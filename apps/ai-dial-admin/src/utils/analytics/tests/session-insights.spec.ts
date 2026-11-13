@@ -6,13 +6,12 @@ import {
   SessionInsightsState,
   SessionsField,
 } from '@/src/models/analytics/sessions-trace';
-import { SessionsTraceI18nKey } from '@/src/constants/i18n';
+import { UNTAGGED_SPAN_FIELD_TAG } from '@/src/constants/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { readableWords } from '@/src/utils/analytics/session-formatting';
 import {
   enrichmentColumnsOf,
   enrichmentPanelsOf,
-  enrichmentTagLabelKey,
   groupFieldsByTag,
   insightValueText,
   sessionInsightsState,
@@ -56,14 +55,17 @@ describe('enrichmentColumnsOf', () => {
   });
 
   test.each([AnalyticsFieldType.Object, AnalyticsFieldType.Array, AnalyticsFieldType.Map])(
-    'drops a %s column, which the panel could not render as a value',
+    'keeps a %s column with its declared type',
     (type) => {
       const columns = enrichmentColumnsOf(NS, [
         schemaField('session_insights.topic'),
         schemaField('session_insights.non_scalar', { type }),
       ]);
 
-      expect(columns.map(({ name }) => name)).toEqual(['session_insights.topic']);
+      expect(columns.map(({ name, type: columnType }) => [name, columnType])).toEqual([
+        ['session_insights.topic', AnalyticsFieldType.String],
+        ['session_insights.non_scalar', type],
+      ]);
     },
   );
 
@@ -132,7 +134,16 @@ describe('groupFieldsByTag', () => {
   });
 
   test('orders undeclared tags by their first field without a declared order', () => {
-    expect(tagsOf([tagged('a', 'risk'), tagged('b'), tagged('c', 'risk')])).toEqual(['risk', '']);
+    expect(tagsOf([tagged('a', 'risk'), tagged('b'), tagged('c', 'risk')])).toEqual(['risk', UNTAGGED_SPAN_FIELD_TAG]);
+  });
+
+  test('describes each grouped field with its label, type, tag and the schema description', () => {
+    const [group] = groupFieldsByTag([column('a', { tag: 'risk', hint: 'Severity.' }), column('b', { tag: 'risk' })]);
+
+    expect(group.fields).toEqual([
+      { name: 'a', label: expect.any(String), type: expect.any(String), tag: 'risk', description: 'Severity.' },
+      { name: 'b', label: expect.any(String), type: expect.any(String), tag: 'risk' },
+    ]);
   });
 
   test('holds every field of a tag in its group, in schema order', () => {
@@ -186,32 +197,43 @@ describe('enrichmentPanelsOf', () => {
         schemaField(`${NS}.risk`, { tag: 'risk' }),
         schemaField(`${NS}.topic`, { tag: 'insight' }),
       ],
-      { [NS]: ['insight', 'system'], other: ['risk'] },
+      { [NS]: { tagOrder: ['insight', 'system'] }, other: { tagOrder: ['risk'] } },
     );
 
     expect(panel.groups.map(({ tag }) => tag)).toEqual(['insight', 'risk', 'system']);
   });
 
-  test('renders no panel for a namespace with no scalar field', () => {
-    expect(enrichmentPanelsOf([schemaField('quality.blob', { type: AnalyticsFieldType.Object })])).toEqual([]);
+  test('carries the enrichment description of its own namespace and none without one', () => {
+    const panels = enrichmentPanelsOf([schemaField('quality.score'), schemaField(`${NS}.topic`)], {
+      quality: { tagOrder: [], description: 'Quality labels' },
+    });
+
+    expect(panels.map(({ namespace, description }) => [namespace, description])).toEqual([
+      ['quality', 'Quality labels'],
+      [NS, undefined],
+    ]);
+  });
+
+  test('keeps the heading field and the summary out of the groups', () => {
+    const [panel] = enrichmentPanelsOf(
+      [schemaField(`${NS}.title`), schemaField(`${NS}.summary`), schemaField(`${NS}.topic`)],
+      {},
+      `${NS}.title`,
+    );
+
+    expect(panel.summary?.name).toBe(`${NS}.summary`);
+    expect(panel.groups.flatMap(({ fields }) => fields.map(({ name }) => name))).toEqual([`${NS}.topic`]);
+    expect(panel.fields).toHaveLength(3);
+  });
+
+  test('renders a panel for a namespace whose only field is an object', () => {
+    const panels = enrichmentPanelsOf([schemaField('quality.blob', { type: AnalyticsFieldType.Object })]);
+
+    expect(panels.map(({ namespace }) => namespace)).toEqual(['quality']);
   });
 
   test('renders no panel without a schema', () => {
     expect(enrichmentPanelsOf()).toEqual([]);
-  });
-});
-
-describe('enrichmentTagLabelKey', () => {
-  test('labels a session tag with its session key', () => {
-    expect(enrichmentTagLabelKey('insight')).toBe(SessionsTraceI18nKey.TagInsight);
-  });
-
-  test('falls back to the hop-log tag vocabulary', () => {
-    expect(enrichmentTagLabelKey('tracing')).toBe(SessionsTraceI18nKey.SpanTagTracing);
-  });
-
-  test('reports no key for a tag neither vocabulary knows', () => {
-    expect(enrichmentTagLabelKey('risk')).toBeUndefined();
   });
 });
 
@@ -299,6 +321,18 @@ describe('sessionInsightsState', () => {
     const record = row({ [SessionsField.InsightTitle]: null, [SessionsField.InsightTopic]: 'billing' });
 
     expect(sessionInsightsState(record, columns)).toBe(SessionInsightsState.Available);
+  });
+
+  test('reports not evaluated when the only list column holds no items', () => {
+    const record = row({ [SessionsField.InsightTitle]: null, [SessionsField.InsightTopic]: [] as unknown as string });
+
+    expect(sessionInsightsState(record, columns)).toBe(SessionInsightsState.NotEvaluated);
+  });
+
+  test('reports not evaluated when the only object column holds no entries', () => {
+    const record = row({ [SessionsField.InsightTitle]: null, [SessionsField.InsightTopic]: {} as unknown as string });
+
+    expect(sessionInsightsState(record, columns)).toBe(SessionInsightsState.NotEvaluated);
   });
 
   test('distinguishes an absent enrichment from an unevaluated session', () => {

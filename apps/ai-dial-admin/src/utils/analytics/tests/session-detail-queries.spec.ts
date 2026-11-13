@@ -162,16 +162,19 @@ describe('buildSessionDetailQuery', () => {
     expect(names).toContain('session_insights.risk_level');
   });
 
-  test('does not name an insight column the detail view could not render as a value', () => {
-    const fields: AnalyticsEntityField[] = [
-      ...asSchemaFields(ALL_FIELDS),
-      { name: 'session_insights.evidence', source: 'evidence', type: AnalyticsFieldType.Object },
-    ];
-    const names = selectedNames(buildSessionDetailQuery(CHAT_ID, fields).select);
+  test.each([AnalyticsFieldType.Object, AnalyticsFieldType.Array, AnalyticsFieldType.Map])(
+    'names a %s insight column, which the panel renders as Metadata does',
+    (type) => {
+      const fields: AnalyticsEntityField[] = [
+        ...asSchemaFields(ALL_FIELDS),
+        { name: 'session_insights.evidence', source: 'evidence', type },
+      ];
+      const names = selectedNames(buildSessionDetailQuery(CHAT_ID, fields).select);
 
-    expect(names).not.toContain('session_insights.evidence');
-    expect(names).toContain(SessionsField.InsightSummary);
-  });
+      expect(names).toContain('session_insights.evidence');
+      expect(names).toContain(SessionsField.InsightSummary);
+    },
+  );
 
   test('names no insight column when the schema reports none', () => {
     const withoutInsights = ALL_FIELDS.filter((name) => !name.startsWith('session_insights.'));

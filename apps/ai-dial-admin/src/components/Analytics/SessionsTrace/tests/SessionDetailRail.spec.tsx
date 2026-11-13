@@ -115,6 +115,10 @@ const METADATA_GROUPS: SpanFieldGroup[] = [
 const openGroup = async (name: RegExp | string) =>
   userEvent.setup().click(screen.getByRole('button', { name, expanded: false }));
 
+const OTHER_GROUP = new RegExp(SessionsTraceI18nKey.SpanTagOther);
+
+const RATING_ENRICHMENT = 'session_ratings';
+
 const setup = (
   feedback: SessionFeedbackRow[] = FEEDBACK,
   total: number | null = feedback.length,
@@ -125,12 +129,18 @@ const setup = (
   metadataGroups: SpanFieldGroup[] = METADATA_GROUPS,
   source: Partial<SessionsSource> = {},
 ) => {
-  const panels = enrichmentPanelsOf(schema);
+  const resolved = {
+    ...defaultSessionsSource(),
+    title: SessionsField.InsightTitle,
+    ratingEnrichment: RATING_ENRICHMENT,
+    ...source,
+  };
+  const panels = enrichmentPanelsOf(schema, {}, resolved.title);
 
   return render(
     <SessionDetailRail
       session={{ ...session, ...ratings }}
-      source={{ ...{ ...defaultSessionsSource(), title: SessionsField.InsightTitle }, ...source }}
+      source={resolved}
       enrichmentPanels={panels}
       enrichmentProvenance={Object.fromEntries(
         panels.map(({ namespace }) => [namespace, enrichmentProvenance(namespace, schema)]),
@@ -168,8 +178,38 @@ describe('SessionDetailRail', () => {
     setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...SESSION, ...INSIGHTS });
 
     expect(screen.getAllByText(SESSIONS_ENTITY).length).toBeGreaterThan(0);
-    expect(screen.getByText(USAGE_LOG_ENTITY)).toBeInTheDocument();
+    expect(screen.getByText(RATING_ENRICHMENT)).toBeInTheDocument();
     expect(screen.getAllByText('session_insights').length).toBeGreaterThan(0);
+  });
+
+  test('renders no enrichment panel when its only value is the heading the page already states', () => {
+    const schema: AnalyticsEntityField[] = [
+      { name: SessionsField.InsightTitle, source: 'title', type: AnalyticsFieldType.String },
+    ];
+    setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...SESSION, ...INSIGHTS }, false, schema);
+
+    expect(screen.queryByRole('heading', { level: 3, name: 'session_insights' })).toBeNull();
+  });
+
+  test('frames a summary that has no groups to sit in', () => {
+    const schema: AnalyticsEntityField[] = [
+      { name: SessionsField.InsightTitle, source: 'title', type: AnalyticsFieldType.String },
+      { name: SessionsField.InsightSummary, source: 'summary', type: AnalyticsFieldType.String },
+    ];
+    setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...SESSION, ...INSIGHTS }, false, schema);
+
+    const summary = screen.getByText(INSIGHTS[SessionsField.InsightSummary] as string);
+
+    expect(summary.closest('.rounded.border')).toBeTruthy();
+  });
+
+  test('renders no feedback panel when no rating enrichment is configured', () => {
+    setup(FEEDBACK, FEEDBACK.length, RATINGS, SESSION, false, INSIGHT_SCHEMA, METADATA_GROUPS, {
+      ratingEnrichment: null,
+    });
+
+    expect(screen.queryByText(SessionsTraceI18nKey.DetailPanelFeedback)).toBeNull();
+    expect(screen.getByText(SessionsTraceI18nKey.DetailPanelUsage)).toBeInTheDocument();
   });
 
   test('names the configured base table rather than a fixed entity', () => {
@@ -192,20 +232,21 @@ describe('SessionDetailRail', () => {
   test('an enrichment panel takes the colour its namespace has in the grid', () => {
     setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...SESSION, ...INSIGHTS });
 
-    const heading = screen.getAllByRole('heading', { level: 3 })[0];
+    const heading = screen.getByRole('heading', { level: 3, name: 'session_insights' });
 
     expect(heading.querySelector('span')).toHaveClass(PROVENANCE_TEXT_CLASS[ColumnProvenance.Insights]);
   });
 
-  test('an evaluated session renders the insights panel first', () => {
+  test('renders the enrichment panels after the usage, metadata and feedback panels', () => {
     setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...SESSION, ...INSIGHTS });
 
-    const headings = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
+    const headings = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent ?? '');
 
-    expect(headings[0]).toContain('session_insights');
+    expect(headings.slice(0, -1)).not.toContain('session_insights');
+    expect(headings.at(-1)).toBe('session_insights');
   });
 
-  test('renders one panel per enrichment, each with its own fields', () => {
+  test('renders one panel per enrichment, each with its own fields', async () => {
     const schema: AnalyticsEntityField[] = [
       ...INSIGHT_SCHEMA,
       { name: 'quality.verdict', source: 'verdict', type: AnalyticsFieldType.String, display_name: 'Verdict' },
@@ -221,8 +262,18 @@ describe('SessionDetailRail', () => {
 
     const headings = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
 
-    expect(headings.slice(0, 2)).toEqual(['session_insights', 'quality']);
+    expect(headings.slice(-2)).toEqual(['session_insights', 'quality']);
+
+    const [, qualityGroup] = screen.getAllByRole('button', { name: OTHER_GROUP, expanded: false });
+    await userEvent.setup().click(qualityGroup);
+
     expect(screen.getByText('sound')).toBeInTheDocument();
+  });
+
+  test('titles an enrichment panel once, with no source identifier repeating the namespace', () => {
+    setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...SESSION, ...INSIGHTS });
+
+    expect(screen.getAllByText('session_insights')).toHaveLength(1);
   });
 
   test('renders no panel for the session rating enrichment', () => {
@@ -240,13 +291,17 @@ describe('SessionDetailRail', () => {
       schema,
     );
 
-    expect(screen.queryByText('session_ratings')).toBeNull();
+    expect(screen.queryByRole('heading', { level: 3, name: 'session_ratings' })).toBeNull();
+    expect(screen.getByText(SessionsTraceI18nKey.DetailPanelFeedback)).toBeInTheDocument();
   });
 
-  test('the insights panel states the evaluator reading without restating the title', () => {
+  test('the insights panel states the evaluator reading without restating the title', async () => {
     setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...SESSION, ...INSIGHTS });
 
     expect(screen.getByText(INSIGHTS[SessionsField.InsightSummary] as string)).toBeInTheDocument();
+
+    await openGroup(OTHER_GROUP);
+
     expect(screen.getByText('Partially resolved')).toBeInTheDocument();
     expect(screen.queryByText(INSIGHTS[SessionsField.InsightTitle] as string)).toBeNull();
   });
@@ -443,7 +498,7 @@ describe('SessionDetailRail', () => {
   });
 
   test('an unrated session states so rather than rendering an empty list', () => {
-    setup([], 0);
+    setup([], 0, { rating_up: 0, rating_down: 0 });
 
     expect(screen.getByText(SessionsTraceI18nKey.DetailNoRatings)).toBeInTheDocument();
   });
@@ -652,11 +707,12 @@ describe('SessionDetailRail — copy and JSON', () => {
     expect(screen.queryByRole('button', { name: `copy ${SessionsTraceI18nKey.Project}` })).toBeNull();
   });
 
-  test('offers no copy control on the insights panel', () => {
+  test('offers a copy control on an insight value, as a metadata value does', async () => {
     setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...SESSION, ...INSIGHTS } as SessionDetailRow);
 
-    expect(screen.getByText('Sentiment')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'copy Sentiment' })).toBeNull();
+    await openGroup(OTHER_GROUP);
+
+    expect(screen.getByRole('button', { name: 'copy Sentiment' })).toBeInTheDocument();
   });
 
   test('opens the whole record as JSON, keyed by the published names and without a read', async () => {

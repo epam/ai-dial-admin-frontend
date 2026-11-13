@@ -1,20 +1,17 @@
+import { DATE_FIELD_TYPES, UNTAGGED_SPAN_FIELD_TAG } from '@/src/constants/analytics/sessions-trace';
 import {
-  DATE_FIELD_TYPES,
-  NON_SCALAR_FIELD_TYPES,
-  SESSION_TAG_LABEL_KEY,
-  SPAN_FIELD_TAG_LABEL_KEY,
-} from '@/src/constants/analytics/sessions-trace';
-import {
+  EnrichmentDefinition,
   SessionDetailRow,
-  SessionEnrichmentGroup,
   SessionEnrichmentPanel,
   SessionInsightField,
   SessionInsightsState,
+  SpanFieldGroup,
   SpanFieldTag,
 } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { columnHeaderName, enrichmentOf } from '@/src/utils/analytics/session-enrichment';
+import { columnHeaderName, enrichmentOf, unqualified } from '@/src/utils/analytics/session-enrichment';
 import { readableWords } from '@/src/utils/analytics/session-formatting';
+import { isSpanFieldEmpty } from '@/src/utils/analytics/session-span-fields';
 import { enrichmentNamespacesOf, ratingEnrichmentOf } from '@/src/utils/analytics/sessions-source';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
@@ -23,12 +20,12 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 // wrong in both directions at once: blind to a column that was added, and still naming one that was replaced
 // and now comes back null.
 //
-// A column the panel could not render as a value is dropped — one the schema types as an object or an
-// array. The test is the declared type, so a column newly typed that way falls out with no change here.
 // Sensitive columns need no test: the detail query may not name one at all, so none can reach a row.
+const SUMMARY_FIELD = 'summary';
+
 export const enrichmentColumnsOf = (namespace: string, fields: AnalyticsEntityField[] = []): SessionInsightField[] =>
   fields
-    .filter((field) => enrichmentOf(field.name) === namespace && !NON_SCALAR_FIELD_TYPES.includes(field.type))
+    .filter((field) => enrichmentOf(field.name) === namespace)
     .map((field) => ({
       name: field.name,
       label: columnHeaderName(field),
@@ -37,12 +34,19 @@ export const enrichmentColumnsOf = (namespace: string, fields: AnalyticsEntityFi
       ...(field.tag ? { tag: field.tag } : {}),
     }));
 
-export const groupFieldsByTag = (fields: SessionInsightField[], tagOrder: string[] = []): SessionEnrichmentGroup[] => {
-  const byTag = new Map<string, SessionInsightField[]>();
+export const groupFieldsByTag = (fields: SessionInsightField[], tagOrder: string[] = []): SpanFieldGroup[] => {
+  const byTag = new Map<string, SpanFieldGroup['fields']>();
 
   for (const field of fields) {
-    const tag = field.tag ?? '';
-    byTag.set(tag, [...(byTag.get(tag) ?? []), field]);
+    const tag = field.tag || UNTAGGED_SPAN_FIELD_TAG;
+    const descriptor = {
+      name: field.name,
+      label: field.label,
+      type: field.type,
+      tag,
+      ...(field.hint ? { description: field.hint } : {}),
+    };
+    byTag.set(tag, [...(byTag.get(tag) ?? []), descriptor]);
   }
 
   const declared = tagOrder.filter((tag) => tag !== SpanFieldTag.System && byTag.has(tag));
@@ -52,12 +56,10 @@ export const groupFieldsByTag = (fields: SessionInsightField[], tagOrder: string
   return [...declared, ...rest, ...system].map((tag) => ({ tag, fields: byTag.get(tag) ?? [] }));
 };
 
-export const enrichmentTagLabelKey = (tag: string): string | undefined =>
-  SESSION_TAG_LABEL_KEY[tag] ?? SPAN_FIELD_TAG_LABEL_KEY[tag];
-
 export const enrichmentPanelsOf = (
   fields: AnalyticsEntityField[] = [],
-  tagOrders: Record<string, string[]> = {},
+  definitions: Record<string, EnrichmentDefinition> = {},
+  headingField: string | null = null,
 ): SessionEnrichmentPanel[] => {
   const rating = ratingEnrichmentOf(fields);
 
@@ -65,11 +67,24 @@ export const enrichmentPanelsOf = (
     .filter((namespace) => namespace !== rating)
     .map((namespace) => {
       const columns = enrichmentColumnsOf(namespace, fields);
+      const definition = definitions[namespace];
+      const summary = columns.find(({ name }) => unqualified(name) === SUMMARY_FIELD);
+      const grouped = columns.filter(({ name }) => name !== headingField && name !== summary?.name);
 
-      return { namespace, title: namespace, fields: columns, groups: groupFieldsByTag(columns, tagOrders[namespace]) };
+      return {
+        namespace,
+        title: namespace,
+        ...(definition?.description ? { description: definition.description } : {}),
+        ...(summary ? { summary } : {}),
+        fields: columns,
+        groups: groupFieldsByTag(grouped, definition?.tagOrder),
+      };
     })
     .filter(({ fields: columns }) => columns.length > 0);
 };
+
+export const enrichmentSummaryText = (record: SessionDetailRow, panel: SessionEnrichmentPanel): string =>
+  panel.summary ? insightValueText(record, panel.summary) : '';
 
 // The text one insight column renders as, empty where the record carries no value for it.
 //
@@ -93,11 +108,8 @@ export const insightValueText = (record: SessionDetailRow, { name, type }: Sessi
   return String(raw);
 };
 
-const hasValue = (record: SessionDetailRow, name: string): boolean => {
-  const raw = record[name as keyof SessionDetailRow];
-
-  return raw != null && raw !== '';
-};
+const hasValue = (record: SessionDetailRow, name: string): boolean =>
+  !isSpanFieldEmpty(record[name as keyof SessionDetailRow] as unknown, '');
 
 // Three states, decided over the enrichment's namespace as a whole rather than over any one field.
 //

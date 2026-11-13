@@ -36,7 +36,7 @@ import {
   roleScopedPanels,
   sessionRatingFigures,
 } from '@/src/utils/analytics/session-detail-fields';
-import { sessionInsightsState } from '@/src/utils/analytics/session-insights';
+import { enrichmentSummaryText, sessionInsightsState } from '@/src/utils/analytics/session-insights';
 
 const ICON_SIZE = 16;
 
@@ -84,25 +84,6 @@ const SessionDetailRail: FC<Props> = ({
 
   return (
     <SessionRailShell className="flex-col gap-4 overflow-y-auto">
-      {enrichmentPanels.map((panel) => {
-        const state = sessionInsightsState(session, panel.fields);
-
-        return (
-          <SessionDetailPanel
-            key={panel.namespace}
-            icon={PANEL_ICON[Panel.Insights]}
-            iconClassName={PROVENANCE_TEXT_CLASS[enrichmentProvenance[panel.namespace] ?? ColumnProvenance.Other]}
-            title={panel.title}
-            source={panel.namespace}
-          >
-            {state === SessionInsightsState.Available ? (
-              <SessionEnrichmentPanel session={session} panel={panel} headingField={source.title} />
-            ) : (
-              <p className="text-secondary dial-small-text">{t(INSIGHTS_ABSENCE_KEY[state])}</p>
-            )}
-          </SessionDetailPanel>
-        );
-      })}
       {detailPanels.map(({ panel, provenance, labelKey, layout, fields }) => (
         <SessionDetailPanel
           key={panel}
@@ -136,14 +117,42 @@ const SessionDetailRail: FC<Props> = ({
           <p className="text-secondary dial-tiny-text">{t(SessionsTraceI18nKey.DetailFieldsUnavailable)}</p>
         )}
       </SessionDetailPanel>
-      <SessionDetailPanel
-        icon={PANEL_ICON[Panel.Feedback]}
-        iconClassName={PROVENANCE_TEXT_CLASS[SESSION_FEEDBACK_PANEL.provenance]}
-        title={t(SESSION_FEEDBACK_PANEL.labelKey)}
-        source={source.ratingEnrichment ?? SESSION_FEEDBACK_PANEL.sourceEntity}
-      >
-        <SessionFeedbackPanel ratings={ratings} feedback={feedback} />
-      </SessionDetailPanel>
+      {source.ratingEnrichment && (
+        <SessionDetailPanel
+          icon={PANEL_ICON[Panel.Feedback]}
+          iconClassName={PROVENANCE_TEXT_CLASS[SESSION_FEEDBACK_PANEL.provenance]}
+          title={t(SESSION_FEEDBACK_PANEL.labelKey)}
+          source={source.ratingEnrichment}
+        >
+          <SessionFeedbackPanel ratings={ratings} feedback={feedback} />
+        </SessionDetailPanel>
+      )}
+      {enrichmentPanels.map((panel) => {
+        const state = sessionInsightsState(session, panel.fields);
+        const isAvailable = state === SessionInsightsState.Available;
+        const hasGroups = panel.groups.length > 0;
+
+        if (isAvailable && !hasGroups && !enrichmentSummaryText(session, panel)) {
+          return null;
+        }
+
+        return (
+          <SessionDetailPanel
+            key={panel.namespace}
+            icon={PANEL_ICON[Panel.Insights]}
+            iconClassName={PROVENANCE_TEXT_CLASS[enrichmentProvenance[panel.namespace] ?? ColumnProvenance.Other]}
+            title={panel.title}
+            hint={panel.description}
+            isFramed={!isAvailable || !hasGroups}
+          >
+            {isAvailable ? (
+              <SessionEnrichmentPanel session={session} panel={panel} />
+            ) : (
+              <p className="text-secondary dial-small-text">{t(INSIGHTS_ABSENCE_KEY[state])}</p>
+            )}
+          </SessionDetailPanel>
+        );
+      })}
     </SessionRailShell>
   );
 };

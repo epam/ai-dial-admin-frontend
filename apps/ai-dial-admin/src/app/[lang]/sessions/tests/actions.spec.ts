@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { analyticsDataApi, sessionsSourceApi } from '@/src/app/api/api';
 import {
-  getEnrichmentTagOrders,
+  getEnrichmentDefinitions,
   getEntityTracePage,
   getSessionFieldValues,
   getSessionHopMessage,
@@ -1100,24 +1100,33 @@ describe('getSessionsSchema', () => {
   });
 });
 
-describe('getEnrichmentTagOrders', () => {
+describe('getEnrichmentDefinitions', () => {
   const getTable = () => analyticsDataApi.getTable as unknown as ReturnType<typeof vi.fn>;
 
-  test('reads each namespace table definition and returns its tag order', async () => {
+  test('reads each namespace table definition and returns its tag order and description', async () => {
     getTable().mockImplementation((name: string) =>
-      Promise.resolve({ success: true, response: { tag_order: [`${name}-tag`] } }),
+      Promise.resolve({ success: true, response: { tag_order: [`${name}-tag`], description: `${name} notes` } }),
     );
 
-    const orders = await getEnrichmentTagOrders(['session_insights', RATINGS]);
+    const definitions = await getEnrichmentDefinitions(['session_insights', RATINGS]);
 
     expect(getTable()).toHaveBeenCalledWith('session_insights', TOKEN_MOCK);
-    expect(orders).toEqual({ session_insights: ['session_insights-tag'], [RATINGS]: [`${RATINGS}-tag`] });
+    expect(definitions).toEqual({
+      session_insights: { tagOrder: ['session_insights-tag'], description: 'session_insights notes' },
+      [RATINGS]: { tagOrder: [`${RATINGS}-tag`], description: `${RATINGS} notes` },
+    });
   });
 
-  test('costs an unreadable table its order rather than the result', async () => {
+  test('omits the description of a table that carries none', async () => {
+    getTable().mockResolvedValueOnce({ success: true, response: { tag_order: ['insight'], description: '' } });
+
+    expect(await getEnrichmentDefinitions(['a'])).toEqual({ a: { tagOrder: ['insight'] } });
+  });
+
+  test('costs an unreadable table its definition rather than the result', async () => {
     getTable().mockRejectedValueOnce(new Error('down')).mockResolvedValueOnce({ success: false });
 
-    expect(await getEnrichmentTagOrders(['a', 'b'])).toEqual({ a: [], b: [] });
+    expect(await getEnrichmentDefinitions(['a', 'b'])).toEqual({ a: { tagOrder: [] }, b: { tagOrder: [] } });
   });
 });
 
