@@ -116,7 +116,9 @@ describe('PipelineGroups', () => {
     const user = userEvent.setup();
     await renderTab([groupMock({ group_key: 'sess_A' }), groupMock({ group_key: 'other', dirty: false })]);
 
-    await user.click(screen.getByRole('combobox', { name: AnalyticsPipelinesI18nKey.GroupsStateFilter }));
+    await user.click(
+      screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsPipelinesI18nKey.GroupsStateFilter}`) }),
+    );
     await user.click(screen.getByRole('option', { name: AnalyticsPipelinesI18nKey.GroupStateUpToDate }));
 
     expect(listedKeys()).toEqual(['other']);
