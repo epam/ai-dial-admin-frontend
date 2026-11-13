@@ -17,6 +17,7 @@ export const createOutputRow = (): OutputRow => ({
   refinement: OutputRefinementKind.Jsonata,
   values: [],
   jsonata: '',
+  source: '',
 });
 
 // Reads the wire map as readily as the rows it publishes: leaving the JSON editor hands the draft back
@@ -29,6 +30,7 @@ export const toOutputRows = (outputs: TransformOutput[] | undefined, type: Trans
     refinement: toRefinement(output),
     values: output.values ?? [],
     jsonata: output.jsonata ?? '',
+    source: output.source ?? '',
   }));
 
 // The unselected refinement stays on the row and is left out of the declaration, so switching back does
@@ -44,5 +46,6 @@ export const toOutputs = (rows: OutputRow[], type: TransformType): TransformOutp
       prose: row.text,
       ...(row.refinement === OutputRefinementKind.Values && row.values.length ? { values: row.values } : {}),
       ...(row.refinement === OutputRefinementKind.Jsonata && row.jsonata ? { jsonata: row.jsonata } : {}),
+      ...(row.refinement === OutputRefinementKind.Jsonata && row.source ? { source: row.source } : {}),
     };
   });
