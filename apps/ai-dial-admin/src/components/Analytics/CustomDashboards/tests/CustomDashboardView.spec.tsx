@@ -185,7 +185,7 @@ describe('CustomDashboardView', () => {
     await editLayout(user);
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
 
-    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.CompareLabel}`) }));
     await user.click(await screen.findByRole('option', { name: AnalyticsUsageI18nKey.ComparePreviousMonth }));
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
@@ -195,7 +195,7 @@ describe('CustomDashboardView', () => {
     renderView();
 
     // The switcher names the open dashboard; there is no separate name heading.
-    expect(screen.getByRole('combobox', { name: CustomDashboardsI18nKey.Switcher })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.Switcher}`) })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Costs' })).toBeNull();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Edit })).toBeNull();
     expect(screen.queryByRole('button', { name: CustomDashboardsI18nKey.AddWidget })).toBeNull();

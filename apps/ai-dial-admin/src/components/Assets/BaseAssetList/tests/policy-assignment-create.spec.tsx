@@ -117,9 +117,8 @@ describe.skip('BaseAssetList — policy assignment creation', () => {
     expect(screen.getByRole('textbox', { name: new RegExp(PolicyAssignmentsI18nKey.CostObject) })).toHaveValue(
       'team-a',
     );
-    expect(screen.getByRole('combobox', { name: new RegExp(PolicyAssignmentsI18nKey.Policy) })).toHaveValue(
-      'team-a/policy',
-    );
+    expect(screen.getByRole('combobox', { name: new RegExp(PolicyAssignmentsI18nKey.Policy) })).toHaveValue('');
+    expect(screen.getByText('team-a/policy')).toBeInTheDocument();
   });
 
   test('closes the form and navigates after creation succeeds', async () => {

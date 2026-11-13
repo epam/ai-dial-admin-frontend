@@ -10,9 +10,10 @@ describe('Limits', () => {
 
     render(<Limits model={model} onChangeModel={onChangeModel} />);
     expect(screen.getByText(ModelViewI18nKey.InteractionLimit)).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: ModelViewI18nKey.InteractionLimit })).toHaveDisplayValue(
-      BasicI18nKey.None,
-    );
+    expect(
+      screen.getByRole('combobox', { name: `${ModelViewI18nKey.InteractionLimit}, ${BasicI18nKey.None}` }),
+    ).toHaveValue('');
+    expect(screen.getByText(BasicI18nKey.None)).toBeInTheDocument();
   });
 
   test('renders prompts and completions inputs for SeparateTokenAndCompletions', () => {

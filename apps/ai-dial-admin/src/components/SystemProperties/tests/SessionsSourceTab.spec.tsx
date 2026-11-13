@@ -125,9 +125,11 @@ describe('SystemProperties — Sessions source tab', () => {
     renderSystemProperties();
     await openSessionsSourceTab(user);
 
-    await vi.waitFor(() => expect(baseTablePicker()).toHaveDisplayValue('sessions'));
-    expect(rolePicker(SessionsRole.Time)).toHaveDisplayValue('last_request_time');
-    expect(rolePicker(SessionsRole.Turns)).toHaveDisplayValue(SystemPropertiesI18nKey.SessionsSourceRoleNotSet);
+    await vi.waitFor(() => expect(baseTablePicker()).toHaveAccessibleName(/sessions/));
+    expect(rolePicker(SessionsRole.Time)).toHaveAccessibleName(/last_request_time/);
+    expect(rolePicker(SessionsRole.Turns)).toHaveAccessibleName(
+      new RegExp(SystemPropertiesI18nKey.SessionsSourceRoleNotSet),
+    );
     expect(baseTablePicker()).toHaveAccessibleDescription(SystemPropertiesI18nKey.SessionsSourceBaseTableCaveat);
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
   });
@@ -140,7 +142,7 @@ describe('SystemProperties — Sessions source tab', () => {
 
     await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.Save }));
 
-    expect(rolePicker(SessionsRole.Turns)).toHaveDisplayValue('turn_count');
+    expect(rolePicker(SessionsRole.Turns)).toHaveAccessibleName(/turn_count/);
     expect(saveSessionsSource).toHaveBeenCalledWith(DEFAULT_SESSIONS_SOURCE_SETTING);
     expect(updateProperties).not.toHaveBeenCalled();
     expect(showNotification).toHaveBeenCalledWith(
@@ -166,7 +168,8 @@ describe('SystemProperties — Sessions source tab', () => {
     await openSessionsSourceTab(user);
 
     expect(await screen.findByText(SystemPropertiesI18nKey.SessionsSourceDefaultMissing)).toBeTruthy();
-    expect(baseTablePicker()).toHaveDisplayValue('');
+    expect(baseTablePicker()).toHaveValue('');
+    expect(baseTablePicker()).not.toHaveAccessibleName(/,/);
     expect(getSessionsSourceSchema).not.toHaveBeenCalled();
   });
 
@@ -175,7 +178,7 @@ describe('SystemProperties — Sessions source tab', () => {
     renderSystemProperties();
     await openSessionsSourceTab(user);
 
-    await vi.waitFor(() => expect(baseTablePicker()).toHaveDisplayValue('sessions'));
+    await vi.waitFor(() => expect(baseTablePicker()).toHaveAccessibleName(/sessions/));
     expect(screen.queryByText(SystemPropertiesI18nKey.SessionsSourceDefaultInUse)).toBeNull();
     expect(screen.queryByText(SystemPropertiesI18nKey.SessionsSourceDefaultMissing)).toBeNull();
   });
@@ -194,8 +197,10 @@ describe('SystemProperties — Sessions source tab', () => {
         }),
       ),
     );
-    expect(baseTablePicker()).toHaveDisplayValue('');
-    expect(rolePicker(SessionsRole.Time)).toHaveDisplayValue('');
+    expect(baseTablePicker()).toHaveValue('');
+    expect(baseTablePicker()).not.toHaveAccessibleName(/,/);
+    expect(rolePicker(SessionsRole.Time)).toHaveValue('');
+    expect(rolePicker(SessionsRole.Time)).not.toHaveAccessibleName(/,/);
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
   });
 
@@ -203,15 +208,18 @@ describe('SystemProperties — Sessions source tab', () => {
     const user = userEvent.setup();
     renderSystemProperties();
     await openSessionsSourceTab(user);
-    await vi.waitFor(() => expect(baseTablePicker()).toHaveDisplayValue('sessions'));
+    await vi.waitFor(() => expect(baseTablePicker()).toHaveAccessibleName(/sessions/));
 
     await chooseOption(user, baseTablePicker(), 'other_sessions');
 
     expect(await screen.findByText(SystemPropertiesI18nKey.SessionsSourceRoleRequired)).toBeTruthy();
-    expect(rolePicker(SessionsRole.SessionId)).toHaveDisplayValue('client_session_id');
-    expect(rolePicker(SessionsRole.Project)).toHaveDisplayValue('project_id');
-    expect(rolePicker(SessionsRole.Cost)).toHaveDisplayValue(SystemPropertiesI18nKey.SessionsSourceRoleNotSet);
-    expect(rolePicker(SessionsRole.Time)).toHaveDisplayValue('');
+    expect(rolePicker(SessionsRole.SessionId)).toHaveAccessibleName(/client_session_id/);
+    expect(rolePicker(SessionsRole.Project)).toHaveAccessibleName(/project_id/);
+    expect(rolePicker(SessionsRole.Cost)).toHaveAccessibleName(
+      new RegExp(SystemPropertiesI18nKey.SessionsSourceRoleNotSet),
+    );
+    expect(rolePicker(SessionsRole.Time)).toHaveValue('');
+    expect(rolePicker(SessionsRole.Time)).not.toHaveAccessibleName(/,/);
     expect(saveButton()).toBeDisabled();
 
     await chooseOption(user, rolePicker(SessionsRole.Time), 'started_at');
@@ -236,7 +244,7 @@ describe('SystemProperties — Sessions source tab', () => {
     const user = userEvent.setup();
     renderSystemProperties();
     await openSessionsSourceTab(user);
-    await vi.waitFor(() => expect(baseTablePicker()).toHaveDisplayValue('sessions'));
+    await vi.waitFor(() => expect(baseTablePicker()).toHaveAccessibleName(/sessions/));
 
     await user.click(rolePicker(SessionsRole.Cost));
 
@@ -255,7 +263,7 @@ describe('SystemProperties — Sessions source tab', () => {
     });
     renderSystemProperties();
     await openSessionsSourceTab(user);
-    await vi.waitFor(() => expect(baseTablePicker()).toHaveDisplayValue('sessions'));
+    await vi.waitFor(() => expect(baseTablePicker()).toHaveAccessibleName(/sessions/));
 
     await chooseOption(user, rolePicker(SessionsRole.Turns), 'turn_count');
     await user.click(saveButton());
@@ -263,7 +271,7 @@ describe('SystemProperties — Sessions source tab', () => {
     expect(showNotification).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Bad Request', description: 'Unknown field' }),
     );
-    expect(rolePicker(SessionsRole.Turns)).toHaveDisplayValue('turn_count');
+    expect(rolePicker(SessionsRole.Turns)).toHaveAccessibleName(/turn_count/);
     expect(saveButton()).toBeTruthy();
   });
 
@@ -271,13 +279,15 @@ describe('SystemProperties — Sessions source tab', () => {
     const user = userEvent.setup();
     renderSystemProperties();
     await openSessionsSourceTab(user);
-    await vi.waitFor(() => expect(baseTablePicker()).toHaveDisplayValue('sessions'));
+    await vi.waitFor(() => expect(baseTablePicker()).toHaveAccessibleName(/sessions/));
 
     await chooseOption(user, rolePicker(SessionsRole.Turns), 'turn_count');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Discard }));
     await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: ButtonsI18nKey.Discard }));
 
-    expect(rolePicker(SessionsRole.Turns)).toHaveDisplayValue(SystemPropertiesI18nKey.SessionsSourceRoleNotSet);
+    expect(rolePicker(SessionsRole.Turns)).toHaveAccessibleName(
+      new RegExp(SystemPropertiesI18nKey.SessionsSourceRoleNotSet),
+    );
   });
 
   test('saving global interceptors sends no sessions source write', async () => {
@@ -298,7 +308,7 @@ describe('SystemProperties — Sessions source tab', () => {
     useAppContext().isReadOnlyAdmin = true;
     renderSystemProperties();
     await openSessionsSourceTab(user);
-    await vi.waitFor(() => expect(baseTablePicker()).toHaveDisplayValue('sessions'));
+    await vi.waitFor(() => expect(baseTablePicker()).toHaveAccessibleName(/sessions/));
 
     expect(baseTablePicker()).toBeDisabled();
     expect(rolePicker(SessionsRole.SessionId)).toBeDisabled();
@@ -314,7 +324,7 @@ describe('SystemProperties — Sessions source tab', () => {
     );
     renderSystemProperties();
     await openSessionsSourceTab(user);
-    await vi.waitFor(() => expect(baseTablePicker()).toHaveDisplayValue('sessions'));
+    await vi.waitFor(() => expect(baseTablePicker()).toHaveAccessibleName(/sessions/));
 
     await chooseOption(user, baseTablePicker(), 'other_sessions');
 
@@ -324,8 +334,8 @@ describe('SystemProperties — Sessions source tab', () => {
         description: 'Schema unavailable',
       }),
     );
-    expect(baseTablePicker()).toHaveDisplayValue('sessions');
-    expect(rolePicker(SessionsRole.Time)).toHaveDisplayValue('last_request_time');
+    expect(baseTablePicker()).toHaveAccessibleName(/sessions/);
+    expect(rolePicker(SessionsRole.Time)).toHaveAccessibleName(/last_request_time/);
   });
 
   test('reports a failed table listing', async () => {

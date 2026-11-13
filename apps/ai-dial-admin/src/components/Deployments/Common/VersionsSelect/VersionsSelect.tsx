@@ -29,7 +29,7 @@ const VersionsSelect: FC<Props> = ({ onChange, versions, selected, onClick }) =>
       options={getVersionsList(versions)}
       size={ElementSize.Small}
       value={selected}
-      className="px-2"
+      className="!w-auto px-2"
       listClassName="!max-w-max"
       onChange={(id) => {
         onChange?.(id as string);
