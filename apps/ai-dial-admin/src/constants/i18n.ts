@@ -4357,6 +4357,7 @@ export enum ResourceDependenciesI18nKey {
   No = 'ResourceDependencies.No',
   LinkIdRequired = 'ResourceDependencies.LinkIdRequired',
   AccessRequired = 'ResourceDependencies.AccessRequired',
+  WriteNotAllowed = 'ResourceDependencies.WriteNotAllowed',
   LinkIdDuplicate = 'ResourceDependencies.LinkIdDuplicate',
   PathRequired = 'ResourceDependencies.PathRequired',
   PathRoot = 'ResourceDependencies.PathRoot',

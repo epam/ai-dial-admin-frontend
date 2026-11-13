@@ -128,12 +128,48 @@ describe('validateLinkId', () => {
 });
 
 describe('validateAccess', () => {
+  const READ_WRITE = [ResourceAccess.Read, ResourceAccess.Write];
+
   test('requires at least one right', () => {
-    expect(validateAccess([])?.key).toBe(ResourceDependenciesI18nKey.AccessRequired);
+    expect(validateAccess([], 'files/public/x')?.key).toBe(ResourceDependenciesI18nKey.AccessRequired);
+  });
+
+  test('reports a missing right before the write restriction', () => {
+    expect(validateAccess([], 'applications/public/x')?.key).toBe(ResourceDependenciesI18nKey.AccessRequired);
   });
 
   test('accepts a selected right', () => {
-    expect(validateAccess([ResourceAccess.Write])).toBeNull();
+    expect(validateAccess([ResourceAccess.Write], 'files/public/x')).toBeNull();
+  });
+
+  test.each([
+    'applications/public/x/',
+    'toolsets/public/x/',
+    'applications/{current-user}/x',
+    '%61pplications/public/x',
+  ])('rejects Write on %s and names the type', (path) => {
+    const issue = validateAccess(READ_WRITE, path);
+
+    expect(issue?.key).toBe(ResourceDependenciesI18nKey.WriteNotAllowed);
+    expect(issue?.params?.type).toBe(path.includes('toolsets') ? 'toolsets' : 'applications');
+  });
+
+  test.each(['applications/public/x/', 'toolsets/public/x/'])('accepts Read alone on %s', (path) => {
+    expect(validateAccess([ResourceAccess.Read], path)).toBeNull();
+  });
+
+  test.each(['files', 'prompts', 'conversations', 'skills'])('accepts Write on %s', (root) => {
+    expect(validateAccess(READ_WRITE, `${root}/public/x`)).toBeNull();
+  });
+
+  test('ignores surrounding whitespace in the path', () => {
+    expect(validateAccess(READ_WRITE, '  applications/public/x  ')?.key).toBe(
+      ResourceDependenciesI18nKey.WriteNotAllowed,
+    );
+  });
+
+  test('accepts Write while the path is still empty', () => {
+    expect(validateAccess(READ_WRITE, '')).toBeNull();
   });
 });
 
@@ -150,6 +186,23 @@ describe('validateDependency', () => {
 
     expect(Object.keys(errors).sort()).toEqual(['access', 'linkId', 'path']);
     expect(hasDependencyErrors(errors)).toBe(true);
+  });
+
+  test('flags Write on an applications target as an access error only', () => {
+    const errors = validateDependency(
+      { ...VALID_VALUES, path: 'applications/public/x/', access: [ResourceAccess.Read, ResourceAccess.Write] },
+      [],
+    );
+
+    expect(Object.keys(errors)).toEqual(['access']);
+    expect(errors.access?.key).toBe(ResourceDependenciesI18nKey.WriteNotAllowed);
+  });
+
+  test('clears the write error once the path moves to a writable root', () => {
+    const values = { ...VALID_VALUES, access: [ResourceAccess.Read, ResourceAccess.Write] };
+
+    expect(validateDependency({ ...values, path: 'toolsets/public/x/' }, [])).toHaveProperty('access');
+    expect(validateDependency({ ...values, path: 'files/public/x/' }, [])).toEqual({});
   });
 });
 
