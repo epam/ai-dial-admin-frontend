@@ -2,7 +2,8 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { analyticsDataApi, sessionsSourceApi, settingsApi } from '@/src/app/api/api';
+import { analyticsDataApi, enrichmentRoutesApi, sessionsSourceApi, settingsApi } from '@/src/app/api/api';
+import { EnrichmentRoute } from '@/src/models/analytics/enrichment-routes';
 import { AnalyticsEntity, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { SessionsSourceSetting } from '@/src/models/analytics/sessions-source';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -38,4 +39,14 @@ export async function getSessionsSourceEntities(): Promise<ServerActionResponse<
 export async function getSessionsSourceSchema(name: string): Promise<ServerActionResponse<AnalyticsEntitySchema>> {
   const authToken = await token();
   return withEntitySchemaCache(name, authToken, () => analyticsDataApi.getEntitySchema(name, authToken));
+}
+
+export async function getEnrichmentRoutes(): Promise<ServerActionResponse<EnrichmentRoute[]>> {
+  return enrichmentRoutesApi.getRoutes(await token());
+}
+
+export async function saveEnrichmentRoutes(
+  routes: EnrichmentRoute[],
+): Promise<ServerActionResponse<EnrichmentRoute[]>> {
+  return enrichmentRoutesApi.putRoutes(routes, await token());
 }

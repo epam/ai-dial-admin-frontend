@@ -18,6 +18,7 @@ export enum EntityViewTab {
   RateLimitSchedule = 'RateLimitSchedule',
   SpendingLimits = 'SpendingLimits',
   SessionsSource = 'SessionsSource',
+  EnrichmentRoutes = 'EnrichmentRoutes',
   ErrorCodes = 'ErrorCodes',
   Keys = 'Keys',
   Entities = 'Entities',
@@ -132,6 +133,11 @@ export const spendingLimitsTab = (t: (key: string) => string) => ({
 export const sessionsSourceTab = (t: (key: string) => string) => ({
   id: EntityViewTab.SessionsSource,
   label: t(SystemPropertiesI18nKey.SessionsSourceTitle),
+});
+
+export const enrichmentRoutesTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.EnrichmentRoutes,
+  label: t(SystemPropertiesI18nKey.EnrichmentRoutesTitle),
 });
 
 export const parametersTab = (t: (key: string) => string) => ({
@@ -657,7 +663,7 @@ export const getDeploymentsViewTabs = (
 
 export const getSystemPropertiesTabs = (t: (key: string) => string, isAnalyticsEnabled?: boolean): TabItem[] => {
   const tabs = [globalInterceptorsTab(t), rateLimitScheduleTab(t), spendingLimitsTab(t)];
-  return isAnalyticsEnabled ? [...tabs, sessionsSourceTab(t)] : tabs;
+  return isAnalyticsEnabled ? [...tabs, sessionsSourceTab(t), enrichmentRoutesTab(t)] : tabs;
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabItem[] => {
