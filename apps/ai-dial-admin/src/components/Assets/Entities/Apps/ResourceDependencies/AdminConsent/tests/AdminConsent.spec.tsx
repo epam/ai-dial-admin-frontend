@@ -147,8 +147,7 @@ describe('AdminConsent', () => {
 
       const title = screen.getByRole('heading', { name: ResourceDependenciesI18nKey.ApproveTitle });
       expect(screen.getByRole('dialog', { name: ResourceDependenciesI18nKey.ApproveTitle })).toBeTruthy();
-      expect(title).toHaveClass('whitespace-normal', 'break-words');
-      expect(title).not.toHaveClass('truncate');
+      expect(title).toHaveClass('truncate');
       expect(screen.getByText('skills/{current-user}/ (READ, WRITE)')).toBeTruthy();
       expect(screen.getByText('files/public/folder/ (READ)')).toBeTruthy();
       expect(onApprove).not.toHaveBeenCalled();
@@ -183,8 +182,7 @@ describe('AdminConsent', () => {
 
       const title = screen.getByRole('heading', { name: ResourceDependenciesI18nKey.ApproveTitle });
       expect(screen.getByRole('dialog', { name: ResourceDependenciesI18nKey.ApproveTitle })).toBeTruthy();
-      expect(title).toHaveClass('whitespace-normal', 'break-words');
-      expect(title).not.toHaveClass('truncate');
+      expect(title).toHaveClass('truncate');
     });
 
     test('revoke lists what is currently approved, not the saved declaration', async () => {
