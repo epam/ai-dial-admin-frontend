@@ -5,7 +5,7 @@ import { FC } from 'react';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
-import BaseAssetList from '@/src/components/Assets/BaseAssetList/BaseAssetList';
+import TabbedAssetList from '@/src/components/Assets/TabbedAssetList/TabbedAssetList';
 
 interface Props {
   runners: DialApplicationScheme[];
@@ -13,7 +13,7 @@ interface Props {
 }
 
 const AppsList: FC<Props> = ({ runners, translators }) => {
-  return <BaseAssetList view={ApplicationRoute.AssetsApplications} runners={runners} translators={translators} />;
+  return <TabbedAssetList view={ApplicationRoute.AssetsApplications} runners={runners} translators={translators} />;
 };
 
 export default AppsList;

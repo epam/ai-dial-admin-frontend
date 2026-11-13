@@ -6,9 +6,7 @@ works in, with roles and permissions): the start-mode gate (full, unit or denied
 full), how `AppContext` exposes it, and the unit-mode rules for menu sections, folder write actions, approve
 and reject, and the role-assignments tab. Replaces the admin backend's security-info as the source of roles —
 created by archiving change `use-core-user-org-units-for-access`.
-
 ## Requirements
-
 ### Requirement: The caller's access is read from Core
 The system SHALL read the caller's access with one `GET /v1/user/role-assignments` call to DIAL Core per request,
 authenticated with the caller's token, and expose it as `adminAccess` (`FULL`, `NONE`) and `units` (each with
@@ -189,16 +187,22 @@ A runner's routes, interceptors and features SHALL be read through `GET /v1/appl
 - **WHEN** a unit user opens an application whose runner is from the config file
 - **THEN** the tab shows the resolved schema's interceptors and no config-file read is made
 
-### Requirement: File roots exclude the config-file and platform buckets
-For a caller in unit mode, the FileManager, breadcrumbs and create dialog SHALL build their roots without the `file` and `platform` roots.
-
-#### Scenario: Create dialog
-- **WHEN** a unit user opens the create dialog for an application
-- **THEN** only the `public` root is offered
-
 ### Requirement: Interceptors and user roles are read-only without admin access
 Interceptors and user roles SHALL be shown read-only to a caller without full admin access, because Core refuses interceptors from non-admins and drops their `userRoles` without an error. Whether unit users should see the roles field at all remains a product decision.
 
 #### Scenario: Unit user with write permission
 - **WHEN** a unit user with `write` on applications opens an application
 - **THEN** the Interceptors and user-roles controls cannot be edited
+
+### Requirement: Unit mode lists the Public source only
+
+For a caller in unit mode, the listing, the folder breadcrumbs, the create dialog and the entity picker SHALL offer the Public source only. The Platform and config.json sources SHALL NOT be offered, no tab row SHALL be rendered, and no platform-bucket or config-file request SHALL be made.
+
+#### Scenario: Create dialog
+- **WHEN** a unit user opens the create dialog for an application
+- **THEN** only the Public folder tree is offered and no Destination control is shown
+
+#### Scenario: Listing has no tab row
+- **WHEN** a unit user opens `/assets-applications`
+- **THEN** the Public file manager is shown with no tab row and no Platform or config.json request is made
+

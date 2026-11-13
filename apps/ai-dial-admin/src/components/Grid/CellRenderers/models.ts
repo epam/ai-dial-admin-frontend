@@ -10,6 +10,7 @@ export type EntityHrefGetter<TData = unknown> = (data: TData | undefined) => str
 export interface DisplayNameCellRendererParams extends ICellRendererParams {
   // When set, replaces the entity icon and the initials fallback with a fixed per-type icon.
   typeIcon?: TypeIconComponent;
+  iconSize?: number;
   getHref?: EntityHrefGetter;
 }
 

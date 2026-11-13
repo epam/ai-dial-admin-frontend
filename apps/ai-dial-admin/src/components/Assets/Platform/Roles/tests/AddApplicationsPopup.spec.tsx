@@ -2,19 +2,26 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { PickedEntity } from '@/src/components/Common/EntitySelectInput/models';
 import { ButtonsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import AddApplicationsPopup from '../AddApplicationsPopup';
 
 vi.mock('@/src/context/assets/AppsFolderContext', () => ({
   AppsFolderProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-// Stand-in for the applications tree: reports a selection through the multi-select callback.
+const PICKED: PickedEntity[] = [
+  { source: AssetSource.Public, name: 'public/a/1.0', path: 'public/a/1.0' },
+  { source: AssetSource.Platform, name: 'b' },
+];
+
+// Stand-in for the tabbed picker: reports a selection through the multi-source callback.
 vi.mock('@/src/components/Common/EntitySelectInput/EntitySelectManager', () => ({
-  default: ({ onChangeSelectedPaths }: { onChangeSelectedPaths?: (paths: string[]) => void }) => (
+  default: ({ onChangeSelectedEntities }: { onChangeSelectedEntities?: (entities: PickedEntity[]) => void }) => (
     <div>
-      <button onClick={() => onChangeSelectedPaths?.(['public/a/1.0', 'platform/b'])}>select-two</button>
-      <button onClick={() => onChangeSelectedPaths?.([])}>select-none</button>
+      <button onClick={() => onChangeSelectedEntities?.(PICKED)}>select-two</button>
+      <button onClick={() => onChangeSelectedEntities?.([])}>select-none</button>
     </div>
   ),
 }));
@@ -32,7 +39,7 @@ describe('AddApplicationsPopup', () => {
 
   const applyButton = () => screen.getByRole('button', { name: ButtonsI18nKey.Apply });
 
-  test('shows the applications tree under the add-applications header when open', () => {
+  test('shows the applications picker under the add-applications header when open', () => {
     renderPopup();
 
     expect(screen.getByText(RolesI18nKey.AddApplications)).toBeTruthy();
@@ -56,7 +63,7 @@ describe('AddApplicationsPopup', () => {
     expect(applyButton().hasAttribute('disabled')).toBe(true);
   });
 
-  test('hands the selected paths to onApply', async () => {
+  test('hands the selected entities, with their sources, to onApply', async () => {
     const user = userEvent.setup();
     renderPopup();
 
@@ -64,7 +71,7 @@ describe('AddApplicationsPopup', () => {
     await user.click(applyButton());
 
     expect(onApply).toHaveBeenCalledOnce();
-    expect(onApply).toHaveBeenCalledWith(['public/a/1.0', 'platform/b']);
+    expect(onApply).toHaveBeenCalledWith(PICKED);
   });
 
   test('discards the pick on cancel so the next open starts empty', async () => {

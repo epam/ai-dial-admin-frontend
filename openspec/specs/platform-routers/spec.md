@@ -7,9 +7,7 @@ directly through Core. A router is a deployment that picks the deployment servin
 mode; the view covers mode and decision settings, an optional app-type schema with its properties, and the shared
 interfaces editor. Core validates cross-entity rules and its message is surfaced verbatim. Created by archiving change
 `add-platform-routers`.
-
 ## Requirements
-
 ### Requirement: AI Gateway > Routers menu entry
 The system SHALL add a `Routers` menu item to the AI Gateway section of the admin menu, directly after
 `Toolsets` and before `Translators`, linking to a new `/platform-routers` route, with an icon distinct from
@@ -20,32 +18,28 @@ the AI Gateway group icon and from the `Routes` entry's icon.
 - **THEN** `Routers` appears immediately after `Toolsets` and before `Translators`
 
 ### Requirement: Router asset list is flat with create and delete actions
-The system SHALL render the router asset list with flat `platform` and synthetic `file` roots, built on the
-shared asset list. The `platform` root SHALL offer create, duplicate, delete, and bulk-delete actions and no
-create-folder, move, or rename action. The `file` root SHALL list config-file-defined routers and
-expose no mutating or folder action.
+The system SHALL render the router asset list with a flat Platform tab and a config.json tab, built on the
+shared tabbed listing. The Platform tab SHALL offer create (Create button), duplicate, and delete actions and no
+create-folder, move, or rename action. The config.json tab SHALL list config-file-defined routers and
+expose no mutating action.
 
 #### Scenario: List shows entries without a folder tree
 - **WHEN** a user opens `/platform-routers`
-- **THEN** all router resources are shown as direct entries with no folder-expand affordance
+- **THEN** all router resources are shown as direct grid rows with no folder-expand affordance
 
 #### Scenario: Create opens a modal with identity fields
-- **WHEN** a user activates the create action in the list toolbar
+- **WHEN** a user activates the Create button
 - **THEN** a modal opens requesting the router's id, display name, display version, and description, and submitting
   it creates the resource under `routers/platform/{name}` and navigates to its detail view
 
-#### Scenario: Bulk delete removes the selected routers
-- **WHEN** a user selects several routers and confirms bulk delete
-- **THEN** each selected router is deleted and the list refreshes without them
-
-#### Scenario: File root is read-only
-- **WHEN** a user opens the `file` root on `/platform-routers`
-- **THEN** config-file router names are listed and no create, delete, bulk-delete, duplicate, move,
+#### Scenario: config.json tab is read-only
+- **WHEN** a user opens the config.json tab on `/platform-routers`
+- **THEN** config-file router names are listed and no create, delete, duplicate, move,
   rename, or folder action is offered
 
 #### Scenario: A read-only admin is offered no mutating actions
 - **WHEN** a read-only admin opens the router asset list
-- **THEN** no create, delete, or bulk-delete action is offered
+- **THEN** no create or delete action is offered
 
 ### Requirement: Router asset list columns are metadata-only
 The system SHALL show name, author, created-at, and updated-at columns for router assets, all sourced from
@@ -215,3 +209,4 @@ validation errors for `mode`, the decision settings, and the schema picker, and 
 #### Scenario: Decision field errors are localized
 - **WHEN** a user enters an out-of-range `timeoutMs` or `maxDecisions`
 - **THEN** the field error text comes from i18n
+

@@ -121,41 +121,21 @@ describe('BaseAssetList', () => {
     });
   });
 
-  describe('getGridColumns — file roots', () => {
-    test.each([
-      [ApplicationRoute.PlatformModels, 'Name'],
-      [ApplicationRoute.PlatformCatalogSchemas, 'Name'],
-      [ApplicationRoute.PlatformAppRunners, 'Name'],
-      [ApplicationRoute.AssetsApplications, 'Name'],
-      [ApplicationRoute.AssetsToolsets, 'Name'],
-    ])('%s uses the asset name column labeled %s', (view, headerName) => {
-      const columns = resolveColumns(getGridColumns(view, 'file/'));
-
-      expect(columns).toHaveLength(1);
-      expect(columns[0]).toMatchObject({ colId: FileManagerColumnKey.Name, field: 'name', headerName });
-    });
-  });
-
-  describe('getGridColumns — dual-bucket views', () => {
+  describe('getGridColumns — public views', () => {
     test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-      '%s uses the flat platform-entity column set (no Version column) while browsing the platform bucket',
+      '%s keeps the Version column',
       (view) => {
-        const colIds = resolveColIds(getGridColumns(view, 'platform/'));
-
-        expect(colIds).not.toContain(FileManagerColumnKey.Version);
-        expect(colIds).toContain(FileManagerColumnKey.Name);
-        expect(colIds).toEqual(resolveColIds(getGridColumns(ApplicationRoute.PlatformKeys)));
+        expect(resolveColIds(getGridColumns(view))).toContain(FileManagerColumnKey.Version);
       },
     );
 
-    test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-      '%s keeps the existing Version column while browsing the public bucket',
+    test.each([ApplicationRoute.Skills, ApplicationRoute.Projects])(
+      '%s uses the metadata-only column set with no Version column',
       (view) => {
-        const withPublicPath = resolveColIds(getGridColumns(view, 'public/'));
-        const withoutPath = resolveColIds(getGridColumns(view));
+        const colIds = resolveColIds(getGridColumns(view));
 
-        expect(withPublicPath).toContain(FileManagerColumnKey.Version);
-        expect(withPublicPath).toEqual(withoutPath);
+        expect(colIds).toContain(FileManagerColumnKey.Name);
+        expect(colIds).not.toContain(FileManagerColumnKey.Version);
       },
     );
   });
@@ -176,26 +156,7 @@ describe('BaseAssetList', () => {
     );
   });
 
-  describe('getGridColumns — PlatformTranslators', () => {
-    test('uses the flat platform-entity column set, matching its Catalog siblings', () => {
-      const colIds = resolveColIds(getGridColumns(ApplicationRoute.PlatformTranslators));
-
-      expect(colIds).not.toContain(FileManagerColumnKey.Version);
-      expect(colIds).toEqual(resolveColIds(getGridColumns(ApplicationRoute.PlatformKeys)));
-    });
-  });
-
   describe('policy records - nested platform views', () => {
-    test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
-      '%s uses the same metadata-only columns as the flat platform views',
-      (view) => {
-        const colIds = resolveColIds(getGridColumns(view, 'platform/'));
-
-        expect(colIds).not.toContain(FileManagerColumnKey.Version);
-        expect(colIds).toEqual(resolveColIds(getGridColumns(ApplicationRoute.PlatformKeys)));
-      },
-    );
-
     test('labels the file manager and its empty state', () => {
       const t = (key: string) => key;
 

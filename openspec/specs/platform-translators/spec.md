@@ -7,9 +7,7 @@ entirely from DIAL Core. Translators are flat platform resources with no folder 
 display-name field, no Roles tab, and no dependency on the admin backend. `in` and `out` select
 from the shared `DeploymentInterfaceType` values; Core validates the write and surfaces any
 rejection message verbatim. Created by archiving change `add-platform-translators`.
-
 ## Requirements
-
 ### Requirement: Catalog > Translators menu entry
 The system SHALL add a `Translators` menu item to the Catalog section of the admin menu, directly
 after `Interceptors`, linking to a new `/platform-translators` route.
@@ -19,37 +17,33 @@ after `Interceptors`, linking to a new `/platform-translators` route.
 - **THEN** `Translators` appears immediately after `Interceptors` and before `Routes`
 
 ### Requirement: Translator asset list is flat with create and delete actions
-The system SHALL render the translator asset list with flat `platform` and synthetic `file` roots, built on the shared asset list. The `platform` root SHALL retain create, delete, and bulk-delete actions; the `file` root SHALL list config-file-defined translators and expose no mutating or folder action.
+The system SHALL render the translator asset list with a flat Platform tab and a config.json tab, built on the shared tabbed listing. The Platform tab SHALL retain create (Create button) and delete actions; the config.json tab SHALL list config-file-defined translators and expose no mutating action.
 
 #### Scenario: List shows entries without a folder tree
 - **WHEN** a user opens `/platform-translators`
-- **THEN** all translator resources are shown as direct entries with no folder-expand affordance
+- **THEN** all translator resources are shown as direct grid rows with no folder-expand affordance
 
 #### Scenario: Translator resource list remains mutable
-- **WHEN** a user browses the `platform` root on `/platform-translators`
-- **THEN** create, delete, and bulk-delete actions remain available according to the user's permissions
+- **WHEN** a user browses the Platform tab on `/platform-translators`
+- **THEN** create and delete actions remain available according to the user's permissions
 
-#### Scenario: Translator file root is read-only
-- **WHEN** a user opens the `file` root on `/platform-translators`
-- **THEN** config-file translator names are listed and no create, delete, bulk-delete, duplicate, move, rename, or folder action is offered
+#### Scenario: Translator config.json tab is read-only
+- **WHEN** a user opens the config.json tab on `/platform-translators`
+- **THEN** config-file translator names are listed and no create, delete, duplicate, move, rename, or folder action is offered
 
 #### Scenario: No create-folder, move, or duplicate action is present
-- **WHEN** a user opens the translator asset list toolbar and row actions
+- **WHEN** a user opens the translator asset list header and row actions
 - **THEN** no create-folder, move-to-folder, or duplicate action is offered
 
 #### Scenario: Create action opens the translator create modal
-- **WHEN** a user activates the create action in the list toolbar
+- **WHEN** a user activates the Create button
 - **THEN** a modal opens requesting only the translator's name — no display name or description
   field, since `Translator` has neither — and submitting it creates the resource and navigates to its
   detail view
 
-#### Scenario: Bulk delete removes the selected translators
-- **WHEN** a user selects several translators and confirms bulk delete
-- **THEN** each selected translator is deleted and the list refreshes without them
-
 #### Scenario: A read-only admin is offered no mutating actions
 - **WHEN** a read-only admin opens the translator asset list
-- **THEN** no create, delete, or bulk-delete action is offered
+- **THEN** no create or delete action is offered
 
 ### Requirement: Translator asset list columns are metadata-only
 The system SHALL show name, author, created-at, and updated-at columns for translator assets, all
