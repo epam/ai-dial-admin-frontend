@@ -9,7 +9,6 @@ export interface OrgUnitsContextType {
   /** Units keyed by normalised `folder`. */
   units: Record<string, OrgUnit>;
   unitsStatus: OrgUnitsStatus;
-  groupClaim: string;
   /** Loads the units on first call only; later calls are no-ops until `refreshUnits`. */
   ensureUnits: () => void;
   refreshUnits: () => Promise<void>;
@@ -18,14 +17,11 @@ export interface OrgUnitsContextType {
 
 const OrgUnitsContext = createContext<OrgUnitsContextType | undefined>(undefined);
 
-const DEFAULT_GROUP_CLAIM = 'groups';
-
 interface Props {
   children: ReactNode;
-  groupClaim?: string;
 }
 
-export const OrgUnitsProvider = ({ children, groupClaim = DEFAULT_GROUP_CLAIM }: Props) => {
+export const OrgUnitsProvider = ({ children }: Props) => {
   const [units, setUnits] = useState<Record<string, OrgUnit>>({});
   const [unitsStatus, setUnitsStatus] = useState(OrgUnitsStatus.IDLE);
   const hasRequestedUnits = useRef(false);
@@ -58,8 +54,8 @@ export const OrgUnitsProvider = ({ children, groupClaim = DEFAULT_GROUP_CLAIM }:
   const getOwningUnit = useCallback((path: string) => findOwningUnit(units, path), [units]);
 
   const value = useMemo(
-    () => ({ units, unitsStatus, groupClaim, ensureUnits, refreshUnits, getOwningUnit }),
-    [units, unitsStatus, groupClaim, ensureUnits, refreshUnits, getOwningUnit],
+    () => ({ units, unitsStatus, ensureUnits, refreshUnits, getOwningUnit }),
+    [units, unitsStatus, ensureUnits, refreshUnits, getOwningUnit],
   );
 
   return <OrgUnitsContext.Provider value={value}>{children}</OrgUnitsContext.Provider>;
