@@ -217,3 +217,5 @@ export const ENTITY_BLOCKS: Partial<Record<ApplicationRoute, EntityBlock[]>> = {
 
 /** The views whose rows carry a price, and so the only ones that offer cost. */
 export const PRICED_VIEWS: UsageView[] = [UsageView.Llm];
+
+export const DONUT_LEGEND_ROWS_PER_COLUMN = 6;

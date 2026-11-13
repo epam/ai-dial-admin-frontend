@@ -29,6 +29,7 @@ sub-capability; open the one row that answers the question rather than reading t
 | `analytics/dashboards` | The Dashboards page over the usage log — how it is reached, its requests, Compare, KPI row, heatmap, share donut, breakdown table |
 | `analytics/custom-dashboards` | User-built dashboards of saved-query widgets — the flag, dashboard and widget model, view and edit modes, the grid, the shared time range, composite SQL widgets |
 | `analytics/config-transfer` | Moving the catalog between environments — the Analytics scope of Export Config, table and pipeline selection, the export preview, the bundle download |
+| `analytics/app-routes` | The instance allowlist of application routes an enrichment pipeline may call — the pair, where it is edited and stored, its validation, how a refused write is reported |
 ## Requirements
 ### Requirement: ANALYTICS_ENABLED feature flag is surfaced on FeatureFlags
 

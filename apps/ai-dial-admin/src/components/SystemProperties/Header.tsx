@@ -14,6 +14,7 @@ interface Props {
   isScheduleValid: boolean;
   isCostObjectInvalid: boolean;
   isSessionsSourceInvalid?: boolean;
+  isEnrichmentRoutesInvalid?: boolean;
   isAnalyticsEnabled?: boolean;
   disableSave?: boolean;
   onSave?: () => void;
@@ -27,6 +28,7 @@ const Header: FC<Props> = ({
   isScheduleValid,
   isCostObjectInvalid,
   isSessionsSourceInvalid,
+  isEnrichmentRoutesInvalid,
   isAnalyticsEnabled,
   disableSave,
   onSave,
@@ -39,7 +41,8 @@ const Header: FC<Props> = ({
     const isInvalid =
       (tab.id === EntityViewTab.RateLimitSchedule && !isScheduleValid) ||
       (tab.id === EntityViewTab.SpendingLimits && isCostObjectInvalid) ||
-      (tab.id === EntityViewTab.SessionsSource && isSessionsSourceInvalid);
+      (tab.id === EntityViewTab.SessionsSource && isSessionsSourceInvalid) ||
+      (tab.id === EntityViewTab.EnrichmentRoutes && isEnrichmentRoutesInvalid);
     const statusProps = getTabStatusProps(t, isInvalid ? TabStatus.Error : undefined);
     // Tabs appends the status label directly to the tab name for assistive technology.
     return {

@@ -275,7 +275,8 @@ after Approve and after Revoke.
 
 ### Requirement: Approve and re-approve confirmation
 Pressing `Approve` or `Re-Approve` SHALL open a confirmation with the header "Approve declared resources
-dependencies?", the text "The application will act on the calling user's behalf for the declared
+dependencies?", which SHALL be fully visible without hover, wrapping when needed, the text "The application
+will act on the calling user's behalf for the declared
 targets, for every user whose own reach covers them. The approval covers exactly the saved declaration
 below - any change to it requires re-approval.", the list of the **saved** targets (with rights), and
 `Cancel` / `Approve` buttons. Confirming SHALL call Core's grant endpoint, then re-fetch status.

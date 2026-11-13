@@ -54,13 +54,39 @@ export const stripEmptyUpstreamSecrets = (upstreams?: DialModelEndpoint[]): Dial
 };
 
 /**
+ * The saved upstream an edited one corresponds to, mirroring how Core restores an omitted secret:
+ * by endpoint first, then by index.
+ *
+ * Index alone breaks once an upstream is deleted and the rest shift. The index fallback is a rename in
+ * place (the editor updates an upstream at a fixed index — `UpstreamEndpoints.onUpdateEndPoint`), so it
+ * applies only while the saved upstream at that index is not itself still present under its own
+ * endpoint. Beyond the original length is an addition, which has no stored secret to lose.
+ */
+export const findOriginalUpstream = (
+  original: DialModelEndpoint[] | undefined,
+  edited: DialModelEndpoint[] | undefined,
+  index: number,
+): DialModelEndpoint | undefined => {
+  const endpoint = edited?.[index]?.endpoint;
+  const matched = endpoint ? original?.find((upstream) => upstream.endpoint === endpoint) : undefined;
+
+  if (matched) {
+    return matched;
+  }
+
+  const atIndex = original?.[index];
+
+  return atIndex && !edited?.some((upstream) => upstream.endpoint && upstream.endpoint === atIndex.endpoint)
+    ? atIndex
+    : undefined;
+};
+
+/**
  * Endpoints whose secret cannot survive the write: Core looks the stored secret up by endpoint, so
  * renaming one while leaving its secrets blank silently drops the credential.
  *
- * Paired by index rather than by set membership, because the editor updates an upstream in place at a
- * fixed index (`UpstreamEndpoints.onUpdateEndPoint`). Set membership cannot tell a rename from a
- * remove-plus-add, so it flagged every newly added upstream — which never had a secret to lose.
- * Only indices that existed before the edit can lose anything.
+ * Set membership alone cannot tell a rename from a remove-plus-add, so it flagged every newly added
+ * upstream — which never had a secret to lose; see `findOriginalUpstream` for the pairing.
  */
 export const getUpstreamsLosingSecret = (
   original?: DialModelEndpoint[],
@@ -71,9 +97,8 @@ export const getUpstreamsLosingSecret = (
   }
 
   return edited.filter((upstream, index) => {
-    const previous = original[index];
+    const previous = findOriginalUpstream(original, edited, index);
 
-    // Beyond the original length is an addition, which has no stored secret to lose.
     if (!previous || !upstream.endpoint || previous.endpoint === upstream.endpoint) {
       return false;
     }

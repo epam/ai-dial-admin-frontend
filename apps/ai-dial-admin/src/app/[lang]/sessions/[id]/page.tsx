@@ -6,6 +6,7 @@ import SessionsSourceError from '@/src/components/Analytics/SessionsTrace/Sessio
 import Page403 from '@/src/components/Page403/Page403';
 import {
   ColumnProvenance,
+  EnrichmentDefinition,
   SessionDetailRow,
   SessionEnrichmentPanel,
   SessionFeedbackPage,
@@ -20,7 +21,7 @@ import { errorObjLog } from '@/src/server/logger';
 import { enrichmentProvenance, sessionFields } from '@/src/utils/analytics/session-column-catalog';
 import { enrichmentPanelsOf } from '@/src/utils/analytics/session-insights';
 import {
-  getEnrichmentTagOrders,
+  getEnrichmentDefinitions,
   getHopBodyGrants,
   getSessionDetail,
   getSessionFeedback,
@@ -65,16 +66,16 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   }
 
   try {
-    const [schema, tagOrders, detail, availability] = await Promise.all([
+    const [schema, definitions, detail, availability] = await Promise.all([
       // A rejected schema read must cost the optional panels, not the page: the detail query is built from the
       // schema on the server and resolves the required fields without it.
       getSessionsSchema().catch((e): ServerActionResponse<AnalyticsEntitySchema> => {
         errorObjLog(e, 'Failed to fetch the sessions entity schema');
         return { success: false };
       }),
-      getEnrichmentTagOrders(source.enrichments.filter((namespace) => namespace !== source.ratingEnrichment)).catch(
-        (e): Record<string, string[]> => {
-          errorObjLog(e, 'Failed to read the enrichment tag orders');
+      getEnrichmentDefinitions(source.enrichments.filter((namespace) => namespace !== source.ratingEnrichment)).catch(
+        (e): Record<string, EnrichmentDefinition> => {
+          errorObjLog(e, 'Failed to read the enrichment definitions');
           return {};
         },
       ),
@@ -90,7 +91,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       errorObjLog(schema, 'Failed to fetch the sessions entity schema');
     }
 
-    enrichmentPanels = enrichmentPanelsOf(schemaFields, tagOrders);
+    enrichmentPanels = enrichmentPanelsOf(schemaFields, definitions, source.title);
     panelProvenance = Object.fromEntries(
       enrichmentPanels.map(({ namespace }) => [namespace, enrichmentProvenance(namespace, schemaFields)]),
     );

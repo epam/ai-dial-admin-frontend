@@ -8,9 +8,9 @@ import { ColDef } from 'ag-grid-community';
 import { ROW_DELTAS_FIELD } from '@/src/components/Analytics/CustomDashboards/constants';
 import { resolveChartAxes } from '@/src/components/Analytics/CustomDashboards/utils/chart-axes';
 import { getWidgetTableColumns } from '@/src/components/Analytics/CustomDashboards/utils/widget-table';
+import { getCategoryColumn } from '@/src/components/Analytics/CustomDashboards/utils/widget-views';
 import {
   buildRowDeltas,
-  buildShareFigure,
   getBucketWidthMs,
   toTimedValues,
 } from '@/src/components/Analytics/CustomDashboards/utils/widget-view-options';
@@ -19,9 +19,10 @@ import { formatCardFigure, formatFullFigure } from '@/src/components/Analytics/C
 import BreakdownGrid from '@/src/components/Analytics/Usage/Breakdown/BreakdownGrid';
 import MeasureCell, { MeasureCellParams } from '@/src/components/Analytics/Usage/Breakdown/cells/MeasureCell';
 import DonutFigure from '@/src/components/Analytics/Usage/Charts/DonutFigure';
+import { buildShareFigure } from '@/src/components/Analytics/Usage/utils/share-figure';
 import UsageEmptyState from '@/src/components/Analytics/Usage/Empty/UsageEmptyState';
 import HeatmapWeekGrid, { formatHeatmapDayLabel } from '@/src/components/Analytics/Usage/Charts/HeatmapWeekGrid';
-import { DONUT_SIZE } from '@/src/components/Analytics/Usage/constants';
+import { WidgetPieLayout } from '@/src/components/Analytics/CustomDashboards/models';
 import { buildValueTimeSeriesOptions, formatChartNumber } from '@/src/components/Analytics/Usage/utils/chart-options';
 import { formatBucketLabel, formatBucketRange } from '@/src/components/Analytics/Usage/utils/format';
 import { buildValueHeatmapMatrix } from '@/src/components/Analytics/Usage/utils/heatmap';
@@ -36,12 +37,20 @@ import {
 } from '@/src/components/Analytics/QueryBuilder/Result/result-column-format';
 import ResultValueCell from '@/src/components/Analytics/QueryBuilder/Result/ResultValueCell';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { CHART_TYPE_BY_WIDGET_VIEW } from '@/src/constants/analytics/dashboards';
+import { CHART_SLOT_DESCRIPTORS } from '@/src/constants/analytics/query-builder';
 import { CustomDashboardsI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useChartColors } from '@/src/hooks/use-chart-colors';
 import { useI18n } from '@/src/locales/client';
 import { WidgetQuerySource, WidgetValueFormat, WidgetView } from '@/src/models/analytics/dashboard';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
-import { ChartConfig, ChartType, ExecutedQueryMeta, QueryResultView } from '@/src/models/analytics/query-builder';
+import {
+  ChartColumnSource,
+  ChartConfig,
+  ChartType,
+  ExecutedQueryMeta,
+  QueryResultView,
+} from '@/src/models/analytics/query-builder';
 import { TimeRange } from '@/src/models/time-range';
 
 interface Props {
@@ -58,6 +67,7 @@ interface Props {
   currency?: string;
   // Colours a table figure's change; Single value widgets take theirs from the same setting.
   isRiseGood: boolean;
+  pieLayout: WidgetPieLayout;
 }
 
 const COMPARED_COLUMN_MIN_WIDTH = 200;
@@ -65,15 +75,22 @@ const COMPARED_COLUMN_MIN_WIDTH = 200;
 // A result row carrying its changes against the compared window, keyed by aggregate column.
 type ComparedRow = Record<string, unknown> & { id: string; [ROW_DELTAS_FIELD]?: Record<string, number | null> };
 
-const toChartConfig = (savedQuery: WidgetQuerySource): ChartConfig => ({
-  type: savedQuery.chart?.type ?? ChartType.Bar,
-  xField: savedQuery.chart?.x_field ?? null,
-  yFields: readChartYFields(savedQuery.chart?.y_field),
-});
+const toChartConfig = (savedQuery: WidgetQuerySource, view: WidgetView, meta: ExecutedQueryMeta): ChartConfig => {
+  const type = CHART_TYPE_BY_WIDGET_VIEW[view] ?? savedQuery.chart?.type ?? ChartType.Bar;
+  if (view === WidgetView.Query || savedQuery.chart?.type === type) {
+    return { type, xField: savedQuery.chart?.x_field ?? null, yFields: readChartYFields(savedQuery.chart?.y_field) };
+  }
+  const descriptor = CHART_SLOT_DESCRIPTORS[type];
+  if (descriptor.xSource !== ChartColumnSource.Dimensions) return { type, xField: null, yFields: null };
+  const xField = getCategoryColumn(meta) ?? null;
+  const yFields = descriptor.isMultiY ? meta.aggregateColumns.filter((column) => column !== xField) : null;
+  return { type, xField, yFields };
+};
 
 /**
  * A result in the widget's view, read-only: the editor's view toggle and chart pickers are absent. The query's
- * own view follows the saved query's table or chart; the others read its first dimension and first aggregate.
+ * own view follows the saved query's table or chart; a chart view draws every aggregate it can as a series,
+ * the usage views read the first dimension and first aggregate.
  */
 const WidgetResult: FC<Props> = ({
   savedQuery,
@@ -86,15 +103,26 @@ const WidgetResult: FC<Props> = ({
   valueFormat,
   currency,
   isRiseGood,
+  pieLayout,
 }) => {
   const t = useI18n();
   const colors = useChartColors();
-  const isChart = view === WidgetView.Query && savedQuery.result_view === QueryResultView.Chart;
+  const isQueryChart = view === WidgetView.Query && savedQuery.result_view === QueryResultView.Chart;
+  const isPieQuery = isQueryChart && savedQuery.chart?.type === ChartType.Pie;
+  const isChart = (isQueryChart && !isPieQuery) || !!CHART_TYPE_BY_WIDGET_VIEW[view];
   const [dimension] = meta.dimensionColumns;
   const [aggregate] = meta.aggregateColumns;
+  const categoryColumn = getCategoryColumn(meta);
+
+  const shareColumns = useMemo(() => {
+    if (view === WidgetView.Share) return { category: categoryColumn, value: aggregate };
+    if (!isPieQuery) return null;
+    const { xField, yFields } = resolveChartAxes(toChartConfig(savedQuery, WidgetView.Query, meta), result, meta);
+    return xField && yFields.length ? { category: xField, value: yFields[0] } : null;
+  }, [view, categoryColumn, aggregate, isPieQuery, savedQuery, result, meta]);
 
   // A table compares as the usage breakdown does: each figure carries its change against the matching row.
-  const isTableCompared = !!previousResult && !isChart && view !== WidgetView.SingleValue;
+  const isTableCompared = !!previousResult && !isQueryChart && !isChart && view !== WidgetView.SingleValue;
   // The figure each compared column shows, keyed by column; it also sizes the column's ruler below.
   const figureFormats = useMemo(() => {
     const formats: Record<string, (row: ComparedRow) => string> = {};
@@ -143,8 +171,8 @@ const WidgetResult: FC<Props> = ({
   }, [isTableCompared, previousResult, result.rows, meta.dimensionColumns, meta.aggregateColumns]);
 
   const chartOptions = useMemo(() => {
-    if (!isChart || !meta.dimensionColumns.length || !meta.aggregateColumns.length) return null;
-    const config = toChartConfig(savedQuery);
+    if (!isChart) return null;
+    const config = toChartConfig(savedQuery, view, meta);
     const { xField, yFields } = resolveChartAxes(config, result, meta);
     if (!xField || !yFields.length) return null;
     return buildChartOptions(config.type, result.rows, xField, yFields, {
@@ -154,7 +182,7 @@ const WidgetResult: FC<Props> = ({
       emptyLabel: t(QueryBuilderI18nKey.ChartEmptyCategory),
       columnLabels: meta.columnLabels,
     });
-  }, [isChart, savedQuery, result, meta, colors, t]);
+  }, [isChart, savedQuery, view, result, meta, colors, t]);
 
   const timeSeriesOptions = useMemo(() => {
     if (view !== WidgetView.TimeSeries) return null;
@@ -194,19 +222,18 @@ const WidgetResult: FC<Props> = ({
 
   const share = useMemo(
     () =>
-      view === WidgetView.Share
-        ? buildShareFigure(
-            colors,
-            result.rows,
-            dimension,
-            aggregate,
-            t(QueryBuilderI18nKey.ChartOtherSlice),
-            (value) => formatFullFigure(value, valueFormat, currency),
-            t(QueryBuilderI18nKey.ChartEmptyCategory),
-          )
+      shareColumns
+        ? buildShareFigure(colors, result.rows, shareColumns.category, shareColumns.value, {
+            otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
+            sliceCount: pieLayout.sliceCount,
+            formatValue: (value) => formatFullFigure(value, valueFormat, currency),
+            emptyLabel: t(QueryBuilderI18nKey.ChartEmptyCategory),
+          })
         : null,
-    [view, colors, result.rows, dimension, aggregate, valueFormat, currency, t],
+    [shareColumns, colors, result.rows, pieLayout.sliceCount, valueFormat, currency, t],
   );
+
+  const shareCaption = shareColumns ? (meta.columnLabels[shareColumns.value] ?? shareColumns.value) : '';
 
   if (!result.rows.length) {
     return <UsageEmptyState title={t(CustomDashboardsI18nKey.WidgetEmpty)} className="size-full" />;
@@ -220,10 +247,9 @@ const WidgetResult: FC<Props> = ({
         <DonutFigure
           slices={share.slices}
           centerValue={`${total.value}${total.unit ?? ''}`}
-          centerCaption={meta.columnLabels[aggregate] ?? aggregate}
-          size={DONUT_SIZE}
-          // A wide widget would stretch the legend until a name and its figure sit a screen apart.
-          legendClassName="max-w-[360px]"
+          centerCaption={shareCaption}
+          size={pieLayout.donutSize}
+          legendRowsPerColumn={pieLayout.legendRowsPerColumn}
         />
       </div>
     );

@@ -20,6 +20,12 @@ All notable infrastructure-relevant changes to this project will be documented i
 - The Sessions pages read ratings from enrichments instead of the `response_ratings` table. An enrichment counts as a rating enrichment when it carries `rate_pos_count`, `rate_zero_count` and `rate_neg_count`; its name and how it is built are up to the instance. One on the Sessions base table (`sessions` by default) feeds the rating pills, the feedback filter and the Rating column; one on `dial_usage_log`, grained by `response_id`, feeds the span and trace ratings and the feedback panel's list. Mark `comment_sample` sensitive and keep the counts non-sensitive, as in `response_ratings`. Without them the ratings are hidden rather than failing
 - The Sessions source — the base table and the fields that play the session id, time, project, title, cost and turns roles — is set on a new `Sessions source` tab of System Properties and stored by the Analytics service under `/v1/settings/sessions-source`. Requires an Analytics service that serves that endpoint. Reading it needs `SETTINGS_READ`, which every read-only bundle carries; a `roles-mapping` that names raw privileges must add it, or the Sessions pages show an error instead of sessions. Saving needs `SETTINGS_WRITE` (`FULL_ADMIN`). Without a stored setting the pages use the default binding (`sessions`, `client_session_id`, `last_request_time`, `project_id`, `session_insights.title`, `total_price`, `turn_count`), so an instance that never saves it behaves as before. An instance with no stored setting and no `sessions` table hides the Sessions menu item until a table is saved on that tab
 
+### Removed
+
+#### Governance
+
+- `ORG_UNITS_GROUP_CLAIM` is no longer read. Role holders on an org unit are now added as a `Custom claim`, where the admin enters the claim name and value, so no deployment-level claim name is needed. Remove the variable from deployment values; if it is left in place it is ignored. Existing assignments on that claim keep working and show as `<claim>=<value>`
+
 ## 0.23.0
 
 ### Added

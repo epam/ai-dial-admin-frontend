@@ -37,7 +37,9 @@ Cross-suite average pass rate still has no deployment-scoped aggregate API.
 2. **Shared client tab component.** One component under `components/EvalTrendsTab`, mounted from
    Entities and Ai Gateway Models/Applications `TabsContent`, keyed by the entity’s deployment id
    (`getModelDeploymentId` for models; `getApplicationDeploymentId` for applications — public-bucket
-   apps use `applications/<path>`, platform/Entities apps use `name`). Query `test_suites` with OR
+   apps use `applications/<path>`, platform/Entities apps use `name`). Each path segment is
+   URI-encoded before the match, so a decoded metadata path lines up with the Core address stored
+   on the suite. Query `test_suites` with OR
    equality on `deployment_ref::id` and `mcp_deployment_ref::id`, sort by name, page through results
    so the dropdown is complete. List projection from `mapTestSuiteRow` is enough for `Trends`
    (needs `id`) and the source-kind label (suite type + refs).

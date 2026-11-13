@@ -17,9 +17,7 @@ const ROLES = [{ name: 'editor', description: 'Edits content' }, { name: 'viewer
 
 describe('UnitRolesCard', () => {
   const renderCard = (props: Partial<React.ComponentProps<typeof UnitRolesCard>> = {}) =>
-    render(
-      <UnitRolesCard roles={ROLES} holders={[]} groupClaim="groups" onAdd={vi.fn()} onRemove={vi.fn()} {...props} />,
-    );
+    render(<UnitRolesCard roles={ROLES} holders={[]} onAdd={vi.fn()} onRemove={vi.fn()} {...props} />);
 
   test('renders one labelled group per role in core order, including configured ones', () => {
     renderCard({ roles: [...ROLES, { name: 'files-reader' }] });
@@ -40,9 +38,9 @@ describe('UnitRolesCard', () => {
     });
 
     expect(screen.getByText('carol@acme.com')).toBeTruthy();
-    expect(screen.getByText('us-risk-analysts')).toBeTruthy();
+    expect(screen.getByText('groups=us-risk-analysts')).toBeTruthy();
     expect(screen.getByText(FoldersI18nKey.HolderEveryone, { selector: '[title]' })).toBeTruthy();
-    expect(screen.getByText('tenant = a')).toBeTruthy();
+    expect(screen.getByText('tenant=a')).toBeTruthy();
   });
 
   test('shows a section for a role core no longer lists but that still has holders', () => {
@@ -62,22 +60,78 @@ describe('UnitRolesCard', () => {
     expect(onRemove).toHaveBeenCalledWith(item.key);
   });
 
-  test('adds a group holder using the configured claim', async () => {
-    const user = userEvent.setup();
-    const onAdd = vi.fn();
-    renderCard({ onAdd, groupClaim: 'realm_access.roles' });
+  test('offers email, role, custom claim and everyone in that order, without group', () => {
+    renderCard();
     const editor = within(screen.getByRole('group', { name: 'editor' }));
 
-    await user.click(editor.getByRole('radio', { name: FoldersI18nKey.HolderGroup }));
-    await user.type(editor.getByRole('textbox'), 'us-risk-analysts');
+    expect(editor.getAllByRole('radio').map((radio) => radio.getAttribute('aria-label'))).toEqual([
+      FoldersI18nKey.HolderPerson,
+      FoldersI18nKey.HolderRole,
+      FoldersI18nKey.HolderClaim,
+      FoldersI18nKey.HolderEveryone,
+    ]);
+  });
+
+  test('shows one input for email and role and two for a custom claim', async () => {
+    const user = userEvent.setup();
+    renderCard();
+    const editor = within(screen.getByRole('group', { name: 'editor' }));
+
+    expect(editor.getAllByRole('textbox')).toHaveLength(1);
+    await user.click(editor.getByRole('radio', { name: FoldersI18nKey.HolderRole }));
+    expect(editor.getAllByRole('textbox')).toHaveLength(1);
+    await user.click(editor.getByRole('radio', { name: FoldersI18nKey.HolderClaim }));
+    expect(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimKey })).toBeTruthy();
+    expect(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue })).toBeTruthy();
+  });
+
+  test('adds a custom claim from the trimmed key and value, then clears both inputs', async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    renderCard({ onAdd });
+    const editor = within(screen.getByRole('group', { name: 'editor' }));
+
+    await user.click(editor.getByRole('radio', { name: FoldersI18nKey.HolderClaim }));
+    await user.type(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimKey }), ' realm_access.roles ');
+    expect(editor.getByRole('button', { name: ButtonsI18nKey.Add })).toBeDisabled();
+    await user.type(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue }), ' analysts ');
     await user.click(editor.getByRole('button', { name: ButtonsI18nKey.Add }));
 
     expect(onAdd).toHaveBeenCalledWith('editor', {
       type: 'claimsPredicate',
       source: 'realm_access.roles',
       function: OrgUnitSubjectFunction.EQUAL,
-      targets: ['us-risk-analysts'],
+      targets: ['analysts'],
     });
+    expect(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimKey })).toHaveValue('');
+    expect(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue })).toHaveValue('');
+  });
+
+  test.each(['email', 'roles', 'sub'])('refuses the reserved claim name %s', async (key) => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    renderCard({ onAdd });
+    const editor = within(screen.getByRole('group', { name: 'editor' }));
+
+    await user.click(editor.getByRole('radio', { name: FoldersI18nKey.HolderClaim }));
+    await user.type(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimKey }), key);
+    await user.type(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue }), 'v');
+
+    expect(editor.getByText(FoldersI18nKey.HolderClaimKeyReserved)).toBeTruthy();
+    expect(editor.getByRole('button', { name: ButtonsI18nKey.Add })).toBeDisabled();
+    expect(onAdd).not.toHaveBeenCalled();
+  });
+
+  test('accepts a reserved name in another case', async () => {
+    const user = userEvent.setup();
+    renderCard();
+    const editor = within(screen.getByRole('group', { name: 'editor' }));
+
+    await user.click(editor.getByRole('radio', { name: FoldersI18nKey.HolderClaim }));
+    await user.type(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimKey }), 'Email');
+    await user.type(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue }), 'v');
+
+    expect(editor.getByRole('button', { name: ButtonsI18nKey.Add })).toBeEnabled();
   });
 
   test('keeps Add disabled for a blank value', () => {
@@ -107,5 +161,16 @@ describe('UnitRolesCard', () => {
 
     expect(screen.queryByRole('button', { name: FoldersI18nKey.RemoveHolder })).toBeNull();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).toBeNull();
+  });
+
+  test('shows a custom claim chip without remove or add controls when read-only', () => {
+    renderCard({
+      isReadonly: true,
+      holders: [holder('editor', 'department', OrgUnitSubjectFunction.EQUAL, ['risk'])],
+    });
+
+    expect(screen.getByText('department=risk')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: FoldersI18nKey.RemoveHolder })).toBeNull();
+    expect(screen.queryByRole('textbox')).toBeNull();
   });
 });

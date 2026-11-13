@@ -194,12 +194,17 @@ export const useSessionsSource = (isActive: boolean) => {
     setCurrentSetting(initialSetting);
   }, [initialSetting]);
 
+  const isUnsaved = !isLoading && !isReadFailed && !savedSetting;
+  const isUsingDefaults =
+    isUnsaved && !isDefaultTableMissing && isEqual(currentSetting, DEFAULT_SESSIONS_SOURCE_SETTING);
+
   return {
     setting: currentSetting,
     tables: tableOptions,
     fields: schemas[baseTable],
     isLoading,
-    isUnsaved: !isLoading && !isReadFailed && !savedSetting,
+    isUnsaved,
+    isUsingDefaults,
     isDefaultTableMissing,
     isChanged,
     isComplete,

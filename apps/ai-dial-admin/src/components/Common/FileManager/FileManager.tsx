@@ -44,6 +44,7 @@ import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
+import { shouldRestoreFolderHierarchy } from '@/src/utils/files/folder-hierarchy';
 import {
   getRootFolder,
   getRootFolders,
@@ -139,6 +140,7 @@ const FileManager: FC<Props> = ({
   const {
     files,
     fetchFiles,
+    fetchFolderHierarchy,
     isFetchingFiles,
     filePath,
     setFilePath,
@@ -168,6 +170,15 @@ const FileManager: FC<Props> = ({
     onColumnVisible,
     onColumnResized,
   } = useGridStatePersistence({ storageKey: view, columnDefs, gridApi, ...FILE_MANAGER_GRID_PERSISTENCE });
+
+  // A filter typed in one folder would hide the contents of the next one, whichever way the user got there.
+  useEffect(() => {
+    if (Object.keys(gridApi?.getFilterModel() ?? {}).length > 0) {
+      gridApi?.setFilterModel(null);
+    }
+    // Only a path change clears; a grid that appears later has nothing to clear.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filePath]);
 
   useEffect(() => {
     ensureUnits();
@@ -200,7 +211,12 @@ const FileManager: FC<Props> = ({
   useEffect(() => {
     if (files == null || files?.length === 0) {
       const rootPaths = getRootFolders(view, isPlatformBucketEnabled, !isUnitMode).map((root) => `${root}/`);
-      fetchFiles(rootPaths.length > 1 ? rootPaths : rootPaths[0]);
+      // A selection that outlived the tree (back from a details page) needs its chain, not just the roots.
+      if (fetchFolderHierarchy && shouldRestoreFolderHierarchy(filePath, fetchedFoldersData)) {
+        fetchFolderHierarchy(filePath, true);
+      } else {
+        fetchFiles(rootPaths.length > 1 ? rootPaths : rootPaths[0]);
+      }
       setLoadedPaths(new Set(rootPaths));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

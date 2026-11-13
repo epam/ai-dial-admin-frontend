@@ -39,7 +39,7 @@ interface Props {
  * - Endpoints: otherwise (default).
  */
 const getInitialSource = (entity: DialApplicationResource, codeAppEditorUrl?: string): string => {
-  if (!!codeAppEditorUrl && entity.endpoint === codeAppEditorUrl && entity.editor_url === codeAppEditorUrl) {
+  if (!!codeAppEditorUrl && entity.editor_url === codeAppEditorUrl) {
     return CODE_APP_SOURCE_TYPE;
   }
   if (entity.application_type_schema_id) {

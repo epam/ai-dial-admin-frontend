@@ -16,6 +16,7 @@ import {
 } from '@/src/components/Analytics/CustomDashboards/models';
 import { getCurrencySymbol } from '@/src/components/Analytics/CustomDashboards/utils/value-format';
 import { getInitialRowLimit, parseRowCount } from '@/src/components/Analytics/CustomDashboards/utils/row-count';
+import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { WIDGET_CURRENCIES, WIDGET_VIEW_LABEL_KEY } from '@/src/constants/analytics/dashboards';
@@ -63,7 +64,8 @@ const WidgetSettingsModal: FC<Props> = ({
   onClose,
 }) => {
   const t = useI18n();
-  const [settings, setSettings] = useState<WidgetSettings>(initial);
+  const [formattedInitialSql] = useState(() => formatSql(initial.sql));
+  const [settings, setSettings] = useState<WidgetSettings>(() => ({ ...initial, sql: formattedInitialSql }));
   const [isRowCountTouched, setIsRowCountTouched] = useState(false);
   const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([]);
   // The views whose change badge takes a colour; a compared line is drawn neutral.
@@ -117,7 +119,11 @@ const WidgetSettingsModal: FC<Props> = ({
   const picked = savedQueries.find((query) => query.id === settings.savedQueryId);
   const isPickedCopied = isDashboardPublic && !isSql && picked?.scope === SavedQueryScope.Personal;
   const previewQuery: Pick<WidgetQuerySource, 'sql' | 'query'> = (isQueryPickable ? picked : previewSource) ?? {};
-  const preview = isSql ? '' : formatQueryPreview(previewQuery);
+  const { sql: previewSql, query: previewBody } = previewQuery;
+  const preview = useMemo(
+    () => (isSql ? '' : formatQueryPreview({ sql: previewSql && formatSql(previewSql), query: previewBody })),
+    [isSql, previewSql, previewBody],
+  );
   const previewLabel = t(CustomDashboardsI18nKey.QueryPreview);
   const previewEditorOptions = useMemo(
     (): editor.IStandaloneEditorConstructionOptions => ({
@@ -173,7 +179,7 @@ const WidgetSettingsModal: FC<Props> = ({
         ...settings,
         title: settings.title.trim(),
         description: settings.description.trim(),
-        sql: settings.sql.trim(),
+        sql: settings.sql === formattedInitialSql ? initial.sql : settings.sql.trim(),
       },
       rowLimit,
       isSql ? undefined : picked,

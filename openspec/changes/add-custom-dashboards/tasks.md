@@ -69,6 +69,14 @@
 - [x] 11.6 Run the `spec-browser-verify` skill against the local stack with the service's dashboards endpoints, for the scenarios that write or read a dashboard, and resolve every `fail`
 - [x] 11.7 Run `npm run lint`, `npm run format`, `npm run typecheck`, `npm run typecheck:specs` and `npm run test` and fix every failure
 
+## 12. Widget polish
+
+- [x] 12.1 Offer `Refresh` on a custom dashboard, re-running every widget once and disabled while any widget loads, with a preset period recomputed from now, with tests
+- [x] 12.2 Show a widget's description on one line with an ellipsis and its full text on hover, and put a widget's info hint directly beside its title, with tests
+- [x] 12.3 Open a widget's SQL statement and the saved-query preview formatted, with tests
+- [x] 12.4 Extract the chart types a result fits into one method shared by the query page and the widget, with tests
+- [x] 12.5 Offer Bar, Line and Scatter chart views on a widget, name the usage donut Pie chart and let it read a composite SQL result, kept in the widget's `settings.chart`; offer the query's own view only for a referenced saved query keeping a view; read a composite SQL result by its values, with tests
+
 ## 8. Browser verification
 
 - [x] 8.1 Run the `spec-browser-verify` skill for this change against the local stack booted with `ANALYTICS_ENABLED`, `ANALYTICS_USAGE_ENABLED` and `ANALYTICS_CUSTOM_DASHBOARDS_ENABLED` truthy and auth disabled; it builds a VerificationRequest from the change's scenarios and runs them through the `spec-verification-gate` sub-agent. Resolve every `fail` verdict before the change is complete; flag-off scenarios stay covered by the unit and component tests

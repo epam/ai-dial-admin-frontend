@@ -727,6 +727,7 @@ export interface SpanFieldDescriptor {
   label: string;
   type: AnalyticsFieldType;
   tag: string;
+  description?: string;
 }
 
 export interface SpanObjectEntry {
@@ -741,6 +742,7 @@ export interface SpanFactRowProps {
   valueClassName?: string;
   // What the row's copy control puts on the clipboard. Absent where there is nothing to copy.
   copyText?: string;
+  hint?: string;
 }
 
 export interface SpanFieldGroup {
@@ -1095,7 +1097,6 @@ export interface SessionFieldDefinition {
 
 export interface SessionPanelFrame {
   panel: SessionDetailPanel;
-  sourceEntity: string;
   provenance: ColumnProvenance;
   labelKey: string;
 }
@@ -1146,14 +1147,16 @@ export interface SessionInsightField {
   tag?: string;
 }
 
-export interface SessionEnrichmentGroup {
-  tag: string;
-  fields: SessionInsightField[];
-}
-
 export interface SessionEnrichmentPanel {
   namespace: string;
   title: string;
+  description?: string;
+  summary?: SessionInsightField;
   fields: SessionInsightField[];
-  groups: SessionEnrichmentGroup[];
+  groups: SpanFieldGroup[];
+}
+
+export interface EnrichmentDefinition {
+  tagOrder: string[];
+  description?: string;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { getUpstreamsLosingSecret, stripEmptyUpstreamSecrets } from '../upstream-secrets';
+import { findOriginalUpstream, getUpstreamsLosingSecret, stripEmptyUpstreamSecrets } from '../upstream-secrets';
 
 describe('Models Utils :: stripEmptyUpstreamSecrets', () => {
   test('Should remove an empty key entirely, not send it as an empty string', () => {
@@ -124,5 +124,27 @@ describe('Models Utils :: getUpstreamsLosingSecret', () => {
 
   test('Should ignore an entry with no endpoint, which cannot route anyway', () => {
     expect(getUpstreamsLosingSecret([{ endpoint: 'http://old' }], [{ key: '' }])).toEqual([]);
+  });
+
+  test('Should not flag remaining upstreams after one before them was deleted', () => {
+    const original = [{ endpoint: 'http://a' }, { endpoint: 'http://b' }, { endpoint: 'http://c' }];
+
+    expect(getUpstreamsLosingSecret(original, original.slice(1))).toEqual([]);
+  });
+});
+
+describe('Models Utils :: findOriginalUpstream', () => {
+  const original = [{ endpoint: 'http://a' }, { endpoint: 'http://b' }];
+
+  test('Should match by endpoint when indexes have shifted', () => {
+    expect(findOriginalUpstream(original, [{ endpoint: 'http://b' }], 0)).toBe(original[1]);
+  });
+
+  test('Should fall back to the index for a renamed upstream', () => {
+    expect(findOriginalUpstream(original, [{ endpoint: 'http://a2' }, { endpoint: 'http://b' }], 0)).toBe(original[0]);
+  });
+
+  test('Should return nothing for an addition', () => {
+    expect(findOriginalUpstream(original, [...original, { endpoint: 'http://new' }], 2)).toBeUndefined();
   });
 });

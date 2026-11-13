@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import Page from '@/src/app/[lang]/sessions/[id]/page';
 import {
-  getEnrichmentTagOrders,
+  getEnrichmentDefinitions,
   getSessionDetail,
   getSessionFeedback,
   getHopBodyGrants,
@@ -52,7 +52,7 @@ const feedback = () => getSessionFeedback as unknown as ReturnType<typeof vi.fn>
 const schema = () => getSessionsSchema as unknown as ReturnType<typeof vi.fn>;
 const availability = () => getHopBodyGrants as unknown as ReturnType<typeof vi.fn>;
 const sourceOf = () => getSessionsSource as unknown as ReturnType<typeof vi.fn>;
-const tagOrders = () => getEnrichmentTagOrders as unknown as ReturnType<typeof vi.fn>;
+const definitions = () => getEnrichmentDefinitions as unknown as ReturnType<typeof vi.fn>;
 
 const SCHEMA_FIELDS = Object.keys(DETAIL_ROW).map((name) => ({ name, type: 'string', source: 'sessions' }));
 
@@ -78,7 +78,7 @@ beforeEach(() => {
     response: { rows: [], total: 0, isCommentTextReadable: false, isAvailable: true },
   });
   sourceOf().mockResolvedValue({ source: defaultSessionsSource(), failure: null });
-  tagOrders().mockResolvedValue({});
+  definitions().mockResolvedValue({});
   schema().mockResolvedValue({ success: true, response: { fields: SCHEMA_FIELDS } });
   availability().mockResolvedValue({
     success: true,
@@ -179,19 +179,21 @@ describe('session detail route', () => {
       source: { ...defaultSessionsSource(), enrichments: ['session_insights', 'quality'] },
       failure: null,
     });
-    tagOrders().mockResolvedValue({ quality: ['system'] });
+    definitions().mockResolvedValue({ quality: { tagOrder: ['system'], description: 'Quality labels' } });
 
     const props = propsOf(await render(CHAT_ID));
-    const panels = props.enrichmentPanels as { namespace: string; groups: { tag: string }[] }[];
+    const panels = props.enrichmentPanels as { namespace: string; description?: string; groups: { tag: string }[] }[];
 
-    expect(tagOrders()).toHaveBeenCalledWith(['session_insights', 'quality']);
+    expect(definitions()).toHaveBeenCalledWith(['session_insights', 'quality']);
     expect(panels.map(({ namespace }) => namespace)).toEqual(['session_insights', 'quality']);
     expect(panels[1].groups.map(({ tag }) => tag)).toEqual(['risk', 'system']);
+    expect(panels[1].description).toBe('Quality labels');
+    expect(panels[0].description).toBeUndefined();
     expect(props.enrichmentProvenance).toEqual({ session_insights: 'insights', quality: expect.any(String) });
     expect(props.source).toMatchObject({ baseTable: 'sessions' });
   });
 
-  test('asks no tag order of the session rating enrichment', async () => {
+  test('asks no definition of the session rating enrichment', async () => {
     sourceOf().mockResolvedValue({
       source: {
         ...defaultSessionsSource(),
@@ -203,7 +205,7 @@ describe('session detail route', () => {
 
     await render(CHAT_ID);
 
-    expect(tagOrders()).toHaveBeenCalledWith(['session_insights']);
+    expect(definitions()).toHaveBeenCalledWith(['session_insights']);
   });
 
   test('renders the session without enrichment panels when the schema cannot be read', async () => {
@@ -238,8 +240,8 @@ describe('session detail route', () => {
     expect(componentName(await pending)).toBe('SessionDetailView');
   });
 
-  test('renders the session when the tag orders cannot be read', async () => {
-    tagOrders().mockRejectedValue(new TypeError('fetch failed'));
+  test('renders the session when the enrichment definitions cannot be read', async () => {
+    definitions().mockRejectedValue(new TypeError('fetch failed'));
 
     expect(componentName(await render(CHAT_ID))).toBe('SessionDetailView');
   });
