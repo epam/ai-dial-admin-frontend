@@ -110,6 +110,7 @@ const KeyValueGrid = ({ value, onChange, disabled, label, addButtonLabel, classN
             />
             {!isReadonly && (
               <RemoveButton
+                disabled={rows.length === 1 && row.key === '' && row.value === ''}
                 onClick={() => onRemoveRow(row.id)}
                 aria-label={t(ButtonsI18nKey.Delete)}
                 className="shrink-0"
