@@ -44,7 +44,6 @@ const mockUnits = (units: Record<string, OrgUnit>, unitsStatus: OrgUnitsStatus) 
   const orgUnits = {
     units,
     unitsStatus,
-    groupClaim: 'groups',
     ensureUnits: vi.fn(),
     refreshUnits: vi.fn(),
     getOwningUnit: (path: string) => getOwningUnit(units, path),

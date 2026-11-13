@@ -421,7 +421,6 @@ describe('FileManager — org units', () => {
     vi.mocked(useOrgUnits).mockReturnValue({
       units,
       unitsStatus: 'ready',
-      groupClaim: 'groups',
       ensureUnits: vi.fn(),
       refreshUnits: vi.fn(),
       getOwningUnit: vi.fn(),
