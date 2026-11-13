@@ -18,17 +18,16 @@ const unit: OrgUnit = {
   folder: 'public/Acme/Risk/',
 };
 
-const renderProvider = async (groupClaim?: string) => {
+const renderProvider = async () => {
   const { OrgUnitsProvider, useOrgUnits } =
     await vi.importActual<typeof import('../OrgUnitsContext')>('../OrgUnitsContext');
 
   const Probe = () => {
-    const { unitsStatus, units, ensureUnits, refreshUnits, getOwningUnit, groupClaim: claim } = useOrgUnits();
+    const { unitsStatus, units, ensureUnits, refreshUnits, getOwningUnit } = useOrgUnits();
     return (
       <div>
         <span>status:{unitsStatus}</span>
         <span>count:{Object.keys(units).length}</span>
-        <span>claim:{claim}</span>
         <span>owner:{getOwningUnit('public/Acme/Risk/models/')?.name ?? 'none'}</span>
         <button onClick={ensureUnits}>ensure</button>
         <button onClick={() => void refreshUnits()}>refresh</button>
@@ -37,7 +36,7 @@ const renderProvider = async (groupClaim?: string) => {
   };
 
   render(
-    <OrgUnitsProvider groupClaim={groupClaim}>
+    <OrgUnitsProvider>
       <Probe />
     </OrgUnitsProvider>,
   );
@@ -109,15 +108,5 @@ describe('OrgUnitsProvider', () => {
     await user.click(screen.getByRole('button', { name: 'ensure' }));
 
     expect(await screen.findByText('status:error')).toBeTruthy();
-  });
-
-  test('defaults the group claim and exposes a configured one', async () => {
-    await renderProvider();
-    expect(screen.getByText('claim:groups')).toBeTruthy();
-  });
-
-  test('exposes the configured group claim', async () => {
-    await renderProvider('realm_access.roles');
-    expect(screen.getByText('claim:realm_access.roles')).toBeTruthy();
   });
 });
