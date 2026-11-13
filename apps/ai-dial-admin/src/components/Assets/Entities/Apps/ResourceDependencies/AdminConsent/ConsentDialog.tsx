@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { ConfirmationPopup, ConfirmationPopupVariant } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, ConfirmationPopupVariant, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, ResourceDependenciesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -22,12 +22,15 @@ interface Props {
 const ConsentDialog: FC<Props> = ({ type, resources, isLoading, onConfirm, onClose }) => {
   const t = useI18n();
   const isRevoke = type === ConsentDialogType.Revoke;
+  const header = t(isRevoke ? ResourceDependenciesI18nKey.RevokeTitle : ResourceDependenciesI18nKey.ApproveTitle);
 
   return (
     <ConfirmationPopup
       open
       variant={isRevoke ? ConfirmationPopupVariant.Danger : ConfirmationPopupVariant.Info}
-      header={t(isRevoke ? ResourceDependenciesI18nKey.RevokeTitle : ResourceDependenciesI18nKey.ApproveTitle)}
+      header={header}
+      ariaLabel={header}
+      size={PopupSize.Md}
       description={
         <div className="flex flex-col gap-3">
           <p>
