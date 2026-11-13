@@ -96,7 +96,7 @@ describe('spanFields', () => {
     ]);
   });
 
-  test("describes a field with the service's own label and type", () => {
+  test("describes a field with the service's own label, type and description", () => {
     const { groups } = spanFields([
       schemaField({
         name: 'usage_client_identity.client_type',
@@ -107,13 +107,19 @@ describe('spanFields', () => {
       }),
     ]);
 
-    // The description is not among them: the rail states a field as a label over its value, and nothing else.
     expect(groups[0].fields[0]).toEqual({
       name: 'usage_client_identity.client_type',
       label: 'Client type',
       type: AnalyticsFieldType.Enum,
       tag: SpanFieldTag.Client,
+      description: 'Client that originated the request.',
     });
+  });
+
+  test('carries no description for a field the schema does not describe', () => {
+    const { groups } = spanFields([schemaField({ name: 'trace_id', tag: SpanFieldTag.Tracing })]);
+
+    expect(groups[0].fields[0]).not.toHaveProperty('description');
   });
 
   // Everything the schema reports is in a group, headline columns included: the rail states some of them
