@@ -6,4 +6,4 @@ import { getFileFolderRows } from '@/src/context/assets/file-folders';
 import { MovableAssetListItem } from '@/src/models/dial/asset-list-item';
 
 export const { Provider: PromptFolderProvider, useFolderContext: usePromptFolder } =
-  createFolderContext<MovableAssetListItem>(getPrompts, 'usePromptFolder', undefined, getFileFolderRows);
+  createFolderContext<MovableAssetListItem>(getPrompts, 'usePromptFolder', getFileFolderRows);

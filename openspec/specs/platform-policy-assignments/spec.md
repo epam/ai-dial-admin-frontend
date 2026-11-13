@@ -26,27 +26,9 @@ linking to `/platform-policy-assignments`. The item SHALL be a Core-direct item,
 - **WHEN** `POLICIES_ENABLED` is off
 - **THEN** `Policy Assignments` is absent from the Governance group
 
-### Requirement: Assignment list is grouped by cost object
-The system SHALL render the assignment list on the shared asset list under the `platform` root, where
-every entry lives in a cost-object folder, and SHALL NOT offer create-folder, rename-folder, or move-to-folder,
-because a cost-object folder exists in Core only while it holds an assignment. The list SHALL NOT show or
-accept an entry at the root.
-
-#### Scenario: Entries are shown inside cost-object folders
-- **WHEN** Core holds `team-a/grant-1`
-- **THEN** `grant-1` is shown inside the `team-a` folder and no entry appears at the root
-
-#### Scenario: Create asks for a cost object
-- **WHEN** a user opens the create modal with no cost-object folder selected
-- **THEN** the modal requires a cost object and never creates a root entry
-
-#### Scenario: Read-only admin sees no mutating actions
-- **WHEN** a read-only admin opens the assignment list
-- **THEN** no create, delete, bulk-delete, or duplicate action is offered
-
 ### Requirement: Assignment list columns are metadata-only
-The system SHALL show name, author, created-at, and updated-at columns, sourced from Core's resource
-metadata, and SHALL NOT fetch each row's content to populate the list.
+The system SHALL show name, cost object, author, created-at, and updated-at columns, sourced from Core's
+resource metadata and the assignment's path, and SHALL NOT fetch each row's content to populate the list.
 
 #### Scenario: Listing issues no per-row content request
 - **WHEN** the assignment list loads
@@ -56,12 +38,12 @@ metadata, and SHALL NOT fetch each row's content to populate the list.
 The system SHALL open a create modal requesting **Cost object**, **ID**, **Policy**, and optionally
 the subject rules, because Core needs a subject pinned by the policy or by the assignment. The cost object
 SHALL name the folder the assignment is written to, and the saved body SHALL carry the same value as
-`costObject`. When create is launched from inside a cost-object folder the cost object SHALL be
-pre-filled and not editable. The ID SHALL follow Core's entity-name rule.
+`costObject`. The cost object is always entered in the modal and never pre-filled from the list. The ID SHALL
+follow Core's entity-name rule.
 
-#### Scenario: Launched inside a folder locks the cost object
-- **WHEN** a user opens the create modal while viewing the `team-a` folder
-- **THEN** Cost object shows `team-a` and cannot be changed
+#### Scenario: Cost object is entered, not inherited
+- **WHEN** a user opens the create modal from the header
+- **THEN** Cost object is empty and editable
 
 #### Scenario: The folder and the body agree
 - **WHEN** a user submits cost object `team-a` and ID `grant-1`
@@ -145,25 +127,6 @@ same cost-object folder under a new ID, and SHALL offer bulk delete.
 - **WHEN** a user selects several assignments and confirms bulk delete
 - **THEN** each is deleted and the list refreshes without them
 
-### Requirement: Deleting a cost object folder deletes its assignments
-The system SHALL let a user delete a cost object folder from the assignment list. Core keeps no marker for such
-a folder, which exists only while it holds an assignment, so deleting it SHALL delete every assignment under
-it, and the folder disappears with the last one. The system SHALL address the folder with a trailing slash when
-listing it, SHALL NOT offer to delete the root, and SHALL delete an assignment selected next to the folder only
-once.
-
-#### Scenario: Deleting a folder removes its assignments and the folder
-- **WHEN** a user deletes the `team-a` folder that holds two assignments and confirms
-- **THEN** both assignments are deleted and `team-a` is no longer listed
-
-#### Scenario: An assignment selected with its folder is deleted once
-- **WHEN** a user selects the `team-a` folder and one of its assignments and confirms the delete
-- **THEN** the assignment is deleted by the folder deletion alone and the delete reports success
-
-#### Scenario: The root cannot be deleted as a folder
-- **WHEN** a delete is requested for the platform root
-- **THEN** nothing is deleted and an error is returned
-
 ### Requirement: Core validates a write; the client adds only shape checks
 The system SHALL send assignment writes to Core and SHALL NOT re-implement Core's semantic rules (policy
 existence, cost-object ownership, subject pinned exactly once, instance-id collisions, `expiresAt` in the
@@ -209,4 +172,19 @@ notification, and navigation SHALL be unchanged.
 
 - **WHEN** the modal was opened inside the `team-a` folder and the user moves to Subjects and back
 - **THEN** Cost object still shows `team-a` and cannot be changed
+
+### Requirement: Assignment list is a flat grid with a cost-object column
+
+The system SHALL render the assignment list as the Platform tab's flat grid: every assignment is one row and shows
+its cost object in the **Cost object** column. Every assignment has a cost object, so the Cost object cell SHALL never be
+empty. The list SHALL NOT render cost-object folders as rows or tree nodes, and SHALL NOT offer create-folder,
+rename-folder, move-to-folder or delete-folder.
+
+#### Scenario: Entries are rows with their cost object
+- **WHEN** Core holds `team-a/grant-1`
+- **THEN** one row `grant-1` is shown with `team-a` in its Cost object cell
+
+#### Scenario: Read-only admin sees no mutating actions
+- **WHEN** a read-only admin opens the assignment list
+- **THEN** no create, delete, or duplicate action is offered
 

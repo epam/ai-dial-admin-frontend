@@ -83,18 +83,7 @@ describe('FilePath', () => {
     await user.click(screen.getByRole('button', { name: 'ActionMenuOperation.Move_to' }));
     expect(screen.getAllByText('item:assistant')).toHaveLength(2);
   });
-  test('does not offer the platform bucket as a Move-to destination for a dual-bucket view', async () => {
-    const user = userEvent.setup();
-    renderFilePath([platformRoot, publicRoot]);
-
-    await user.click(screen.getByRole('button', { name: 'ActionMenuOperation.Move_to' }));
-
-    expect(screen.getByText('item:public')).toBeInTheDocument();
-    expect(screen.queryByText('item:platform')).not.toBeInTheDocument();
-    expect(screen.queryByText('item:platform')).not.toBeInTheDocument();
-  });
-
-  test('offers every root as a Move-to destination for a non-dual-bucket view', async () => {
+  test('offers the public root as a Move-to destination', async () => {
     const user = userEvent.setup();
     renderFilePath([publicRoot], ApplicationRoute.Prompts);
 
@@ -103,10 +92,10 @@ describe('FilePath', () => {
     expect(screen.getByText('root:public')).toBeInTheDocument();
   });
 
-  test('fetches file, platform, and public roots for a dual-bucket view', () => {
+  test('fetches only the public root', () => {
     const fetchFiles = renderFilePath([]);
 
     expect(fetchFiles).toHaveBeenCalledOnce();
-    expect(fetchFiles).toHaveBeenCalledWith(['file/', 'platform/', 'public/']);
+    expect(fetchFiles).toHaveBeenCalledWith('public/');
   });
 });

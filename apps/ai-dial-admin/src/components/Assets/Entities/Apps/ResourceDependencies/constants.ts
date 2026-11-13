@@ -15,6 +15,9 @@ export const DECLARABLE_TYPE_ROOTS = [
   'projects',
 ];
 
+// Core rejects Write on these types: they are only ever read as dependencies.
+export const WRITE_FORBIDDEN_TYPE_ROOTS = ['applications', 'toolsets'];
+
 export const PERSONAL_TARGET_FORM = `{type}/${CURRENT_USER_PLACEHOLDER}/…`;
 
 export const COPY_LINK_ID_SUFFIX = '_copy';

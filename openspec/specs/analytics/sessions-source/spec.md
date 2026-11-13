@@ -96,8 +96,13 @@ compatibility.
 
 Where the analytics service holds no stored setting, the Sessions pages SHALL use the default binding: base table
 `sessions`, Session id `client_session_id`, Time `last_request_time`, Project `project_id`, Title
-`session_insights.title`, Cost `total_price`, Turns `turn_count`. The tab SHALL show the default binding as
-unsaved values, so opening it and saving stores the default explicitly.
+`session_insights.title`, Cost `total_price`, Turns `turn_count`. While the default binding is in
+use and nothing is stored, the tab SHALL offer only the base-table picker, set to `sessions`, and no role pickers: the
+default's roles are fixed, so listing them would only invite edits to a binding the operator did not choose. Saving
+from that state stores the default explicitly. Choosing another base table SHALL reveal the role pickers, carrying
+over every default role the new table can still fill. With no base table chosen — the default table is missing, or
+the stored setting could not be read — the tab SHALL likewise offer only the base-table picker, and SHALL NOT flag a
+required role as unbound before a table exists to bind it to.
 
 Where no setting is stored and the analytics service reports no `sessions` entity to the caller, there is
 nothing to fall back to. The **Sessions** item SHALL then be left out of the Analytics menu, and opening a Sessions
@@ -124,6 +129,18 @@ makes them hold for any other.
 
 - **WHEN** no Sessions source is stored and the Sessions page is opened
 - **THEN** the session query reads the `sessions` entity, ordered and bounded by `last_request_time`
+
+#### Scenario: The default binding offers only the base table
+
+- **WHEN** the operator opens the Sessions source tab, no setting is stored and the `sessions` table exists
+- **THEN** the tab shows the base-table picker set to `sessions` and no role pickers
+- **AND** choosing another base table shows the role pickers, with the roles that table can fill kept
+
+#### Scenario: No base table offers only the base table
+
+- **WHEN** no setting is stored and the `sessions` table is missing
+- **THEN** the tab shows an empty base-table picker, no role pickers and no required-role error
+- **AND** choosing a table shows the role pickers
 
 #### Scenario: No setting and no default table hides the Sessions page
 

@@ -97,7 +97,7 @@ export default async function Layout({ children, params }: { children: ReactNode
           isEnableAuth={isEnableAuth}
         >
           <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
-            <OrgUnitsProvider groupClaim={process.env.ORG_UNITS_GROUP_CLAIM || 'groups'}>
+            <OrgUnitsProvider>
               <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
                 <AssetFolderProviders>
                   <NotificationProvider>

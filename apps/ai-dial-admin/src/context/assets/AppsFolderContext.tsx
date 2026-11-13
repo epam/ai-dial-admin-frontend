@@ -1,17 +1,9 @@
 'use client';
 
-import { getApps, getConfigFileApplications } from '@/src/app/[lang]/assets-applications/actions';
+import { getApps } from '@/src/app/[lang]/assets-applications/actions';
 import { createFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { getFileFolderRows } from '@/src/context/assets/file-folders';
 import { MovableAssetListItem } from '@/src/models/dial/asset-list-item';
 
 export const { Provider: AppsFolderProvider, useFolderContext: useAppsFolder } =
-  createFolderContext<MovableAssetListItem>(
-    getApps,
-    'useAppsFolder',
-    async () => {
-      const result = await getConfigFileApplications();
-      return result.success ? result.data : undefined;
-    },
-    getFileFolderRows,
-  );
+  createFolderContext<MovableAssetListItem>(getApps, 'useAppsFolder', getFileFolderRows);

@@ -43,3 +43,10 @@ export interface GlobalSettings {
    */
   spendingLimits?: SpendingLimits;
 }
+
+export interface SystemPropertiesTabStore {
+  isChanged: boolean;
+  disableSave?: boolean;
+  onSave: () => void;
+  onDiscard: () => void;
+}

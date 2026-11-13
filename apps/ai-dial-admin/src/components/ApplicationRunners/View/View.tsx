@@ -16,7 +16,7 @@ import {
   updateCoreRunner,
 } from '@/src/app/[lang]/application-runners/actions';
 import { createApplication } from '@/src/app/[lang]/applications/actions';
-import CreateAsset from '@/src/components/Assets/Modals/CreateAsset';
+import CreateSeededAsset from '@/src/components/Assets/Modals/CreateSeededAsset';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
@@ -229,9 +229,9 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
           )}
         {isCreateAssetAppModalOpen &&
           createPortal(
-            <CreateAsset
+            <CreateSeededAsset
               view={ApplicationRoute.AssetsApplications}
-              isModalOpen={isCreateAssetAppModalOpen}
+              isOpen={isCreateAssetAppModalOpen}
               onClose={() => {
                 setIsCreateAssetAppModalOpen(false);
                 dispatch({ type: ValidationActionType.Reset });

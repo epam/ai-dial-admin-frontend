@@ -55,14 +55,14 @@ describe('FileManager', () => {
     dialFileManagerPropsSpy.mockClear();
   });
 
-  test('fetches file, platform, and public roots on mount for a dual-bucket view', () => {
+  test('fetches only the public root on mount, for the Applications view too', () => {
     const fetchFiles = renderFileManager();
 
     expect(fetchFiles).toHaveBeenCalledOnce();
-    expect(fetchFiles).toHaveBeenCalledWith(['file/', 'platform/', 'public/']);
+    expect(fetchFiles).toHaveBeenCalledWith('public/');
   });
 
-  // Regression (4.4): conversation rows and the flat platform views have no folder concept, so
+  // Regression (4.4): conversation rows have no folder concept, so
   // drag-and-drop move must be withheld entirely rather than left to resolve as a silent no-op —
   // `handleMoveToFiles` reports success on an empty promise list (`Promise.all([]).every(...)` is
   // vacuously true).
@@ -72,26 +72,6 @@ describe('FileManager', () => {
     const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
     expect(props.onMoveToFiles).toBeUndefined();
   });
-
-  test('withholds onMoveToFiles for a flat platform view', () => {
-    renderFileManager(ApplicationRoute.PlatformModels);
-
-    const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
-    expect(props.onMoveToFiles).toBeUndefined();
-  });
-
-  // A cost object folder exists in Core only while it holds a record, so a policy record view has no folder
-  // marker to create, rename or move to.
-  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
-    'withholds onMoveToFiles and onCreateFolder for the nested platform view %s',
-    (view) => {
-      renderFileManager(view);
-
-      const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
-      expect(props.onMoveToFiles).toBeUndefined();
-      expect(props.onCreateFolder).toBeUndefined();
-    },
-  );
 
   test('still offers onCreateFolder for a foldered view', () => {
     renderFileManager(ApplicationRoute.AssetsApplications);
@@ -477,7 +457,6 @@ describe('FileManager — org units', () => {
     vi.mocked(useOrgUnits).mockReturnValue({
       units,
       unitsStatus: 'ready',
-      groupClaim: 'groups',
       ensureUnits: vi.fn(),
       refreshUnits: vi.fn(),
       getOwningUnit: vi.fn(),

@@ -1,16 +1,18 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { analyticsDataApi, sessionsSourceApi, settingsApi } from '@/src/app/api/api';
+import { analyticsDataApi, enrichmentRoutesApi, sessionsSourceApi, settingsApi } from '@/src/app/api/api';
 import { DEFAULT_SESSIONS_SOURCE_SETTING } from '@/src/constants/analytics/sessions-source';
 import { clearEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
+  getEnrichmentRoutes,
   getProperties,
   getSessionsSource,
   getSessionsSourceEntities,
   getSessionsSourceSchema,
+  saveEnrichmentRoutes,
   saveSessionsSource,
   updateProperties,
 } from './actions';
@@ -54,6 +56,25 @@ describe('System properties :: server actions', () => {
       TOKEN_MOCK,
       undefined,
     );
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should read the enrichment routes with the token', async () => {
+    (enrichmentRoutesApi.getRoutes as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getEnrichmentRoutes();
+
+    expect(enrichmentRoutesApi.getRoutes).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should save the enrichment routes with the token', async () => {
+    const routes = [{ deployment: 'insights-app', route: 'insights' }];
+    (enrichmentRoutesApi.putRoutes as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await saveEnrichmentRoutes(routes);
+
+    expect(enrichmentRoutesApi.putRoutes).toHaveBeenCalledWith(routes, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

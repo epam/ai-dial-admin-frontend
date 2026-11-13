@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import OutputsEditor from '@/src/components/Analytics/Pipelines/Enrich/OutputsEditor';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
-import { TransformOutput, TransformType } from '@/src/models/analytics/pipeline';
+import { TransformOutput, TransformPreset, TransformType } from '@/src/models/analytics/pipeline';
 import { OutputRefinementKind } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
@@ -46,17 +46,26 @@ const COLUMNS: AnalyticsTableColumn[] = [
 
 // The editor is controlled: it publishes rows and is re-seeded from what it published, so a host holding
 // the state is what exercises it the way the forms do.
+const onOutputsChange = vi.fn();
+
 const Host = ({
   type,
+  preset,
   seed = [],
   columns = COLUMNS,
 }: {
   type: TransformType;
+  preset?: TransformPreset;
   seed?: TransformOutput[];
   columns?: AnalyticsTableColumn[];
 }) => {
   const [outputs, setOutputs] = useState<TransformOutput[]>(seed);
-  return <OutputsEditor outputs={outputs} type={type} columns={columns} isReady onChange={setOutputs} />;
+  const onChange = (next: TransformOutput[]) => {
+    onOutputsChange(next);
+    setOutputs(next);
+  };
+
+  return <OutputsEditor outputs={outputs} type={type} preset={preset} columns={columns} isReady onChange={onChange} />;
 };
 
 const addButton = () => screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.AddOutput });
@@ -255,5 +264,56 @@ describe('OutputsEditor — editing', () => {
 
     expect(screen.getByText(AnalyticsPipelinesI18nKey.AddOutput)).toBeTruthy();
     expect(screen.queryByText(AnalyticsPipelinesI18nKey.OutputColumn)).toBeNull();
+  });
+});
+
+describe('OutputsEditor — an application-route transform', () => {
+  const sourceField = () => screen.getByLabelText(`${AnalyticsPipelinesI18nKey.OutputSource} 1`);
+
+  test('labels the transform refinement as the source and shows the stored one', () => {
+    render(
+      <Host
+        type={TransformType.Llm}
+        preset={TransformPreset.DialAppRoute}
+        seed={[{ name: 'topic', jsonata: 'for_chat', source: 'intent.topic' }]}
+      />,
+    );
+
+    expect(sourceField()).toHaveDisplayValue('intent.topic');
+    expect(screen.queryByLabelText(`${AnalyticsPipelinesI18nKey.OutputJsonata} 1`)).toBeNull();
+  });
+
+  test('writes a typed expression to the source and leaves the jsonata as it was', () => {
+    render(
+      <Host
+        type={TransformType.Llm}
+        preset={TransformPreset.DialAppRoute}
+        seed={[{ name: 'topic', jsonata: 'for_chat' }]}
+      />,
+    );
+
+    fireEvent.change(sourceField(), { target: { value: 'intent.topic' } });
+
+    expect(onOutputsChange).toHaveBeenLastCalledWith([
+      { name: 'topic', prose: '', jsonata: 'for_chat', source: 'intent.topic' },
+    ]);
+  });
+
+  test('marks a source that repeats the output name', () => {
+    render(
+      <Host
+        type={TransformType.Llm}
+        preset={TransformPreset.DialAppRoute}
+        seed={[{ name: 'topic', source: 'topic' }]}
+      />,
+    );
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.OutputSourceIdentity)).toBeTruthy();
+  });
+
+  test('keeps the jsonata field under chat completion', () => {
+    render(<Host type={TransformType.Llm} seed={[{ name: 'topic', jsonata: 'for_chat', source: 'intent.topic' }]} />);
+
+    expect(screen.getByLabelText(`${AnalyticsPipelinesI18nKey.OutputJsonata} 1`)).toHaveDisplayValue('for_chat');
   });
 });

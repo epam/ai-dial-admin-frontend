@@ -2,11 +2,11 @@
 
 import { FC } from 'react';
 
-import BaseAssetList from '@/src/components/Assets/BaseAssetList/BaseAssetList';
+import TabbedAssetList from '@/src/components/Assets/TabbedAssetList/TabbedAssetList';
 import { ApplicationRoute } from '@/src/types/routes';
 
 const CatalogSchemasList: FC = () => {
-  return <BaseAssetList view={ApplicationRoute.PlatformCatalogSchemas} />;
+  return <TabbedAssetList view={ApplicationRoute.PlatformCatalogSchemas} />;
 };
 
 export default CatalogSchemasList;

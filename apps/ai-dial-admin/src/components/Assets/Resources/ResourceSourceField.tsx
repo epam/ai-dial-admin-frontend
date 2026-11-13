@@ -38,7 +38,8 @@ interface Props {
  * - App Runner: `application_type_schema_id` present.
  * - Endpoints: otherwise (default).
  */
-const getInitialSource = (entity: DialApplicationResource, codeAppEditorUrl?: string): string => {
+
+export const getInitialSource = (entity: DialApplicationResource, codeAppEditorUrl?: string): string => {
   if (!!codeAppEditorUrl && entity.editor_url === codeAppEditorUrl) {
     return CODE_APP_SOURCE_TYPE;
   }

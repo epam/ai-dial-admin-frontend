@@ -11,7 +11,6 @@ import {
   PolicySubjectsI18nKey,
   TabsI18nKey,
 } from '@/src/constants/i18n';
-import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { PolicySubjectFunction } from '@/src/models/dial/policy';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -24,24 +23,18 @@ const nextButton = () => screen.getByRole('button', { name: ButtonsI18nKey.Next 
 const stepButton = (name: string) => screen.getByRole('button', { name: new RegExp(`^${name}`) });
 const createButton = () => screen.getByRole('button', { name: ButtonsI18nKey.Create });
 
-const renderModal = (filePath = 'platform/', names: string[] = [], route = ApplicationRoute.PlatformPolicies) => {
+const renderModal = (names: string[] = [], route = ApplicationRoute.PlatformPolicies) => {
   const onCreate = vi.fn().mockResolvedValue({ success: true });
   const onClose = vi.fn();
-  const context = { filePath } as AssetsFolderContextReader;
   render(
     <SaveValidationContextProvider>
-      <CreatePolicyModal
-        route={route}
-        isOpen
-        names={names}
-        getContext={() => context}
-        onClose={onClose}
-        onCreate={onCreate}
-      />
+      <CreatePolicyModal route={route} isOpen names={names} onClose={onClose} onCreate={onCreate} />
     </SaveValidationContextProvider>,
   );
   return { onCreate, onClose };
 };
+
+const fillCostObject = (value: string) => fireEvent.change(costObjectInput(), { target: { value } });
 
 const fillDetails = () => {
   fireEvent.change(nameInput(), { target: { value: 'policy-one' } });
@@ -75,12 +68,18 @@ describe('CreatePolicyModal', () => {
     });
   });
 
-  test('locks the assignment cost object when created inside its folder', () => {
-    renderModal('platform/team-a/', [], ApplicationRoute.PlatformPolicyAssignments);
+  test('starts the assignment cost object blank and editable', () => {
+    renderModal([], ApplicationRoute.PlatformPolicyAssignments);
     const costObject = screen.getByRole('textbox', { name: new RegExp(PolicyAssignmentsI18nKey.CostObject) });
-    expect(costObject).toHaveValue('team-a');
-    expect(costObject).toBeDisabled();
+    expect(costObject).toHaveValue('');
+    expect(costObject).toBeEnabled();
     expect(nextButton()).toBeDisabled();
+  });
+
+  test('starts the policy cost object blank and editable', () => {
+    renderModal();
+    expect(costObjectInput()).toHaveValue('');
+    expect(costObjectInput()).toBeEnabled();
   });
 
   test('shows the Details and Subjects steps with Details current', () => {
@@ -110,7 +109,7 @@ describe('CreatePolicyModal', () => {
   });
 
   test('requires a unique name, integer priority and a positive cost window before Next', () => {
-    renderModal('platform/', ['taken']);
+    renderModal(['taken']);
     expect(nextButton()).toBeDisabled();
     fillDetails();
     expect(nextButton()).toBeEnabled();
@@ -146,8 +145,9 @@ describe('CreatePolicyModal', () => {
 
   test('preserves details and subjects across Next and Back', async () => {
     const user = userEvent.setup();
-    renderModal('platform/team-a/');
+    renderModal();
     fillDetails();
+    fillCostObject('team-a');
     await user.click(nextButton());
     await addValidRule(user);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Back }));
@@ -162,20 +162,19 @@ describe('CreatePolicyModal', () => {
 
   test('creates an unpinned policy without adding subjects', async () => {
     const user = userEvent.setup();
-    const { onCreate, onClose } = renderModal('platform/team-a/');
+    const { onCreate, onClose } = renderModal();
     fillDetails();
+    fillCostObject('team-a');
     await user.click(nextButton());
     expect(screen.getByText(PolicySubjectsI18nKey.Empty)).toBeInTheDocument();
     await user.click(createButton());
     expect(onClose).toHaveBeenCalledOnce();
-    expect(onCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ folderId: 'platform/team-a/', costObject: undefined }),
-    );
+    expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ folderId: 'team-a/', costObject: undefined }));
   });
 
   test('blocks creation for an incomplete rule and allows it after removal', async () => {
     const user = userEvent.setup();
-    const { onCreate, onClose } = renderModal('platform/team-a/');
+    const { onCreate, onClose } = renderModal();
     fillDetails();
     await user.click(nextButton());
     expect(createButton()).toBeEnabled();
@@ -192,12 +191,13 @@ describe('CreatePolicyModal', () => {
   });
 
   test.each([
-    ['platform/team-a/', 'team-a'],
-    ['platform/', undefined],
-  ])('uses the selected folder to pin subjects for %s', async (filePath, costObject) => {
+    ['team-a', 'team-a/', 'team-a'],
+    ['', '', undefined],
+  ])('uses the entered cost object %j to pin subjects', async (entered, folderId, costObject) => {
     const user = userEvent.setup();
-    const { onCreate, onClose } = renderModal(filePath);
+    const { onCreate, onClose } = renderModal();
     fillDetails();
+    if (entered) fillCostObject(entered);
     await user.click(nextButton());
     await addValidRule(user);
     expect(createButton()).toBeEnabled();
@@ -205,7 +205,7 @@ describe('CreatePolicyModal', () => {
     expect(onClose).toHaveBeenCalledOnce();
     expect(onCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        folderId: filePath,
+        folderId,
         costObject,
         subject: [{ source: 'roles', function: PolicySubjectFunction.EQUAL, targets: ['admin'] }],
       }),
@@ -214,8 +214,9 @@ describe('CreatePolicyModal', () => {
 
   test('unpins subjects when the folder is cleared after going Back', async () => {
     const user = userEvent.setup();
-    const { onCreate, onClose } = renderModal('platform/team-a/');
+    const { onCreate, onClose } = renderModal();
     fillDetails();
+    fillCostObject('team-a');
     await user.click(nextButton());
     await addValidRule(user);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Back }));
@@ -234,8 +235,9 @@ describe('CreatePolicyModal', () => {
 
   test('uses the changed folder when returning to subjects', async () => {
     const user = userEvent.setup();
-    const { onCreate, onClose } = renderModal('platform/team-a/');
+    const { onCreate, onClose } = renderModal();
     fillDetails();
+    fillCostObject('team-a');
     await user.click(nextButton());
     await addValidRule(user);
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Back }));

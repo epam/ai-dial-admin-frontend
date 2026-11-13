@@ -35,94 +35,38 @@ describe('getToolbarOptionLabels', () => {
 
 describe('getGridActionLabels', () => {
   test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    '%s on the platform bucket offers only duplicate, delete, and openInNewTab',
-    (view) => {
-      const keys = getGridActionLabels(view, false, 'platform/').map((item) => item.key);
-
-      expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
-      expect(keys).not.toContain('preview');
-      expect(keys).not.toContain('move');
-      expect(keys).not.toContain('rename');
-    },
-  );
-
-  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    '%s on the public bucket keeps the existing full action set',
-    (view) => {
-      const withPublicPath = getGridActionLabels(view, false, 'public/').map((item) => item.key);
-      const withoutPath = getGridActionLabels(view, false).map((item) => item.key);
-
-      expect(withPublicPath).toEqual(withoutPath);
-      // The public bucket keeps folder/versioning actions the platform bucket's restricted set lacks.
-      expect(withPublicPath).toContain('move');
-      expect(withPublicPath).toContain('rename');
-    },
-  );
-
-  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    '%s on the platform bucket still returns no options for a read-only admin',
-    (view) => {
-      expect(getGridActionLabels(view, true, 'platform/')).toEqual([]);
-    },
-  );
-});
-
-describe('getGridActionLabels - nested platform views', () => {
-  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
-    '%s offers only duplicate, delete, and openInNewTab, like the flat platform views',
+    '%s keeps the full public-tree action set',
     (view) => {
       const keys = getGridActionLabels(view, false).map((item) => item.key);
 
-      expect(keys).toEqual(getGridActionLabels(ApplicationRoute.PlatformRoutes, false).map((item) => item.key));
-      expect(keys).not.toContain('move');
+      expect(keys).toContain('move');
+      expect(keys).toContain('rename');
+      expect(keys).not.toContain('preview');
     },
   );
 
-  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
-    '%s offers a read-only admin nothing',
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s returns no options for a read-only admin',
     (view) => {
       expect(getGridActionLabels(view, true)).toEqual([]);
     },
   );
-});
 
-describe('getTreeActionLabels - nested platform views', () => {
-  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
-    '%s offers no folder rename, move or delete, since a cost object folder is implicit in Core',
-    (view) => {
-      expect(getTreeActionLabels(false, view, 'platform/')).toEqual([]);
-      expect(getTreeActionLabels(false, view, 'team-a/')).toEqual([]);
-    },
-  );
-
-  test('leaves the flat platform views offering none, as before', () => {
-    expect(getTreeActionLabels(false, ApplicationRoute.PlatformRoutes, 'platform/')).toEqual([]);
-  });
-});
-
-describe('getToolbarOptionLabels - nested platform views', () => {
   test.each([
-    [ApplicationRoute.PlatformPolicies, FileManagerI18nKey.Policy],
-    [ApplicationRoute.PlatformPolicyAssignments, FileManagerI18nKey.PolicyAssignment],
-  ])('%s offers a single new-item action named for the record', (view, label) => {
-    expect(getToolbarOptionLabels(view, false)).toEqual([{ key: 'newItem', label, icon: null }]);
+    ApplicationRoute.PlatformModels,
+    ApplicationRoute.PlatformRoles,
+    ApplicationRoute.PlatformKeys,
+    ApplicationRoute.PlatformPolicies,
+  ])('%s offers nothing here: platform rows are handled by the flat grid', (view) => {
+    expect(getGridActionLabels(view, false)).toEqual([]);
   });
 });
 
 describe('getTreeActionLabels', () => {
   test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    '%s offers no tree actions while browsing the platform bucket',
+    '%s keeps folder-tree actions',
     (view) => {
-      expect(getTreeActionLabels(false, view, 'platform/')).toEqual([]);
-    },
-  );
-
-  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    '%s keeps folder-tree actions while browsing the public bucket',
-    (view) => {
-      const keys = getTreeActionLabels(false, view, 'public/').map((item) => item.key);
-
-      expect(keys.length).toBeGreaterThan(0);
+      expect(getTreeActionLabels(false, view).length).toBeGreaterThan(0);
     },
   );
 });
@@ -149,86 +93,6 @@ describe('Conversations offers no move action', () => {
 
   test('getTreeActionLabels returns no options for a read-only admin', () => {
     expect(getTreeActionLabels(true, ApplicationRoute.Conversations)).toEqual([]);
-  });
-});
-
-describe('getToolbarOptionLabels — dual-bucket views', () => {
-  test('AssetsApplications offers a single "New Application" entry (same label as the public bucket) while browsing the platform bucket', () => {
-    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsApplications, false, 'platform/');
-
-    expect(labels).toEqual([{ key: 'newItem', label: FileManagerI18nKey.Application, icon: null }]);
-  });
-
-  test('AssetsToolsets offers a single "New Toolset" entry (same label as the public bucket) while browsing the platform bucket', () => {
-    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsToolsets, false, 'platform/');
-
-    expect(labels).toEqual([{ key: 'newItem', label: FileManagerI18nKey.Toolset, icon: null }]);
-  });
-
-  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    '%s keeps the existing toolbar entries while browsing the public bucket',
-    (view) => {
-      const withPublicPath = getToolbarOptionLabels(view, false, 'public/');
-      const withoutPath = getToolbarOptionLabels(view, false);
-
-      expect(withPublicPath).toEqual(withoutPath);
-    },
-  );
-});
-
-describe('getGridActionLabels', () => {
-  test('AssetsRoles offers delete and openInNewTab and duplicate — Role.class has no displayName field for the shared duplicate modal to write', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformRoles, false).map((item) => item.key);
-
-    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab', 'duplicate']));
-  });
-
-  test('AssetsRoles returns no options for a read-only admin', () => {
-    expect(getGridActionLabels(ApplicationRoute.PlatformRoles, true)).toEqual([]);
-  });
-
-  test('AssetsRoutes still offers duplicate, unaffected by the AssetsRoles carve-out', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformRoutes, false).map((item) => item.key);
-
-    expect(keys).toContain('duplicate');
-  });
-
-  test('PlatformKeys now exposes duplicate, delete, and openInNewTab for a non-read-only admin', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformKeys, false).map((item) => item.key);
-
-    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
-  });
-
-  test('PlatformKeys returns no options for a read-only admin', () => {
-    expect(getGridActionLabels(ApplicationRoute.PlatformKeys, true)).toEqual([]);
-  });
-
-  test('PlatformTranslators exposes duplicate, delete, and openInNewTab for a non-read-only admin', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformTranslators, false).map((item) => item.key);
-
-    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
-  });
-
-  test('PlatformTranslators returns no options for a read-only admin', () => {
-    expect(getGridActionLabels(ApplicationRoute.PlatformTranslators, true)).toEqual([]);
-  });
-
-  test('PlatformCatalogSchemas exposes duplicate, delete, and openInNewTab for a writable API row', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, false, 'platform/').map(
-      (item) => item.key,
-    );
-
-    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
-  });
-
-  test('PlatformCatalogSchemas exposes only openInNewTab for a file-root row', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, false, 'file/').map((item) => item.key);
-
-    expect(keys).toEqual(['openInNewTab']);
-  });
-
-  test('PlatformCatalogSchemas returns no options for a read-only admin', () => {
-    expect(getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, true)).toEqual([]);
   });
 });
 
@@ -1117,29 +981,29 @@ describe('getAgentLinkForConversation', () => {
 
 describe.each([ApplicationRoute.Skills, ApplicationRoute.Projects])('%s folder actions', (view) => {
   test('getTreeActionLabels offers add sibling, add child, manage permissions, and delete', () => {
-    const keys = getTreeActionLabels(false, view, 'public/').map((item) => item.key);
+    const keys = getTreeActionLabels(false, view).map((item) => item.key);
 
     expect(keys).toEqual(['addSibling', 'addChild', 'managePermissions', 'delete']);
   });
 
   test('getTreeActionLabels offers neither rename nor move', () => {
-    const keys = getTreeActionLabels(false, view, 'public/').map((item) => item.key);
+    const keys = getTreeActionLabels(false, view).map((item) => item.key);
 
     expect(keys).not.toContain('rename');
     expect(keys).not.toContain('move');
   });
 
   test('getTreeActionLabels returns no options for a read-only admin', () => {
-    expect(getTreeActionLabels(true, view, 'public/')).toEqual([]);
+    expect(getTreeActionLabels(true, view)).toEqual([]);
   });
 
   test('getGridActionLabels adds the folder actions to the item actions', () => {
-    const keys = getGridActionLabels(view, false, 'public/').map((item) => item.key);
+    const keys = getGridActionLabels(view, false).map((item) => item.key);
 
     expect(keys).toEqual(['addSibling', 'addChild', 'managePermissions', 'delete', 'openInNewTab']);
   });
 
   test('getGridActionLabels returns no options for a read-only admin', () => {
-    expect(getGridActionLabels(view, true, 'public/')).toEqual([]);
+    expect(getGridActionLabels(view, true)).toEqual([]);
   });
 });

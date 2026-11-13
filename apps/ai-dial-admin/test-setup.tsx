@@ -154,7 +154,6 @@ vi.mock('@/src/context/OrgUnitsContext', () => {
   const noUnits = {
     units: {},
     unitsStatus: 'idle',
-    groupClaim: 'groups',
     ensureUnits: vi.fn(),
     refreshUnits: vi.fn(async () => undefined),
     getOwningUnit: vi.fn(() => undefined),

@@ -18,6 +18,7 @@ interface Props {
   fields?: AnalyticsEntityField[];
   isLoading?: boolean;
   isUnsaved?: boolean;
+  isUsingDefaults?: boolean;
   isDefaultTableMissing?: boolean;
   onChangeBaseTable: (table: string) => void;
   onChangeRole: (role: SessionsRole, field: string | null) => void;
@@ -29,6 +30,7 @@ const SessionsSource: FC<Props> = ({
   fields,
   isLoading,
   isUnsaved,
+  isUsingDefaults,
   isDefaultTableMissing,
   onChangeBaseTable,
   onChangeRole,
@@ -36,6 +38,7 @@ const SessionsSource: FC<Props> = ({
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isDisabled = isReadOnlyAdmin || isLoading;
+  const hasRoles = !isUsingDefaults && !!setting.baseTable;
 
   const tableOptions = useMemo<SelectOption[]>(() => tables.map((table) => ({ value: table, label: table })), [tables]);
 
@@ -80,16 +83,17 @@ const SessionsSource: FC<Props> = ({
           disabled={isDisabled}
           onChange={onBaseTableChange}
         />
-        {SESSIONS_ROLES.map((role) => (
-          <SessionsSourceRoleSelect
-            key={role}
-            role={role}
-            field={setting.roles[role]}
-            fields={fields}
-            isDisabled={isDisabled}
-            onChangeRole={onChangeRole}
-          />
-        ))}
+        {hasRoles &&
+          SESSIONS_ROLES.map((role) => (
+            <SessionsSourceRoleSelect
+              key={role}
+              role={role}
+              field={setting.roles[role]}
+              fields={fields}
+              isDisabled={isDisabled}
+              onChangeRole={onChangeRole}
+            />
+          ))}
       </div>
     </div>
   );

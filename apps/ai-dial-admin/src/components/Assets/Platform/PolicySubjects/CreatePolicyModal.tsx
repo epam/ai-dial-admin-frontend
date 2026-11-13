@@ -13,12 +13,10 @@ import SubjectRulesEditor from '@/src/components/Assets/Platform/PolicySubjects/
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import { ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
-import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { PolicySubjectRule } from '@/src/models/dial/policy';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -39,15 +37,13 @@ interface Props {
   route: ApplicationRoute;
   isOpen: boolean;
   names: string[];
-  getContext: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
   onCreate?: (asset: AssetWithVersion) => Promise<ServerActionResponse>;
 }
 
-const CreatePolicyModal: FC<Props> = ({ route, isOpen, names, getContext, onClose, onCreate }) => {
+const CreatePolicyModal: FC<Props> = ({ route, isOpen, names, onClose, onCreate }) => {
   const t = useI18n();
   const router = useRouter();
-  const folderContext = getContext();
   const { isValid } = useSaveValidationContext();
   const { showNotification } = useNotification();
   const protectedRequest = useProtectedRequest();
@@ -56,9 +52,8 @@ const CreatePolicyModal: FC<Props> = ({ route, isOpen, names, getContext, onClos
   const [draft, setDraft] = useState<PolicyCreateDraft>(() => ({
     name: '',
     ...(isPolicy ? NEW_POLICY_DEFAULTS : {}),
-    folderId: folderContext.filePath,
+    folderId: '',
   }));
-  const [isCostObjectLocked] = useState(() => !!getCostObjectFromFolder(folderContext.filePath));
   const [isCreating, setIsCreating] = useState(false);
   const isCreatingRef = useRef(false);
   const hasChangedStep = useRef(false);
@@ -168,12 +163,7 @@ const CreatePolicyModal: FC<Props> = ({ route, isOpen, names, getContext, onClos
           {isPolicy ? (
             <PolicyCreateProperties entity={draft} names={names} onChangeEntity={onChangeDraft} />
           ) : (
-            <PolicyAssignmentCreateProperties
-              entity={draft}
-              names={names}
-              isCostObjectLocked={isCostObjectLocked}
-              onChangeEntity={onChangeDraft}
-            />
+            <PolicyAssignmentCreateProperties entity={draft} names={names} onChangeEntity={onChangeDraft} />
           )}
         </div>
         {isSubjectsStep && (

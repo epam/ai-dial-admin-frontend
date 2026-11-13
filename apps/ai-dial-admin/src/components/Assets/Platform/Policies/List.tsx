@@ -2,11 +2,11 @@
 
 import { FC } from 'react';
 
-import BaseAssetList from '@/src/components/Assets/BaseAssetList/BaseAssetList';
+import TabbedAssetList from '@/src/components/Assets/TabbedAssetList/TabbedAssetList';
 import { ApplicationRoute } from '@/src/types/routes';
 
 const PoliciesList: FC = () => {
-  return <BaseAssetList view={ApplicationRoute.PlatformPolicies} />;
+  return <TabbedAssetList view={ApplicationRoute.PlatformPolicies} />;
 };
 
 export default PoliciesList;

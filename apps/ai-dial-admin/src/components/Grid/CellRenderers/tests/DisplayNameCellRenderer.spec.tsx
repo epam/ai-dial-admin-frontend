@@ -63,6 +63,28 @@ describe('DisplayNameCellRenderer', () => {
     expect(screen.getByText('CH')).toBeInTheDocument();
   });
 
+  test.each([28, 40])('renders the initials avatar at %ipx', (iconSize) => {
+    render(<DisplayNameCellRenderer {...params({ name: 'Chat' })} iconSize={iconSize} />);
+
+    expect(screen.getByText('CH').closest(`[style*="${iconSize}px"]`)).not.toBeNull();
+  });
+
+  test.each([
+    [28, 'dial-small-text-semi'],
+    [40, 'dial-h3-text'],
+  ])('renders appropriately sized initials for a %ipx avatar', (iconSize, textClass) => {
+    render(<DisplayNameCellRenderer {...params({ name: 'Chat' })} iconSize={iconSize} />);
+
+    expect(screen.getByText('CH')).toHaveClass(textClass);
+  });
+
+  test('uses the requested size for an entity image', () => {
+    render(<DisplayNameCellRenderer {...params({ name: 'Chat', iconUrl: 'files/chat.png' })} iconSize={28} />);
+
+    expect(screen.getByAltText('entityImage')).toHaveAttribute('width', '28');
+    expect(screen.getByAltText('entityImage')).toHaveAttribute('height', '28');
+  });
+
   test('derives two initials from a multi-word display name', () => {
     render(<DisplayNameCellRenderer {...params({ displayName: 'Claude Opus', name: 'claude-opus' })} />);
 

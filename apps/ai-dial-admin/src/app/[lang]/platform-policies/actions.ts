@@ -5,7 +5,6 @@ import { cookies, headers } from 'next/headers';
 import { assetApi } from '@/src/app/api/api';
 import { DialPolicyResource } from '@/src/models/dial/resource';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
-import { deleteCostObjectFolder } from '@/src/server/assets/delete-cost-object-folder';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -40,12 +39,6 @@ export async function updatePolicy(policy: PolicyEntity, etag: string) {
 export async function removePolicy(path: string, etag?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetApi.delete(token, ResourceType.POLICY, path, etag);
-}
-
-/** Deletes every policy of a cost object folder; the folder then disappears, as Core keeps none of its own. */
-export async function removePolicyFolder(path: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return deleteCostObjectFolder(assetApi, token, ResourceType.POLICY, path);
 }
 
 export async function bulkDeletePolicies(paths: { path: string }[]) {

@@ -98,6 +98,7 @@ export interface OutputRow {
   refinement: OutputRefinementKind;
   values: string[];
   jsonata: string;
+  source: string;
 }
 
 /** Two rows may share a key, or be blank, which the object sent on the wire cannot hold. */

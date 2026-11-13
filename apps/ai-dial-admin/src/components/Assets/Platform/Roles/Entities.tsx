@@ -5,6 +5,7 @@ import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { PickedEntity } from '@/src/components/Common/EntitySelectInput/models';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
@@ -110,10 +111,10 @@ const RoleEntities: FC<Props> = ({ selectedRole, models, isSkipRefresh, onChange
     setIsModalOpen(false);
   }, []);
 
-  const onAddApplications = useCallback((paths: string[]) => {
+  const onAddApplications = useCallback((entities: PickedEntity[]) => {
     const updatedRole = {
       ...roleRef.current,
-      limits: addApplicationLimits(roleRef.current.limits, paths),
+      limits: addApplicationLimits(roleRef.current.limits, entities),
     };
     roleRef.current = updatedRole;
     onChangeRef.current(updatedRole);

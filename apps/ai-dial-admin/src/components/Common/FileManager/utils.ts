@@ -8,7 +8,7 @@ import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from
 import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
 import { ASSETS_ROW_HEIGHT, ICON_ROW_HEIGHT } from '@/src/components/Grid/constants';
 import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
-import { TEMP_FOLDER } from '@/src/constants/file';
+import { ROOT_FOLDER, TEMP_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { SCHEMA_ID_NAMED_VIEWS } from '@/src/utils/core-schemas/constants';
@@ -18,10 +18,8 @@ import {
   FILE_MANAGER_GRID_CLASS,
   FILE_NAME_MAX_LENGTH,
   MAX_FOLDER_NESTING_DEPTH,
-  MOVE_EXCLUDED_PATHS,
 } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
-import { getRootFolder, isFileRootPath, isPlatformDualBucketView } from '@/src/utils/files/root-folder';
 import { isCatalogView } from '@/src/utils/is-view';
 import { addTrailingSlash } from '@/src/utils/url';
 
@@ -101,7 +99,6 @@ export const getDestinationFolderPopupOptions = (
       ? t(FileManagerI18nKey.MoveItem, { item: itemName })
       : t(FileManagerI18nKey.MoveItems, { count: itemsCount }),
   processDestinationFolderPath: (path: string) => addTrailingSlash(path),
-  excludedPaths: MOVE_EXCLUDED_PATHS,
 });
 
 export const createEmptyFile = () => {
@@ -171,25 +168,27 @@ const getActionLabelsWithIcon = (
   }, {});
 };
 
+const getSelectionMode = (isReadOnlyAdmin: boolean, isSingleSelection?: boolean): GridSelectionMode | undefined => {
+  if (isReadOnlyAdmin) {
+    return void 0;
+  }
+
+  return isSingleSelection ? GridSelectionMode.SINGLE : GridSelectionMode.MULTIPLE;
+};
+
 export const getGridOptions = (
   view: ApplicationRoute,
   isReadOnlyAdmin: boolean,
   columnDefs: ColDef[],
   t: (key: string) => string,
   isSingleSelection?: boolean,
-  currentPath?: string,
 ) =>
   ({
     alternateOddRowColors: false,
     columnDefs,
     containerClassName: FILE_MANAGER_GRID_CLASS,
-    selectionMode:
-      isReadOnlyAdmin || isFileRootPath(currentPath)
-        ? void 0
-        : isSingleSelection
-          ? GridSelectionMode.SINGLE
-          : GridSelectionMode.MULTIPLE,
-    actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin, currentPath), t),
+    selectionMode: getSelectionMode(isReadOnlyAdmin, isSingleSelection),
+    actionLabels: getActionLabels(getGridActionLabels(view, isReadOnlyAdmin), t),
     additionalGridOptions: {
       rowHeight: isCatalogView(view) ? ICON_ROW_HEIGHT : ASSETS_ROW_HEIGHT,
       defaultColDef: {
@@ -216,16 +215,16 @@ export const getTreeOptions = (
   view: ApplicationRoute,
   setExpanded: (paths: Set<string>) => void,
   t: (key: string) => string,
-  currentPath?: string,
-  // An empty header suppresses the library's default "Folder Tree" title.
+  // The library draws a default "Folder Tree" title unless the header is empty; a page that already shows its
+  // own title (the tabbed Applications/Toolsets listing) passes none.
   header = '',
 ) => {
   return {
     collapsed: false,
     expandedPaths: expandedPaths,
     loadedPaths,
-    loadingPaths: isFetchingFiles ? new Set<string>([getRootFolder(view)]) : new Set<string>(),
-    actionLabels: getActionLabels(getTreeActionLabels(isReadOnlyAdmin, view, currentPath), t),
+    loadingPaths: isFetchingFiles ? new Set<string>([ROOT_FOLDER]) : new Set<string>(),
+    actionLabels: getActionLabels(getTreeActionLabels(isReadOnlyAdmin, view), t),
     onExpandedPathsChange: setExpanded,
     header,
   };
@@ -233,47 +232,17 @@ export const getTreeOptions = (
 
 export const isHiddenFilesToggleSupported = (route: ApplicationRoute) => route === ApplicationRoute.Files;
 
-export const getToolbarOptions = (
-  route: ApplicationRoute,
-  isReadOnlyAdmin: boolean,
-  t: (key: string) => string,
-  currentPath?: string,
-) => ({
+export const getToolbarOptions = (route: ApplicationRoute, isReadOnlyAdmin: boolean, t: (key: string) => string) => ({
   showHiddenFilesToggle: isHiddenFilesToggleSupported(route),
   showHiddenFilesLabel: t(FileManagerI18nKey.ShowHiddenFiles),
   hideHiddenFilesLabel: t(FileManagerI18nKey.HideHiddenFiles),
-  newActions: getActionLabelsWithIcon(getToolbarOptionLabels(route, isReadOnlyAdmin, currentPath), t),
+  newActions: getActionLabelsWithIcon(getToolbarOptionLabels(route, isReadOnlyAdmin), t),
   newButtonLabel: route === ApplicationRoute.Files ? t(ButtonsI18nKey.Add) : t(ButtonsI18nKey.Create),
 });
 
-export const getBulkActionsToolbarOptions = (
-  view: ApplicationRoute,
-  t: (key: string) => string,
-  currentPath?: string,
-) => {
-  if (isFileRootPath(currentPath)) {
-    return {
-      getSelectionLabel: () => t(FileManagerI18nKey.SelectedItems),
-      actionLabels: {},
-    };
-  }
-
+export const getBulkActionsToolbarOptions = (view: ApplicationRoute, t: (key: string) => string) => {
   const isFlatBulkView =
-    view === ApplicationRoute.Conversations ||
-    view === ApplicationRoute.PlatformModels ||
-    view === ApplicationRoute.PlatformAppRunners ||
-    view === ApplicationRoute.PlatformCatalogSchemas ||
-    view === ApplicationRoute.PlatformInterceptors ||
-    view === ApplicationRoute.PlatformTranslators ||
-    view === ApplicationRoute.PlatformRouters ||
-    view === ApplicationRoute.PlatformRoutes ||
-    view === ApplicationRoute.PlatformRoles ||
-    view === ApplicationRoute.PlatformKeys ||
-    view === ApplicationRoute.PlatformPolicies ||
-    view === ApplicationRoute.PlatformPolicyAssignments ||
-    view === ApplicationRoute.Skills ||
-    view === ApplicationRoute.Projects ||
-    isPlatformDualBucketView(view, currentPath);
+    view === ApplicationRoute.Conversations || view === ApplicationRoute.Skills || view === ApplicationRoute.Projects;
 
   const actionLabels = isFlatBulkView ? bulkActionLabels.filter((action) => action.key === 'delete') : bulkActionLabels;
 

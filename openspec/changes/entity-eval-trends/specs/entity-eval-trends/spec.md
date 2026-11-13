@@ -50,7 +50,9 @@ page of results. While the list is loading, the tab SHALL show a loading indicat
 For Platform Models the deployment id is `getModelDeploymentId(name)` (the bare model name). For
 applications the deployment id is `getApplicationDeploymentId(view, application)`: public-bucket
 asset applications use `applications/<metadata.path>`; platform-bucket and Entities applications
-use `name`.
+use `name`. Before comparing to `deployment_ref.id` / `mcp_deployment_ref.id`, each `/`-separated
+segment of that id SHALL be URI-encoded, because Core stores the address that way (`Code Apps`
+is stored as `Code%20Apps`). Ids with no reserved characters are unchanged.
 
 #### Scenario: Suites match the entity deployment id
 
@@ -63,6 +65,12 @@ use `name`.
 - **WHEN** the view is Assets Applications, the application is not on the platform bucket, and
   `_metadata.path` is `folder/my-app__1.0.0`
 - **THEN** suites are loaded for deployment id `applications/folder/my-app__1.0.0`
+
+#### Scenario: Folder name with spaces matches the stored deployment id
+
+- **WHEN** the entity deployment id is `applications/public/QA/Code Apps ALS/app__1.0.0` and a suite
+  stores `deployment_ref.id` `applications/public/QA/Code%20Apps%20ALS/app__1.0.0`
+- **THEN** that suite appears in the suite dropdown
 
 #### Scenario: No matching suites
 

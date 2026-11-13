@@ -5,10 +5,10 @@ import classNames from 'classnames';
 
 import PopupLoader from '@/src/components/Common/FormPopup/PopupLoader';
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
-import ResourceSourceField from '@/src/components/Assets/Resources/ResourceSourceField';
+import ResourceSourceField, { getInitialSource } from '@/src/components/Assets/Resources/ResourceSourceField';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import {
@@ -38,7 +38,7 @@ import {
   getCreateNotificationDescription,
   getCreateNotificationTitle,
 } from '@/src/utils/entities/create-entity';
-import { isPlatformBucketPath } from '@/src/utils/files/root-folder';
+import { isPlatformBucketPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { isValidEndpoint } from '@/src/utils/validation/url-error';
@@ -55,7 +55,14 @@ interface Props {
   runners?: DialApplicationScheme[];
   versionsMap?: Record<string, string[]>;
   translators?: ResourceInfo[];
-  getContext: () => AssetsFolderContextReader<AssetListItem>;
+  /** The Public tree's folder state. Not needed, and not passed, for a platform create. */
+  getContext?: () => AssetsFolderContextReader<AssetListItem>;
+  /** A platform create writes the flat, unversioned `platform/{name}` resource and needs no folder context. */
+  isPlatform?: boolean;
+  /** Seeds the form, e.g. from the app runner the application is created for. */
+  initialValues?: Partial<DialApplicationResource>;
+  /** Rendered above the form, for an entry point that lets the user choose the destination. */
+  topSlot?: ReactNode;
   onClose: () => void;
   onCreate?: (asset: AssetWithVersion) => Promise<ServerActionResponse>;
 }
@@ -67,6 +74,9 @@ const CreateApplication: FC<Props> = ({
   versionsMap,
   translators,
   getContext,
+  isPlatform: isPlatformCreate,
+  initialValues,
+  topSlot,
   onClose,
   onCreate,
 }) => {
@@ -76,8 +86,9 @@ const CreateApplication: FC<Props> = ({
   const { showNotification } = useNotification();
   const { isValid } = useSaveValidationContext();
   const protectedRequest = useProtectedRequest();
-  const folderContext = getContext();
-  const isPlatform = isPlatformBucketPath(folderContext.filePath);
+  const folderContext = getContext?.();
+  const isPlatform = isPlatformCreate ?? isPlatformBucketPath(folderContext?.filePath);
+  const folderId = isPlatform ? `${PLATFORM_ROOT_FOLDER}/` : (folderContext?.filePath ?? '');
   const initialAsset = useMemo(
     () =>
       ({
@@ -85,14 +96,17 @@ const CreateApplication: FC<Props> = ({
         displayName: '',
         description: '',
         interfaces: {},
-        folderId: folderContext.filePath,
+        folderId,
         ...(isPlatform ? { user_roles: [] } : { version: DEFAULT_NEW_ENTITY_VERSION }),
+        ...initialValues,
       }) as DialApplicationResource,
-    [isPlatform, folderContext.filePath],
+    [isPlatform, folderId, initialValues],
   );
   const [step, setStep] = useState(CreateStep.Details);
   const [asset, setAsset] = useState(initialAsset);
-  const [source, setSource] = useState(ASSET_APPLICATION_INTERFACES_SOURCE_TYPE);
+  const [source, setSource] = useState(() =>
+    initialValues ? getInitialSource(initialAsset, codeAppEditorUrl) : ASSET_APPLICATION_INTERFACES_SOURCE_TYPE,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isUniqueNameError, setIsUniqueNameError] = useState(false);
 
@@ -121,7 +135,7 @@ const CreateApplication: FC<Props> = ({
     const entity = {
       ...asset,
       name: asset.name?.trim() || '',
-      folderId: folderContext.filePath,
+      folderId,
       ...(!isPlatform && { display_version: asset.version }),
     } as unknown as AssetWithVersion;
     const response = await protectedRequest(onCreate, entity);
@@ -139,26 +153,16 @@ const CreateApplication: FC<Props> = ({
     );
     router.push(getUrnForEntity(ApplicationRoute.AssetsApplications, entity));
     onCloseAndReset();
-  }, [
-    asset,
-    folderContext.filePath,
-    isPlatform,
-    onCloseAndReset,
-    onCreate,
-    protectedRequest,
-    router,
-    showNotification,
-    t,
-  ]);
+  }, [asset, folderId, isPlatform, onCloseAndReset, onCreate, protectedRequest, router, showNotification, t]);
 
   const versionError = !isPlatform
     ? getAssetDestinationError(
-        folderContext.filePath,
+        folderId,
         asset.name || '',
         asset.version,
         ResourceType.APPLICATION,
         t,
-        getAssetPathsFromVersions(folderContext.filePath, versionsMap),
+        getAssetPathsFromVersions(folderId, versionsMap),
       )
     : undefined;
   const isDetailsValid =
@@ -211,6 +215,7 @@ const CreateApplication: FC<Props> = ({
           ariaLabel={title}
           statusLabels={getStepStatusLabels(t)}
         />
+        {topSlot}
         {step === CreateStep.Details && (
           <div className="flex flex-col gap-y-8">
             <AssetProperties

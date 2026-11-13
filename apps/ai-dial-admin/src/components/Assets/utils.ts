@@ -8,12 +8,7 @@ import {
   resolveDeploymentNavigationTarget,
 } from '@/src/utils/deployment-navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import {
-  isFileRootPath,
-  isPlatformBucketView,
-  isPlatformBucketRow,
-  isPlatformDualBucketView,
-} from '@/src/utils/files/root-folder';
+import { isPlatformBucketRow } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
   allActionLabels,
@@ -103,42 +98,14 @@ export const getParentPathByFullPath = (fullPath: string) => {
   return normalized.slice(0, lastSlash + 1);
 };
 
-export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
-  if (isFileRootPath(currentPath)) {
-    return allActionLabels.filter((item) => item.key === 'openInNewTab');
-  }
-
+export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
   switch (view) {
     case ApplicationRoute.Files:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
-    case ApplicationRoute.PlatformModels:
-    case ApplicationRoute.PlatformAppRunners:
-    case ApplicationRoute.PlatformCatalogSchemas:
-    case ApplicationRoute.PlatformInterceptors:
-    case ApplicationRoute.PlatformRoutes:
-    case ApplicationRoute.PlatformRoles:
-    case ApplicationRoute.PlatformKeys:
-    case ApplicationRoute.PlatformPolicies:
-    case ApplicationRoute.PlatformPolicyAssignments:
-    case ApplicationRoute.PlatformTranslators:
-    case ApplicationRoute.PlatformRouters:
-      return isReadOnlyAdmin
-        ? []
-        : allActionLabels.filter(
-            (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
-          );
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
-      if (isPlatformDualBucketView(view, currentPath)) {
-        return isReadOnlyAdmin
-          ? []
-          : allActionLabels.filter(
-              (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
-            );
-      }
-      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Conversations:
@@ -155,15 +122,7 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
   }
 };
 
-export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute, currentPath?: string) => {
-  if (isFileRootPath(currentPath)) {
-    return [];
-  }
-
-  if (isPlatformBucketView(view) || isPlatformDualBucketView(view, currentPath)) {
-    return [];
-  }
-
+export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute) => {
   // No rename or move here: Core-backed folder rename/move doesn't cover these types. Folder delete
   // runs through its own recursive endpoints (`removeSkillFolder` / `removeProjectFolder`).
   if (view === ApplicationRoute.Skills || view === ApplicationRoute.Projects) {
@@ -181,106 +140,12 @@ export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationR
       );
 };
 
-export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
-  if (isReadOnlyAdmin || isFileRootPath(currentPath)) return [];
-
-  if (isPlatformDualBucketView(view, currentPath)) {
-    const label =
-      view === ApplicationRoute.AssetsToolsets ? FileManagerI18nKey.Toolset : FileManagerI18nKey.Application;
-    return [{ key: 'newItem', label, icon: null }];
-  }
+export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
+  if (isReadOnlyAdmin) return [];
 
   switch (view) {
     case ApplicationRoute.Files:
       return [...baseToolbarOptionLabels, { key: 'uploadFiles', label: FileManagerI18nKey.Files, icon: null }];
-    case ApplicationRoute.PlatformAppRunners:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.AppRunner,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformCatalogSchemas:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.CatalogSchema,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformModels:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Model,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformInterceptors:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Interceptor,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformTranslators:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Translator,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformRouters:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Router,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformRoutes:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Route,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformPolicies:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Policy,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformPolicyAssignments:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.PolicyAssignment,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformRoles:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Role,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformKeys:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Key,
-          icon: null,
-        },
-      ];
     case ApplicationRoute.AssetsApplications:
       return [
         ...baseToolbarOptionLabels,

@@ -88,6 +88,7 @@ export interface PipelineOutput {
   name: string;
   column: string;
   jsonata?: string;
+  source?: string;
 }
 
 export enum TransformType {
@@ -97,6 +98,7 @@ export enum TransformType {
 
 export enum TransformPreset {
   ChatCompletion = 'chat_completion',
+  DialAppRoute = 'dial_app_route',
 }
 
 /**
@@ -116,6 +118,7 @@ export interface TransformOutputBody {
   prose?: string;
   values?: string[];
   jsonata?: string;
+  source?: string;
 }
 
 /**
@@ -134,6 +137,7 @@ export interface TransformOutput {
   prose?: string;
   values?: string[];
   jsonata?: string;
+  source?: string;
   sql?: string;
 }
 
@@ -146,6 +150,7 @@ export interface PipelineTransform {
   type: TransformType;
   preset?: TransformPreset;
   model?: string;
+  route?: string;
   params?: Record<string, unknown>;
   request_template?: string;
   inputs?: Record<string, PipelineVar>;

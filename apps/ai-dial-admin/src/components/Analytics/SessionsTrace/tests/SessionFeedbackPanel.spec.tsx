@@ -40,10 +40,39 @@ const setup = (
   );
 
 describe('SessionFeedbackPanel', () => {
-  test('states that a session carries no ratings rather than rendering an empty list', () => {
-    setup([], 0);
+  test('states that a session carries no ratings instead of zero counts and an empty list', () => {
+    render(
+      <SessionFeedbackPanel
+        ratings={{ rating_up: 0, rating_down: 0 }}
+        feedback={{ rows: [], total: 0, isCommentTextReadable: false, isAvailable: true }}
+      />,
+    );
 
     expect(screen.getByText(SessionsTraceI18nKey.DetailNoRatings)).toBeInTheDocument();
+    expect(screen.queryByText('0')).toBeNull();
+  });
+
+  test('states zero counts above a listed response rather than the no-ratings label', () => {
+    setup(
+      [row({ rate_pos_count: 0, rate_zero_count: 0, rate_neg_count: 0 })],
+      1,
+      false,
+      {},
+      {
+        rating_up: 0,
+        rating_down: 0,
+      },
+    );
+
+    expect(screen.queryByText(SessionsTraceI18nKey.DetailNoRatings)).toBeNull();
+    expect(screen.getAllByText('0').length).toBeGreaterThan(0);
+  });
+
+  test('states the counts and no empty-list label when the session carries ratings', () => {
+    setup([], 0);
+
+    expect(screen.queryByText(SessionsTraceI18nKey.DetailNoRatings)).toBeNull();
+    expect(screen.getByText('2')).toBeInTheDocument();
   });
 
   test('reads a response direction from its own counts', () => {
