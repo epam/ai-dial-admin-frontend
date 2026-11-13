@@ -262,7 +262,7 @@ describe('WidgetSettingsModal — view', () => {
       />,
     );
 
-    expect(screen.getByRole('combobox', { name: CustomDashboardsI18nKey.ValueColumn })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.ValueColumn}`) })).toBeTruthy();
 
     // Settings start from `initial` once, at mount, so the other view is a fresh modal.
     unmount();
@@ -291,7 +291,7 @@ describe('WidgetSettingsModal — view', () => {
       />,
     );
 
-    expect(screen.queryByRole('combobox', { name: CustomDashboardsI18nKey.ValueColumn })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.ValueColumn}`) })).toBeNull();
   });
 
   test('offers a currency once a Single value is written as money', async () => {
@@ -320,12 +320,14 @@ describe('WidgetSettingsModal — view', () => {
     );
     const user = userEvent.setup();
 
-    expect(screen.queryByRole('combobox', { name: CustomDashboardsI18nKey.Currency })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.Currency}`) })).toBeNull();
 
-    await user.click(screen.getByRole('combobox', { name: CustomDashboardsI18nKey.ValueFormat }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.ValueFormat}`) }));
     await user.click(await screen.findByRole('option', { name: CustomDashboardsI18nKey.FormatMoney }));
 
-    expect(await screen.findByRole('combobox', { name: CustomDashboardsI18nKey.Currency })).toBeTruthy();
+    expect(
+      await screen.findByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.Currency}`) }),
+    ).toBeTruthy();
   });
 
   test('hides the picker while there is no result to judge', () => {
@@ -405,7 +407,7 @@ describe('WidgetSettingsModal — source', () => {
     );
 
   const chooseSql = async (user: ReturnType<typeof userEvent.setup>) => {
-    await user.click(screen.getByRole('combobox', { name: CustomDashboardsI18nKey.Source }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.Source}`) }));
     await user.click(await screen.findByRole('option', { name: CustomDashboardsI18nKey.SourceSql }));
   };
 
