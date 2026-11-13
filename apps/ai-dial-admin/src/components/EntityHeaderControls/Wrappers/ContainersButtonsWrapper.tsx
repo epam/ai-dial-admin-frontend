@@ -13,9 +13,9 @@ import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom';
 
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
-import { CreateAssetRoute } from '@/src/components/Assets/BaseAssetList/types';
-import { AssetFolderContextMap, CreateAssetActionMap } from '@/src/components/Assets/BaseAssetList/utils';
-import CreateAsset from '@/src/components/Assets/Modals/CreateAsset';
+import { AssetFolderContextMap } from '@/src/components/Assets/BaseAssetList/utils';
+import CreateSeededAsset from '@/src/components/Assets/Modals/CreateSeededAsset';
+import CreatePlatformEntity from '@/src/components/Assets/Platform/CreatePlatformEntity';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
@@ -39,6 +39,7 @@ import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -310,26 +311,25 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
       {isModalOpen &&
         modalType === ModalType.createAsset &&
         createPortal(
-          // Flat platform types (models, interceptors) go through the same create flow as their
-          // Assets list; only the dual-bucket types need the folder-aware asset modal.
+          // Flat platform types (models, interceptors) go through the same create flow as their Platform
+          // tab; Applications and Toolsets let the user choose between the Public tree and Platform.
           isPlatformBucketView(assetView) ? (
-            <CreateEntity
-              route={assetView}
-              isModalOpen={isModalOpen}
+            <CreatePlatformEntity
+              view={assetView}
+              isOpen={isModalOpen}
               names={assetNames ?? []}
               onClose={onCloseModal}
-              createEntity={CreateAssetActionMap[assetView as CreateAssetRoute]}
               initialValues={assetTemplate as Partial<AssetWithVersion>}
-              isModal
             />
           ) : (
-            <CreateAsset
+            <CreateSeededAsset
               view={assetView}
-              isModalOpen={isModalOpen}
+              isOpen={isModalOpen}
               onClose={onCloseModal}
               initialValues={assetTemplate as Partial<AssetWithVersion>}
               context={assetFolderContext}
-              shouldOpenOnPlatform
+              platformNames={assetNames}
+              defaultDestination={AssetSource.Platform}
             />
           ),
           document.body,

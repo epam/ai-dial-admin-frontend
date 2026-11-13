@@ -2630,6 +2630,16 @@ export enum ExportRunI18nKey {
   NoPreview = 'ExportRun.NoPreview',
 }
 
+export enum AssetTabsI18nKey {
+  Public = 'AssetTabs.Public',
+  Platform = 'AssetTabs.Platform',
+  ConfigFile = 'AssetTabs.ConfigFile',
+  TabsLabel = 'AssetTabs.TabsLabel',
+  Destination = 'AssetTabs.Destination',
+  LoadError = 'AssetTabs.LoadError',
+  NameColumn = 'AssetTabs.NameColumn',
+}
+
 export enum FileManagerI18nKey {
   SelectedItems = 'FileManager.SelectedItems',
   FolderPath = 'FileManager.FolderPath',

@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 
-import { getGridColumns } from '@/src/components/Assets/BaseAssetList/utils';
+import { getFlatAssetColumns } from '@/src/components/Assets/FlatAssetGrid/columns';
 import { getForbiddenSymbolsRegExp, isItemNameValid, isItemOpenable } from '@/src/components/Common/FileManager/utils';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { ApplicationRoute } from '@/src/types/routes';
 
 const VIEW = ApplicationRoute.PlatformAppRunners;
@@ -43,32 +44,21 @@ describe('App runner asset :: URI-shaped names', () => {
 });
 
 describe('App runner asset :: created time column', () => {
-  const columnsOf = () => getGridColumns(VIEW);
+  const columnsOf = () =>
+    getFlatAssetColumns(VIEW, AssetSource.Platform, () => undefined, { name: 'Name', costObject: 'Cost object' });
 
-  test('Should expose createdAt as a locale-aware column factory, not a raw field', () => {
-    const createdAt = columnsOf()[2] as unknown as (
-      locale: Intl.LocalesArgument,
-      options: Intl.DateTimeFormatOptions | undefined,
-    ) => { field?: string; colId?: string; cellRenderer?: unknown };
+  test('Should expose createdAt as its own column with a date formatter', () => {
+    const createdAt = columnsOf().find((column) => column.field === 'createdAt');
 
-    expect(typeof createdAt).toEqual('function');
-
-    const resolved = createdAt('en-US', undefined);
-    expect(resolved.field).toEqual('createdAt');
-    expect(resolved.cellRenderer).toBeTypeOf('function');
+    expect(createdAt).toBeDefined();
+    expect(createdAt?.valueFormatter).toBeTypeOf('function');
   });
 
   test('Should not reuse the updated-time colId, which would collide in ag-grid', () => {
-    const createdAt = columnsOf()[2] as unknown as (
-      locale: Intl.LocalesArgument,
-      options: Intl.DateTimeFormatOptions | undefined,
-    ) => { colId?: string };
-    const updatedAt = columnsOf()[3] as unknown as (
-      locale: Intl.LocalesArgument,
-      options: Intl.DateTimeFormatOptions | undefined,
-    ) => { colId?: string };
+    const createdAt = columnsOf().find((column) => column.field === 'createdAt');
+    const updatedAt = columnsOf().find((column) => column.field === 'updatedAt');
 
-    expect(createdAt('en-US', undefined).colId).toEqual('createdAt');
-    expect(createdAt('en-US', undefined).colId).not.toEqual(updatedAt('en-US', undefined).colId);
+    expect(createdAt?.field).not.toEqual(updatedAt?.field);
+    expect(createdAt?.colId ?? createdAt?.field).not.toEqual(updatedAt?.colId ?? updatedAt?.field);
   });
 });

@@ -22,7 +22,7 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
 }));
 
 const createAssetProps = vi.fn();
-vi.mock('@/src/components/Assets/Modals/CreateAsset', () => ({
+vi.mock('@/src/components/Assets/Modals/CreateSeededAsset', () => ({
   default: (props: any) => {
     createAssetProps(props);
     return <div>create-asset-modal</div>;
@@ -107,7 +107,7 @@ describe('App runner asset :: create asset application action', () => {
 
     expect(screen.getByText('create-asset-modal')).toBeInTheDocument();
     expect(createAssetProps).toHaveBeenCalledWith(
-      expect.objectContaining({ view: ApplicationRoute.AssetsApplications, isModalOpen: true }),
+      expect.objectContaining({ view: ApplicationRoute.AssetsApplications, isOpen: true }),
     );
   });
 

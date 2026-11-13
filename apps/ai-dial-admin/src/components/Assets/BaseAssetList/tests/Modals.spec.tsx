@@ -5,9 +5,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import Modals from '../Modals';
 import { ModalType } from '../types';
 
-vi.mock('@/src/components/Assets/Modals/DuplicatePlatformAsset', () => ({
-  default: () => <div>duplicate-platform-asset</div>,
-}));
 vi.mock('@/src/components/Assets/Modals/DuplicateAsset', () => ({
   default: () => <div>duplicate-asset</div>,
 }));
@@ -26,25 +23,9 @@ const renderDuplicateModal = (view: ApplicationRoute, duplicateItem: Record<stri
   );
 };
 
-/**
- * Regression: a platform-bucket application/toolset row must duplicate the same flat, unversioned
- * way the six other flat platform views already do (design.md D2/`platform-applications`/
- * `platform-toolsets`) — not the versioned `DuplicateAsset` flow (select new version vs. new entity,
- * enter a version) that a public-bucket row still gets.
- */
-describe('Modals :: duplicate modal dispatch for dual-bucket views', () => {
+describe('Modals :: duplicate modal dispatch', () => {
   test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    'renders DuplicatePlatformAsset, not DuplicateAsset, for a platform-bucket %s row',
-    (view) => {
-      renderDuplicateModal(view, { name: 'pl_Ts', _metadata: { folderId: 'platform/' }, path: 'platform/pl_Ts' });
-
-      expect(screen.getByText('duplicate-platform-asset')).toBeInTheDocument();
-      expect(screen.queryByText('duplicate-asset')).not.toBeInTheDocument();
-    },
-  );
-
-  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    'renders DuplicateAsset, unchanged, for a public-bucket %s row',
+    'renders DuplicateAsset for a %s row',
     (view) => {
       renderDuplicateModal(view, {
         name: 'MyEntity',
@@ -53,7 +34,6 @@ describe('Modals :: duplicate modal dispatch for dual-bucket views', () => {
       });
 
       expect(screen.getByText('duplicate-asset')).toBeInTheDocument();
-      expect(screen.queryByText('duplicate-platform-asset')).not.toBeInTheDocument();
     },
   );
 });

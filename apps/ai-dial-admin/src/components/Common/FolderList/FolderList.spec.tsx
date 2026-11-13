@@ -4,7 +4,6 @@ import { useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { Asset } from '@/src/models/dial/deployment-asset';
-import { FILE_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -40,23 +39,9 @@ describe('FolderList', () => {
     await vi.waitFor(() => expect(context.fetchFiles).toHaveBeenCalledWith(`${ROOT_FOLDER}/`));
   });
 
-  test('auto-fetches both roots as an array when rootPaths has more than one entry', async () => {
-    const context = fakeContext();
-    render(<FolderList context={() => context} rootPaths={['platform/', 'public/']} />);
-
-    await vi.waitFor(() => expect(context.fetchFiles).toHaveBeenCalledWith(['platform/', 'public/']));
-  });
-
-  test('auto-fetches the single rootPaths entry unwrapped when it is the only one', async () => {
-    const context = fakeContext();
-    render(<FolderList context={() => context} rootPaths={['platform/']} />);
-
-    await vi.waitFor(() => expect(context.fetchFiles).toHaveBeenCalledWith('platform/'));
-  });
-
   test('does not auto-fetch when files are already loaded', () => {
     const context = fakeContext([{ name: 'folder', path: 'public/', folderId: 'public/' }]);
-    render(<FolderList context={() => context} rootPaths={['platform/', 'public/']} />);
+    render(<FolderList context={() => context} />);
 
     expect(context.fetchFiles).not.toHaveBeenCalled();
   });
@@ -83,27 +68,6 @@ describe('FolderList', () => {
     expect(screen.getByText(EntitiesI18nKey.NoFolders)).toBeInTheDocument();
     expect(fetchFiles).toHaveBeenCalledOnce();
   });
-
-  test('does not refetch when rootPaths is a new array with the same entries', async () => {
-    const context = fakeContext();
-    const { rerender } = render(<FolderList context={() => context} rootPaths={['platform/', 'public/']} />);
-    await vi.waitFor(() => expect(context.fetchFiles).toHaveBeenCalledOnce());
-
-    rerender(<FolderList context={() => context} rootPaths={['platform/', 'public/']} />);
-
-    expect(context.fetchFiles).toHaveBeenCalledOnce();
-  });
-
-  test('fetches again when the root paths change', async () => {
-    const context = fakeContext();
-    const { rerender } = render(<FolderList context={() => context} rootPaths={['platform/']} />);
-    await vi.waitFor(() => expect(context.fetchFiles).toHaveBeenCalledWith('platform/'));
-
-    rerender(<FolderList context={() => context} rootPaths={['public/']} />);
-
-    await vi.waitFor(() => expect(context.fetchFiles).toHaveBeenLastCalledWith('public/'));
-    expect(context.fetchFiles).toHaveBeenCalledTimes(2);
-  });
 });
 
 describe('FolderList tree', () => {
@@ -114,7 +78,6 @@ describe('FolderList tree', () => {
     const toggleFolder = vi.fn();
     const context = {
       ...(fakeContext([
-        folder('file', `${FILE_ROOT_FOLDER}/`),
         folder('apps', 'public/apps/', [folder('child', 'public/apps/child/')]),
         folder('.hidden', 'public/.hidden/'),
       ]) as object),
@@ -124,14 +87,13 @@ describe('FolderList tree', () => {
     return { context, toggleFolder };
   };
 
-  test('exposes a localized tree and lists folders, dot-folders included, without the root', () => {
+  test('exposes a localized tree and lists folders, dot-folders included', () => {
     const { context } = treeContext();
     render(<FolderList context={() => context} />);
 
     expect(screen.getByRole('tree', { name: FoldersI18nKey.Folders })).toBeInTheDocument();
     expect(screen.getByRole('treeitem', { name: 'apps' })).toBeInTheDocument();
     expect(screen.getByRole('treeitem', { name: '.hidden' })).toBeInTheDocument();
-    expect(screen.queryByRole('treeitem', { name: 'file' })).not.toBeInTheDocument();
   });
 
   test('calls toggleFolder once per click with the context node and never steals focus', async () => {

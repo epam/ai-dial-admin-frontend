@@ -7,29 +7,21 @@ const PROMPT = { name: 'summarize__1.0', path: 'public/team/summarize__1.0', fol
 
 describe('getAssetItemUrl', () => {
   test('builds the details address of an item', () => {
-    expect(getAssetItemUrl(ApplicationRoute.Prompts, PROMPT, 'public/team/')).toMatch(/^\/prompts\//);
+    expect(getAssetItemUrl(ApplicationRoute.Prompts, PROMPT)).toMatch(/^\/prompts\//);
   });
 
-  test('marks an item opened from the file root as config-file sourced', () => {
-    expect(getAssetItemUrl(ApplicationRoute.Prompts, PROMPT, 'file/')).toMatch(/[?&]configFile=true$/);
-  });
-
-  test('leaves a Catalog Schema opened from the file root unmarked', () => {
-    const schema = { name: 'schema-1', path: 'file/schema-1' };
-
-    expect(getAssetItemUrl(ApplicationRoute.PlatformCatalogSchemas, schema, 'file/')).not.toContain('configFile');
+  test('never marks an item as config-file sourced: those rows live in the flat grid', () => {
+    expect(getAssetItemUrl(ApplicationRoute.Prompts, PROMPT)).not.toContain('configFile');
   });
 });
 
 describe('getAssetItemHref', () => {
   test('returns the details address for an openable item', () => {
-    expect(getAssetItemHref(ApplicationRoute.Prompts, PROMPT, 'public/team/')).toBe(
-      getAssetItemUrl(ApplicationRoute.Prompts, PROMPT, 'public/team/'),
-    );
+    expect(getAssetItemHref(ApplicationRoute.Prompts, PROMPT)).toBe(getAssetItemUrl(ApplicationRoute.Prompts, PROMPT));
   });
 
   test('returns nothing for an item whose name cannot be opened', () => {
-    expect(getAssetItemHref(ApplicationRoute.Prompts, { name: 'bad:name/x' }, 'public/')).toBeUndefined();
+    expect(getAssetItemHref(ApplicationRoute.Prompts, { name: 'bad:name/x' })).toBeUndefined();
   });
 
   test('returns nothing without an item or a name', () => {

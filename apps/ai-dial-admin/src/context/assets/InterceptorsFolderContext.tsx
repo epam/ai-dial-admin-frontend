@@ -1,11 +1,8 @@
 'use client';
 
-import { getConfigFileInterceptors, getInterceptors } from '@/src/app/[lang]/platform-interceptors/actions';
+import { getInterceptors } from '@/src/app/[lang]/platform-interceptors/actions';
 import { createFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { PlatformAssetListItem } from '@/src/models/dial/asset-list-item';
 
 export const { Provider: InterceptorsFolderProvider, useFolderContext: useInterceptorsFolder } =
-  createFolderContext<PlatformAssetListItem>(getInterceptors, 'useInterceptorsFolder', async () => {
-    const result = await getConfigFileInterceptors();
-    return result.success ? result.data : undefined;
-  });
+  createFolderContext<PlatformAssetListItem>(getInterceptors, 'useInterceptorsFolder');

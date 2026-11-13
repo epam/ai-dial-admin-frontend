@@ -1,31 +1,10 @@
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { BucketType, EntitySource } from '@/src/models/dial/asset-list-item';
+import { BucketType } from '@/src/models/dial/asset-list-item';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { ApplicationRoute } from '@/src/types/routes';
 
 /** Core's fixed bucket for `ConfigResourceController`-backed resource types. */
 export const PLATFORM_ROOT_FOLDER = 'platform';
-
-/** A synthetic UI root backed by Core's read-only config-file inspection endpoint. */
-export const FILE_ROOT_FOLDER = 'file';
-
-export interface RootDescriptor {
-  name: string;
-  source: EntitySource;
-  isReadOnly: boolean;
-}
-
-const resourceRoot = (name: string): RootDescriptor => ({
-  name,
-  source: EntitySource.Resource,
-  isReadOnly: false,
-});
-
-const fileRoot = (): RootDescriptor => ({
-  name: FILE_ROOT_FOLDER,
-  source: EntitySource.File,
-  isReadOnly: true,
-});
 
 /** Core's flat `platform` resource views. */
 const FLAT_PLATFORM_VIEWS: readonly ApplicationRoute[] = [
@@ -88,40 +67,6 @@ export const CONFIG_FILE_ENTITY_TYPE_BY_VIEW: ReadonlyMap<ApplicationRoute, Conf
 export const getConfigFileEntityType = (view: ApplicationRoute): ConfigFileEntityType | undefined =>
   CONFIG_FILE_ENTITY_TYPE_BY_VIEW.get(view);
 
-export const isFileRootPath = (path?: string | null): boolean => path === `${FILE_ROOT_FOLDER}/`;
-
-export const isFileSource = (entitySource?: string, path?: string | null): boolean =>
-  entitySource === EntitySource.File || isFileRootPath(path);
-
-/**
- * Ordered FileManager roots. `file` is synthetic and must never be sent to Core's resource metadata
- * endpoint. It remains visible when the physical platform bucket is not offered (unit mode), and goes only when
- * the caller cannot read Core's config-file endpoints (`isFileRootEnabled` off).
- */
-export const getRootDescriptors = (
-  view: ApplicationRoute,
-  isPlatformBucketEnabled = true,
-  isFileRootEnabled = true,
-): RootDescriptor[] => {
-  const hasFileRoot = isFileRootEnabled && getConfigFileEntityType(view) != null;
-
-  if (DUAL_BUCKET_VIEWS.includes(view)) {
-    const roots = isPlatformBucketEnabled
-      ? [resourceRoot(PLATFORM_ROOT_FOLDER), resourceRoot(ROOT_FOLDER)]
-      : [resourceRoot(ROOT_FOLDER)];
-    return hasFileRoot ? [fileRoot(), ...roots] : roots;
-  }
-
-  const roots = [resourceRoot(getRootFolder(view))];
-  return hasFileRoot ? [fileRoot(), ...roots] : roots;
-};
-
-export const getRootFolders = (
-  view: ApplicationRoute,
-  isPlatformBucketEnabled = true,
-  isFileRootEnabled = true,
-): string[] => getRootDescriptors(view, isPlatformBucketEnabled, isFileRootEnabled).map((root) => root.name);
-
 /** The bucket segment a path/folderId begins with, for views whose resources can live in either. */
 export const isPlatformBucketPath = (path?: string | null): boolean =>
   !!path && path.startsWith(`${PLATFORM_ROOT_FOLDER}/`);
@@ -132,10 +77,6 @@ export const isPublicPath = (path?: string | null): boolean => !!path && path.st
 /** True when a row belongs to the physical platform bucket. */
 export const isPlatformBucketRow = (bucket?: string, fallbackPath?: string | null): boolean =>
   bucket ? bucket === BucketType.Platform : isPlatformBucketPath(fallbackPath);
-
-/** True when `view` is a dual physical-bucket view and the current path is in `platform`. */
-export const isPlatformDualBucketView = (view: ApplicationRoute, currentPath?: string): boolean =>
-  DUAL_BUCKET_VIEWS.includes(view) && isPlatformBucketPath(currentPath);
 
 /** See platform Applications/Toolsets detail URL contract. */
 export const isPlatformBucketDetailRoute = (rawPath?: string): boolean => !rawPath;

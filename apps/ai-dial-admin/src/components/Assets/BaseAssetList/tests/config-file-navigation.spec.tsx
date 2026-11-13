@@ -24,7 +24,7 @@ const item = {
 vi.mock('@/src/context/assets/AppsFolderContext', () => ({
   useAppsFolder: () => ({
     fetchFiles: vi.fn(),
-    filePath: 'file/',
+    filePath: 'public/folder/',
     fetchedFoldersData,
     setFilePath: vi.fn(),
   }),
@@ -40,7 +40,7 @@ vi.mock('@/src/components/Common/FileManager/FileManager', () => ({
 
 vi.mock('../Modals', () => ({ __esModule: true, default: () => null }));
 
-const CONFIG_FILE_URL = '/assets-applications/MyApp?path=public%2Ffolder%2FMyApp__1.0&configFile=true';
+const ASSET_URL = '/assets-applications/MyApp?path=public%2Ffolder%2FMyApp__1.0';
 
 const renderNameCell = () => {
   const columns = lastProps.value?.columnDefs as Array<(...args: unknown[]) => ColDef>;
@@ -49,17 +49,17 @@ const renderNameCell = () => {
   return render(<>{cellRenderer({ data: item, context: {} } as unknown as ICellRendererParams)}</>);
 };
 
-describe('BaseAssetList config-file navigation', () => {
+describe('BaseAssetList asset navigation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal('open', windowOpen);
   });
 
-  test('links a config-file asset name to its details with the path query preserved', () => {
+  test('links an asset name to its details with the path query preserved and no config-file flag', () => {
     render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
     renderNameCell();
 
-    expect(screen.getByRole('link', { name: 'MyApp' })).toHaveAttribute('href', CONFIG_FILE_URL);
+    expect(screen.getByRole('link', { name: 'MyApp' })).toHaveAttribute('href', ASSET_URL);
   });
 
   test('does not open details on a file-row click', () => {
@@ -68,12 +68,12 @@ describe('BaseAssetList config-file navigation', () => {
     expect(lastProps.value?.onTableFileClick).toBeUndefined();
   });
 
-  test('opens the corrected URL through the action-menu new-tab callback', async () => {
+  test('opens the plain details URL through the action-menu new-tab callback', async () => {
     const user = userEvent.setup();
     render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
 
     await user.click(screen.getByRole('button', { name: 'open-in-new-tab' }));
 
-    expect(windowOpen).toHaveBeenCalledWith(CONFIG_FILE_URL, '_blank');
+    expect(windowOpen).toHaveBeenCalledWith(ASSET_URL, '_blank');
   });
 });

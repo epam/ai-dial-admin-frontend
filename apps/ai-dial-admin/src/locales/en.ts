@@ -2515,6 +2515,15 @@ export default {
     TrendsStabilityLoadFailed: 'Failed to load test case stability',
     TrendsTestCasesLoadFailed: 'Failed to load test case results',
   },
+  AssetTabs: {
+    Public: 'Public',
+    Platform: 'Platform',
+    ConfigFile: 'config.json',
+    TabsLabel: 'Entity source',
+    Destination: 'Destination',
+    LoadError: 'Failed to load entities',
+    NameColumn: 'Name',
+  },
   FileManager: {
     SelectedItems: 'item(s) selected',
     FolderPath: 'Folder path',

@@ -1,61 +1,36 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import { getGridColumns, getEmptyAsset } from '@/src/components/Assets/BaseAssetList/utils';
-import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
+import { getFlatAssetColumns } from '@/src/components/Assets/FlatAssetGrid/columns';
+import { getGridActionLabels, getToolbarOptionLabels } from '@/src/components/Assets/utils';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { ApplicationRoute } from '@/src/types/routes';
 
 const VIEW = ApplicationRoute.PlatformModels;
 
 /**
- * Models are flat in Core's `platform` bucket. Browser verification found the tree root still offered
- * `Add child`, which submits the `getEmptyAsset` placeholder Core cannot store — and it failed
- * invisibly: the pending node vanished with no error, no toast, and an HTTP 200 server action.
+ * The Model list is a flat grid on the Platform tab, not a file-manager tree, so the file manager's label
+ * helpers must offer nothing for it: a folder operation would submit a placeholder Core cannot store.
  */
 describe('Model asset :: folder operations', () => {
-  test('Should offer no tree actions, since the tree holds only the flat root', () => {
-    expect(getTreeActionLabels(false, VIEW)).toEqual([]);
+  test('Should offer no file-manager toolbar entries', () => {
+    expect(getToolbarOptionLabels(VIEW, false)).toEqual([]);
   });
 
-  test.each(['addSibling', 'addChild', 'move', 'rename', 'managePermissions'])(
-    'Should not offer %s on the tree',
-    (action) => {
-      expect(getTreeActionLabels(false, VIEW).map((item) => item.key)).not.toContain(action);
-    },
-  );
-
-  test('Should offer no folder creation in the toolbar', () => {
-    expect(getToolbarOptionLabels(VIEW, false).map((item) => item.key)).toEqual(['newItem']);
-  });
-
-  test('Should offer duplicate, delete and open-in-new-tab in the grid context menu', () => {
-    expect(getGridActionLabels(VIEW, false).map((item) => item.key)).toEqual(['duplicate', 'delete', 'openInNewTab']);
-  });
-
-  test.each(['addSibling', 'addChild', 'move', 'rename', 'managePermissions'])(
-    'Should not offer the folder-bound %s in the grid context menu',
-    (action) => {
-      expect(getGridActionLabels(VIEW, false).map((item) => item.key)).not.toContain(action);
-    },
-  );
-
-  test('Should confirm the placeholder a folder create would send is not a usable model', () => {
-    expect(getEmptyAsset(VIEW, 'platform/')).not.toHaveProperty('endpoint');
+  test('Should offer no file-manager row actions', () => {
+    expect(getGridActionLabels(VIEW, false)).toEqual([]);
   });
 });
 
 type ColumnFactory = (dateLocale?: unknown, dateOptions?: unknown) => { colId?: string; field?: string };
 
-/**
- * Date columns are supplied as locale-taking factories cast to `ColDef`, so resolving them is the only
- * way to read their `colId` — which is what matters here, since the created-at column is derived from
- * the updated-at one and two columns sharing a `colId` silently collide in ag-grid.
- */
 const columnIds = (view: ApplicationRoute): (string | undefined)[] =>
-  getGridColumns(view).map((column) => {
-    const resolved = typeof column === 'function' ? (column as ColumnFactory)('en-US', void 0) : column;
+  getFlatAssetColumns(view, AssetSource.Platform, () => undefined, { name: 'Name', costObject: 'Cost object' }).map(
+    (column) => {
+      const resolved = typeof column === 'function' ? (column as unknown as ColumnFactory)('en-US', void 0) : column;
 
-    return resolved.colId ?? resolved.field;
-  });
+      return resolved.colId ?? resolved.field;
+    },
+  );
 
 describe('Model asset :: list columns', () => {
   test('Should expose name, author, created-at and updated-at', () => {
@@ -68,12 +43,8 @@ describe('Model asset :: list columns', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  test('Should match the sibling flat view, both being metadata-only', () => {
-    expect(columnIds(VIEW)).toEqual(columnIds(ApplicationRoute.PlatformAppRunners));
-  });
-
-  test('Should carry no version column, unlike the versioned asset views', () => {
+  test('Should carry no version or folder column', () => {
     expect(columnIds(VIEW)).not.toContain('version');
-    expect(columnIds(ApplicationRoute.AssetsApplications)).toContain('version');
+    expect(columnIds(VIEW)).not.toContain('folder');
   });
 });

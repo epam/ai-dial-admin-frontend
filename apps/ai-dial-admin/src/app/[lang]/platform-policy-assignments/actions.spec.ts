@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { assetApi } from '@/src/app/api/api';
 import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
-import { deleteCostObjectFolder } from '@/src/server/assets/delete-cost-object-folder';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -14,14 +13,12 @@ import {
   getPolicyAssignments,
   removePolicyAssignment,
   updatePolicyAssignment,
-  removePolicyAssignmentFolder,
 } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
 vi.mock('@/src/server/assets/bulk-delete');
-vi.mock('@/src/server/assets/delete-cost-object-folder');
 
 describe('Platform policy assignments :: server actions', () => {
   beforeEach(() => {
@@ -111,19 +108,5 @@ describe('Platform policy assignments :: server actions', () => {
       { path: 'team-a/a' },
     ]);
     expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('deletes a cost object folder through the folder helper with the token', async () => {
-    vi.mocked(deleteCostObjectFolder).mockResolvedValue({ success: true });
-
-    const result = await removePolicyAssignmentFolder('team-a/');
-
-    expect(deleteCostObjectFolder).toHaveBeenCalledWith(
-      assetApi,
-      TOKEN_MOCK,
-      ResourceType.POLICY_ASSIGNMENT,
-      'team-a/',
-    );
-    expect(result).toEqual({ success: true });
   });
 });

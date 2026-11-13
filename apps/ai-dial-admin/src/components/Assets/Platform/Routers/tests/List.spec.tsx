@@ -4,12 +4,12 @@ import { describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 import RoutersList from '../List';
 
-vi.mock('@/src/components/Assets/BaseAssetList/BaseAssetList', () => ({
+vi.mock('@/src/components/Assets/TabbedAssetList/TabbedAssetList', () => ({
   default: ({ view }: any) => <div>base-asset-list:{view}</div>,
 }));
 
 describe('RoutersList', () => {
-  test('renders BaseAssetList scoped to the PlatformRouters view', () => {
+  test('renders TabbedAssetList scoped to the PlatformRouters view', () => {
     render(<RoutersList />);
 
     expect(screen.getByText(`base-asset-list:${ApplicationRoute.PlatformRouters}`)).toBeInTheDocument();

@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ActionMenuOperationI18nKey, ButtonsI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { PickedEntity } from '@/src/components/Common/EntitySelectInput/models';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { DialRoleResource } from '@/src/models/dial/resource';
 import { ConfigEntityOrigin } from '@/src/types/config-file-entity';
 import RoleEntities from '../Entities';
@@ -39,12 +41,21 @@ vi.mock('@/src/components/EntityView/AddEntitiesGrid', () => ({
 }));
 
 vi.mock('../AddApplicationsPopup', () => ({
-  default: ({ onApply, onClose }: { onApply: (paths: string[]) => void; onClose: () => void }) => (
+  default: ({ onApply, onClose }: { onApply: (entities: PickedEntity[]) => void; onClose: () => void }) => (
     <section aria-label="add applications">
-      <button type="button" onClick={() => onApply(['public/team/app/1.0', 'platform/platformApp', 'fileApp'])}>
+      <button
+        type="button"
+        onClick={() =>
+          onApply([
+            { source: AssetSource.Public, name: 'public/team/app/1.0', path: 'public/team/app/1.0' },
+            { source: AssetSource.Platform, name: 'platformApp' },
+            { source: AssetSource.ConfigFile, name: 'fileApp' },
+          ])
+        }
+      >
         Apply applications
       </button>
-      <button type="button" onClick={() => onApply(['platform/existing'])}>
+      <button type="button" onClick={() => onApply([{ source: AssetSource.Platform, name: 'existing' }])}>
         Apply existing application
       </button>
       <button type="button" onClick={onClose}>

@@ -61,12 +61,12 @@ describe('Files folders opt-in', () => {
   test.each(OPT_IN_CONTEXTS)('%s passes the Files folder source to its folder context', async (name) => {
     const args = await loadContext(name);
 
-    expect(args[3]).toBe(getFileFolderRows);
+    expect(args[2]).toBe(getFileFolderRows);
   });
 
   test.each(OTHER_CONTEXTS)('%s does not borrow Files folders', async (name) => {
     const args = await loadContext(name);
 
-    expect(args[3]).toBeUndefined();
+    expect(args[2]).toBeUndefined();
   });
 });
