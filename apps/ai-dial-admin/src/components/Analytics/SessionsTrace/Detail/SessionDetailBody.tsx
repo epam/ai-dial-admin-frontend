@@ -5,14 +5,15 @@ import { FC, useCallback, useMemo } from 'react';
 import SessionDetailRail from '@/src/components/Analytics/SessionsTrace/Detail/SessionDetailRail';
 import SessionTraceList from '@/src/components/Analytics/SessionsTrace/Detail/SessionTraceList';
 import { useSessionTraces } from '@/src/components/Analytics/SessionsTrace/Detail/use-session-traces';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import {
+  ColumnProvenance,
   SessionDetailRow,
-  SessionFeedbackRow,
-  SessionInsightField,
+  SessionEnrichmentPanel,
+  SessionFeedbackPage,
   SessionTraceCard,
   SessionTraceGroup,
   SessionTraceFigures,
-  SessionRatingCounts,
   SessionScope,
   SpanFieldGroup,
 } from '@/src/models/analytics/sessions-trace';
@@ -20,13 +21,12 @@ import { asTraceFigures, attributeRatingsToTraces, traceCardTitle } from '@/src/
 
 interface Props {
   session: SessionDetailRow;
-  insightColumns: SessionInsightField[];
+  source: SessionsSource;
+  enrichmentPanels: SessionEnrichmentPanel[];
+  enrichmentProvenance: Record<string, ColumnProvenance>;
   metadataGroups: SpanFieldGroup[];
   scope: SessionScope;
-  feedbackRows: SessionFeedbackRow[];
-  feedbackTotal: number | null;
-  ratings: SessionRatingCounts | null;
-  isCommentTextReadable: boolean;
+  feedback: SessionFeedbackPage | null;
   onOpenTrace: (figures: SessionTraceFigures, title?: string) => void;
 }
 
@@ -40,16 +40,16 @@ interface Props {
  */
 const SessionDetailBody: FC<Props> = ({
   session,
-  insightColumns,
+  source,
+  enrichmentPanels,
+  enrichmentProvenance,
   metadataGroups,
-  feedbackRows,
-  feedbackTotal,
-  ratings,
-  isCommentTextReadable,
+  feedback,
   onOpenTrace,
   scope,
 }) => {
-  const projectId = session.project_id ?? '';
+  const projectId = source.project === null ? null : (session.project_id ?? '');
+  const feedbackRows = useMemo(() => feedback?.rows ?? [], [feedback]);
 
   const { groups, hasMore, isLoading, hasLoadError, onLoadMore } = useSessionTraces({
     scope,
@@ -81,12 +81,11 @@ const SessionDetailBody: FC<Props> = ({
       />
       <SessionDetailRail
         session={session}
-        insightColumns={insightColumns}
+        source={source}
+        enrichmentPanels={enrichmentPanels}
+        enrichmentProvenance={enrichmentProvenance}
         metadataGroups={metadataGroups}
-        feedback={feedbackRows}
-        feedbackTotal={feedbackTotal}
-        ratings={ratings}
-        isCommentTextReadable={isCommentTextReadable}
+        feedback={feedback}
       />
     </div>
   );

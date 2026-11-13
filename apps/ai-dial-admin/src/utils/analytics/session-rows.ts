@@ -1,5 +1,7 @@
-import { SessionRatingCounts, SessionRatingRow, SessionRow } from '@/src/models/analytics/sessions-trace';
+import { ResponseRatingsField, SessionRatingCounts, SessionRow } from '@/src/models/analytics/sessions-trace';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import { toNumber } from '@/src/utils/analytics/scalar';
+import { canonicalSessionRow } from '@/src/utils/analytics/sessions-source';
 
 const UNRESOLVED: SessionRatingCounts = {
   rating_up: null,
@@ -9,40 +11,35 @@ const UNRESOLVED: SessionRatingCounts = {
   rate_events: null,
 };
 
-const NONE: SessionRatingCounts = {
-  rating_up: 0,
-  rating_down: 0,
-  provable_down: 0,
-  captured_form: 0,
-  rate_events: 0,
+const sum = (...values: unknown[]): number =>
+  values.reduce<number>((total, value) => total + (toNumber(value as number | string | null) ?? 0), 0);
+
+export const sessionRatingCountsOf = (
+  record: Record<string, unknown>,
+  namespace: string | null,
+): SessionRatingCounts => {
+  if (!namespace) {
+    return UNRESOLVED;
+  }
+
+  const read = (field: ResponseRatingsField): unknown => record[`${namespace}.${field}`];
+
+  return {
+    rating_up: sum(read(ResponseRatingsField.RatePosCount)),
+    rating_down: sum(read(ResponseRatingsField.RateZeroCount), read(ResponseRatingsField.RateNegCount)),
+    provable_down: sum(read(ResponseRatingsField.RateBoolFalseCount), read(ResponseRatingsField.RateNegCount)),
+    captured_form: sum(read(ResponseRatingsField.RateRawCount)),
+    rate_events: sum(read(ResponseRatingsField.RateEventCount)),
+  };
 };
-
-const sum = (...values: (number | string | null)[]): number =>
-  values.reduce<number>((total, value) => total + (toNumber(value) ?? 0), 0);
-
-export const sessionRatingCounts = (row?: SessionRatingRow): SessionRatingCounts =>
-  row
-    ? {
-        rating_up: sum(row.rating_up),
-        rating_down: sum(row.rate_zero, row.rate_negative),
-        provable_down: sum(row.rate_bool_false, row.rate_negative),
-        captured_form: sum(row.rate_raw),
-        rate_events: sum(row.rate_events),
-      }
-    : NONE;
 
 export const negativeRatingGap = ({ rating_down: down, provable_down: provable }: SessionRatingCounts): number =>
   down == null || provable == null ? 0 : Math.max(down - provable, 0);
 
 export const hasNegativeRatingCaveat = (counts: SessionRatingCounts): boolean => negativeRatingGap(counts) > 0;
 
-const countsByChatId = (ratingRows: SessionRatingRow[]): Map<string, SessionRatingCounts> =>
-  new Map(ratingRows.map((row) => [row.chat_id, sessionRatingCounts(row)]));
-
-export const attachRatings = (rows: SessionRow[], ratingRows: SessionRatingRow[]): SessionRow[] => {
-  const counts = countsByChatId(ratingRows);
-
-  return rows.map((row) => ({ ...row, ...(counts.get(row.client_session_id) ?? NONE) }));
-};
-
-export const unresolvedRatings = (rows: SessionRow[]): SessionRow[] => rows.map((row) => ({ ...row, ...UNRESOLVED }));
+export const ratedSessionRow = (source: SessionsSource, raw: Record<string, unknown>): SessionRow =>
+  ({
+    ...canonicalSessionRow(source, raw),
+    ...sessionRatingCountsOf(raw, source.ratingEnrichment),
+  }) as unknown as SessionRow;

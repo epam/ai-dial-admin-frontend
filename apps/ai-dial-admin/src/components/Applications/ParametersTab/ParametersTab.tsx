@@ -94,7 +94,7 @@ const ParametersTab: FC<Props> = ({
       // its Parameters tab never offers the iframe UI view.
       const hasUi = !!targetUrl && !isReadOnlyAdmin && view !== ApplicationRoute.PlatformRouters;
 
-      setViewItems(generateViewItems(t, view, hasUi, !!config));
+      setViewItems(generateViewItems(t, view, hasUi, !!scheme));
       setParamsView(getInitialParamsView(view, hasUi));
     });
 

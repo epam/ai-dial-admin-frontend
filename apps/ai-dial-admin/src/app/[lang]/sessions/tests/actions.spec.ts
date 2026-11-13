@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { analyticsDataApi } from '@/src/app/api/api';
+import { analyticsDataApi, sessionsSourceApi } from '@/src/app/api/api';
 import {
+  getEnrichmentTagOrders,
   getEntityTracePage,
   getSessionFieldValues,
   getSessionHopMessage,
@@ -10,11 +11,11 @@ import {
   getSessionHopResponse,
   getSessions,
   getSessionsSchema,
+  getSessionsSource,
 } from '@/src/app/[lang]/sessions/actions';
 import {
   ARRAY_VALUE_PAGE_SIZE,
   SESSION_FIELD_VALUE_COUNT_ALIAS,
-  FEEDBACK_CANDIDATE_LIMIT,
   RAW_BODY_BYTE_BUDGET,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/sessions-trace';
@@ -31,6 +32,7 @@ import {
   MessageRole,
   UsageLogField,
 } from '@/src/models/analytics/sessions-trace';
+import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   QueryMode,
   QueryOffsetPage,
@@ -38,6 +40,7 @@ import {
   QuerySortDirection,
   StructuredQuery,
 } from '@/src/models/analytics/query';
+import { SessionsRole, SessionsSourceProblem, SessionsSourceSetting } from '@/src/models/analytics/sessions-source';
 import { clearEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -61,6 +64,53 @@ const FILTERS: SessionFilters = {
 const REQUEST: SessionPageRequest = { ...FILTERS, offset: 0, limit: 100 };
 const LATER_PAGE: SessionPageRequest = { ...FILTERS, offset: 100, limit: 100 };
 
+const RATINGS = 'session_ratings';
+
+const schemaField = (name: string, type = AnalyticsFieldType.String): AnalyticsEntityField => ({
+  name,
+  type,
+  source: name.includes('.') ? name.slice(name.indexOf('.') + 1) : name,
+});
+
+const BASE_FIELDS: AnalyticsEntityField[] = [
+  schemaField('client_session_id'),
+  schemaField('project_id'),
+  schemaField('user_hash'),
+  schemaField('turn_count', AnalyticsFieldType.Long),
+  schemaField('total_tokens', AnalyticsFieldType.Long),
+  schemaField('total_price', AnalyticsFieldType.Decimal),
+  schemaField('last_request_time', AnalyticsFieldType.Timestamp),
+  schemaField('first_request_time', AnalyticsFieldType.Timestamp),
+  schemaField('session_insights.title'),
+];
+
+const RATING_FIELDS: AnalyticsEntityField[] = [
+  'rate_pos_count',
+  'rate_zero_count',
+  'rate_neg_count',
+  'rate_bool_false_count',
+  'rate_raw_count',
+  'rate_event_count',
+].map((name) => schemaField(`${RATINGS}.${name}`, AnalyticsFieldType.Long));
+
+const SESSIONS_SCHEMA = [...BASE_FIELDS, ...RATING_FIELDS];
+
+const CUSTOM_SETTING: SessionsSourceSetting = {
+  baseTable: 'agent_runs',
+  roles: {
+    [SessionsRole.SessionId]: 'run_key',
+    [SessionsRole.Time]: 'ended_at',
+    [SessionsRole.Turns]: 'steps',
+  },
+};
+
+const CUSTOM_SCHEMA = [
+  schemaField('run_key'),
+  schemaField('ended_at', AnalyticsFieldType.Timestamp),
+  schemaField('steps', AnalyticsFieldType.Long),
+  schemaField('region'),
+];
+
 const SESSION_ROW = {
   client_session_id: 'a',
   project_id: 'p',
@@ -72,18 +122,29 @@ const SESSION_ROW = {
   first_request_time: '2026-07-28T10:00:00.000Z',
 };
 
+const ratingCounts = (counts: Record<string, number | string | null>) =>
+  Object.fromEntries(Object.entries(counts).map(([name, count]) => [`${RATINGS}.${name}`, count]));
+
 const execute = () => analyticsDataApi.executeAction as unknown as ReturnType<typeof vi.fn>;
+const getEntitySchema = () => analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>;
+const getSetting = () => sessionsSourceApi.getSetting as unknown as ReturnType<typeof vi.fn>;
 
 const ok = (rows: object[]) => ({ success: true, response: { rows } });
 
 const failure = { success: false, status: 500, errorMessage: 'boom' };
 
+const serveSchemas = (schemas: Record<string, AnalyticsEntityField[] | null>) =>
+  getEntitySchema().mockImplementation((entity: string) =>
+    Promise.resolve(schemas[entity] ? { success: true, response: { fields: schemas[entity] } } : { success: false }),
+  );
+
+const bindSource = (setting: SessionsSourceSetting | null) =>
+  getSetting().mockResolvedValue(setting ? { success: true, response: setting } : { success: true });
+
 enum QueryKind {
   List = 'list',
   Totals = 'totals',
   RatingTotals = 'ratingTotals',
-  Candidates = 'candidates',
-  Ratings = 'ratings',
   // Step one of a filter over an array-valued column: the hop log's scalar `deployment` column, grouped.
   Resolution = 'resolution',
   // The grouped count that discovers an enum column's values.
@@ -93,17 +154,14 @@ enum QueryKind {
 const aliases = (query: StructuredQuery): (string | undefined)[] => (query.select ?? []).map((column) => column.as);
 
 const kindOf = (query: StructuredQuery): QueryKind => {
-  if (query.entity === 'response_ratings') {
-    if (aliases(query).includes('last_rated')) {
-      return QueryKind.Candidates;
-    }
-    return aliases(query).includes('rated_conversations') ? QueryKind.RatingTotals : QueryKind.Ratings;
-  }
   if (query.entity === USAGE_LOG_ENTITY) {
     return QueryKind.Resolution;
   }
   if (aliases(query).includes(SESSION_FIELD_VALUE_COUNT_ALIAS)) {
     return QueryKind.FieldValues;
+  }
+  if (aliases(query).includes('rated_conversations')) {
+    return QueryKind.RatingTotals;
   }
   return query.mode === QueryMode.Aggregate ? QueryKind.Totals : QueryKind.List;
 };
@@ -117,8 +175,6 @@ interface Stubs {
   totals?: object;
   rated?: object;
   negative?: object;
-  candidates?: object;
-  ratings?: object;
   // A queue rather than one value: the resolution pages until a page comes back short, so a test of the
   // walk has to answer successive offsets differently.
   resolutions?: object[];
@@ -130,8 +186,6 @@ const stub = ({
   totals = ok([{ sessions: 0, cost: null }]),
   rated = ok([{ rated_conversations: 0 }]),
   negative = ok([{ rated_conversations: 0 }]),
-  candidates,
-  ratings,
   resolutions,
   fieldValues,
 }: Stubs = {}) => {
@@ -143,30 +197,15 @@ const stub = ({
         return Promise.resolve(pending.shift() ?? ok([]));
       case QueryKind.FieldValues:
         return Promise.resolve(fieldValues ?? ok([]));
-      case QueryKind.Candidates:
-        return Promise.resolve(candidates ?? ok([]));
       case QueryKind.Totals:
         return Promise.resolve(totals);
       case QueryKind.RatingTotals:
         return Promise.resolve(isNegativeRatingTotals(query) ? negative : rated);
-      case QueryKind.Ratings:
-        return Promise.resolve(ratings ?? ok([]));
       default:
         return Promise.resolve(list);
     }
   });
 };
-
-const ratingRow = (overrides: Record<string, number | string | null> = {}) => ({
-  chat_id: 'a',
-  rating_up: 0,
-  rate_zero: 0,
-  rate_negative: 0,
-  rate_bool_false: 0,
-  rate_raw: 0,
-  rate_events: 0,
-  ...overrides,
-});
 
 const issued = (kind: QueryKind): StructuredQuery[] =>
   execute()
@@ -175,11 +214,16 @@ const issued = (kind: QueryKind): StructuredQuery[] =>
 
 const queryOf = (kind: QueryKind): StructuredQuery => issued(kind)[0];
 
+const selectNames = (query: StructuredQuery): string[] =>
+  (query.select ?? []).map((column) => (column.expr as { name: string }).name);
+
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   clearEntitySchemaCache();
   (getUserToken as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(TOKEN_MOCK);
   (getIsEnableAuthToggle as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
+  bindSource(null);
+  serveSchemas({ sessions: SESSIONS_SCHEMA });
 });
 
 describe('getSessions', () => {
@@ -194,6 +238,15 @@ describe('getSessions', () => {
     );
   });
 
+  test('resolves the binding from the stored setting and the base table schema', async () => {
+    stub();
+
+    await getSessions(REQUEST);
+
+    expect(getSetting()).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(getEntitySchema()).toHaveBeenCalledWith('sessions', TOKEN_MOCK);
+  });
+
   test('carries the requested offset and limit into the query page', async () => {
     stub();
 
@@ -202,19 +255,31 @@ describe('getSessions', () => {
     expect(queryOf(QueryKind.List).page).toMatchObject({ offset: 200, limit: 100 });
   });
 
-  test('resolves both directions for exactly the returned page in one query', async () => {
-    stub({ list: ok([SESSION_ROW]), ratings: ok([ratingRow({ rating_up: 2, rate_negative: 1 })]) });
+  test('reads both rating directions off the session rows, issuing no rating query of its own', async () => {
+    stub({ list: ok([{ ...SESSION_ROW, ...ratingCounts({ rate_pos_count: 2, rate_neg_count: 1 }) }]) });
 
     const result = await getSessions(REQUEST);
 
-    expect(issued(QueryKind.Ratings)).toHaveLength(1);
     expect(result.response?.rows[0]).toMatchObject({ rating_up: 2, rating_down: 1 });
+    expect(execute().mock.calls.every(([query]) => (query as StructuredQuery).entity === 'sessions')).toBe(true);
+  });
+
+  test('projects the rating enrichment counts in the list query', async () => {
+    stub();
+
+    await getSessions(REQUEST);
+
+    expect(selectNames(queryOf(QueryKind.List))).toEqual(expect.arrayContaining(RATING_FIELDS.map(({ name }) => name)));
   });
 
   test('carries the caveat figures onto the row', async () => {
     stub({
-      list: ok([SESSION_ROW]),
-      ratings: ok([ratingRow({ rate_zero: 4, rate_bool_false: 1, rate_raw: 1, rate_events: 4 })]),
+      list: ok([
+        {
+          ...SESSION_ROW,
+          ...ratingCounts({ rate_zero_count: 4, rate_bool_false_count: 1, rate_raw_count: 1, rate_event_count: 4 }),
+        },
+      ]),
     });
 
     const result = await getSessions(REQUEST);
@@ -222,21 +287,22 @@ describe('getSessions', () => {
     expect(result.response?.rows[0]).toMatchObject({ rating_down: 4, provable_down: 1, captured_form: 1 });
   });
 
-  test('skips the rating queries entirely when the page is empty', async () => {
-    stub();
+  test('reads a session the enrichment has no row for as unrated', async () => {
+    stub({ list: ok([SESSION_ROW]) });
 
-    await getSessions(REQUEST);
+    const result = await getSessions(REQUEST);
 
-    expect(issued(QueryKind.Ratings)).toHaveLength(0);
+    expect(result.response?.rows[0]).toMatchObject({ rating_up: 0, rating_down: 0 });
   });
 
-  test('leaves ratings unresolved when the query fails, still returning the rows', async () => {
-    stub({ list: ok([SESSION_ROW]), ratings: failure });
+  test('leaves ratings unresolved where the schema reports no rating enrichment, still returning the rows', async () => {
+    serveSchemas({ sessions: BASE_FIELDS });
+    stub({ list: ok([SESSION_ROW]) });
 
     const result = await getSessions(REQUEST);
 
     expect(result.success).toBe(true);
-    expect(result.response?.rows[0]).toMatchObject({ rating_up: null, rating_down: null });
+    expect(result.response?.rows[0]).toMatchObject({ client_session_id: 'a', rating_up: null, rating_down: null });
   });
 
   test('propagates a failed list query, carrying no rows but the figures it resolved', async () => {
@@ -247,6 +313,184 @@ describe('getSessions', () => {
     expect(result.success).toBe(false);
     expect(result.response?.rows).toEqual([]);
     expect(result.response?.period?.totals).toEqual({ sessions: 212, cost: null });
+  });
+});
+
+describe('getSessions :: a custom source', () => {
+  beforeEach(() => {
+    bindSource(CUSTOM_SETTING);
+    serveSchemas({ agent_runs: CUSTOM_SCHEMA });
+  });
+
+  test('reads the bound base table and its schema', async () => {
+    stub();
+
+    await getSessions(REQUEST);
+
+    expect(getEntitySchema()).toHaveBeenCalledWith('agent_runs', TOKEN_MOCK);
+    expect(queryOf(QueryKind.List).entity).toBe('agent_runs');
+  });
+
+  test('projects the role-bound fields and bounds the period by the Time field', async () => {
+    stub();
+
+    await getSessions({ ...REQUEST, sourceFields: ['region'] });
+
+    const list = queryOf(QueryKind.List);
+    expect(selectNames(list)).toEqual(expect.arrayContaining(['run_key', 'ended_at', 'steps', 'region']));
+    expect(JSON.stringify(list.filter)).toContain('"ended_at"');
+    expect(JSON.stringify(list.filter)).not.toContain(SessionsField.LastRequestTime);
+  });
+
+  test('returns rows keyed by the canonical names as well as the bound ones', async () => {
+    stub({ list: ok([{ run_key: 'r-1', ended_at: 5, steps: 3, region: 'eu' }]) });
+
+    const result = await getSessions(REQUEST);
+
+    expect(result.response?.rows[0]).toMatchObject({
+      run_key: 'r-1',
+      client_session_id: 'r-1',
+      last_request_time: 5,
+      turn_count: 3,
+      region: 'eu',
+    });
+  });
+
+  test('sums no cost without a Cost role and issues no rating aggregate without a rating enrichment', async () => {
+    stub();
+
+    await getSessions(REQUEST);
+
+    expect(JSON.stringify(queryOf(QueryKind.Totals).select)).not.toContain('sum');
+    expect(issued(QueryKind.RatingTotals)).toHaveLength(0);
+  });
+
+  test('carries no feedback predicate without a rating enrichment', async () => {
+    stub();
+
+    await getSessions({ ...REQUEST, feedback: FeedbackFilter.Positive });
+
+    expect(JSON.stringify(queryOf(QueryKind.List).filter)).not.toContain('rate_');
+  });
+});
+
+describe('getSessions :: a required role that does not resolve', () => {
+  test('fails without querying and names the role and the field', async () => {
+    bindSource({
+      baseTable: 'agent_runs',
+      roles: { [SessionsRole.SessionId]: 'run_key', [SessionsRole.Time]: 'gone' },
+    });
+    serveSchemas({ agent_runs: CUSTOM_SCHEMA });
+    stub();
+
+    const result = await getSessions(REQUEST);
+
+    expect(result).toEqual({ success: false, errorMessage: `${SessionsRole.Time}: gone` });
+    expect(execute()).not.toHaveBeenCalled();
+  });
+
+  test('fails when the bound field has a type its role cannot take', async () => {
+    bindSource({
+      baseTable: 'agent_runs',
+      roles: { [SessionsRole.SessionId]: 'run_key', [SessionsRole.Time]: 'region' },
+    });
+    serveSchemas({ agent_runs: CUSTOM_SCHEMA });
+
+    const result = await getSessions(REQUEST);
+
+    expect(result.success).toBe(false);
+    expect(result.errorMessage).toBe(`${SessionsRole.Time}: region`);
+  });
+});
+
+describe('getSessionsSource', () => {
+  test('resolves the default binding when nothing is stored', async () => {
+    const resolution = await getSessionsSource();
+
+    expect(resolution.failure).toBeNull();
+    expect(resolution.source).toMatchObject({
+      baseTable: 'sessions',
+      sessionId: SessionsField.ChatId,
+      time: SessionsField.LastRequestTime,
+      cost: SessionsField.TotalPrice,
+      ratingEnrichment: RATINGS,
+    });
+  });
+
+  test('fails without a source rather than falling back to the default when the setting cannot be read', async () => {
+    getSetting().mockResolvedValue({ success: false, status: 403, errorMessage: 'Access denied' });
+
+    expect(await getSessionsSource()).toEqual({
+      source: null,
+      failure: null,
+      problem: SessionsSourceProblem.SettingUnreadable,
+    });
+    expect(getEntitySchema()).not.toHaveBeenCalled();
+  });
+
+  test('fails the session query without querying when the setting cannot be read', async () => {
+    getSetting().mockResolvedValue({ success: false, status: 403 });
+
+    const result = await getSessions(REQUEST);
+
+    expect(result.success).toBe(false);
+    expect(execute()).not.toHaveBeenCalled();
+  });
+
+  test('reports Sessions as not set up when nothing is stored and the default table does not exist', async () => {
+    getEntitySchema().mockResolvedValue({ success: false, status: 404 });
+
+    expect(await getSessionsSource()).toEqual({
+      source: null,
+      failure: null,
+      problem: SessionsSourceProblem.DefaultTableMissing,
+    });
+  });
+
+  test('keeps the default source when the default table schema fails for another reason', async () => {
+    getEntitySchema().mockResolvedValue({ success: false, status: 500 });
+
+    const resolution = await getSessionsSource();
+
+    expect(resolution.problem).toBeUndefined();
+    expect(resolution.source?.baseTable).toBe('sessions');
+  });
+
+  test('reports the setting read failure as the schema read failure', async () => {
+    getSetting().mockResolvedValue({ success: false, status: 403, errorMessage: 'Access denied' });
+
+    expect(await getSessionsSchema()).toEqual(
+      expect.objectContaining({ success: false, status: 403, errorMessage: 'Access denied' }),
+    );
+  });
+
+  test('resolves a stored binding against the caller schema, leaving unbound roles null', async () => {
+    bindSource(CUSTOM_SETTING);
+    serveSchemas({ agent_runs: CUSTOM_SCHEMA });
+
+    const resolution = await getSessionsSource();
+
+    expect(resolution.source).toMatchObject({
+      baseTable: 'agent_runs',
+      sessionId: 'run_key',
+      time: 'ended_at',
+      turns: 'steps',
+      project: null,
+      cost: null,
+      ratingEnrichment: null,
+    });
+  });
+
+  test('reports the failing role and field', async () => {
+    bindSource({
+      baseTable: 'agent_runs',
+      roles: { [SessionsRole.SessionId]: 'gone', [SessionsRole.Time]: 'ended_at' },
+    });
+    serveSchemas({ agent_runs: CUSTOM_SCHEMA });
+
+    const resolution = await getSessionsSource();
+
+    expect(resolution).toEqual({ source: null, failure: { role: SessionsRole.SessionId, field: 'gone' } });
   });
 });
 
@@ -273,6 +517,24 @@ describe('getSessions :: the period figures', () => {
       totals: { sessions: 1886, cost: 654.07 },
       ratings: { rated: 19, negative: 13 },
     });
+  });
+
+  test('aggregates the rating figures over the base entity', async () => {
+    stub();
+
+    await getSessions(REQUEST);
+
+    issued(QueryKind.RatingTotals).forEach((query) => expect(query.entity).toBe('sessions'));
+  });
+
+  test('reports no rating figures where the schema reports no rating enrichment', async () => {
+    serveSchemas({ sessions: BASE_FIELDS });
+    stub({ totals: ok([{ sessions: 3, cost: 1 }]) });
+
+    const result = await getSessions(REQUEST);
+
+    expect(issued(QueryKind.RatingTotals)).toHaveLength(0);
+    expect(result.response?.period).toEqual({ totals: { sessions: 3, cost: 1 } });
   });
 
   // A search or column predicate reaching the totals query would make the pills a summary of the filtered result.
@@ -358,12 +620,11 @@ describe('getSessions :: the period figures', () => {
 
   // A feedback filter selecting nothing empties the grid, not the period; zeroes would assert an empty period.
   test('reports the period even when the feedback filter selects nothing', async () => {
-    stub({ candidates: ok([]), totals: ok([{ sessions: 212, cost: 1 }]) });
+    stub({ list: ok([]), totals: ok([{ sessions: 212, cost: 1 }]) });
 
     const result = await getSessions({ ...REQUEST, feedback: FeedbackFilter.Negative });
 
     expect(result.response?.rows).toEqual([]);
-    expect(result.response?.total).toBe(0);
     expect(result.response?.period?.totals).toEqual({ sessions: 212, cost: 1 });
   });
 
@@ -391,7 +652,7 @@ describe('getSessions :: the period figures', () => {
     });
 
     const pending = getSessions(REQUEST);
-    await Promise.resolve();
+    await vi.waitFor(() => expect(inFlight).toContain(QueryKind.List));
 
     expect(inFlight).toContain(QueryKind.Totals);
 
@@ -438,6 +699,7 @@ describe('getSessions :: the grid row total', () => {
         columnFilters: [{ field: SessionsField.TurnCount, operator: SessionFilterOperator.GreaterThan, value: '2' }],
       },
     ],
+    ['a feedback filter', { feedback: FeedbackFilter.Rated }],
   ])('reports no total when %s narrows the period', async (_label, overrides) => {
     stub({ totals: ok([{ sessions: 1886, cost: 1 }]) });
 
@@ -464,101 +726,50 @@ describe('getSessions :: the grid row total', () => {
   });
 });
 
-describe('getSessions :: the feedback candidates', () => {
-  test('resolves the candidates itself on the first page and returns them', async () => {
-    stub({ candidates: ok([{ chat_id: 'a' }, { chat_id: 'b' }]) });
+describe('getSessions :: the feedback filter', () => {
+  const listFilter = () => JSON.stringify(queryOf(QueryKind.List).filter);
 
-    const result = await getSessions({ ...REQUEST, feedback: FeedbackFilter.Positive });
-
-    expect(queryOf(QueryKind.Candidates).entity).toBe('response_ratings');
-    expect(result.response?.candidates?.ids).toEqual(['a', 'b']);
-  });
-
-  test('narrows the list query by the candidates it resolved', async () => {
-    stub({ candidates: ok([{ chat_id: 'a' }]) });
+  test('narrows the list query by a predicate on the rating enrichment counts', async () => {
+    stub({ list: ok([SESSION_ROW]) });
 
     await getSessions({ ...REQUEST, feedback: FeedbackFilter.Positive });
 
+    expect(listFilter()).toContain(`${RATINGS}.rate_pos_count`);
+  });
+
+  test('resolves no candidate ids and narrows by no id list', async () => {
+    stub();
+
+    await getSessions({ ...REQUEST, feedback: FeedbackFilter.Rated });
+
     const args = (queryOf(QueryKind.List).filter as { args: { op: QueryOperator }[] }).args;
-    expect(args.some((node) => node.op === QueryOperator.In)).toBe(true);
+    expect(args.some((node) => node.op === QueryOperator.In)).toBe(false);
+    expect(execute().mock.calls.every(([query]) => (query as StructuredQuery).entity === 'sessions')).toBe(true);
   });
 
-  test('narrows to nothing without reading ratings where the rating entity is not provisioned', async () => {
-    stub({ candidates: ok([{ chat_id: 'a' }]) });
-    (analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      success: false,
-      status: 404,
-    });
-
-    const result = await getSessions({ ...REQUEST, feedback: FeedbackFilter.Positive });
-
-    expect(result.success).toBe(true);
-    expect(issued(QueryKind.Candidates)).toEqual([]);
-    expect(result.response?.rows).toEqual([]);
-  });
-
-  test('drops blank and non-string ids', async () => {
-    stub({ candidates: ok([{ chat_id: '' }, { chat_id: null }, { chat_id: 'a' }]) });
-
-    const result = await getSessions({ ...REQUEST, feedback: FeedbackFilter.Rated });
-
-    expect(result.response?.candidates?.ids).toEqual(['a']);
-  });
-
-  test('reports an uncapped candidate set', async () => {
-    stub({ candidates: ok([{ chat_id: 'a' }]) });
-
-    const result = await getSessions({ ...REQUEST, feedback: FeedbackFilter.Positive });
-
-    expect(result.response?.candidates?.isCapped).toBe(false);
-  });
-
-  test('reports a candidate set that reached the limit', async () => {
-    const rows = Array.from({ length: FEEDBACK_CANDIDATE_LIMIT }, (_unused, index) => ({ chat_id: `c${index}` }));
-    stub({ candidates: ok(rows) });
-
-    const result = await getSessions({ ...REQUEST, feedback: FeedbackFilter.Positive });
-
-    expect(result.response?.candidates?.isCapped).toBe(true);
-  });
-
-  test('propagates a failed candidate query without running the list query', async () => {
-    stub({ candidates: failure });
-
-    const result = await getSessions({ ...REQUEST, feedback: FeedbackFilter.Positive });
-
-    expect(issued(QueryKind.List)).toHaveLength(0);
-    expect(result.success).toBe(false);
-    expect(result.response).toBeUndefined();
-  });
-
-  // An active feedback state narrows by `in`; building the query without ids would drop the predicate and
-  // return every session instead of none.
-  test('returns nothing without querying when no session carries the feedback', async () => {
-    stub({ candidates: ok([]) });
-
-    const result = await getSessions({ ...REQUEST, feedback: FeedbackFilter.Positive });
-
-    expect(issued(QueryKind.List)).toHaveLength(0);
-    expect(result.response).toMatchObject({ rows: [], total: 0 });
-  });
-
-  test('a later page reuses the ids the caller carries rather than resolving them again', async () => {
+  test('a later page carries the same predicate', async () => {
     stub({ list: ok([SESSION_ROW]) });
 
-    await getSessions({ ...LATER_PAGE, feedback: FeedbackFilter.Positive, chatIds: ['a', 'b'] });
+    await getSessions({ ...LATER_PAGE, feedback: FeedbackFilter.Negative });
 
-    expect(issued(QueryKind.Candidates)).toHaveLength(0);
-    const args = (queryOf(QueryKind.List).filter as { args: { op: QueryOperator }[] }).args;
-    expect(args.some((node) => node.op === QueryOperator.In)).toBe(true);
+    expect(listFilter()).toContain(`${RATINGS}.rate_neg_count`);
   });
 
-  test('the default feedback state resolves no candidates', async () => {
+  test('the default feedback state adds no predicate', async () => {
     stub();
 
     await getSessions(REQUEST);
 
-    expect(issued(QueryKind.Candidates)).toHaveLength(0);
+    expect(listFilter()).not.toContain('rate_');
+  });
+
+  test('is dropped where the schema reports no rating enrichment', async () => {
+    serveSchemas({ sessions: BASE_FIELDS });
+    stub();
+
+    await getSessions({ ...REQUEST, feedback: FeedbackFilter.Positive });
+
+    expect(listFilter()).not.toContain('rate_');
   });
 });
 
@@ -577,8 +788,7 @@ describe('getSessions :: projection', () => {
     await getSessions({ ...REQUEST, visibleEnrichmentFields: ['session_insights.topic'] });
     const withColumn = JSON.stringify(queryOf(QueryKind.List).select);
 
-    vi.clearAllMocks();
-    stub();
+    execute().mockClear();
     await getSessions({ ...REQUEST, visibleEnrichmentFields: [] });
 
     expect(withColumn).toContain('session_insights.topic');
@@ -798,14 +1008,36 @@ describe('getSessionFieldValues', () => {
     expect(JSON.stringify(queryOf(QueryKind.FieldValues).filter)).toContain('carried-name');
   });
 
-  // An active feedback filter narrows by `in`, so an empty candidate set is the complete answer.
-  test('answers nothing without a query when the feedback candidates are empty', async () => {
-    stub();
+  test('carries the feedback predicate on the rating enrichment', async () => {
+    stub({ fieldValues: ok([valueRow('positive', 1)]) });
 
-    const result = await getSessionFieldValues(REQUEST_FOR({ feedback: FeedbackFilter.Rated, chatIds: [] }));
+    await getSessionFieldValues(REQUEST_FOR({ feedback: FeedbackFilter.Rated }));
 
-    expect(result).toEqual({ success: true, response: [] });
-    expect(issued(QueryKind.FieldValues)).toHaveLength(0);
+    expect(JSON.stringify(queryOf(QueryKind.FieldValues).filter)).toContain(`${RATINGS}.rate_pos_count`);
+  });
+
+  test('reads the values under the field the role is bound to on a custom source', async () => {
+    bindSource(CUSTOM_SETTING);
+    serveSchemas({ agent_runs: CUSTOM_SCHEMA });
+    stub({ fieldValues: ok([{ steps: '4', [SESSION_FIELD_VALUE_COUNT_ALIAS]: 2 }]) });
+
+    const result = await getSessionFieldValues(REQUEST_FOR({ field: SessionsField.TurnCount }));
+
+    expect(queryOf(QueryKind.FieldValues)).toMatchObject({ entity: 'agent_runs', group_by: ['steps'] });
+    expect(result.response).toEqual([{ value: '4', count: 2 }]);
+  });
+
+  test('fails without a query when a required role does not resolve', async () => {
+    bindSource({
+      baseTable: 'agent_runs',
+      roles: { [SessionsRole.SessionId]: 'gone', [SessionsRole.Time]: 'ended_at' },
+    });
+    serveSchemas({ agent_runs: CUSTOM_SCHEMA });
+
+    const result = await getSessionFieldValues(REQUEST_FOR());
+
+    expect(result).toEqual({ success: false, errorMessage: `${SessionsRole.SessionId}: gone` });
+    expect(execute()).not.toHaveBeenCalled();
   });
 
   test('reports a failed read rather than an empty value list', async () => {
@@ -819,8 +1051,6 @@ describe('getSessionFieldValues', () => {
 });
 
 describe('getSessionsSchema', () => {
-  const getEntitySchema = () => analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>;
-
   test('reads the sessions entity schema with the caller token', async () => {
     getEntitySchema().mockResolvedValue({
       success: true,
@@ -849,13 +1079,49 @@ describe('getSessionsSchema', () => {
     await getSessionsSchema();
     const result = await getSessionsSchema();
 
-    expect(getEntitySchema()).toHaveBeenCalledTimes(1);
+    expect(getEntitySchema()).toHaveBeenCalledOnce();
     expect(result.success).toBe(true);
+  });
+
+  test('reads the schema of the bound base table', async () => {
+    bindSource(CUSTOM_SETTING);
+    serveSchemas({ agent_runs: CUSTOM_SCHEMA });
+
+    const result = await getSessionsSchema();
+
+    expect(getEntitySchema()).toHaveBeenCalledWith('agent_runs', TOKEN_MOCK);
+    expect(result.response?.fields).toEqual(CUSTOM_SCHEMA);
+  });
+
+  test('reports a schema read that throws as a failure', async () => {
+    getEntitySchema().mockRejectedValue(new Error('down'));
+
+    expect(await getSessionsSchema()).toEqual({ success: false });
+  });
+});
+
+describe('getEnrichmentTagOrders', () => {
+  const getTable = () => analyticsDataApi.getTable as unknown as ReturnType<typeof vi.fn>;
+
+  test('reads each namespace table definition and returns its tag order', async () => {
+    getTable().mockImplementation((name: string) =>
+      Promise.resolve({ success: true, response: { tag_order: [`${name}-tag`] } }),
+    );
+
+    const orders = await getEnrichmentTagOrders(['session_insights', RATINGS]);
+
+    expect(getTable()).toHaveBeenCalledWith('session_insights', TOKEN_MOCK);
+    expect(orders).toEqual({ session_insights: ['session_insights-tag'], [RATINGS]: [`${RATINGS}-tag`] });
+  });
+
+  test('costs an unreadable table its order rather than the result', async () => {
+    getTable().mockRejectedValueOnce(new Error('down')).mockResolvedValueOnce({ success: false });
+
+    expect(await getEnrichmentTagOrders(['a', 'b'])).toEqual({ a: [], b: [] });
   });
 });
 
 describe('the hop inspector reads', () => {
-  const getEntitySchema = () => analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>;
   const READABLE = [UsageLogField.RequestBody, UsageLogField.ResponseBody];
 
   const schemaOf = (names: string[]) =>

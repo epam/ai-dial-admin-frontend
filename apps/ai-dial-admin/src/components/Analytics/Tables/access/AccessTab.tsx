@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, ButtonVariant, EllipsisTooltip, Search } from '@epam/ai-dial-ui-kit';
-import { IconPlus, IconUsersGroup } from '@tabler/icons-react';
+import { IconPlus, IconUsers, IconUsersGroup } from '@tabler/icons-react';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import classNames from 'classnames';
 import { FC, useMemo, useState } from 'react';
@@ -10,10 +10,10 @@ import FilterToggle from '@/src/components/Analytics/Tables/access/FilterToggle'
 import PrivilegeMarkCell from '@/src/components/Analytics/Tables/access/PrivilegeMarkCell';
 import RemoveRoleDialog from '@/src/components/Analytics/Tables/access/RemoveRoleDialog';
 import RoleDrawer from '@/src/components/Analytics/Tables/access/RoleDrawer';
-import { MARKED_PRIVILEGES } from '@/src/components/Analytics/Tables/access/constants';
+import { EVERYONE_ROLE, MARKED_PRIVILEGES } from '@/src/components/Analytics/Tables/access/constants';
 import { AccessStatus, PrivilegeMark, RoleRow, RowsCellKind } from '@/src/components/Analytics/Tables/access/models';
 import { TableAccessState } from '@/src/components/Analytics/Tables/access/use-table-access';
-import { summarizeFilter } from '@/src/components/Analytics/Tables/access/utils';
+import { roleLabel, summarizeFilter } from '@/src/components/Analytics/Tables/access/utils';
 import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
@@ -41,16 +41,17 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
 
   const isReady = access.status === AccessStatus.Ready;
   const isEmptyTable = isReady && access.rows.length === 0;
+  const everyoneLabel = t(AnalyticsTableAccessI18nKey.EveryoneLabel);
 
   const rows = useMemo(
     () =>
       access.rows.filter(
         (row) =>
-          row.role.toLowerCase().includes(search.trim().toLowerCase()) &&
+          roleLabel(row.role, everyoneLabel).toLowerCase().includes(search.trim().toLowerCase()) &&
           (!isCanReadOnly || row.marks.read !== PrivilegeMark.None) &&
           (!isRowsLimitedOnly || row.filter != null),
       ),
-    [access.rows, search, isCanReadOnly, isRowsLimitedOnly],
+    [access.rows, search, isCanReadOnly, isRowsLimitedOnly, everyoneLabel],
   );
 
   const rowActions: ActionMenuOperationDeclaration<RoleRow>[] = useMemo(
@@ -76,7 +77,14 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
         cellRenderer: ({ data }: ICellRendererParams<RoleRow>) =>
           data && (
             <span className="flex items-center gap-2">
-              <span className="font-mono">{data.role}</span>
+              {data.role === EVERYONE_ROLE ? (
+                <>
+                  <IconUsers size={16} className="text-secondary" aria-hidden />
+                  <span>{everyoneLabel}</span>
+                </>
+              ) : (
+                <span className="font-mono">{data.role}</span>
+              )}
               {data.isSensitive && <SensitiveIndicator />}
             </span>
           ),
@@ -122,7 +130,7 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
       },
       ACTION_COLUMN(rowActions),
     ],
-    [t, rowActions],
+    [t, rowActions, everyoneLabel],
   );
 
   const onOpenRow = (field: string | undefined, row: RoleRow | undefined) => {

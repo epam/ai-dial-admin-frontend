@@ -212,6 +212,62 @@ describe('FileManager — folder expansion', () => {
   });
 });
 
+describe('FileManager — selected folder restore', () => {
+  const root = 'public/';
+  const nested = 'public/team/';
+
+  const renderRestore = (overrides: Partial<AssetsFolderContextReader> = {}) => {
+    // Stable `files`: the mount effect keys on it, so a fresh literal per render would repeat the load.
+    const context = {
+      files: [],
+      fetchFiles: vi.fn(),
+      fetchFolderHierarchy: vi.fn(),
+      filePath: nested,
+      fetchedFoldersData: {},
+      ...overrides,
+    } as unknown as AssetsFolderContextReader;
+
+    render(<FileManager view={ApplicationRoute.Prompts} label="label" columnDefs={[]} getContext={() => context} />);
+
+    return context;
+  };
+
+  test('loads the chain of an uncached nested selection instead of the roots', () => {
+    const context = renderRestore();
+
+    expect(context.fetchFolderHierarchy).toHaveBeenCalledOnce();
+    expect(context.fetchFolderHierarchy).toHaveBeenCalledWith(nested, true);
+    expect(context.fetchFiles).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ['cached nested', { filePath: nested, fetchedFoldersData: { [nested]: [] } }],
+    ['root', { filePath: root }],
+    ['empty', { filePath: '' }],
+  ])('loads the roots for a %s selection', (_, overrides) => {
+    const context = renderRestore(overrides);
+
+    expect(context.fetchFiles).toHaveBeenCalledOnce();
+    expect(context.fetchFiles).toHaveBeenCalledWith(root);
+    expect(context.fetchFolderHierarchy).not.toHaveBeenCalled();
+  });
+
+  test('loads the roots when the context cannot load a hierarchy', () => {
+    const context = renderRestore({ fetchFolderHierarchy: undefined });
+
+    expect(context.fetchFiles).toHaveBeenCalledOnce();
+    expect(context.fetchFiles).toHaveBeenCalledWith(root);
+  });
+
+  test('loads nothing when the tree is already populated', () => {
+    const files = [{ name: 'public', path: root, bucket: BucketType.Public, nodeType: DialFileNodeType.FOLDER }];
+    const context = renderRestore({ files } as Partial<AssetsFolderContextReader>);
+
+    expect(context.fetchFiles).not.toHaveBeenCalled();
+    expect(context.fetchFolderHierarchy).not.toHaveBeenCalled();
+  });
+});
+
 describe('FileManager — hidden files toggle', () => {
   const lastProps = () => dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
 

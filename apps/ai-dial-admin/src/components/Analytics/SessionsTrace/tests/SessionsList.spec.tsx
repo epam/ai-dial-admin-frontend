@@ -15,6 +15,10 @@ import {
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { ColumnProvenance, SessionColumn, SessionRow, SessionsField } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
+import { GRID_COLUMNS_KEY } from '@/src/components/Grid/constants';
+import { SESSIONS_STORAGE_TABLE_KEY } from '@/src/constants/analytics/sessions-trace';
+import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 
 interface CapturedProps {
   rowData?: SessionRow[] | null;
@@ -81,7 +85,15 @@ const INSIGHT_MODEL_FIELD: AnalyticsEntityField = {
   display_name: 'Model',
 };
 
-const renderList = (schemaFields: AnalyticsEntityField[] | null = ALL_FIELDS) =>
+const RATED_SOURCE: SessionsSource = {
+  ...defaultSessionsSource(),
+  enrichments: ['session_insights', 'session_ratings'],
+  ratingEnrichment: 'session_ratings',
+};
+
+const INSIGHTS_GROUP = `${ColumnProvenance.Insights}:session_insights`;
+
+const renderList = (schemaFields: AnalyticsEntityField[] | null = ALL_FIELDS, source: SessionsSource = RATED_SOURCE) =>
   render(
     <SessionsList
       datasource={datasource}
@@ -90,12 +102,14 @@ const renderList = (schemaFields: AnalyticsEntityField[] | null = ALL_FIELDS) =>
       isColumnsPanelOpen={false}
       onToggleColumnsPanel={vi.fn()}
       schemaFields={schemaFields}
+      source={source}
     />,
   );
 
 beforeEach(() => {
   captured = {};
   vi.clearAllMocks();
+  localStorage.clear();
 });
 
 describe('SessionsList :: paging', () => {
@@ -242,7 +256,7 @@ describe('SessionsList :: columns', () => {
     const attributed = leafColumns().map((column) => column.field);
 
     expect(groups.map((group) => group.groupId)).toContain(`${ColumnProvenance.Sessions}:identity`);
-    expect(groups.map((group) => group.groupId)).toContain(`${ColumnProvenance.Insights}:insight`);
+    expect(groups.map((group) => group.groupId)).toContain(`${INSIGHTS_GROUP}:insight`);
     expect(groups.every((group) => group.marryChildren)).toBe(true);
     expect(new Set(attributed).size).toBe(attributed.length);
   });
@@ -259,7 +273,7 @@ describe('SessionsList :: columns', () => {
       SessionsField.ChatId,
       SessionsField.LastRequestTime,
     ]);
-    expect(groupFields(`${ColumnProvenance.Insights}:insight`)).toContain(SessionsField.InsightTopics);
+    expect(groupFields(`${INSIGHTS_GROUP}:insight`)).toContain(SessionsField.InsightTopics);
     expect(groupFields(`${ColumnProvenance.Feedback}`)).toEqual([SessionColumn.Rating]);
   });
 
@@ -270,9 +284,7 @@ describe('SessionsList :: columns', () => {
       (captured.columnDefs ?? []).find((group) => group.groupId === groupId)?.headerName;
 
     expect(header(`${ColumnProvenance.Sessions}:identity`)).toBe(SessionsTraceI18nKey.TagIdentity);
-    expect(header(`${ColumnProvenance.Insights}:insight`)).toBe(
-      `${SessionsTraceI18nKey.ProvenanceInsights} · ${SessionsTraceI18nKey.TagInsight}`,
-    );
+    expect(header(`${INSIGHTS_GROUP}:insight`)).toBe(`session_insights · ${SessionsTraceI18nKey.TagInsight}`);
   });
 
   // The defect that withdrew the derived catalog: this field reports the display name "Model" while holding
@@ -280,13 +292,9 @@ describe('SessionsList :: columns', () => {
   test('offers the evaluator deployment only under the evaluator-run group', () => {
     renderList([...ALL_FIELDS, INSIGHT_MODEL_FIELD]);
 
-    const bookkeeping = (captured.columnDefs ?? []).find(
-      (group) => group.groupId === `${ColumnProvenance.Insights}:provenance`,
-    );
+    const bookkeeping = (captured.columnDefs ?? []).find((group) => group.groupId === `${INSIGHTS_GROUP}:provenance`);
 
-    expect(bookkeeping?.headerName).toBe(
-      `${SessionsTraceI18nKey.ProvenanceInsights} · ${SessionsTraceI18nKey.TagProvenance}`,
-    );
+    expect(bookkeeping?.headerName).toBe(`session_insights · ${SessionsTraceI18nKey.TagProvenance}`);
     expect((bookkeeping?.children as ColDef[]).map((column) => column.field)).toContain(INSIGHT_MODEL_FIELD.name);
   });
 
@@ -324,5 +332,81 @@ describe('SessionsList :: columns', () => {
     const project = leafColumns().find((column) => column.field === SessionsField.ProjectId);
     expect(project?.sortable).not.toBe(false);
     expect(project?.filter).not.toBe(false);
+  });
+});
+
+describe('SessionsList :: the bound source', () => {
+  const fields = () => leafColumns().map((column) => column.field);
+
+  const CUSTOM_SOURCE: SessionsSource = {
+    baseTable: 'agent_runs',
+    sessionId: 'run_key',
+    time: 'ended_at',
+    project: null,
+    title: null,
+    cost: null,
+    turns: 'steps',
+    enrichments: [],
+    ratingEnrichment: null,
+  };
+
+  const CUSTOM_FIELDS: AnalyticsEntityField[] = [
+    { name: 'run_key', source: 'run_key', type: AnalyticsFieldType.String, tag: 'identity' },
+    { name: 'ended_at', source: 'ended_at', type: AnalyticsFieldType.Timestamp, tag: 'identity' },
+    { name: 'steps', source: 'steps', type: AnalyticsFieldType.Long, tag: 'response' },
+    { name: 'region', source: 'region', type: AnalyticsFieldType.String, tag: 'principal' },
+  ];
+
+  test('drops the Rating column without a rating enrichment', () => {
+    renderList(ALL_FIELDS, defaultSessionsSource());
+
+    expect(fields()).not.toContain(SessionColumn.Rating);
+    expect(fields()).toContain(SessionsField.ChatId);
+  });
+
+  test('drops the curated Cost column without a Cost role', () => {
+    renderList(ALL_FIELDS, { ...RATED_SOURCE, cost: null });
+
+    const headers = leafColumns().map((column) => column.headerName);
+    expect(headers).not.toContain(SessionsTraceI18nKey.Cost);
+    expect(leafColumns().find((column) => column.field === SessionsField.TotalPrice)).toBeUndefined();
+    expect(fields()).toContain(SessionColumn.Rating);
+  });
+
+  test('renders the curated Cost column on the default binding', () => {
+    renderList();
+
+    expect(leafColumns().map((column) => column.headerName)).toContain(SessionsTraceI18nKey.Cost);
+  });
+
+  test('renders the bound role columns of a custom table and derives the rest', () => {
+    renderList(CUSTOM_FIELDS, CUSTOM_SOURCE);
+
+    expect(fields()).toEqual(
+      expect.arrayContaining([SessionsField.ChatId, SessionsField.LastRequestTime, SessionsField.TurnCount, 'region']),
+    );
+    expect(fields()).not.toContain('run_key');
+    expect(fields()).not.toContain(SessionsField.ProjectId);
+  });
+
+  test('keeps the saved grid state when it was saved for the same table', () => {
+    const state = JSON.stringify({ columns: [] });
+    localStorage.setItem(`${GRID_COLUMNS_KEY}${SESSIONS_STORAGE_KEY}`, state);
+    localStorage.setItem(SESSIONS_STORAGE_TABLE_KEY, 'agent_runs');
+
+    renderList(CUSTOM_FIELDS, CUSTOM_SOURCE);
+
+    expect(localStorage.getItem(`${GRID_COLUMNS_KEY}${SESSIONS_STORAGE_KEY}`)).toBe(state);
+    expect(captured.storageKey).toBe(SESSIONS_STORAGE_KEY);
+  });
+
+  test('drops the saved grid state before the grid reads it when it was saved for another table', () => {
+    localStorage.setItem(`${GRID_COLUMNS_KEY}${SESSIONS_STORAGE_KEY}`, JSON.stringify({ columns: [] }));
+    localStorage.setItem(SESSIONS_STORAGE_TABLE_KEY, 'sessions');
+
+    renderList(CUSTOM_FIELDS, CUSTOM_SOURCE);
+
+    expect(localStorage.getItem(`${GRID_COLUMNS_KEY}${SESSIONS_STORAGE_KEY}`)).toBeNull();
+    expect(localStorage.getItem(SESSIONS_STORAGE_TABLE_KEY)).toBe('agent_runs');
   });
 });

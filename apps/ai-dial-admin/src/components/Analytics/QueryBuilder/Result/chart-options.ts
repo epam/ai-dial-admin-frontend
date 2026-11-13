@@ -1,12 +1,11 @@
 import { EChartsOption } from 'echarts-for-react/src/types';
 
 import { renderCell } from '@/src/components/Analytics/QueryBuilder/utils/result';
-import { PIE_MAX_SLICES } from '@/src/constants/analytics/query-builder';
 import { CHART_SERIES_COLOR_CYCLE } from '@/src/constants/analytics/query-builder-palette';
 import { CHART_TOOLTIP_STYLE } from '@/src/constants/chart-tooltip';
 import { ChartColors } from '@/src/components/Common/MetricCard/models';
 import { ChartLegendEntry } from '@/src/components/Analytics/Usage/Charts/ChartLegend';
-import { ChartBuildContext, ChartType, PieSlice } from '@/src/models/analytics/query-builder';
+import { ChartBuildContext, ChartType } from '@/src/models/analytics/query-builder';
 
 type ResultRows = Array<Record<string, unknown>>;
 
@@ -56,23 +55,6 @@ export const getStrictNumericColumns = (rows: ResultRows, columns: string[]): st
 
 // A blank category would draw an unlabeled bar or slice, so it reads as `emptyLabel` instead.
 const renderCategory = (value: unknown, emptyLabel: string): string => renderCell(value) || emptyLabel;
-
-// Top-N pie slices by value; the remaining categories merge into one localized "Other" slice.
-export const bucketTopSlices = (
-  rows: ResultRows,
-  categoryField: string,
-  valueField: string,
-  otherLabel: string,
-  maxSlices: number = PIE_MAX_SLICES,
-  emptyLabel = '',
-): PieSlice[] => {
-  const slices = rows
-    .map((row) => ({ name: renderCategory(row[categoryField], emptyLabel), value: toNumber(row[valueField]) ?? 0 }))
-    .sort((a, b) => b.value - a.value);
-  if (slices.length <= maxSlices) return slices;
-  const other = slices.slice(maxSlices).reduce((sum, s) => sum + s.value, 0);
-  return [...slices.slice(0, maxSlices), { name: otherLabel, value: other }];
-};
 
 const baseOptions = (colors: ChartColors, xData: string[], yName?: string): EChartsOption => ({
   title: { show: false },
@@ -148,27 +130,6 @@ export const buildLineChartOptions = (
   yFields: string[],
 ): EChartsOption => buildCartesianOptions(colors, ChartType.Line, rows, xField, yFields);
 
-export const buildPieChartOptions = (
-  colors: ChartColors,
-  rows: ResultRows,
-  categoryField: string,
-  valueField: string,
-  otherLabel: string,
-  emptyLabel = '',
-): EChartsOption => ({
-  title: { show: false },
-  tooltip: { trigger: 'item', ...CHART_TOOLTIP_STYLE },
-  series: [
-    {
-      type: 'pie',
-      radius: '70%',
-      data: bucketTopSlices(rows, categoryField, valueField, otherLabel, PIE_MAX_SLICES, emptyLabel),
-      label: { color: colors.neutral },
-    },
-  ],
-  color: CHART_SERIES_COLOR_CYCLE,
-});
-
 // 'value' when every axis value is a plain number; 'time' otherwise — a scatter axis column is
 // pre-filtered by getNumericColumns, so non-numeric means date-like strings.
 const scatterAxisType = (rows: ResultRows, field: string): 'value' | 'time' =>
@@ -232,9 +193,6 @@ export const buildChartOptions = (
 ): EChartsOption => {
   const label = (column: string): string => context.columnLabels[column] ?? column;
   const [yField] = yFields;
-  if (type === ChartType.Pie) {
-    return buildPieChartOptions(context.colors, rows, xField, yField, context.otherLabel, context.emptyLabel);
-  }
   if (type === ChartType.Scatter) {
     return buildScatterChartOptions(
       context.colors,

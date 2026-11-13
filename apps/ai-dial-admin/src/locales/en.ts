@@ -2912,6 +2912,7 @@ export default {
     Value: 'Value',
     ValueType: 'Type',
     ComparedAgainst: 'Compared against',
+    CallerValue: 'Caller value',
     Direction: 'Direction',
     Nulls: 'Nulls',
     Select: 'Select',
@@ -2941,6 +2942,7 @@ export default {
     StructuredQueryJson: 'StructuredQuery JSON',
     Run: 'Run',
     NoRows: 'No rows.',
+    NoRowsForAccess: 'No rows match your access.',
     Total: 'total',
     FieldPlaceholder: 'Select field',
     ValuePlaceholder: 'Value',
@@ -3793,6 +3795,15 @@ export default {
     RowsRestricted: 'Rows restricted',
     RowsRestrictedTooltip: 'A row policy limits which rows of this table you read, through every query surface.',
     SensitiveLocked: 'Changing sensitivity needs the sensitive clearance on this table.',
+    EveryoneLabel: 'Everyone (all authenticated users)',
+    EveryoneDescription: 'Every authenticated caller, whatever roles it holds.',
+    EveryoneLockReason: 'Everyone can be given read-side access only, so Write and Modify are not offered.',
+    EveryoneAllRowsWarning:
+      'Every authenticated user will read every row of this table, and the row limits of every other role on it will stop applying. Choose Only some rows to confine everyone.',
+    CallerUserHash: "Caller's user hash",
+    CallerUserHashHint: 'The user hash of the caller reading the table. A caller without one reads no rows.',
+    CallerProject: "Caller's project",
+    CallerProjectHint: 'The project of a project API key. Any other caller reads no rows.',
   },
   AnalyticsUsage: {
     ViewByLabel: 'View by',
@@ -3985,8 +3996,13 @@ export default {
     SummaryPeriodHint:
       'Covers every session and coding-agent session in the selected period. The search, column filters and feedback filter narrow the list below, not this figure.',
     SchemaLoadFailed: 'Could not load the sessions schema, so the columns that depend on it were dropped.',
-    FeedbackCappedNotice:
-      'Showing only the most recently rated sessions. More may carry this feedback than are listed.',
+    SourceRoleMissing:
+      'The Sessions source binds the {role} role to "{field}", which this account cannot read. Check the Sessions source in System Properties.',
+    SourceSettingReadFailed:
+      'Could not read the Sessions source setting, so the table these pages read is unknown. Your account may lack access to analytics settings.',
+    SourceNotConfiguredTitle: 'Sessions are not set up',
+    SourceNotConfigured:
+      'No Sessions source is saved and there is no sessions table to fall back to. Choose a table in System Properties → Sessions source.',
     SummaryUnavailableHint: 'Could not be loaded.',
     RatingUp: 'Positive ratings in the selected period',
     RatingDown: 'Negative ratings in the selected period',
@@ -4000,7 +4016,6 @@ export default {
     DetailId: 'Id',
     DetailDuration: 'Duration',
     DetailLastActivity: 'Last activity',
-    DetailPanelInsights: 'Insights',
     DetailPanelUsage: 'Usage',
     DetailPanelFeedback: 'Feedback',
     DetailPanelMetadata: 'Metadata',
@@ -4068,8 +4083,6 @@ export default {
     TraceOk: 'OK',
     TraceFailed: 'Failed',
     TraceSpansPartial: 'Showing {shown} of {total} spans',
-    TraceRatingsPartial:
-      'Only the most recently rated responses of this session were read, so a span here may carry a rating it does not show.',
     TraceLoadFailed: 'Could not load this trace.',
     TraceNoSpans: 'No spans recorded for this turn.',
     SpanRecordedAt: 'Recorded at',
@@ -4326,6 +4339,30 @@ export default {
     SpendingLimitEnforceWarning: 'Requests will be blocked once a spending limit is exceeded.',
     DefaultCostObjectLabel: 'Default cost object',
     DefaultCostObjectInvalid: 'Enter a default cost object',
+    SessionsSourceTitle: 'Sessions source',
+    SessionsSourceDescription:
+      'Chooses the table the Sessions pages read and the field that plays each role in it. The analytics service stores one value for the whole instance.',
+    SessionsSourceDefaultInUse:
+      'No Sessions source is saved, so the Sessions pages read the sessions table with the fields shown below. If that table is ever missing, the Sessions page is hidden from the menu until a table is saved here.',
+    SessionsSourceDefaultMissing:
+      'No Sessions source is saved and there is no sessions table, so the Sessions page is hidden from the menu. Choose a table and save to show it.',
+    SessionsSourceBaseTableLabel: 'Base table',
+    SessionsSourceBaseTablePlaceholder: 'Select a table',
+    SessionsSourceBaseTableCaveat:
+      'The table must record the same session id the usage log (dial_usage_log) records. Otherwise a session’s traces read as empty.',
+    SessionsSourceFieldPlaceholder: 'Select a field',
+    SessionsSourceRoleNotSet: 'Not set',
+    SessionsSourceRoleRequired: '{role} is required',
+    SessionsSourceRoleSessionId: 'Session id',
+    SessionsSourceRoleTime: 'Time',
+    SessionsSourceRoleProject: 'Project',
+    SessionsSourceRoleTitle: 'Title',
+    SessionsSourceRoleCost: 'Cost',
+    SessionsSourceRoleTurns: 'Turns',
+    SessionsSourceSaved: 'Sessions source saved',
+    SessionsSourceReadFailed: 'The stored Sessions source could not be read',
+    SessionsSourceTablesReadFailed: 'Analytics tables could not be listed',
+    SessionsSourceSchemaReadFailed: 'The table schema could not be read',
   },
   AnalyticsPipelinePreview: {
     RoleKey: 'Key',
@@ -4623,8 +4660,11 @@ export default {
     ViewTable: 'Table',
     ViewSingleValue: 'Single value',
     ViewTimeSeries: 'Time series',
-    ViewShare: 'Share',
+    ViewShare: 'Pie chart',
     ViewHeatmap: 'Activity heatmap',
+    ViewBarChart: 'Bar chart',
+    ViewLineChart: 'Line chart',
+    ViewScatterChart: 'Scatter chart',
     CurrentPeriod: 'Current period',
     CompositeSqlHint: "Uses the time range and row limit written in its query, not the dashboard's.",
     WidgetLoadFailed: 'This widget could not be loaded.',

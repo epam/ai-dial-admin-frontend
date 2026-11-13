@@ -389,6 +389,18 @@ describe('Server :: AnalyticsDataApi', () => {
     );
   });
 
+  test('putRowPolicy percent-encodes the everyone grantee in the path', async () => {
+    const policy = { filter: { op: 'eq', args: [] } } as any;
+    fetch.mockResponseOnce(JSON.stringify(policy), JSON_HEADERS);
+
+    await instance.putRowPolicy('events', '*', policy, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/tables\/events\/row-policies\/%2A$/),
+      expect.objectContaining({ method: 'PUT' }),
+    );
+  });
+
   test('deleteRowPolicy issues DELETE on the role-scoped URL', async () => {
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 

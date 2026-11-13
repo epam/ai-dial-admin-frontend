@@ -37,7 +37,7 @@ type CardProps = ComponentProps<typeof WidgetCard>;
 const push = vi.fn();
 const onRetry = vi.fn();
 
-const SAVED_QUERY = { id: 'q-1', name: 'Spend by model' } as SavedQuery;
+const SAVED_QUERY = { id: 'q-1', name: 'Spend by model', result_view: QueryResultView.Table } as SavedQuery;
 const STRUCTURED: WidgetQuery = {
   kind: WidgetQueryKind.Structured,
   savedQuery: SAVED_QUERY,
@@ -456,6 +456,21 @@ describe('WidgetCard — edit mode', () => {
     expect(onResize).toHaveBeenCalledWith('w-1', WidgetSize.Large);
   });
 
+  test("leaves the query's view out of an inline widget's settings", async () => {
+    renderEditing({
+      widget: {
+        ...WIDGET,
+        saved_query_id: undefined,
+        inline_query: { name: 'Inline spend', sql: 'SELECT 1', result_view: QueryResultView.Table },
+      },
+    });
+    const user = await openMenu();
+
+    await user.click(await screen.findByRole('menuitem', { name: CustomDashboardsI18nKey.WidgetSettings }));
+
+    expect(onEditSettings).toHaveBeenCalledWith('w-1', { fittingViews: [WidgetView.Table], valueColumns: [] });
+  });
+
   test('opens the widget settings', async () => {
     renderEditing();
     const user = await openMenu();
@@ -570,6 +585,24 @@ describe('WidgetCard — access', () => {
     renderCard({ widgetQuery: UNAVAILABLE, onDeniedChange });
 
     expect(onDeniedChange).toHaveBeenCalledWith('w-1', true);
+  });
+
+  test('tells its dashboard while it is loading, and stops once it unmounts', () => {
+    const onLoadingChange = vi.fn();
+    vi.mocked(useDashboardWidgetData).mockReturnValue({
+      result: null,
+      meta: null,
+      previousResult: null,
+      isLoading: true,
+      hasFailed: false,
+      isDenied: false,
+      onRetry: vi.fn(),
+    });
+    const { unmount } = renderCard({ onLoadingChange });
+    expect(onLoadingChange).toHaveBeenLastCalledWith('w-1', true);
+
+    unmount();
+    expect(onLoadingChange).toHaveBeenLastCalledWith('w-1', false);
   });
 
   test('offers no Open query for an inline widget', async () => {

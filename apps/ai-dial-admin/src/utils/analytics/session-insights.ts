@@ -1,31 +1,75 @@
 import {
   DATE_FIELD_TYPES,
-  INSIGHTS_ENRICHMENT,
   NON_SCALAR_FIELD_TYPES,
+  SESSION_TAG_LABEL_KEY,
+  SPAN_FIELD_TAG_LABEL_KEY,
 } from '@/src/constants/analytics/sessions-trace';
-import { SessionDetailRow, SessionInsightField, SessionInsightsState } from '@/src/models/analytics/sessions-trace';
+import {
+  SessionDetailRow,
+  SessionEnrichmentGroup,
+  SessionEnrichmentPanel,
+  SessionInsightField,
+  SessionInsightsState,
+  SpanFieldTag,
+} from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { columnHeaderName, enrichmentOf } from '@/src/utils/analytics/session-enrichment';
 import { readableWords } from '@/src/utils/analytics/session-formatting';
+import { enrichmentNamespacesOf, ratingEnrichmentOf } from '@/src/utils/analytics/sessions-source';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
-// Which columns the insights panel presents, read off the entity's own schema rather than a list held here.
-// The enrichment is provisioned per instance and the evaluator supersedes its own columns, so a list would
-// be wrong in both directions at once: blind to a column that was added, and still naming one that was
-// replaced and now comes back null.
+// Which columns an enrichment panel presents, read off the entity's own schema rather than a list held here.
+// An enrichment is provisioned per instance and its evaluator supersedes its own columns, so a list would be
+// wrong in both directions at once: blind to a column that was added, and still naming one that was replaced
+// and now comes back null.
 //
 // A column the panel could not render as a value is dropped — one the schema types as an object or an
 // array. The test is the declared type, so a column newly typed that way falls out with no change here.
 // Sensitive columns need no test: the detail query may not name one at all, so none can reach a row.
-export const insightColumnsOf = (fields: AnalyticsEntityField[] = []): SessionInsightField[] =>
+export const enrichmentColumnsOf = (namespace: string, fields: AnalyticsEntityField[] = []): SessionInsightField[] =>
   fields
-    .filter((field) => enrichmentOf(field.name) === INSIGHTS_ENRICHMENT && !NON_SCALAR_FIELD_TYPES.includes(field.type))
+    .filter((field) => enrichmentOf(field.name) === namespace && !NON_SCALAR_FIELD_TYPES.includes(field.type))
     .map((field) => ({
       name: field.name,
       label: columnHeaderName(field),
       hint: field.description,
       type: field.type,
+      ...(field.tag ? { tag: field.tag } : {}),
     }));
+
+export const groupFieldsByTag = (fields: SessionInsightField[], tagOrder: string[] = []): SessionEnrichmentGroup[] => {
+  const byTag = new Map<string, SessionInsightField[]>();
+
+  for (const field of fields) {
+    const tag = field.tag ?? '';
+    byTag.set(tag, [...(byTag.get(tag) ?? []), field]);
+  }
+
+  const declared = tagOrder.filter((tag) => tag !== SpanFieldTag.System && byTag.has(tag));
+  const rest = [...byTag.keys()].filter((tag) => tag !== SpanFieldTag.System && !declared.includes(tag));
+  const system = byTag.has(SpanFieldTag.System) ? [SpanFieldTag.System] : [];
+
+  return [...declared, ...rest, ...system].map((tag) => ({ tag, fields: byTag.get(tag) ?? [] }));
+};
+
+export const enrichmentTagLabelKey = (tag: string): string | undefined =>
+  SESSION_TAG_LABEL_KEY[tag] ?? SPAN_FIELD_TAG_LABEL_KEY[tag];
+
+export const enrichmentPanelsOf = (
+  fields: AnalyticsEntityField[] = [],
+  tagOrders: Record<string, string[]> = {},
+): SessionEnrichmentPanel[] => {
+  const rating = ratingEnrichmentOf(fields);
+
+  return enrichmentNamespacesOf(fields)
+    .filter((namespace) => namespace !== rating)
+    .map((namespace) => {
+      const columns = enrichmentColumnsOf(namespace, fields);
+
+      return { namespace, title: namespace, fields: columns, groups: groupFieldsByTag(columns, tagOrders[namespace]) };
+    })
+    .filter(({ fields: columns }) => columns.length > 0);
+};
 
 // The text one insight column renders as, empty where the record carries no value for it.
 //

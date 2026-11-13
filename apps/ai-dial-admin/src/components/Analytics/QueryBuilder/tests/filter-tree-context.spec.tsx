@@ -16,7 +16,7 @@ const functions = [{ name: 'now' }] as QueryFunction[];
 
 describe('useFilterTree', () => {
   test('returns the value an owner outside the Query Builder provides', () => {
-    const own: FilterTreeContextValue = { fields, functions: [], refresh: vi.fn() };
+    const own: FilterTreeContextValue = { fields, functions: [], callerValues: [], refresh: vi.fn() };
     const wrapper = ({ children }: { children: ReactNode }) => (
       <FilterTreeContext.Provider value={own}>{children}</FilterTreeContext.Provider>
     );
@@ -35,11 +35,11 @@ describe('useFilterTree', () => {
 
     const { result } = renderHook(() => useFilterTree(), { wrapper });
 
-    expect(result.current).toEqual({ fields, functions, refresh });
+    expect(result.current).toEqual({ fields, functions, callerValues: [], refresh });
   });
 
   test('prefers the provided value over the Query Builder context', () => {
-    const own: FilterTreeContextValue = { fields: [], functions: [], refresh: vi.fn() };
+    const own: FilterTreeContextValue = { fields: [], functions: [], callerValues: [], refresh: vi.fn() };
     const builder = {
       state: { fields, functions },
       refresh: vi.fn(),

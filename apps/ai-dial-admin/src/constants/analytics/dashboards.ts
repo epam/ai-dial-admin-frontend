@@ -1,5 +1,6 @@
 import { CustomDashboardsI18nKey } from '@/src/constants/i18n';
 import { DashboardCreatePermissions, WidgetPlacement, WidgetSize, WidgetView } from '@/src/models/analytics/dashboard';
+import { ChartType } from '@/src/models/analytics/query-builder';
 
 export const DASHBOARD_GRID_COLUMNS = 12;
 
@@ -46,6 +47,22 @@ export const WIDGET_VIEW_LABEL_KEY: Record<WidgetView, CustomDashboardsI18nKey> 
   [WidgetView.TimeSeries]: CustomDashboardsI18nKey.ViewTimeSeries,
   [WidgetView.Share]: CustomDashboardsI18nKey.ViewShare,
   [WidgetView.Heatmap]: CustomDashboardsI18nKey.ViewHeatmap,
+  [WidgetView.BarChart]: CustomDashboardsI18nKey.ViewBarChart,
+  [WidgetView.LineChart]: CustomDashboardsI18nKey.ViewLineChart,
+  [WidgetView.ScatterChart]: CustomDashboardsI18nKey.ViewScatterChart,
+};
+
+export const CHART_TYPE_BY_WIDGET_VIEW: Partial<Record<WidgetView, ChartType>> = {
+  [WidgetView.BarChart]: ChartType.Bar,
+  [WidgetView.LineChart]: ChartType.Line,
+  [WidgetView.ScatterChart]: ChartType.Scatter,
+};
+
+export const WIDGET_VIEW_BY_CHART_TYPE: Record<ChartType, WidgetView> = {
+  [ChartType.Bar]: WidgetView.BarChart,
+  [ChartType.Line]: WidgetView.LineChart,
+  [ChartType.Pie]: WidgetView.Share,
+  [ChartType.Scatter]: WidgetView.ScatterChart,
 };
 
 export const DEFAULT_CURRENCY = 'USD';
@@ -55,3 +72,16 @@ export const WIDGET_CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'PLN'];
 
 // What the service answers a read the caller may not make; a saved query it may not see answers 404.
 export const WIDGET_DENIED_STATUSES = [403, 404];
+
+export const WIDGET_PIE_SLICE_BANDS = [
+  { maxWidth: 4, sliceCount: 5, legendColumns: 1 },
+  { maxWidth: 8, sliceCount: 10, legendColumns: 2 },
+] as const;
+
+export const WIDGET_PIE_WIDEST_BAND = { sliceCount: 15, legendColumns: 3 } as const;
+
+export const WIDGET_PIE_SHORT_MAX_HEIGHT = 3;
+
+export const WIDGET_PIE_SHORT_LEGEND_ROWS = 4;
+
+export const WIDGET_PIE_SHORT_DONUT_SIZE = 140;

@@ -5,11 +5,7 @@ import { FC, Fragment, useMemo } from 'react';
 
 import { IconCirclesRelation } from '@tabler/icons-react';
 
-import {
-  SESSIONS_ENTITY,
-  PROVENANCE_TEXT_CLASS,
-  QUERIED_SOURCE_ENTITIES,
-} from '@/src/constants/analytics/sessions-trace';
+import { PROVENANCE_TEXT_CLASS } from '@/src/constants/analytics/sessions-trace';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
@@ -18,16 +14,14 @@ import { composedSourceEntities } from '@/src/utils/analytics/session-column-cat
 const JOIN_ICON_SIZE = 14;
 
 interface Props {
+  baseTable: string;
   schemaFields?: AnalyticsEntityField[] | null;
 }
 
-const SessionsProvenanceLine: FC<Props> = ({ schemaFields }) => {
+const SessionsProvenanceLine: FC<Props> = ({ baseTable, schemaFields }) => {
   const t = useI18n();
 
-  const entities = useMemo(
-    () => composedSourceEntities(SESSIONS_ENTITY, schemaFields ?? [], QUERIED_SOURCE_ENTITIES),
-    [schemaFields],
-  );
+  const entities = useMemo(() => composedSourceEntities(baseTable, schemaFields ?? []), [baseTable, schemaFields]);
 
   return (
     <p className="flex flex-wrap items-center gap-2 dial-small-text text-secondary">

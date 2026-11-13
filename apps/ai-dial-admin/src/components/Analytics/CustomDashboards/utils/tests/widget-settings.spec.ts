@@ -1,9 +1,13 @@
 import { describe, expect, test } from 'vitest';
 
 import { WidgetSettings, WidgetSourceKind } from '@/src/components/Analytics/CustomDashboards/models';
-import { toStoredWidgetSettings } from '@/src/components/Analytics/CustomDashboards/utils/widget-settings';
+import {
+  toStoredWidgetSettings,
+  toWidgetViewPatch,
+} from '@/src/components/Analytics/CustomDashboards/utils/widget-settings';
 import { DEFAULT_CURRENCY } from '@/src/constants/analytics/dashboards';
 import { ChangeDirection, WidgetValueFormat, WidgetView } from '@/src/models/analytics/dashboard';
+import { ChartType } from '@/src/models/analytics/query-builder';
 
 const form = (patch: Partial<WidgetSettings> = {}): WidgetSettings => ({
   source: WidgetSourceKind.SavedQuery,
@@ -51,5 +55,52 @@ describe('toStoredWidgetSettings', () => {
         form({ view: WidgetView.Share, valueFormat: WidgetValueFormat.Duration }),
       ),
     ).toEqual({ value_format: WidgetValueFormat.Duration, pinned: true });
+  });
+
+  test('keeps a picked chart in the settings and drops it for any other view', () => {
+    expect(toStoredWidgetSettings(undefined, form({ view: WidgetView.BarChart }))).toEqual({
+      chart: { type: ChartType.Bar },
+    });
+    expect(
+      toStoredWidgetSettings({ chart: { type: ChartType.Bar } }, form({ view: WidgetView.Table })),
+    ).toBeUndefined();
+  });
+});
+
+describe('toWidgetViewPatch', () => {
+  test('keeps a picked chart in the settings, with no view', () => {
+    expect(toWidgetViewPatch(form({ view: WidgetView.BarChart }), undefined, WidgetView.Table, false)).toEqual({
+      view: undefined,
+      settings: { chart: { type: ChartType.Bar } },
+    });
+  });
+
+  test('keeps an unset view unset while its resolved view is submitted unchanged', () => {
+    expect(toWidgetViewPatch(form({ view: WidgetView.BarChart }), undefined, WidgetView.BarChart, true)).toEqual({
+      view: undefined,
+      settings: undefined,
+    });
+    expect(toWidgetViewPatch(form({ view: WidgetView.Table }), undefined, WidgetView.Table, true)).toEqual({
+      view: undefined,
+      settings: undefined,
+    });
+  });
+
+  test("clears a stored chart when the query's view is picked", () => {
+    expect(
+      toWidgetViewPatch(
+        form({ view: WidgetView.Query }),
+        { chart: { type: ChartType.Line } },
+        WidgetView.LineChart,
+        false,
+      ),
+    ).toEqual({ view: undefined, settings: undefined });
+  });
+
+  test('stores a picked service view as the view', () => {
+    expect(toWidgetViewPatch(form({ view: WidgetView.Table }), undefined, WidgetView.Query, false)).toEqual({
+      view: WidgetView.Table,
+      settings: undefined,
+    });
   });
 });

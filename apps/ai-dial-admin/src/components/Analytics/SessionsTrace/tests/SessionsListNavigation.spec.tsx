@@ -6,6 +6,7 @@ import SessionCellRenderer from '@/src/components/Analytics/SessionsTrace/List/S
 import SessionsList from '@/src/components/Analytics/SessionsTrace/List/SessionsList';
 import { sessionDetailHref } from '@/src/components/Analytics/SessionsTrace/utils';
 import { SessionColumn, SessionRow, SessionsField } from '@/src/models/analytics/sessions-trace';
+import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 
 type Column = ColDef<SessionRow> | ColGroupDef<SessionRow>;
 
@@ -46,6 +47,7 @@ beforeEach(() => {
       onGridReady={vi.fn()}
       isColumnsPanelOpen={false}
       onToggleColumnsPanel={vi.fn()}
+      source={{ ...defaultSessionsSource(), ratingEnrichment: 'session_ratings' }}
     />,
   );
 });

@@ -2,7 +2,7 @@
 name: git-commit
 context: fork
 effort: low
-allowed-tools: Bash(git:*), Bash(gh:*), Bash(grep:*), Edit(.claude/reference/areas.md)
+allowed-tools: Bash(git:*), Bash(gh:*), Bash(grep:*), Edit(docs/areas.md)
 arguments: ticket area
 argument-hint: "[ticket] [area]"
 description: >
@@ -78,35 +78,49 @@ If there are no changes at all — report and stop.
 Resolve the `area` with this 3-tier fallback (project-agnostic — works in any repo):
 
 1. **`area` argument given** → use it verbatim. Done.
-2. **Project defines an area taxonomy** → if `.claude/reference/areas.md` exists, read it and map the changed
-   files to an area using the rules in that file (`Parent/Child` for one leaf, `Parent` for several
-   under one parent, most-changed parent across many, technical area for infra/config).
+2. **Project defines an area taxonomy** → if `docs/areas.md` exists, read it and resolve in two passes:
+   1. **Shortlist** — collect every listed area whose route slug or component folder matches a changed
+      file. A change usually yields a handful: the feature areas of the pages it touches and the
+      `Components/*` / `Layout*` areas of the shared folders it touches.
+   2. **Pick from the shortlist** — never from the whole file. Apply the level rule in that file: feature
+      work or a feature bug takes a feature area, a fix to a component's own behavior takes a component
+      area. Read the level from the ticket title or the user's description of the task. If the shortlist
+      holds both levels and nothing states the level, show the shortlist and ask the user to choose.
+      Within one level, use the file's own rules (`Parent/Child` for one leaf, `Parent` for several under
+      one parent, most-changed parent across many, technical area for infra/config).
 3. **Neither** → infer a sensible area from the **top-level directory** of the changed files
    (e.g. most changes under `src/auth/**` → `auth`). For pure tooling/config with no feature home, use a
    technical area: `infra`, `config`, `api`.
 
-### Step 3a — Self-extend `.claude/reference/areas.md` (only if the file exists)
+### Step 3a — Self-extend `docs/areas.md` (only if the file exists)
 
-If the resolved area is **not already listed** in `.claude/reference/areas.md`, append it so the taxonomy grows
+If the resolved area is **not already listed** in `docs/areas.md`, append it so the taxonomy grows
 over time. Do this for both a new arg-supplied area and a tier-3 inferred area.
+
+An area names a **place in the code**, not a feature or a behavior. Append a row only when the area has
+its own route slug or its own component folder that no listed area already owns. A scope that names a
+capability spread over existing areas (a feature flag, an availability gate, an OpenSpec change name) is
+not an area: resolve to the listed area that owns most of the changed files and leave the file untouched.
 
 Rules — be conservative, append-only, never rewrite or reorder existing rows:
 
-1. **Confirm it's new** — `grep -F "<area>" .claude/reference/areas.md`. If the exact area string is already
+1. **Confirm it's new** — `grep -F "<area>" docs/areas.md`. If the exact area string is already
    present, skip; do nothing.
 2. **Pick the right section:**
    - New leaf under an existing parent (e.g. `Deployments/Foo`) → add a row to that parent's table.
    - New top-level feature with a route/component but no parent → add a row under
      **Cross-cutting feature areas**.
+   - New shared component folder with no route → add it as `Components/<Folder>` under
+     **Cross-cutting feature areas**.
    - New non-UI concern → add a row under **Technical areas** with a short "Covers" note.
 3. **Fill the evidence columns** from the actual change — the route slug (`app/[lang]/<slug>`) and/or
    the component folder (`src/components/<Folder>`) the change touched. Leave a cell as `—` only if it
-   genuinely has none.
+   genuinely has none. Never add a feature row with `—` in both cells.
 4. **Only one new row per run**, matching the single resolved area. Don't bulk-invent areas.
 5. The edit is staged by `git add` in Step 5, so the taxonomy update ships **in the same commit** as the
    change that introduced it. Mention the added area in the Step 7 summary.
 
-If `.claude/reference/areas.md` does **not** exist, skip 3a entirely (don't create it — that's a deliberate
+If `docs/areas.md` does **not** exist, skip 3a entirely (don't create it — that's a deliberate
 project-setup choice, not something this skill bootstraps).
 
 ---

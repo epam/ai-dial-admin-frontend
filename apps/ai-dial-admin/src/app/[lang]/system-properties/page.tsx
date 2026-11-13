@@ -11,6 +11,7 @@ import { readConfigEntities } from '@/src/server/config-entities/read-page-optio
 import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsAnalyticsEnabled } from '@/src/utils/env/get-analytics-toggle';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const HTTP_NOT_FOUND = 404;
@@ -57,6 +58,7 @@ export default async function Page() {
         globalSettings={globalSettings}
         doesSettingsExist={doesSettingsExist}
         optionWarnings={optionWarnings}
+        isAnalyticsEnabled={getIsAnalyticsEnabled()}
       />
     </SaveValidationContextProvider>
   );

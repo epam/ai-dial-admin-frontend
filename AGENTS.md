@@ -43,8 +43,8 @@ Things that cost time or fail silently if you don't know them:
   it as a default project skills location, so both see the canonical files. The `openspec-*` entries
   under `.cursor/skills` and `.github/skills` are different — the openspec CLI generates a distinct
   variant per tool and owns them.
-- **Analytics is a root index plus eleven sub-capabilities** under `openspec/specs/analytics/` —
-  `query-builder`, `query-viewer`, `saved-queries`, `tables`, `sessions-listing`,
+- **Analytics is a root index plus twelve sub-capabilities** under `openspec/specs/analytics/` —
+  `query-builder`, `query-viewer`, `saved-queries`, `tables`, `sessions-source`, `sessions-listing`,
   `session-trace-listing`, `session-trace-detail`, `pipelines`, `dashboards`, `custom-dashboards`,
   `config-transfer`. Address one as
   `analytics/<sub>`. `analytics/spec.md` is the index: it carries only what every Analytics page
@@ -76,7 +76,7 @@ Things that cost time or fail silently if you don't know them:
 - What a capability is specified to do → `openspec/specs/<capability>/spec.md` (`openspec list --specs`
   to find it). Why it was built that way → the archived change under `openspec/changes/archive/`;
   `proposal.md` holds the alternatives, `design.md` the accepted tradeoff.
-- Which commit/PR area owns a set of files → `.claude/reference/areas.md`
+- Which commit/PR area owns a set of files → `docs/areas.md`
 - What ui-kit offers and its real props → the `ai-dial-ui-kit` MCP server (`searchEntity`,
   `getEntityDetails`, `getMigrationGuides`), not a grep through `node_modules`
 
