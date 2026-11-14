@@ -832,6 +832,13 @@ export enum InterceptorsI18nKey {
   GlobalMessage = 'Interceptors.GlobalMessage',
 }
 
+export enum GrafanaLinksI18nKey {
+  Traces = 'GrafanaLinks.Traces',
+  AllTraces = 'GrafanaLinks.AllTraces',
+  ErrorTraces = 'GrafanaLinks.ErrorTraces',
+  OpensInNewTab = 'GrafanaLinks.OpensInNewTab',
+}
+
 export enum TelemetryI18nKey {
   SystemUsage = 'Telemetry.SystemUsage',
   EntitiesConsumption = 'Telemetry.EntitiesConsumption',

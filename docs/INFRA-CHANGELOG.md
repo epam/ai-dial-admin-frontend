@@ -4,6 +4,15 @@ All notable infrastructure-relevant changes to this project will be documented i
 
 ## 0.24.0
 
+### Added
+
+#### Telemetry
+
+- Asset application pages (`/assets-applications/[id]`) show a `Traces in Grafana` dropdown with `All traces` and `Errors only` options that open Grafana Explore on the Tempo datasource, filtered to that application. They appear only when `GRAFANA_TRACES_URL` is set; the application is matched on its `dial.deployment` span attribute
+  - `GRAFANA_TRACES_URL` — the Grafana root, for example `https://grafana.example.com` (a trailing slash is optional). It is separate from `GRAFANA_LINK`, which keeps opening whatever URL it holds from the Dashboard page, and `GRAFANA_LINK` is not used for these links
+  - `GRAFANA_TEMPO_DATASOURCE_UID` — UID of the Tempo datasource in Grafana. Set it when it is not `tempo`, or the dropdown opens an empty Explore (default: `tempo`)
+  - `GRAFANA_ORG_ID` — Grafana organization id. An empty, non-numeric or non-positive value uses the default (default: `1`)
+
 ### Changed
 
 #### Analytics

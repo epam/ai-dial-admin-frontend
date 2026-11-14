@@ -9,6 +9,7 @@ import { removePlatformApplication, updatePlatformApplication } from '@/src/app/
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import TabsContent from '@/src/components/Applications/View/TabsContent';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import ApplicationGrafanaLinks from '@/src/components/Assets/ApplicationGrafanaLinks/ApplicationGrafanaLinks';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { useIframeSaveFeedback } from '@/src/components/EntityView/hooks/use-iframe-save-feedback';
@@ -33,6 +34,7 @@ import { useEntityReadOnlyAt } from '@/src/hooks/use-entity-read-only-at';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
+import { GrafanaTraceLinks } from '@/src/utils/grafana/models';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getTabsForAsset, rolesTab, toolsTab } from '@/src/utils/tabs/utils';
 import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
@@ -52,6 +54,7 @@ interface Props {
   optionWarnings?: EntitiesI18nKey[];
   /** True when `originalApp` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
   isConfigFileSource?: boolean;
+  grafanaLinks?: GrafanaTraceLinks | null;
 }
 
 /**
@@ -95,6 +98,7 @@ const PlatformApplicationView: FC<Props> = ({
   catalogSchemas,
   optionWarnings,
   isConfigFileSource,
+  grafanaLinks,
 }) => {
   const t = useI18n();
   const router = useRouter();
@@ -283,7 +287,9 @@ const PlatformApplicationView: FC<Props> = ({
         onChangeActiveTab={onChangeActiveTab}
         onRemove={removePlatformApplication}
         getAssetContext={useAppsFolder}
-      />
+      >
+        <ApplicationGrafanaLinks links={grafanaLinks} />
+      </SimpleEntityHeader>
 
       <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled && activeTab !== EntityViewTab.Parameters ? (
