@@ -29,9 +29,9 @@ vi.mock('@/src/components/Assets/FlatAssetGrid/FlatAssetGrid', () => ({
   ),
 }));
 vi.mock('@/src/components/Assets/Platform/CreatePlatformEntity', () => ({
-  default: ({ view, names }: { view: string; names: string[] }) => (
+  default: ({ view, names, bucket }: { view: string; names: string[]; bucket: string }) => (
     <div>
-      create-platform-entity:{view}:{names.join(',')}
+      create-platform-entity:{view}:{bucket}:{names.join(',')}
     </div>
   ),
 }));
@@ -53,7 +53,7 @@ const flat = (count: number | undefined, overrides: Partial<FlatAssets> = {}): F
 });
 
 const replace = vi.fn();
-let counts: Record<AssetSource.Platform | AssetSource.ConfigFile, FlatAssets>;
+let counts: Record<AssetSource, FlatAssets>;
 
 const renderList = (view: ApplicationRoute, query = '') => {
   vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams(query) as never);
@@ -66,13 +66,20 @@ describe('TabbedAssetList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     appContext.isUnitMode = false;
-    counts = { [AssetSource.Platform]: flat(5), [AssetSource.ConfigFile]: flat(3) };
+    counts = {
+      [AssetSource.Public]: flat(2, {
+        rows: [
+          { name: 'pub-0', path: 'public/pub-0', bucket: 'public' as never },
+          { name: 'pub-1', path: 'public/pub-1', bucket: 'public' as never },
+        ],
+      }),
+      [AssetSource.Platform]: flat(5),
+      [AssetSource.ConfigFile]: flat(3),
+    };
     vi.mocked(useRouter).mockReturnValue({ replace } as never);
     vi.mocked(usePathname).mockReturnValue('/assets-applications');
     vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
-    vi.mocked(useFlatAssets).mockImplementation(
-      ((_: unknown, source: AssetSource.Platform | AssetSource.ConfigFile) => counts[source]) as never,
-    );
+    vi.mocked(useFlatAssets).mockImplementation(((_: unknown, source: AssetSource) => counts[source]) as never);
   });
 
   describe('tabs', () => {
@@ -213,7 +220,7 @@ describe('TabbedAssetList', () => {
       await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
       expect(
-        screen.getByText('create-platform-entity:/platform-models:row-0,row-1,row-2,row-3,row-4'),
+        screen.getByText('create-platform-entity:/platform-models:platform:row-0,row-1,row-2,row-3,row-4'),
       ).toBeInTheDocument();
     });
 
@@ -247,6 +254,89 @@ describe('TabbedAssetList', () => {
       renderList(ApplicationRoute.PlatformModels);
 
       expect(screen.queryByRole('button', { name: ButtonsI18nKey.Create })).not.toBeInTheDocument();
+    });
+  });
+  describe('Aliases, whose Public source is a flat grid', () => {
+    const aliasesPath = '/assets-aliases';
+
+    beforeEach(() => {
+      vi.mocked(usePathname).mockReturnValue(aliasesPath);
+    });
+
+    test('shows Platform, Public and config.json, in that order, with Platform selected', () => {
+      renderList(ApplicationRoute.AssetsAliases);
+
+      expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+        expect.stringContaining(AssetTabsI18nKey.Platform),
+        expect.stringContaining(AssetTabsI18nKey.Public),
+        expect.stringContaining(AssetTabsI18nKey.ConfigFile),
+      ]);
+      expect(screen.getByRole('tab', { name: new RegExp(AssetTabsI18nKey.Platform) })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      );
+      expect(screen.getByText(`flat-grid:${AssetSource.Platform}:5`)).toBeInTheDocument();
+    });
+
+    test('badges the Public tab too, since its rows are counted', () => {
+      renderList(ApplicationRoute.AssetsAliases);
+
+      expect(screen.getByRole('tab', { name: new RegExp(`${AssetTabsI18nKey.Public}.*2`) })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: new RegExp(`${AssetTabsI18nKey.Platform}.*5`) })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: new RegExp(`${AssetTabsI18nKey.ConfigFile}.*3`) })).toBeInTheDocument();
+    });
+
+    test('sums the three sources in the header', () => {
+      renderList(ApplicationRoute.AssetsAliases);
+
+      expect(screen.getByText(`${5 + 2 + 3} filemanager.models`)).toBeInTheDocument();
+    });
+
+    test('renders the Public tab as a flat grid, never the file-manager tree', () => {
+      renderList(ApplicationRoute.AssetsAliases, 'tab=public');
+
+      expect(screen.getByText(`flat-grid:${AssetSource.Public}:2`)).toBeInTheDocument();
+      expect(screen.queryByText(/public-tree:/)).not.toBeInTheDocument();
+    });
+
+    test('offers Create on the Public tab and creates in the public bucket with the public names', async () => {
+      renderList(ApplicationRoute.AssetsAliases, 'tab=public');
+
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+      expect(screen.getByText(`create-platform-entity:${aliasesPath}:public:pub-0,pub-1`)).toBeInTheDocument();
+    });
+
+    test('creates in the platform bucket from the Platform tab', async () => {
+      renderList(ApplicationRoute.AssetsAliases);
+
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+      expect(
+        screen.getByText(`create-platform-entity:${aliasesPath}:platform:row-0,row-1,row-2,row-3,row-4`),
+      ).toBeInTheDocument();
+    });
+
+    test('offers no Create on the read-only config.json tab', () => {
+      renderList(ApplicationRoute.AssetsAliases, 'tab=config');
+
+      expect(screen.queryByRole('button', { name: ButtonsI18nKey.Create })).not.toBeInTheDocument();
+    });
+
+    test('reads only the Platform source for a unit-mode caller and shows no tab row', () => {
+      appContext.isUnitMode = true;
+
+      renderList(ApplicationRoute.AssetsAliases);
+
+      expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+      expect(useFlatAssets).toHaveBeenCalledWith(ApplicationRoute.AssetsAliases, AssetSource.Public, false);
+      expect(useFlatAssets).toHaveBeenCalledWith(ApplicationRoute.AssetsAliases, AssetSource.ConfigFile, false);
+    });
+
+    test('does not read a flat Public source for Applications, whose Public source is a tree', () => {
+      renderList(ApplicationRoute.AssetsApplications);
+
+      expect(useFlatAssets).toHaveBeenCalledWith(ApplicationRoute.AssetsApplications, AssetSource.Public, false);
     });
   });
 });

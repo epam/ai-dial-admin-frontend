@@ -7,9 +7,11 @@ import { getCatalogSchemaById } from '@/src/app/[lang]/platform-catalog-schemas/
 import CreateApplication from '@/src/components/Assets/Entities/Apps/CreateApplication';
 import { CreateAssetActionMap, PlatformCreateAssetActionMap } from '@/src/components/Assets/BaseAssetList/utils';
 import { CreateAssetRoute } from '@/src/components/Assets/BaseAssetList/types';
+import CreateAliasModal from '@/src/components/Assets/Entities/Aliases/CreateAliasModal';
 import CreateKeyModal from '@/src/components/Assets/Platform/Keys/CreateKeyModal';
 import CreatePolicyModal from '@/src/components/Assets/Platform/PolicySubjects/CreatePolicyModal';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -22,6 +24,8 @@ interface Props {
   view: ApplicationRoute;
   isOpen: boolean;
   names: string[];
+  /** Where a bucket-aware entity (an alias) is written; the Platform bucket unless a flat Public tab says otherwise. */
+  bucket?: AssetSource.Public | AssetSource.Platform;
   runners?: DialApplicationScheme[];
   translators?: ResourceInfo[];
   /** Seeds the form, e.g. from the app runner or MCP container the entity is created for. */
@@ -44,6 +48,7 @@ const CreatePlatformEntity: FC<Props> = ({
   view,
   isOpen,
   names,
+  bucket,
   runners,
   translators,
   initialValues,
@@ -61,6 +66,18 @@ const CreatePlatformEntity: FC<Props> = ({
     case ApplicationRoute.PlatformPolicies:
     case ApplicationRoute.PlatformPolicyAssignments:
       return <CreatePolicyModal route={view} isOpen={isOpen} names={names} onClose={onClose} onCreate={createEntity} />;
+    case ApplicationRoute.AssetsAliases:
+      return (
+        <CreateAliasModal
+          isOpen={isOpen}
+          names={names}
+          bucket={bucket}
+          initialValues={seed}
+          topSlot={topSlot}
+          createEntity={createEntity}
+          onClose={onClose}
+        />
+      );
     case ApplicationRoute.AssetsApplications:
       return (
         <CreateApplication

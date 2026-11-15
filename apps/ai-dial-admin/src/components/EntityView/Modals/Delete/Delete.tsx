@@ -103,8 +103,11 @@ const DeleteConfirmationModal = <T extends Artefact>({
       // (`platform/{name}`) the server action needs — Core has no lookup by bare name for these —
       // but the notification should show the plain name, matching every other platform entity's
       // flat, unversioned display (design.md's `platform-applications`/`platform-toolsets`).
-      const displayKey =
-        DUAL_BUCKET_VIEWS.includes(view) && isPlatformBucketPath(entityKey) ? entity?.name || entityKey : entityKey;
+      // An alias is flat in both buckets, so its public path (`public/{name}`) reads as the plain name too.
+      const isNameDisplayed =
+        view === ApplicationRoute.AssetsAliases ||
+        (DUAL_BUCKET_VIEWS.includes(view) && isPlatformBucketPath(entityKey));
+      const displayKey = isNameDisplayed ? entity?.name || entityKey : entityKey;
       showNotification(
         getSuccessNotification(getNotificationTitle(view, t), getNotificationDescription(view, displayKey, t)),
       );

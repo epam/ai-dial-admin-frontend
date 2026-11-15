@@ -10,6 +10,7 @@ export const duplicateEntityMap: Record<string, DuplicateI18nKey> = {
   [ApplicationRoute.PlatformPolicies]: DuplicateI18nKey.Policy,
   [ApplicationRoute.PlatformPolicyAssignments]: DuplicateI18nKey.PolicyAssignment,
   [ApplicationRoute.PlatformTranslators]: DuplicateI18nKey.Translator,
+  [ApplicationRoute.AssetsAliases]: DuplicateI18nKey.Alias,
   [ApplicationRoute.PlatformRouters]: DuplicateI18nKey.Router,
   [ApplicationRoute.Applications]: DuplicateI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: DuplicateI18nKey.Application,

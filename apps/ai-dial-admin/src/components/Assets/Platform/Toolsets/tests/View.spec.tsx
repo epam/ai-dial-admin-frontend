@@ -6,7 +6,8 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import PlatformToolsetView from '../View';
 
-vi.mock('@/src/context/assets/ToolsetsFolderContext', () => ({
+vi.mock('@/src/context/assets/ToolsetsFolderContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/context/assets/ToolsetsFolderContext')>()),
   useToolsetFolder: vi.fn(),
 }));
 

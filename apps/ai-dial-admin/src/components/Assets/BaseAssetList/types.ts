@@ -4,6 +4,7 @@ export type BaseAssetRoute =
   | ApplicationRoute.Prompts
   | ApplicationRoute.AssetsApplications
   | ApplicationRoute.AssetsToolsets
+  | ApplicationRoute.AssetsAliases
   | ApplicationRoute.Conversations
   | ApplicationRoute.PlatformModels
   | ApplicationRoute.PlatformAppRunners
@@ -26,6 +27,7 @@ export type CrudAssetRoute =
 
 export type CreateAssetRoute =
   | CrudAssetRoute
+  | ApplicationRoute.AssetsAliases
   | ApplicationRoute.PlatformModels
   | ApplicationRoute.PlatformAppRunners
   | ApplicationRoute.PlatformCatalogSchemas

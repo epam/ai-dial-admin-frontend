@@ -15,9 +15,11 @@ import {
   createToolset,
   getPlatformToolset,
 } from '@/src/app/[lang]/assets-toolsets/actions';
+import { bulkDeleteAliases, createAlias, getAlias } from '@/src/app/[lang]/assets-aliases/actions';
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/platform-models/actions';
 import { useNotification } from '@/src/context/NotificationContext';
 import { AssetListItem, BucketType } from '@/src/models/dial/asset-list-item';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -46,6 +48,13 @@ vi.mock('@/src/app/[lang]/assets-toolsets/actions', async (importOriginal) => ({
   bulkDeletePlatformToolsets: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+vi.mock('@/src/app/[lang]/assets-aliases/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/assets-aliases/actions')>()),
+  getAlias: vi.fn().mockResolvedValue({ success: true, response: { name: 'search', path: 'public/search' } }),
+  createAlias: vi.fn().mockResolvedValue({ success: true, response: {} }),
+  bulkDeleteAliases: vi.fn().mockResolvedValue({ success: true }),
+}));
+
 vi.mock('@/src/app/[lang]/platform-models/actions', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/src/app/[lang]/platform-models/actions')>()),
   getModel: vi.fn().mockResolvedValue({ success: true, response: { name: 'gpt', path: 'platform/gpt' } }),
@@ -60,7 +69,10 @@ describe('usePlatformAssetActions', () => {
   const refetch = vi.fn().mockResolvedValue(undefined);
   const { showNotification } = useNotification();
 
-  const renderActions = (view: ApplicationRoute) => renderHook(() => usePlatformAssetActions({ view, refetch }));
+  const renderActions = (
+    view: ApplicationRoute,
+    source: AssetSource.Public | AssetSource.Platform = AssetSource.Platform,
+  ) => renderHook(() => usePlatformAssetActions({ view, source, refetch }));
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -204,5 +216,66 @@ describe('usePlatformAssetActions', () => {
     act(() => result.current.onOpenDelete([]));
 
     expect(result.current.modalType).toBeNull();
+  });
+
+  describe('aliases, which live in both buckets as flat rows', () => {
+    const aliasRow = (name: string, bucket: 'public' | 'platform'): AssetListItem => ({
+      name,
+      path: `${bucket}/${name}`,
+      bucket: bucket === 'public' ? BucketType.Public : BucketType.Platform,
+    });
+
+    test('reads the duplicate source through the generic alias getter, not a bucket-specific one', async () => {
+      const { result } = renderActions(ApplicationRoute.AssetsAliases, AssetSource.Public);
+
+      await act(async () => {
+        await result.current.onOpenDuplicate(aliasRow('search', 'public'));
+      });
+
+      expect(getAlias).toHaveBeenCalledWith('public/search', expect.anything());
+      expect(result.current.modalType).toBe(PlatformModalType.Duplicate);
+    });
+
+    test('duplicates a Public alias into the public bucket', async () => {
+      const { result } = renderActions(ApplicationRoute.AssetsAliases, AssetSource.Public);
+
+      await act(async () => {
+        await result.current.onDuplicate({ name: 'search-copy', path: 'public/search' } as unknown as AssetWithVersion);
+      });
+
+      expect(createAlias).toHaveBeenCalledWith(expect.objectContaining({ name: 'search-copy', folderId: 'public/' }));
+      expect(push).toHaveBeenCalledWith(expect.stringContaining('/assets-aliases/search-copy?path='));
+    });
+
+    test('duplicates a Platform alias into the platform bucket and redirects to the bare name', async () => {
+      const { result } = renderActions(ApplicationRoute.AssetsAliases, AssetSource.Platform);
+
+      await act(async () => {
+        await result.current.onDuplicate({
+          name: 'assistant-copy',
+          path: 'platform/assistant',
+        } as unknown as AssetWithVersion);
+      });
+
+      expect(createAlias).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'assistant-copy', folderId: 'platform/' }),
+      );
+      expect(push).toHaveBeenCalledWith('/assets-aliases/assistant-copy');
+    });
+
+    test('bulk deletes alias rows of either bucket through the alias action', async () => {
+      const { result } = renderActions(ApplicationRoute.AssetsAliases, AssetSource.Public);
+
+      act(() => result.current.onOpenDelete([aliasRow('a', 'public'), aliasRow('b', 'public')]));
+      await act(async () => {
+        await result.current.onDelete();
+      });
+
+      expect(bulkDeleteAliases).toHaveBeenCalledWith([
+        { path: 'public/a', etag: expect.anything() },
+        { path: 'public/b', etag: expect.anything() },
+      ]);
+      expect(refetch).toHaveBeenCalledOnce();
+    });
   });
 });

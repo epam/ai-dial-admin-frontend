@@ -258,6 +258,14 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
+  test("offers an alias its properties, target and roles, since everything else is its target's", () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsAliases).map((tab) => tab.id)).toEqual([
+      EntityViewTab.Properties,
+      EntityViewTab.Target,
+      EntityViewTab.Roles,
+    ]);
+  });
+
   test('offers no Dependencies tab on AssetsApplications', () => {
     expect(getTabsForAsset(t, ApplicationRoute.AssetsApplications)).not.toContainEqual(dependenciesTab(t));
   });

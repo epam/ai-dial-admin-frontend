@@ -4,12 +4,14 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { AssetModel } from '@/src/models/dial/deployment-asset';
 import ModelView from '../View';
 
-vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
+vi.mock('@/src/app/[lang]/platform-models/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/platform-models/actions')>()),
   updateModel: vi.fn(),
   removeModel: vi.fn(),
 }));
 
-vi.mock('@/src/context/assets/ModelsFolderContext', () => ({
+vi.mock('@/src/context/assets/ModelsFolderContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/context/assets/ModelsFolderContext')>()),
   useModelsFolder: () => ({ fetchFiles: vi.fn() }),
 }));
 

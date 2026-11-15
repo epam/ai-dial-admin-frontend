@@ -45,6 +45,7 @@ export const getRootFolder = (view: ApplicationRoute): string =>
 export const DUAL_BUCKET_VIEWS: readonly ApplicationRoute[] = [
   ApplicationRoute.AssetsApplications,
   ApplicationRoute.AssetsToolsets,
+  ApplicationRoute.AssetsAliases,
 ];
 
 /**
@@ -62,6 +63,7 @@ export const CONFIG_FILE_ENTITY_TYPE_BY_VIEW: ReadonlyMap<ApplicationRoute, Conf
   [ApplicationRoute.PlatformRoles, ConfigFileEntityType.Roles],
   [ApplicationRoute.AssetsApplications, ConfigFileEntityType.Applications],
   [ApplicationRoute.AssetsToolsets, ConfigFileEntityType.Toolsets],
+  [ApplicationRoute.AssetsAliases, ConfigFileEntityType.Aliases],
 ]);
 
 export const getConfigFileEntityType = (view: ApplicationRoute): ConfigFileEntityType | undefined =>

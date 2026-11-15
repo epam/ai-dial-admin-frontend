@@ -11,7 +11,7 @@ import DuplicatePlatformKeyModal from '@/src/components/Assets/Platform/Keys/Dup
 import { isItemOpenable } from '@/src/components/Common/FileManager/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ASSETS_ROW_HEIGHT } from '@/src/components/Grid/constants';
-import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
+import { MULTI_ROW_SELECTION, SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetTabsI18nKey, PolicyAssignmentsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -23,15 +23,17 @@ import { DialKeyResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { appendUrlQuery, getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { getFlatAssetColumns } from './columns';
-import { FlatAssets } from './models';
+import { FlatAssets, FlatAssetSource } from './models';
 import { PlatformModalType, usePlatformAssetActions } from './use-platform-asset-actions';
 
 interface Props {
   view: ApplicationRoute;
-  source: AssetSource.Platform | AssetSource.ConfigFile;
+  source: FlatAssetSource;
   assets: FlatAssets;
   /** Select mode: a plain multi-select list with no row actions, for a picker. */
   isSelectMode?: boolean;
+  /** Select mode: one row at a time, as a radio, instead of a multi-select list. */
+  isSingleSelect?: boolean;
   /** Select mode: the names that should show as selected, so a name picked on another tab shows here too. */
   selectedNames?: ReadonlySet<string>;
   /** Reports the rows the user has selected; a selection applied from `selectedNames` is not reported back. */
@@ -40,14 +42,16 @@ interface Props {
 }
 
 /**
- * The flat grid behind a listing's Platform and config.json tabs: no tree, no folders. Platform rows can be
- * duplicated and deleted; config.json rows are read-only and only open.
+ * The flat grid behind a listing's Platform and config.json tabs, and its Public tab where that is flat too: no
+ * tree, no folders. Platform and Public rows can be duplicated and deleted; config.json rows are read-only and only
+ * open.
  */
 const FlatAssetGrid: FC<Props> = ({
   view,
   source,
   assets,
   isSelectMode,
+  isSingleSelect,
   selectedNames,
   onSelectionChange,
   onGridApiChange,
@@ -55,10 +59,9 @@ const FlatAssetGrid: FC<Props> = ({
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const isPlatform = source === AssetSource.Platform;
-  const canWrite = isPlatform && !isReadOnlyAdmin && !isSelectMode;
+  const canWrite = source !== AssetSource.ConfigFile && !isReadOnlyAdmin && !isSelectMode;
 
-  const actions = usePlatformAssetActions({ view, refetch: assets.refetch });
+  const actions = usePlatformAssetActions({ view, source, refetch: assets.refetch });
   const { onOpenDuplicate, onOpenDelete } = actions;
 
   // A config.json row opens read-only through `configFile=true`; Catalog Schemas resolve by `$id` instead.
@@ -155,7 +158,7 @@ const FlatAssetGrid: FC<Props> = ({
           getHref={getHref}
           emptyDataProps={{ title: emptyState.title, description: emptyState.description }}
           additionalGridOptions={{
-            ...(isSelectMode ? MULTI_ROW_SELECTION : {}),
+            ...(isSelectMode ? (isSingleSelect ? SINGLE_ROW_SELECTION : MULTI_ROW_SELECTION) : {}),
             rowHeight: ASSETS_ROW_HEIGHT,
             onSelectionChanged,
           }}
