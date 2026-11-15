@@ -26,25 +26,20 @@ export const hasPublicSource = (view: ApplicationRoute): boolean => hasPublicTre
 
 /**
  * The tabs a listing offers, in display order. Platform and config.json are admin-only, so a caller in unit
- * mode keeps only what their units can reach: the public tree for Applications and Toolsets, and nothing the
- * admin reads would answer for Aliases, which Core serves to admins only.
+ * mode keeps only the Public source, where the listing has one.
  */
 export const getAvailableSources = (view: ApplicationRoute, isUnitMode: boolean): AssetSource[] => {
-  if (hasPublicTree(view)) {
+  if (hasPublicSource(view)) {
     return isUnitMode ? [AssetSource.Public] : [AssetSource.Public, AssetSource.Platform, AssetSource.ConfigFile];
-  }
-
-  if (hasFlatPublic(view)) {
-    return isUnitMode ? [AssetSource.Platform] : [AssetSource.Platform, AssetSource.Public, AssetSource.ConfigFile];
   }
 
   const hasConfigFile = !isUnitMode && getConfigFileEntityType(view) != null;
   return hasConfigFile ? [AssetSource.Platform, AssetSource.ConfigFile] : [AssetSource.Platform];
 };
 
-/** Public where a public tree exists, Platform elsewhere — a flat Public source is the exception, not the default. */
+/** Public wherever the listing has a Public source, Platform elsewhere. */
 export const getDefaultSource = (view: ApplicationRoute): AssetSource =>
-  hasPublicTree(view) ? AssetSource.Public : AssetSource.Platform;
+  hasPublicSource(view) ? AssetSource.Public : AssetSource.Platform;
 
 /** An unknown or unavailable `tab` value falls back to the view's default. */
 export const parseSourceParam = (

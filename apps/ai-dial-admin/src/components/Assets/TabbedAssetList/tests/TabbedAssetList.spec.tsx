@@ -263,19 +263,19 @@ describe('TabbedAssetList', () => {
       vi.mocked(usePathname).mockReturnValue(aliasesPath);
     });
 
-    test('shows Platform, Public and config.json, in that order, with Platform selected', () => {
+    test('shows Public, Platform and config.json, in that order, with Public selected', () => {
       renderList(ApplicationRoute.AssetsAliases);
 
       expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
-        expect.stringContaining(AssetTabsI18nKey.Platform),
         expect.stringContaining(AssetTabsI18nKey.Public),
+        expect.stringContaining(AssetTabsI18nKey.Platform),
         expect.stringContaining(AssetTabsI18nKey.ConfigFile),
       ]);
-      expect(screen.getByRole('tab', { name: new RegExp(AssetTabsI18nKey.Platform) })).toHaveAttribute(
+      expect(screen.getByRole('tab', { name: new RegExp(AssetTabsI18nKey.Public) })).toHaveAttribute(
         'aria-selected',
         'true',
       );
-      expect(screen.getByText(`flat-grid:${AssetSource.Platform}:5`)).toBeInTheDocument();
+      expect(screen.getByText(`flat-grid:${AssetSource.Public}:2`)).toBeInTheDocument();
     });
 
     test('badges the Public tab too, since its rows are counted', () => {
@@ -293,14 +293,14 @@ describe('TabbedAssetList', () => {
     });
 
     test('renders the Public tab as a flat grid, never the file-manager tree', () => {
-      renderList(ApplicationRoute.AssetsAliases, 'tab=public');
+      renderList(ApplicationRoute.AssetsAliases);
 
       expect(screen.getByText(`flat-grid:${AssetSource.Public}:2`)).toBeInTheDocument();
       expect(screen.queryByText(/public-tree:/)).not.toBeInTheDocument();
     });
 
     test('offers Create on the Public tab and creates in the public bucket with the public names', async () => {
-      renderList(ApplicationRoute.AssetsAliases, 'tab=public');
+      renderList(ApplicationRoute.AssetsAliases);
 
       await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
@@ -308,7 +308,7 @@ describe('TabbedAssetList', () => {
     });
 
     test('creates in the platform bucket from the Platform tab', async () => {
-      renderList(ApplicationRoute.AssetsAliases);
+      renderList(ApplicationRoute.AssetsAliases, 'tab=platform');
 
       await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
 
@@ -323,13 +323,14 @@ describe('TabbedAssetList', () => {
       expect(screen.queryByRole('button', { name: ButtonsI18nKey.Create })).not.toBeInTheDocument();
     });
 
-    test('reads only the Platform source for a unit-mode caller and shows no tab row', () => {
+    test('reads only the Public source for a unit-mode caller and shows no tab row', () => {
       appContext.isUnitMode = true;
 
       renderList(ApplicationRoute.AssetsAliases);
 
       expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
-      expect(useFlatAssets).toHaveBeenCalledWith(ApplicationRoute.AssetsAliases, AssetSource.Public, false);
+      expect(useFlatAssets).toHaveBeenCalledWith(ApplicationRoute.AssetsAliases, AssetSource.Public, true);
+      expect(useFlatAssets).toHaveBeenCalledWith(ApplicationRoute.AssetsAliases, AssetSource.Platform, false);
       expect(useFlatAssets).toHaveBeenCalledWith(ApplicationRoute.AssetsAliases, AssetSource.ConfigFile, false);
     });
 

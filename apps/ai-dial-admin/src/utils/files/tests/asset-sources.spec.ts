@@ -25,10 +25,10 @@ describe('getAvailableSources', () => {
     });
   });
 
-  it('offers Platform, Public and config.json, in that order, for Aliases', () => {
+  it('offers Public, Platform and config.json, in that order, for Aliases', () => {
     expect(getAvailableSources(ApplicationRoute.AssetsAliases, false)).toEqual([
-      AssetSource.Platform,
       AssetSource.Public,
+      AssetSource.Platform,
       AssetSource.ConfigFile,
     ]);
   });
@@ -48,14 +48,12 @@ describe('getAvailableSources', () => {
     expect(getAvailableSources(view, false)).toEqual([AssetSource.Platform]);
   });
 
-  it('offers Public only to a unit-mode caller on Applications and Toolsets', () => {
-    expect(getAvailableSources(ApplicationRoute.AssetsApplications, true)).toEqual([AssetSource.Public]);
-    expect(getAvailableSources(ApplicationRoute.AssetsToolsets, true)).toEqual([AssetSource.Public]);
-  });
-
-  it('offers a unit-mode caller on Aliases the Platform source only, since Core serves aliases to admins', () => {
-    expect(getAvailableSources(ApplicationRoute.AssetsAliases, true)).toEqual([AssetSource.Platform]);
-  });
+  it.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets, ApplicationRoute.AssetsAliases])(
+    'offers Public only to a unit-mode caller on %s',
+    (view) => {
+      expect(getAvailableSources(view, true)).toEqual([AssetSource.Public]);
+    },
+  );
 
   it('drops config.json for a unit-mode caller on a platform entity', () => {
     expect(getAvailableSources(ApplicationRoute.PlatformModels, true)).toEqual([AssetSource.Platform]);
@@ -70,13 +68,10 @@ describe('getAvailableSources', () => {
 });
 
 describe('getDefaultSource and the Public source kinds', () => {
-  it('defaults to Public where a public tree exists and to Platform elsewhere', () => {
+  it('defaults to Public where the listing has a Public source and to Platform elsewhere', () => {
     expect(getDefaultSource(ApplicationRoute.AssetsApplications)).toBe(AssetSource.Public);
+    expect(getDefaultSource(ApplicationRoute.AssetsAliases)).toBe(AssetSource.Public);
     expect(getDefaultSource(ApplicationRoute.PlatformRoutes)).toBe(AssetSource.Platform);
-  });
-
-  it('defaults to Platform for Aliases, whose Public source is flat', () => {
-    expect(getDefaultSource(ApplicationRoute.AssetsAliases)).toBe(AssetSource.Platform);
   });
 
   it('tells a public tree from a flat Public source', () => {
@@ -119,11 +114,11 @@ describe('parseSourceParam', () => {
     );
   });
 
-  it('opens Aliases on Platform without a tab parameter and honours a Public one', () => {
+  it('opens Aliases on Public without a tab parameter and honours a Platform one', () => {
     const aliasSources = getAvailableSources(ApplicationRoute.AssetsAliases, false);
 
-    expect(parseSourceParam(ApplicationRoute.AssetsAliases, undefined, aliasSources)).toBe(AssetSource.Platform);
-    expect(parseSourceParam(ApplicationRoute.AssetsAliases, 'public', aliasSources)).toBe(AssetSource.Public);
+    expect(parseSourceParam(ApplicationRoute.AssetsAliases, undefined, aliasSources)).toBe(AssetSource.Public);
+    expect(parseSourceParam(ApplicationRoute.AssetsAliases, 'platform', aliasSources)).toBe(AssetSource.Platform);
   });
 });
 

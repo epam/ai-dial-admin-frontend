@@ -27,8 +27,8 @@ NOT appear as roots, folders or tree nodes anywhere in the file manager.
 The system SHALL offer a **Public** tab only for Assets Applications, Assets Toolsets and Assets Aliases, a
 **Platform** tab for every listing, and a **config.json** tab only where DIAL Core exposes a config-file type for the
 view. Keys SHALL have no config.json tab. A listing with exactly one available tab SHALL render no tab row. For a
-caller in unit mode, Assets Applications and Assets Toolsets SHALL offer the Public tab only and render no tab row.
-Assets Aliases is admin-only, so for a caller in unit mode it SHALL offer the Platform tab only and render no tab row.
+caller in unit mode, Assets Applications, Assets Toolsets and Assets Aliases SHALL offer the Public tab only and render
+no tab row.
 For Assets Applications and Assets Toolsets the Public tab is the `public/` tree; for Assets Aliases it is a flat grid
 of `aliases/public/`.
 
@@ -40,7 +40,7 @@ of `aliases/public/`.
 #### Scenario: Aliases shows three tabs
 
 - **WHEN** an admin opens `/assets-aliases`
-- **THEN** the tabs are Platform, Public and config.json, in that order
+- **THEN** the tabs are Public, Platform and config.json, in that order
 
 #### Scenario: Models shows two tabs
 
@@ -60,12 +60,12 @@ of `aliases/public/`.
 #### Scenario: Unit user gets no alias tab row
 
 - **WHEN** a unit-mode user opens `/assets-aliases`
-- **THEN** no tab row is rendered and only the Platform source is requested
+- **THEN** no tab row is rendered and only the Public source is requested
 
 ### Requirement: Default tab
 
-The system SHALL select **Public** by default on Assets Applications and Assets Toolsets, and **Platform** by
-default on every other listing, Assets Aliases included. The selected tab SHALL be mirrored to a `tab` query
+The system SHALL select **Public** by default on Assets Applications, Assets Toolsets and Assets Aliases, and
+**Platform** by default on every other listing. The selected tab SHALL be mirrored to a `tab` query
 parameter, so a reload, a deep link or a return from a detail page restores the same tab; an unknown or unavailable
 `tab` value SHALL fall back to the default.
 

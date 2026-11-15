@@ -23,8 +23,8 @@ NOT be offered to a caller in unit mode.
 - **THEN** the list title and the breadcrumb root show the `Aliases` label, and the detail breadcrumb ends in a non-link segment for the alias
 
 ### Requirement: Alias listing offers Platform, Public and config.json sources
-The system SHALL render `/assets-aliases` with the shared tabbed listing over three sources, in this order: **Platform**
-(`aliases/platform/`), **Public** (`aliases/public/`) and **config.json** (Core's config-file aliases). Platform and
+The system SHALL render `/assets-aliases` with the shared tabbed listing over three sources, in this order: **Public**
+(`aliases/public/`), **Platform** (`aliases/platform/`) and **config.json** (Core's config-file aliases). Platform and
 Public SHALL be flat grids with no folder affordance. The config.json tab SHALL be read-only. The Platform and Public
 grids SHALL show name, author, created-at and updated-at, all from Core's resource metadata, and SHALL NOT fetch each
 row's content to populate the list (the target and present-as are visible on the detail view only); config.json rows
@@ -32,7 +32,7 @@ show the name only.
 
 #### Scenario: Three tabs in order
 - **WHEN** an admin opens `/assets-aliases`
-- **THEN** the tabs are Platform, Public and config.json, in that order, with Platform selected
+- **THEN** the tabs are Public, Platform and config.json, in that order, with Public selected
 
 #### Scenario: Platform and Public rows are direct rows
 - **WHEN** an admin opens the Public tab
