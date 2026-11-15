@@ -21,4 +21,5 @@ export enum ResourceType {
   PROJECT_KEY = 'PROJECT_KEY',
   POLICY = 'POLICY',
   POLICY_ASSIGNMENT = 'POLICY_ASSIGNMENT',
+  ALIAS = 'ALIAS',
 }

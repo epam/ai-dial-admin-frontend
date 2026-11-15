@@ -22,6 +22,7 @@ import {
 } from '@/src/app/[lang]/platform-interceptors/actions';
 import { bulkDeleteRouters, createRouter, getRouter } from '@/src/app/[lang]/platform-routers/actions';
 import { bulkDeleteTranslators, createTranslator, getTranslator } from '@/src/app/[lang]/platform-translators/actions';
+import { bulkDeleteAliases, createAlias, getAlias } from '@/src/app/[lang]/assets-aliases/actions';
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/platform-models/actions';
 import { bulkDeleteKeys, createKey, getKey } from '@/src/app/[lang]/platform-keys/actions';
 import { bulkDeleteRoles, createRole, getRole } from '@/src/app/[lang]/platform-roles/actions';
@@ -62,6 +63,7 @@ import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContex
 import { useCatalogSchemasFolder } from '@/src/context/assets/CatalogSchemasFolderContext';
 import { useInterceptorsFolder } from '@/src/context/assets/InterceptorsFolderContext';
 import { useRoutersFolder } from '@/src/context/assets/RoutersFolderContext';
+import { useAliasesFolder } from '@/src/context/assets/AliasesFolderContext';
 import { useTranslatorsFolder } from '@/src/context/assets/TranslatorsFolderContext';
 import { useKeysFolder } from '@/src/context/assets/KeysFolderContext';
 import { useRolesFolder } from '@/src/context/assets/RolesFolderContext';
@@ -238,6 +240,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Applications;
     case ApplicationRoute.AssetsToolsets:
       return FileManagerI18nKey.Toolsets;
+    case ApplicationRoute.AssetsAliases:
+      return FileManagerI18nKey.Aliases;
     case ApplicationRoute.Conversations:
       return FileManagerI18nKey.Conversations;
     case ApplicationRoute.PlatformModels:
@@ -290,6 +294,11 @@ export const getEmptyStateContent = (
       return {
         title: t(FileManagerI18nKey.ToolsetsEmptyStateTitle),
         description: t(FileManagerI18nKey.ToolsetsEmptyStateDescription),
+      };
+    case ApplicationRoute.AssetsAliases:
+      return {
+        title: t(FileManagerI18nKey.AliasesEmptyStateTitle),
+        description: t(FileManagerI18nKey.AliasesEmptyStateDescription),
       };
     case ApplicationRoute.Conversations:
       return {
@@ -435,6 +444,7 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.Prompts]: usePromptFolder,
   [ApplicationRoute.AssetsApplications]: useAppsFolder,
   [ApplicationRoute.AssetsToolsets]: useToolsetFolder,
+  [ApplicationRoute.AssetsAliases]: useAliasesFolder,
   [ApplicationRoute.Conversations]: useConversationFolder,
   [ApplicationRoute.PlatformModels]: useModelsFolder,
   [ApplicationRoute.PlatformAppRunners]: useAppRunnersFolder,
@@ -455,6 +465,7 @@ export const GetAssetActionMap = {
   [ApplicationRoute.Prompts]: getPrompt,
   [ApplicationRoute.AssetsApplications]: getApp,
   [ApplicationRoute.AssetsToolsets]: getToolset,
+  [ApplicationRoute.AssetsAliases]: getAlias,
   [ApplicationRoute.Conversations]: getConversation,
   [ApplicationRoute.PlatformModels]: getModel,
   [ApplicationRoute.PlatformAppRunners]: getRunner,
@@ -516,6 +527,9 @@ export const CreateAssetActionMap: Record<CreateAssetRoute, CreateAssetAction> =
   [ApplicationRoute.AssetsToolsets]: createToolset as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  // Not sanitized: `folderId` carries the bucket (`public/` or `platform/`) the alias is written to, and the
+  // action builds the path from it before keeping only the fields Core accepts.
+  [ApplicationRoute.AssetsAliases]: createAlias as unknown as CreateAssetAction,
   [ApplicationRoute.PlatformModels]: sanitizePlatformCreateAsset(
     createModel as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
   ),
@@ -596,6 +610,7 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.Prompts]: bulkDeletePrompts,
   [ApplicationRoute.AssetsApplications]: bulkDeleteApps,
   [ApplicationRoute.AssetsToolsets]: bulkDeleteToolsets,
+  [ApplicationRoute.AssetsAliases]: bulkDeleteAliases,
   [ApplicationRoute.Conversations]: deleteConversations,
   [ApplicationRoute.PlatformModels]: bulkDeleteModels,
   [ApplicationRoute.PlatformAppRunners]: bulkDeleteRunners,

@@ -162,17 +162,31 @@ describe('MENU_CONFIGURATION — AI Gateway group', () => {
   const findGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.AiGateway);
 
-  test('lists models, toolsets, routers, translators, routes, applications, application runners, catalog schemas', () => {
+  test('lists models, toolsets, routers, translators, aliases, routes, applications, application runners, catalog schemas', () => {
     expect(findGroup(baseFlags)?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.PlatformModels,
       MenuI18nKey.Toolsets,
       MenuI18nKey.PlatformRouters,
       MenuI18nKey.PlatformTranslators,
+      MenuI18nKey.PlatformAliases,
       MenuI18nKey.PlatformRoutes,
       MenuI18nKey.Applications,
       MenuI18nKey.PlatformAppRunners,
       MenuI18nKey.PlatformCatalogSchemas,
     ]);
+  });
+
+  test('places Aliases directly after Translators and before Routes', () => {
+    const keys = findGroup(baseFlags)?.items.map((item) => item.key) ?? [];
+
+    expect(keys.indexOf(MenuI18nKey.PlatformAliases)).toBe(keys.indexOf(MenuI18nKey.PlatformTranslators) + 1);
+    expect(keys.indexOf(MenuI18nKey.PlatformAliases)).toBe(keys.indexOf(MenuI18nKey.PlatformRoutes) - 1);
+  });
+
+  test('links Aliases to the assets aliases route', () => {
+    const items = findGroup(baseFlags)?.items ?? [];
+
+    expect(items.find((item) => item.key === MenuI18nKey.PlatformAliases)?.href).toBe(ApplicationRoute.AssetsAliases);
   });
 
   test('links Routers to the platform routers route', () => {
@@ -273,6 +287,7 @@ describe('MENU_CONFIGURATION — Core-direct items', () => {
     MenuI18nKey.PlatformModels,
     MenuI18nKey.PlatformRouters,
     MenuI18nKey.PlatformTranslators,
+    MenuI18nKey.PlatformAliases,
     MenuI18nKey.PlatformRoutes,
     MenuI18nKey.PlatformAppRunners,
     MenuI18nKey.PlatformCatalogSchemas,

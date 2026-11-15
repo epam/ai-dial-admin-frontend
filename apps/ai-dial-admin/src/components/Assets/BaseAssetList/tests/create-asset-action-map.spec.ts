@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
+import { createAlias } from '@/src/app/[lang]/assets-aliases/actions';
 import { createModel } from '@/src/app/[lang]/platform-models/actions';
 import { createRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 import { createCatalogSchema } from '@/src/app/[lang]/platform-catalog-schemas/actions';
@@ -14,6 +15,10 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { CreateAssetRoute } from '../types';
 import { CreateAssetActionMap } from '../utils';
 
+vi.mock('@/src/app/[lang]/assets-aliases/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/assets-aliases/actions')>()),
+  createAlias: vi.fn(),
+}));
 vi.mock('@/src/app/[lang]/platform-models/actions', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/src/app/[lang]/platform-models/actions')>()),
   createModel: vi.fn(),
@@ -102,5 +107,16 @@ describe('CreateAssetActionMap', () => {
     await CreateAssetActionMap[view as CreateAssetRoute](asset as never);
 
     expect(createAction).toHaveBeenCalledWith(asset);
+  });
+
+  // An alias is written to the bucket its `folderId` names, so, unlike the flat views, the folder must reach the
+  // action, which builds the path from it and keeps only the fields Core accepts.
+  test.each(['platform/', 'public/'])('passes the %s bucket folder through to an alias create', async (folderId) => {
+    vi.mocked(createAlias).mockResolvedValue({ success: true });
+    const asset = { name: 'assistant', folderId, target: { path: 'models/gpt' } };
+
+    await CreateAssetActionMap[ApplicationRoute.AssetsAliases](asset as never);
+
+    expect(createAlias).toHaveBeenCalledWith(asset);
   });
 });

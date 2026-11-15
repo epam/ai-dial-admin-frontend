@@ -33,6 +33,7 @@ const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Applications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolset,
+  [ApplicationRoute.AssetsAliases]: DeleteI18nKey.Alias,
   [ApplicationRoute.Toolsets]: DeleteI18nKey.Toolset,
   [ApplicationRoute.Skills]: DeleteI18nKey.Skill,
   [ApplicationRoute.Projects]: DeleteI18nKey.Project,
@@ -62,6 +63,7 @@ const deleteEntityMap: Record<string, DeleteI18nKey> = {
 const bulkDeleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolsets,
+  [ApplicationRoute.AssetsAliases]: DeleteI18nKey.Aliases,
   [ApplicationRoute.Prompts]: DeleteI18nKey.Prompts,
   [ApplicationRoute.PlatformModels]: DeleteI18nKey.Models,
   [ApplicationRoute.PlatformAppRunners]: DeleteI18nKey.ApplicationRunners,

@@ -124,6 +124,16 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  // Flat in both buckets, so unlike Applications and Toolsets there is no folder trail to enrich it with.
+  [ApplicationRoute.AssetsAliases]: {
+    segments: [
+      { name: 'AssetsAliases', i18nKey: MenuI18nKey.PlatformAliases },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.PlatformRoutes]: {
     segments: [
       { name: 'PlatformRoutes', i18nKey: MenuI18nKey.PlatformRoutes },

@@ -27,6 +27,12 @@ describe('ROUTABLE_NAMESPACES', () => {
   });
 });
 
+describe('getRouteNamespace :: aliases', () => {
+  test('has no namespace, so a unit user is never offered Aliases', () => {
+    expect(getRouteNamespace(ApplicationRoute.AssetsAliases)).toBeUndefined();
+  });
+});
+
 describe('getRouteNamespace', () => {
   test.each([
     [ApplicationRoute.AssetsApplications, UnitNamespace.APPLICATIONS],

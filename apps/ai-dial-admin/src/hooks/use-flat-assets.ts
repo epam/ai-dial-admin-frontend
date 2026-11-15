@@ -2,24 +2,23 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { FlatAssets, FlatReadResult } from '@/src/components/Assets/FlatAssetGrid/models';
+import { FlatAssets, FlatAssetSource, FlatReadResult } from '@/src/components/Assets/FlatAssetGrid/models';
 import { readFlatAssets } from '@/src/components/Assets/FlatAssetGrid/readers';
 import { AssetTabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useGuardedRead } from '@/src/hooks/use-guarded-read';
 import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
-import { AssetSource } from '@/src/models/dial/asset-source';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 
 /**
- * A listing's Platform or config.json rows. Owns its own state and needs no folder context: nothing here reads
+ * A listing's Platform, config.json or (for a view with a flat Public source) Public rows. Owns its own state and needs no folder context: nothing here reads
  * `filePath`, a folder cache or an expanded set. Loads on mount so a tab's count is known before the tab opens.
  */
 export const useFlatAssets = (
   view: ApplicationRoute,
-  source: AssetSource.Platform | AssetSource.ConfigFile,
+  source: FlatAssetSource,
   /** A source the listing does not offer is never read. */
   isEnabled = true,
 ): FlatAssets => {

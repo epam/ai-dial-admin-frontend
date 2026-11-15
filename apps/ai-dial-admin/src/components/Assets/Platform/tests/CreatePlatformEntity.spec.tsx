@@ -9,6 +9,7 @@ import { CreateAssetActionMap, PlatformCreateAssetActionMap } from '@/src/compon
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { NotificationType } from '@/src/models/notification';
 import { ApplicationRoute } from '@/src/types/routes';
 import CreatePlatformEntity from '../CreatePlatformEntity';
@@ -28,6 +29,7 @@ vi.mock('@/src/components/Assets/BaseAssetList/utils', () => ({
     '/platform-app-runners': vi.fn(),
     '/platform-catalog-schemas': vi.fn(),
     '/platform-policies': vi.fn(),
+    '/assets-aliases': vi.fn(),
   },
   PlatformCreateAssetActionMap: { '/assets-toolsets': vi.fn(), '/assets-applications': vi.fn() },
 }));
@@ -65,6 +67,15 @@ vi.mock('@/src/components/EntityMainProperties/Properties/Properties', () => ({
   ),
 }));
 
+vi.mock('@/src/components/Assets/Entities/Aliases/CreateAliasModal', () => ({
+  default: ({ bucket, createEntity }: any) => (
+    <div>
+      create-alias:bucket={String(bucket)}:wired=
+      {String(createEntity === (CreateAssetActionMap as Record<string, unknown>)['/assets-aliases'])}
+    </div>
+  ),
+}));
+
 const push = vi.fn();
 const onClose = vi.fn();
 const createAction = (key: string) => (CreateAssetActionMap as Record<string, ReturnType<typeof vi.fn>>)[key];
@@ -92,6 +103,12 @@ describe('CreatePlatformEntity :: per-view switch', () => {
     });
 
     expect(screen.getByText(/create-application:platform=true:schema=runner-1:wired=true/)).toBeInTheDocument();
+  });
+
+  test('renders the alias wizard, wired to the alias create action and the bucket of the active tab', () => {
+    renderPopup(ApplicationRoute.AssetsAliases, { bucket: AssetSource.Public });
+
+    expect(screen.getByText('create-alias:bucket=public:wired=true')).toBeInTheDocument();
   });
 
   test('renders the generic platform form for every other view', () => {
@@ -140,6 +157,18 @@ describe('CreatePlatformEntity :: generic form', () => {
     );
     expect(createAction('/platform-models')).not.toHaveBeenCalled();
     expect(push).toHaveBeenCalledWith('/assets-toolsets/mcp');
+  });
+
+  test('keeps every other view in the platform bucket whatever bucket is passed', async () => {
+    createAction('/platform-models').mockResolvedValue({ success: true, response: { name: 'gpt' } });
+    renderPopup(ApplicationRoute.PlatformModels);
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'entity-name' }), { target: { value: 'gpt' } });
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    await vi.waitFor(() =>
+      expect(createAction('/platform-models')).toHaveBeenCalledWith(expect.objectContaining({ folderId: 'platform/' })),
+    );
   });
 
   test('keeps the popup open and shows the error when Core refuses the create', async () => {

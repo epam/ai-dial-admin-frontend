@@ -29,6 +29,8 @@ import {
   getAvailableSources,
   getDefaultSource,
   getHeaderCount,
+  hasFlatPublic,
+  hasPublicTree,
   parseSourceParam,
 } from '@/src/utils/files/asset-sources';
 import { TAB_QUERY_PARAM } from './constants';
@@ -67,6 +69,12 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
   const activeSource = parseSourceParam(view, searchParams.get(TAB_QUERY_PARAM), sources);
   const platform = useFlatAssets(view, AssetSource.Platform, sources.includes(AssetSource.Platform));
   const configFile = useFlatAssets(view, AssetSource.ConfigFile, sources.includes(AssetSource.ConfigFile));
+  // A flat Public source is read like the others; a public tree is the file manager's own and is never read here.
+  const flatPublic = useFlatAssets(
+    view,
+    AssetSource.Public,
+    sources.includes(AssetSource.Public) && hasFlatPublic(view),
+  );
 
   const onChangeTab = useCallback(
     (id: string) => {
@@ -83,10 +91,14 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
     [pathname, router, searchParams, view],
   );
 
-  // Public is a tree and is not counted, so it has no entry here and its tab shows no badge.
+  // A public tree is not counted, so it has no entry here and its tab shows no badge.
   const counts = useMemo<AssetSourceCounts>(
-    () => ({ [AssetSource.Platform]: platform.count, [AssetSource.ConfigFile]: configFile.count }),
-    [platform.count, configFile.count],
+    () => ({
+      [AssetSource.Public]: flatPublic.count,
+      [AssetSource.Platform]: platform.count,
+      [AssetSource.ConfigFile]: configFile.count,
+    }),
+    [flatPublic.count, platform.count, configFile.count],
   );
 
   const tabs = useMemo<TabItem[]>(
@@ -94,14 +106,18 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
       sources.map((source) => ({
         id: source,
         label: t(TAB_LABEL_KEYS[source]),
-        count: source === AssetSource.Public ? undefined : counts[source],
+        count: source === AssetSource.Public && hasPublicTree(view) ? undefined : counts[source],
       })),
-    [sources, t, counts],
+    [sources, t, counts, view],
   );
 
-  const headerCount = getHeaderCount(sources, counts);
-  const platformNames = useMemo(() => platform.rows.map((row) => row.name), [platform.rows]);
-  const canCreate = !isReadOnlyAdmin && activeSource === AssetSource.Platform;
+  const headerCount = getHeaderCount(view, sources, counts);
+  const isFlatPublicActive = activeSource === AssetSource.Public && hasFlatPublic(view);
+  const canCreate = !isReadOnlyAdmin && (activeSource === AssetSource.Platform || isFlatPublicActive);
+  const createNames = useMemo(
+    () => (isFlatPublicActive ? flatPublic.rows : platform.rows).map((row) => row.name),
+    [isFlatPublicActive, flatPublic.rows, platform.rows],
+  );
   const hasTabs = sources.length > 1;
   const onCloseCreate = useCallback(() => setIsCreateOpen(false), []);
   // With a tab row the button ends that row; a listing with a single source has no tab row, so it stays in the header.
@@ -126,7 +142,7 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
           )}
         </div>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-4">
-          {activeSource !== AssetSource.Public && <ResetFiltersButton gridApi={gridApi} />}
+          {(activeSource !== AssetSource.Public || hasFlatPublic(view)) && <ResetFiltersButton gridApi={gridApi} />}
           {!hasTabs && createButton}
         </div>
       </div>
@@ -144,7 +160,10 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
         </div>
       )}
       <div className="min-h-0 flex-1">
-        {activeSource === AssetSource.Public && (
+        {activeSource === AssetSource.Public && hasFlatPublic(view) && (
+          <FlatAssetGrid view={view} source={AssetSource.Public} assets={flatPublic} onGridApiChange={setGridApi} />
+        )}
+        {activeSource === AssetSource.Public && !hasFlatPublic(view) && (
           <BaseAssetList
             view={view}
             runners={runners}
@@ -164,7 +183,8 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
           <CreatePlatformEntity
             view={view}
             isOpen={isCreateOpen}
-            names={platformNames}
+            names={createNames}
+            bucket={activeSource === AssetSource.Public ? AssetSource.Public : AssetSource.Platform}
             runners={runners}
             translators={translators}
             onClose={onCloseCreate}
