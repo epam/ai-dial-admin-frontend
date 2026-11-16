@@ -222,7 +222,7 @@ describe('buildOverallScoreChartOptions', () => {
         {
           coord: [3.5, 0.6],
           label: {
-            show: false,
+            show: true,
             position: 'insideStartTop',
             formatter: 'Thld (0.6)',
             color: palette['text-primary'],
@@ -235,7 +235,7 @@ describe('buildOverallScoreChartOptions', () => {
     ]);
   });
 
-  test('labels each threshold value once when it returns after another value', () => {
+  test('labels a threshold again when it returns after another value', () => {
     const runOrder = [0, 1, 0].map((overallScoreThreshold, index) =>
       run({ runId: `run-${index}`, computedAtMs: index, overallScoreThreshold }),
     );
@@ -249,7 +249,7 @@ describe('buildOverallScoreChartOptions', () => {
             [{ label: { show: false } }, {}],
             [{ label: { show: true, formatter: 'Thld (1)' } }, {}],
             [{ label: { show: false } }, {}],
-            [{ label: { show: false, formatter: 'Thld (0)' } }, {}],
+            [{ label: { show: true, formatter: 'Thld (0)' } }, {}],
           ],
         },
       },
