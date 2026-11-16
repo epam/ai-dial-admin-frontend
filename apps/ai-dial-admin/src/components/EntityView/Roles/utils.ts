@@ -26,6 +26,7 @@ export const getNoAvailableTitle = (view: ApplicationRoute) => {
   if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications)
     return RolesI18nKey.NotAvailableApplication;
   if (view === ApplicationRoute.PlatformRoutes) return RolesI18nKey.NotAvailableRoute;
+  if (view === ApplicationRoute.AssetsAliases) return RolesI18nKey.NotAvailableAlias;
   return RolesI18nKey.NotAvailableToolSet;
 };
 

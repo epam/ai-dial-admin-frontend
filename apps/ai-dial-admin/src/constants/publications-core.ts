@@ -48,6 +48,8 @@ export const ROUTES_PREFIX = 'routes/platform/';
 export const KEYS_PREFIX = 'keys/platform/';
 export const POLICIES_PREFIX = 'policies/platform/';
 export const POLICY_ASSIGNMENTS_PREFIX = 'policy_assignments/platform/';
+/** Aliases are dual-bucket like applications: the bucket is part of the path (`public/<name>`, `platform/<name>`). */
+export const ALIASES_PREFIX = 'aliases/';
 
 export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.APPLICATION]: APPLICATIONS_PREFIX,
@@ -68,6 +70,7 @@ export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.PROJECT_KEY]: KEYS_PREFIX,
   [ResourceType.POLICY]: POLICIES_PREFIX,
   [ResourceType.POLICY_ASSIGNMENT]: POLICY_ASSIGNMENTS_PREFIX,
+  [ResourceType.ALIAS]: ALIASES_PREFIX,
 };
 
 /** Hardcoded list path — the backend always lists `publications/public/`. */

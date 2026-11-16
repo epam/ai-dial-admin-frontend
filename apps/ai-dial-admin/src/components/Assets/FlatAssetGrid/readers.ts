@@ -1,3 +1,4 @@
+import { getAliases, getConfigFileAliases } from '@/src/app/[lang]/assets-aliases/actions';
 import { getApps, getConfigFileApplications } from '@/src/app/[lang]/assets-applications/actions';
 import { getConfigFileToolsets, getToolsets } from '@/src/app/[lang]/assets-toolsets/actions';
 import { getConfigFileAppRunners, getRunners } from '@/src/app/[lang]/platform-app-runners/actions';
@@ -18,7 +19,9 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { toConfigFileItems } from '@/src/utils/files/folder-nodes';
 import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
-import { FlatReadResult } from './models';
+import { ROOT_FOLDER } from '@/src/constants/file';
+import { hasFlatPublic } from '@/src/utils/files/asset-sources';
+import { FlatAssetSource, FlatReadResult } from './models';
 
 type ListFolder = (path: string) => Promise<AssetListItem[] | null | undefined>;
 type ListConfigFileNames = () => Promise<ConfigFileReadResult<string[]>>;
@@ -47,6 +50,7 @@ const FLAT_READERS: Partial<Record<ApplicationRoute, FlatReader>> = {
   [ApplicationRoute.PlatformPolicyAssignments]: { list: getPolicyAssignments, isNested: true },
   [ApplicationRoute.AssetsApplications]: { list: getApps, listConfigFileNames: getConfigFileApplications },
   [ApplicationRoute.AssetsToolsets]: { list: getToolsets, listConfigFileNames: getConfigFileToolsets },
+  [ApplicationRoute.AssetsAliases]: { list: getAliases, listConfigFileNames: getConfigFileAliases },
 };
 
 const isFolder = (row: AssetListItem): boolean => row.nodeType === DialFileNodeType.FOLDER;
@@ -63,16 +67,20 @@ const readPlatformRows = async (reader: FlatReader): Promise<AssetListItem[]> =>
 };
 
 /**
- * One flat read for a listing's Platform or config.json source. A failed read is reported as such, never as
- * an empty list, so a caller cannot show a count of zero for a source it could not read.
+ * One flat read for a listing's Platform, config.json or flat Public source. A failed read is reported as such,
+ * never as an empty list, so a caller cannot show a count of zero for a source it could not read.
  */
-export const readFlatAssets = async (
-  view: ApplicationRoute,
-  source: AssetSource.Platform | AssetSource.ConfigFile,
-): Promise<FlatReadResult> => {
+export const readFlatAssets = async (view: ApplicationRoute, source: FlatAssetSource): Promise<FlatReadResult> => {
   const reader = FLAT_READERS[view];
   if (!reader) {
     return { success: false };
+  }
+
+  if (source === AssetSource.Public) {
+    // A public tree is browsed through the file manager, never read flat.
+    return hasFlatPublic(view)
+      ? { success: true, rows: (await reader.list(`${ROOT_FOLDER}/`)) ?? [] }
+      : { success: false };
   }
 
   if (source === AssetSource.Platform) {

@@ -4,6 +4,7 @@ import { ResourceType } from '@/src/types/resource-type';
 
 import {
   CoreResourceMetadataNode,
+  mergeAliasResource,
   mergeApplicationResource,
   mergeConversation,
   mergeAppRunnerResource,
@@ -610,6 +611,58 @@ describe('Server :: Core :: asset-metadata :: policy records', () => {
       name: 'grant-1',
       folderId: 'team-a/',
       path: 'team-a/grant-1',
+    });
+  });
+});
+
+describe('Server :: Core :: asset-metadata :: aliases', () => {
+  test('mergeAliasResource reads a platform alias with its bucket as the folder', () => {
+    const meta = metadata({ url: 'aliases/platform/assistant-v1', author: 'ada', updatedAt: 5 });
+
+    expect(mergeAliasResource({ target: { path: 'models/gpt' }, status: 'valid' }, meta)).toEqual({
+      target: { path: 'models/gpt' },
+      name: 'assistant-v1',
+      _metadata: {
+        name: 'assistant-v1',
+        path: 'platform/assistant-v1',
+        folderId: 'platform/',
+        author: 'ada',
+        updatedAt: '5',
+        status: 'valid',
+      },
+    });
+  });
+
+  test('mergeAliasResource keeps a double underscore in the name instead of reading a version', () => {
+    const meta = metadata({ url: 'aliases/public/a__b' });
+    const result = mergeAliasResource({}, meta);
+
+    expect(result._metadata).toMatchObject({ name: 'a__b', path: 'public/a__b', folderId: 'public/' });
+    expect(result._metadata).not.toHaveProperty('version');
+  });
+
+  test('mergeAliasResource moves the invalid-blob projections into _metadata', () => {
+    const meta = metadata({ url: 'aliases/public/broken' });
+    const warnings = [{ field: 'target.path', message: 'missing' }];
+
+    const result = mergeAliasResource({ status: 'invalid', validationWarnings: warnings }, meta);
+
+    expect(result).not.toHaveProperty('status');
+    expect(result).not.toHaveProperty('validationWarnings');
+    expect(result._metadata).toMatchObject({ status: 'invalid', validationWarnings: warnings });
+  });
+
+  test('toResourceInfoList lists aliases of a bucket as rows named by their own name', () => {
+    const node = metadata({
+      nodeType: 'FOLDER',
+      items: [metadata({ name: 'one', url: 'aliases/public/one', bucket: 'public' })],
+    });
+
+    expect(toResourceInfoList(node, ResourceType.ALIAS)[0]).toMatchObject({
+      name: 'one',
+      folderId: 'public/',
+      path: 'public/one',
+      nodeType: 'item',
     });
   });
 });

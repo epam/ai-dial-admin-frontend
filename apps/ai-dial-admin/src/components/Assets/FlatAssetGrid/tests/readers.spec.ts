@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { getAliases, getConfigFileAliases } from '@/src/app/[lang]/assets-aliases/actions';
+import { getApps } from '@/src/app/[lang]/assets-applications/actions';
 import { getConfigFileModels, getModels } from '@/src/app/[lang]/platform-models/actions';
 import { getPolicies } from '@/src/app/[lang]/platform-policies/actions';
 import { AssetListItem, BucketType } from '@/src/models/dial/asset-list-item';
@@ -9,6 +11,10 @@ import { ConfigFileFailureReason } from '@/src/types/config-file-entity';
 import { ApplicationRoute } from '@/src/types/routes';
 import { readFlatAssets } from '../readers';
 
+vi.mock('@/src/app/[lang]/assets-aliases/actions', () => ({
+  getAliases: vi.fn(),
+  getConfigFileAliases: vi.fn(),
+}));
 vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   getApps: vi.fn(),
   getConfigFileApplications: vi.fn(),
@@ -120,5 +126,54 @@ describe('readFlatAssets', () => {
   test('fails for a view with no reader and for a view with no config.json source', async () => {
     expect(await readFlatAssets(ApplicationRoute.Models, AssetSource.Platform)).toEqual({ success: false });
     expect(await readFlatAssets(ApplicationRoute.PlatformKeys, AssetSource.ConfigFile)).toEqual({ success: false });
+  });
+
+  describe('aliases, whose Public source is flat', () => {
+    test('reads the Platform source from platform/ and the Public source from public/', async () => {
+      vi.mocked(getAliases).mockImplementation((async (path: string) => [item(`${path}one`)]) as never);
+
+      const platform = await readFlatAssets(ApplicationRoute.AssetsAliases, AssetSource.Platform);
+      const publicRows = await readFlatAssets(ApplicationRoute.AssetsAliases, AssetSource.Public);
+
+      expect(getAliases).toHaveBeenNthCalledWith(1, 'platform/');
+      expect(getAliases).toHaveBeenNthCalledWith(2, 'public/');
+      expect(platform).toEqual({ success: true, rows: [item('platform/one')] });
+      expect(publicRows).toEqual({ success: true, rows: [item('public/one')] });
+    });
+
+    test('treats a Public source that answers nothing as an empty list, not a failure', async () => {
+      vi.mocked(getAliases).mockResolvedValue(undefined as never);
+
+      expect(await readFlatAssets(ApplicationRoute.AssetsAliases, AssetSource.Public)).toEqual({
+        success: true,
+        rows: [],
+      });
+    });
+
+    test('lists the config-file alias names as rows', async () => {
+      vi.mocked(getConfigFileAliases).mockResolvedValue({ success: true, data: ['assistant-v1'] });
+
+      const result = await readFlatAssets(ApplicationRoute.AssetsAliases, AssetSource.ConfigFile);
+
+      expect(result).toMatchObject({ success: true, rows: [expect.objectContaining({ name: 'assistant-v1' })] });
+    });
+
+    test('reports a failed config-file read as a failure, never as an empty list', async () => {
+      vi.mocked(getConfigFileAliases).mockResolvedValue({
+        success: false,
+        failure: { reason: ConfigFileFailureReason.RequestFailed, errorHeader: 'Down', errorMessage: 'no' },
+      });
+
+      expect(await readFlatAssets(ApplicationRoute.AssetsAliases, AssetSource.ConfigFile)).toEqual({
+        success: false,
+        errorHeader: 'Down',
+        errorMessage: 'no',
+      });
+    });
+  });
+
+  test('never reads a Public tree flat: Applications answers a failure without listing', async () => {
+    expect(await readFlatAssets(ApplicationRoute.AssetsApplications, AssetSource.Public)).toEqual({ success: false });
+    expect(getApps).not.toHaveBeenCalled();
   });
 });

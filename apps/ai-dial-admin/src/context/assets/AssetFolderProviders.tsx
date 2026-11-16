@@ -1,5 +1,6 @@
 'use client';
 
+import { AliasesFolderProvider } from '@/src/context/assets/AliasesFolderContext';
 import { AppRunnersFolderProvider } from '@/src/context/assets/AppRunnersFolderContext';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { CatalogSchemasFolderProvider } from '@/src/context/assets/CatalogSchemasFolderContext';
@@ -27,6 +28,7 @@ export const AssetFolderProviders = composeProviders([
   CatalogSchemasFolderProvider,
   InterceptorsFolderProvider,
   TranslatorsFolderProvider,
+  AliasesFolderProvider,
   RoutersFolderProvider,
   RoutesFolderProvider,
   PoliciesFolderProvider,

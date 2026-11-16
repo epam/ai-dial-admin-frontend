@@ -43,6 +43,7 @@ export type PublishableResourceType = Exclude<
   | ResourceType.PROJECT_KEY
   | ResourceType.POLICY
   | ResourceType.POLICY_ASSIGNMENT
+  | ResourceType.ALIAS
 >;
 
 export interface PublicationTypeConfig {

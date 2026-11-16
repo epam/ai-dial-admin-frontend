@@ -13,6 +13,7 @@ export enum EntityViewTab {
   Features = 'Features',
   Parameters = 'Parameters',
   Roles = 'Roles',
+  Target = 'Target',
   Interceptors = 'Interceptors',
   GlobalInterceptors = 'GlobalInterceptors',
   RateLimitSchedule = 'RateLimitSchedule',
@@ -108,6 +109,11 @@ export const rolesTab = (t: (key: string) => string, warning?: boolean) => ({
   id: EntityViewTab.Roles,
   label: t(TabsI18nKey.Roles),
   ...getTabStatusProps(t, warning ? TabStatus.Warning : undefined),
+});
+
+export const targetTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Target,
+  label: t(TabsI18nKey.Target),
 });
 
 export const interceptorsTab = (t: (key: string) => string) => ({
@@ -537,6 +543,11 @@ export const getTabsForAsset = (
       tabs.push(auditTab(t));
     }
     return tabs;
+  }
+  // An alias has no features, parameters or catalog of its own — they are its target's — so only what it
+  // is listed as, what it forwards to and who may use it.
+  if (view === ApplicationRoute.AssetsAliases) {
+    return [propertiesTab(t), targetTab(t), rolesTab(t, rolesWarning)];
   }
   if (view === ApplicationRoute.Conversations) {
     return [propertiesTab(t), conversationTab(t)];

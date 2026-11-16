@@ -18,6 +18,7 @@ export type VersionedResourceType = Exclude<
   | ResourceType.PROJECT_KEY
   | ResourceType.POLICY
   | ResourceType.POLICY_ASSIGNMENT
+  | ResourceType.ALIAS
   | ResourceType.CONVERSATION
   | ResourceType.PROMPT
 >;
@@ -25,8 +26,8 @@ export type VersionedResourceType = Exclude<
 export const VERSIONED_RESOURCE_TYPES: VersionedResourceType[] = [ResourceType.APPLICATION, ResourceType.TOOLSET];
 
 /**
- * Versionless resource types that nest in folders (prompt, conversation, and the policy records, whose
- * one folder level is the cost object). Their paths parse with folder semantics — name = last `/`
+ * Versionless resource types that nest in folders (prompt, conversation, the policy records, whose
+ * one folder level is the cost object, and aliases, whose one level is the bucket). Their paths parse with folder semantics — name = last `/`
  * segment, folderId = the rest — and a `__` in the name is never split into name + version.
  */
 export const FOLDER_NESTED_VERSIONLESS_TYPES: ReadonlySet<ResourceType> = new Set([
@@ -34,6 +35,7 @@ export const FOLDER_NESTED_VERSIONLESS_TYPES: ReadonlySet<ResourceType> = new Se
   ResourceType.PROMPT,
   ResourceType.POLICY,
   ResourceType.POLICY_ASSIGNMENT,
+  ResourceType.ALIAS,
 ]);
 
 /**
@@ -75,6 +77,7 @@ export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
   [ResourceType.PROJECT_KEY]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
   [ResourceType.POLICY]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY]}`,
   [ResourceType.POLICY_ASSIGNMENT]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY_ASSIGNMENT]}`,
+  [ResourceType.ALIAS]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ALIAS]}`,
 };
 
 /** `v1/metadata/{prefix}` metadata endpoint per resource type. `SKILL`'s and `PROJECT`'s entries are unreachable — see `CORE_RESOURCE_URL`. */
@@ -97,6 +100,7 @@ export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
   [ResourceType.PROJECT_KEY]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
   [ResourceType.POLICY]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY]}`,
   [ResourceType.POLICY_ASSIGNMENT]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY_ASSIGNMENT]}`,
+  [ResourceType.ALIAS]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ALIAS]}`,
 };
 
 /** Backend default list path — only Conversation and Prompt default an omitted path (`ConversationService`/`PromptService`). */

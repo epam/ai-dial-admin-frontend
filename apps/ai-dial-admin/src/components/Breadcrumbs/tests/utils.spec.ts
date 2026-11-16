@@ -44,6 +44,20 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     ]);
   });
 
+  test('An alias detail route is the aliases list followed by the alias name without a link', () => {
+    expect(getBreadcrumbs('/en/assets-aliases/assistant-v1', 'en')).toEqual([
+      { key: MenuI18nKey.PlatformAliases, name: 'assets-aliases', href: '/en/assets-aliases' },
+      { key: undefined, name: 'assistant-v1', href: '' },
+    ]);
+  });
+
+  test('The aliases list is a single breadcrumb', () => {
+    const config = getBreadcrumbs('/assets-aliases', 'en');
+
+    expect(config).toHaveLength(1);
+    expect(config[0].key).toEqual(MenuI18nKey.PlatformAliases);
+  });
+
   test('Should return empty array for home page', () => {
     const config = getBreadcrumbs('/home', 'en');
     expect(config.length).toEqual(0);
