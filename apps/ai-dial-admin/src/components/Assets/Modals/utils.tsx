@@ -129,6 +129,10 @@ export const getDeleteModalTitle = (
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Translators) : t(FileManagerI18nKey.Translator),
       });
+    case ApplicationRoute.PlatformPlugins:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Plugins) : t(FileManagerI18nKey.Plugin),
+      });
     case ApplicationRoute.AssetsAliases:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Aliases) : t(FileManagerI18nKey.Alias),
@@ -243,6 +247,10 @@ export const getDeleteModalDescription = (
     case ApplicationRoute.PlatformTranslators:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.Translators) : t(FileManagerI18nKey.Translator)).toLowerCase(),
+      });
+    case ApplicationRoute.PlatformPlugins:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1 ? t(FileManagerI18nKey.Plugins) : t(FileManagerI18nKey.Plugin)).toLowerCase(),
       });
     case ApplicationRoute.AssetsAliases:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {

@@ -162,12 +162,13 @@ describe('MENU_CONFIGURATION — AI Gateway group', () => {
   const findGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.AiGateway);
 
-  test('lists models, toolsets, routers, translators, aliases, routes, applications, application runners, catalog schemas', () => {
+  test('lists models, toolsets, routers, translators, plugins, aliases, routes, applications, application runners, catalog schemas', () => {
     expect(findGroup(baseFlags)?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.PlatformModels,
       MenuI18nKey.Toolsets,
       MenuI18nKey.PlatformRouters,
       MenuI18nKey.PlatformTranslators,
+      MenuI18nKey.PlatformPlugins,
       MenuI18nKey.PlatformAliases,
       MenuI18nKey.PlatformRoutes,
       MenuI18nKey.Applications,
@@ -176,11 +177,24 @@ describe('MENU_CONFIGURATION — AI Gateway group', () => {
     ]);
   });
 
-  test('places Aliases directly after Translators and before Routes', () => {
+  test('places Plugins between Translators and Aliases', () => {
     const keys = findGroup(baseFlags)?.items.map((item) => item.key) ?? [];
 
-    expect(keys.indexOf(MenuI18nKey.PlatformAliases)).toBe(keys.indexOf(MenuI18nKey.PlatformTranslators) + 1);
+    expect(keys.indexOf(MenuI18nKey.PlatformPlugins)).toBe(keys.indexOf(MenuI18nKey.PlatformTranslators) + 1);
+    expect(keys.indexOf(MenuI18nKey.PlatformPlugins)).toBe(keys.indexOf(MenuI18nKey.PlatformAliases) - 1);
+  });
+
+  test('places Aliases directly after Plugins and before Routes', () => {
+    const keys = findGroup(baseFlags)?.items.map((item) => item.key) ?? [];
+
+    expect(keys.indexOf(MenuI18nKey.PlatformAliases)).toBe(keys.indexOf(MenuI18nKey.PlatformPlugins) + 1);
     expect(keys.indexOf(MenuI18nKey.PlatformAliases)).toBe(keys.indexOf(MenuI18nKey.PlatformRoutes) - 1);
+  });
+
+  test('links Plugins to the platform plugins route', () => {
+    const items = findGroup(baseFlags)?.items ?? [];
+
+    expect(items.find((item) => item.key === MenuI18nKey.PlatformPlugins)?.href).toBe(ApplicationRoute.PlatformPlugins);
   });
 
   test('links Aliases to the assets aliases route', () => {
@@ -287,6 +301,7 @@ describe('MENU_CONFIGURATION — Core-direct items', () => {
     MenuI18nKey.PlatformModels,
     MenuI18nKey.PlatformRouters,
     MenuI18nKey.PlatformTranslators,
+    MenuI18nKey.PlatformPlugins,
     MenuI18nKey.PlatformAliases,
     MenuI18nKey.PlatformRoutes,
     MenuI18nKey.PlatformAppRunners,

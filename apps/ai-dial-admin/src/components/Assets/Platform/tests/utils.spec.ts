@@ -16,6 +16,10 @@ describe('getInitialPlatformEntity', () => {
     expect(getInitialPlatformEntity(ApplicationRoute.PlatformTranslators)).toEqual({ name: '' });
   });
 
+  test('starts a plugin with a name, an empty type and empty settings, and no description', () => {
+    expect(getInitialPlatformEntity(ApplicationRoute.PlatformPlugins)).toEqual({ name: '', type: '', settings: {} });
+  });
+
   test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
     'starts %s with snake_case roles',
     (view) => {

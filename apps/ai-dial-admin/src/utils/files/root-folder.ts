@@ -58,6 +58,7 @@ export const CONFIG_FILE_ENTITY_TYPE_BY_VIEW: ReadonlyMap<ApplicationRoute, Conf
   [ApplicationRoute.PlatformCatalogSchemas, ConfigFileEntityType.CatalogSchemas],
   [ApplicationRoute.PlatformInterceptors, ConfigFileEntityType.Interceptors],
   [ApplicationRoute.PlatformTranslators, ConfigFileEntityType.Translators],
+  [ApplicationRoute.PlatformPlugins, ConfigFileEntityType.Plugins],
   [ApplicationRoute.PlatformRouters, ConfigFileEntityType.Routers],
   [ApplicationRoute.PlatformRoutes, ConfigFileEntityType.Routes],
   [ApplicationRoute.PlatformRoles, ConfigFileEntityType.Roles],

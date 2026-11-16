@@ -19,6 +19,7 @@ import { RoutesFolderProvider } from '@/src/context/assets/RoutesFolderContext';
 import { SkillFolderProvider } from '@/src/context/assets/SkillFolderContext';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { TranslatorsFolderProvider } from '@/src/context/assets/TranslatorsFolderContext';
+import { PluginsFolderProvider } from '@/src/context/assets/PluginsFolderContext';
 import { composeProviders } from '@/src/context/compose-providers';
 
 export const AssetFolderProviders = composeProviders([
@@ -28,6 +29,7 @@ export const AssetFolderProviders = composeProviders([
   CatalogSchemasFolderProvider,
   InterceptorsFolderProvider,
   TranslatorsFolderProvider,
+  PluginsFolderProvider,
   AliasesFolderProvider,
   RoutersFolderProvider,
   RoutesFolderProvider,

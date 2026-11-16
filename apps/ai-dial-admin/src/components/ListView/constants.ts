@@ -18,6 +18,7 @@ export const listViewTitleMap: Record<string, MenuI18nKey> = {
   [ApplicationRoute.PlatformRoutes]: MenuI18nKey.PlatformRoutes,
   [ApplicationRoute.PlatformRouters]: MenuI18nKey.PlatformRouters,
   [ApplicationRoute.PlatformTranslators]: MenuI18nKey.PlatformTranslators,
+  [ApplicationRoute.PlatformPlugins]: MenuI18nKey.PlatformPlugins,
   [ApplicationRoute.AssetsAliases]: MenuI18nKey.PlatformAliases,
   [ApplicationRoute.PlatformPolicies]: MenuI18nKey.PlatformPolicies,
   [ApplicationRoute.PlatformPolicyAssignments]: MenuI18nKey.PlatformPolicyAssignments,

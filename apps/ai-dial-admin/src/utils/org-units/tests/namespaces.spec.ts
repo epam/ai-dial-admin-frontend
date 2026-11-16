@@ -33,6 +33,12 @@ describe('getRouteNamespace :: aliases', () => {
   });
 });
 
+describe('getRouteNamespace :: plugins', () => {
+  test('has no namespace, so a unit user is never offered Plugins', () => {
+    expect(getRouteNamespace(ApplicationRoute.PlatformPlugins)).toBeUndefined();
+  });
+});
+
 describe('getRouteNamespace', () => {
   test.each([
     [ApplicationRoute.AssetsApplications, UnitNamespace.APPLICATIONS],

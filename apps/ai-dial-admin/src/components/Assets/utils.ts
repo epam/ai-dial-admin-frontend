@@ -284,6 +284,7 @@ export const getDeleteNotificationContent = (
     case ApplicationRoute.PlatformCatalogSchemas:
     case ApplicationRoute.PlatformInterceptors:
     case ApplicationRoute.PlatformTranslators:
+    case ApplicationRoute.PlatformPlugins:
     case ApplicationRoute.AssetsAliases:
     case ApplicationRoute.PlatformRouters:
     case ApplicationRoute.PlatformRoutes:
@@ -297,6 +298,7 @@ export const getDeleteNotificationContent = (
         if (view === ApplicationRoute.PlatformCatalogSchemas) return FileManagerI18nKey.CatalogSchema;
         if (view === ApplicationRoute.PlatformInterceptors) return FileManagerI18nKey.Interceptor;
         if (view === ApplicationRoute.PlatformTranslators) return FileManagerI18nKey.Translator;
+        if (view === ApplicationRoute.PlatformPlugins) return FileManagerI18nKey.Plugin;
         if (view === ApplicationRoute.AssetsAliases) return FileManagerI18nKey.Alias;
         if (view === ApplicationRoute.PlatformRouters) return FileManagerI18nKey.Router;
         if (view === ApplicationRoute.PlatformRoutes) return FileManagerI18nKey.Route;

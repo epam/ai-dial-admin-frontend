@@ -14,6 +14,7 @@ import {
   DialRouteResource,
   DialToolsetResource,
   DialRouterResource,
+  DialPluginResource,
   DialTranslatorResource,
 } from '@/src/models/dial/resource';
 import { DialAliasResource } from '@/src/models/dial/alias';
@@ -494,6 +495,21 @@ export const mergeTranslatorResource = (
   } as DialTranslatorResource;
 };
 
+/** Plugins are flat and unversioned like translators and, like them, a plain POJO — see `mergeTranslatorResource`. */
+export const mergePluginResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialPluginResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  return {
+    ...rest,
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PLUGIN], content),
+      ...validity,
+    },
+  } as DialPluginResource;
+};
+
 /**
  * Routes are flat and unversioned like models and interceptors — merged via `flatMetadataFields` for
  * the same reason: the metadata `url`'s remainder after stripping `routes/platform/` is a bare name
@@ -757,6 +773,7 @@ export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
   [ResourceType.CATALOG_SCHEMA]: mergeCatalogSchemaResource,
   [ResourceType.INTERCEPTOR]: mergeInterceptorResource,
   [ResourceType.TRANSLATOR]: mergeTranslatorResource,
+  [ResourceType.PLUGIN]: mergePluginResource,
   [ResourceType.ROUTER]: mergeRouterResource,
   [ResourceType.ROUTE]: mergeRouteResource,
   [ResourceType.ROLE]: mergeRoleResource,
