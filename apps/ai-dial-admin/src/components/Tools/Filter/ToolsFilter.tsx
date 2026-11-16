@@ -8,6 +8,10 @@ import { useI18n } from '@/src/locales/client';
 import { ToolFilter } from '../type';
 import SelectedFilter from './SelectedFilter';
 
+/** Restates the ui-kit 2.0 floating surface and menu row — the same way `TimeFilter` does. */
+const LIST_CLASS = '!rounded-xl p-1 !shadow-md ![background-color:var(--bg-layer-raised, #fcfcfc)]';
+const ROW_CLASS = 'flex h-[40px] items-center rounded-lg px-3 hover:bg-control-accent-alpha-hover';
+
 interface Props {
   isAllSelected: boolean;
   selectedFilters: ToolFilter[];
@@ -21,11 +25,14 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
 
   return (
     <Dropdown
-      listClassName="w-[200px]"
-      onOpenChange={(open) => setIsDropdownOpen(open)}
+      open={isDropdownOpen}
+      onOpenChange={setIsDropdownOpen}
+      allowedPlacements={['bottom-start', 'bottom-end']}
+      matchReferenceWidth={false}
+      listClassName={LIST_CLASS}
       renderOverlay={() => (
-        <div className="bg-layer-0 rounded flex flex-col w-[200px]">
-          <div className="py-2 px-4">
+        <div className="flex min-w-[200px] flex-col">
+          <div className={ROW_CLASS}>
             <Checkbox
               isSelected={isAllSelected}
               id={ToolFilter.All}
@@ -33,8 +40,8 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
               onChange={onSelectAll}
             />
           </div>
-          <div className="flex flex-col pl-[20px]">
-            <div className="py-2 px-4">
+          <div className="flex flex-col pl-5">
+            <div className={ROW_CLASS}>
               <Checkbox
                 isSelected={selectedFilters.includes(ToolFilter.AutoDetected)}
                 id={ToolFilter.AutoDetected}
@@ -42,7 +49,7 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
                 onChange={(value) => onSelectFilter(value, ToolFilter.AutoDetected)}
               />
             </div>
-            <div className="py-2 px-4">
+            <div className={ROW_CLASS}>
               <Checkbox
                 isSelected={selectedFilters.includes(ToolFilter.AddedManually)}
                 id={ToolFilter.AddedManually}
@@ -54,7 +61,7 @@ const ToolsFilter: FC<Props> = ({ isAllSelected, onSelectFilter, selectedFilters
         </div>
       )}
     >
-      <SelectedFilter selectedFilters={selectedFilters} isDropdownOpen={isDropdownOpen} />
+      <SelectedFilter selectedFilters={selectedFilters} isAllSelected={isAllSelected} isDropdownOpen={isDropdownOpen} />
     </Dropdown>
   );
 };
