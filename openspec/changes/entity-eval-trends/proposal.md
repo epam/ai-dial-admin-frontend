@@ -15,6 +15,8 @@ comparing recent runs requires navigating away.
 - Show the Trends Preview runs badge in the tab body (not on the entity tab line).
 - Show **Trends in All Test Suites** month-to-date eval cost for the deployment (vs the matching
   previous-month span) via `GET /api/v1/costs/deployment/{id}`.
+- Show per-suite average overall-score pills in the Eval Trends suite dropdown (latest up to 10
+  runs), with a hover tooltip for average score and cost.
 - **Deferred:** the Figma cross-suite average pass-rate KPI card (still needs a deployment-scoped
   pass-rate aggregate).
 

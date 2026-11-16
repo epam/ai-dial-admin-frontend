@@ -8,6 +8,10 @@ import {
   EVAL_TRENDS_SUITES_PAGE_SIZE,
   toStoredDeploymentId,
 } from '@/src/components/EvalTrendsTab/build-suites-for-deployment-query';
+import {
+  loadSuiteRecentRunAverages,
+  SuiteRecentRunAverage,
+} from '@/src/components/EvalTrendsTab/suite-recent-run-averages';
 import { collectEvaluationPages } from '@/src/components/ListView/Evaluation/utils/collect-evaluation-pages';
 import {
   buildTestSuitesQuery,
@@ -106,6 +110,12 @@ export async function getDeploymentPeriodCosts(
     current: current ?? EMPTY_DEPLOYMENT_COSTS,
     previous: previous ?? EMPTY_DEPLOYMENT_COSTS,
   };
+}
+
+/** Per-suite averages of overall score and cost over the latest up-to-10 runs. */
+export async function getSuiteRecentRunAverages(suiteIds: string[]): Promise<SuiteRecentRunAverage[]> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return loadSuiteRecentRunAverages(suiteIds, (query) => structuredQueryApi.execute(query, token));
 }
 
 export async function getTestSuiteByName(name: string) {

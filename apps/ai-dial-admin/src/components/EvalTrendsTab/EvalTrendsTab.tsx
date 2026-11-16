@@ -16,7 +16,9 @@ import { IconExternalLink } from '@tabler/icons-react';
 
 import AllSuitesTrendsHeader from '@/src/components/EvalTrendsTab/AllSuitesTrendsHeader';
 import EvalMonthCostCard from '@/src/components/EvalTrendsTab/EvalMonthCostCard';
+import SuiteScorePill from '@/src/components/EvalTrendsTab/SuiteScorePill';
 import { useEntityTestSuites } from '@/src/components/EvalTrendsTab/use-entity-test-suites';
+import { useSuiteRecentRunAverages } from '@/src/components/EvalTrendsTab/use-suite-recent-run-averages';
 import Trends from '@/src/components/TestSuites/Trends/Trends';
 import TrendsPreviewRunsBadge from '@/src/components/TestSuites/Trends/TrendsPreviewRunsBadge';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -38,6 +40,9 @@ const EvalTrendsTab: FC<Props> = ({ deploymentId }) => {
   const [selectedSuiteId, setSelectedSuiteId] = useState<string | null>(null);
   const [trendsRunCount, setTrendsRunCount] = useState<number | null>(null);
 
+  const suiteIds = useMemo(() => suites.map((suite) => suite.id).filter((id): id is string => !!id), [suites]);
+  const { averagesBySuiteId } = useSuiteRecentRunAverages(suiteIds);
+
   useEffect(() => {
     setSelectedSuiteId(pickDefaultSuiteId(suites));
     setTrendsRunCount(null);
@@ -52,11 +57,18 @@ const EvalTrendsTab: FC<Props> = ({ deploymentId }) => {
     () =>
       suites
         .filter((suite): suite is TestSuite & { id: string } => !!suite.id)
-        .map((suite) => ({
-          value: suite.id,
-          label: suite.name || suite.id,
-        })),
-    [suites],
+        .map((suite) => {
+          const suiteName = suite.name || suite.id;
+          const average = averagesBySuiteId[suite.id];
+          return {
+            value: suite.id,
+            label: suiteName,
+            ...(average?.avgScore != null && {
+              rightControl: <SuiteScorePill suiteName={suiteName} average={average} />,
+            }),
+          };
+        }),
+    [suites, averagesBySuiteId],
   );
 
   if (isLoading) {

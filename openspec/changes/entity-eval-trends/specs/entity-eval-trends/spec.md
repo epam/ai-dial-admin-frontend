@@ -84,6 +84,14 @@ searchable select of suite names (defaulting to the first by name) and an “Ope
 that opens the selected suite’s detail page in a new browser tab. Changing the selection SHALL show
 Trends for the newly selected suite.
 
+For each listed suite the system SHALL load the latest up to 10 `test_suite_runs` (by
+`created_at_ms`, no status filter) via the structured-query API and average finite
+`overall_score_value` / `total_cost` values appended to those rows. When a suite has a numeric
+average overall score, its open-list option SHALL show a right-aligned score pill; hovering the
+pill SHALL show a tooltip with the suite name, the actual run-window label (for example “last 10
+runs”), average overall score, and average cost. A suite with no numeric score SHALL omit the pill.
+Failure or empty averages SHALL leave the suite list and Trends usable without pills.
+
 #### Scenario: Default selection and switch suite
 
 - **WHEN** suites `alpha` and `beta` are loaded
@@ -98,6 +106,23 @@ Trends for the newly selected suite.
 
 - **WHEN** suites are listed in the select
 - **THEN** the select is searchable by suite name
+
+#### Scenario: Score pill and tooltip for a suite with recent-run averages
+
+- **WHEN** suite `ragas` has 10 recent runs whose average overall score is `0.580` and average cost
+  is `$0.76`
+- **THEN** the open suite list shows a right-aligned `0.580` pill for `ragas`, and hovering the pill
+  shows the suite name, “last 10 runs”, average overall score, and average cost
+
+#### Scenario: Suite without a numeric score omits the pill
+
+- **WHEN** a suite’s recent-run window has no finite `overall_score_value`
+- **THEN** that suite’s option has no score pill
+
+#### Scenario: Averages failure does not block the suite picker
+
+- **WHEN** the recent-run averages query fails
+- **THEN** the suite select and Trends still work and no score pills are shown
 
 ### Requirement: Reuse suite Trends with Preview runs in the tab body
 

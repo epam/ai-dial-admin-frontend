@@ -2501,6 +2501,10 @@ export default {
     'EvalTrendsBasedOnAllSuites#one': 'Based on all 1 test suite',
     'EvalTrendsBasedOnAllSuites#other': 'Based on all {count} test suites',
     EvalTrendsDeltaVsPrevPeriod: '{delta} vs prev. period',
+    'EvalTrendsLastRuns#one': 'last 1 run',
+    'EvalTrendsLastRuns#other': 'last {count} runs',
+    EvalTrendsAvgOverallScore: 'Avg overall score',
+    EvalTrendsAvgCost: 'Avg cost',
 
     TrendsSingleRunMessage: 'Only a single run is available, so a trend cannot be displayed.',
     TrendsTooltipRun: 'Run:',
