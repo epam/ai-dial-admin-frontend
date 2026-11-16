@@ -32,6 +32,13 @@ export const getUniformExecutionFields = (results: ResultDto[]): Set<string> =>
     ? new Set<string>()
     : new Set<string>(EXECUTION_INDEX_FIELDS.filter((field) => isUniformField(results, field)));
 
+/**
+ * Grouping by test case is useful exactly when at least one execution index is useful as a visible
+ * column. An empty result set has nothing to group.
+ */
+export const hasVaryingExecutionIndices = (results: ResultDto[]): boolean =>
+  results.length > 0 && getUniformExecutionFields(results).size < EXECUTION_INDEX_FIELDS.length;
+
 /** Only ever hides: a column a builder already hid stays hidden, whatever its values do. */
 export const hideUniformColumns = (columns: ColDef[], uniformFields: Set<string>): ColDef[] =>
   columns.map((column) => (uniformFields.has(column.colId ?? column.field ?? '') ? { ...column, hide: true } : column));
