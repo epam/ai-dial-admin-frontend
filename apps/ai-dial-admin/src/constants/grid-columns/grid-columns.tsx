@@ -291,9 +291,18 @@ const targetRadioNameColumn = (column: ColDef, idField: string): ColDef => ({
   tooltipValueGetter: () => undefined,
 });
 
+const evaluationDescriptionColumn: ColDef = {
+  ...DESCRIPTION_COLUMN,
+  // The deployments API stores a missing description as the string "null".
+  valueGetter: ({ data }: ValueGetterParams) => {
+    const description = data?.description;
+    return description == null || description === 'null' ? '' : description;
+  },
+};
+
 const EVALUATION_DEPLOYMENT_DETAIL_COLUMNS: ColDef[] = [
   { field: 'deploymentId', headerName: 'ID', hide: false },
-  DESCRIPTION_COLUMN,
+  evaluationDescriptionColumn,
 ];
 
 export const EVALUATION_DEPLOYMENTS_COLUMNS: ColDef[] = [
