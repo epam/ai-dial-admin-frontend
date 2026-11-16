@@ -168,7 +168,16 @@ export const getDefaultValueForType = (type: string): unknown => {
   return '';
 };
 
-//todo support multiple types from scheme
+/** The active type of a schema row: the type matching its current value, else the first allowed one. */
+export const resolveRowType = (allowedTypes: string[], value: unknown): string => {
+  if (allowedTypes.length === 1) return allowedTypes[0];
+  if (value != null) {
+    const inferredType = inferTypeFromValue(value);
+    if (allowedTypes.includes(inferredType)) return inferredType;
+  }
+  return allowedTypes[0];
+};
+
 export const convertJsonSchema = (
   schema: DialApplicationScheme,
   schemeData: Record<string, unknown>,
@@ -180,24 +189,21 @@ export const convertJsonSchema = (
 
     const isRequired = schema.required && schema.required.includes(key);
 
-    let typeValue = TypeEntity.OBJECT as string;
+    let allowedTypes: string[] = [TypeEntity.OBJECT];
 
     if (value.anyOf) {
-      typeValue = getTypeFromUnion(value.anyOf);
+      allowedTypes = getTypesFromUnion(value.anyOf);
     } else if (value.oneOf) {
-      typeValue = getTypeFromUnion(value.oneOf);
+      allowedTypes = getTypesFromUnion(value.oneOf);
     } else if (value.type) {
-      if (value.type === TypeEntity.ARRAY) {
-        typeValue = TypeEntity.OBJECT;
-      } else {
-        typeValue = value.type;
-      }
+      allowedTypes = getTypesFromUnion([value]);
     }
 
     result.push({
       key,
       value: schemeData[key],
-      type: typeValue,
+      type: resolveRowType(allowedTypes, schemeData[key]),
+      allowedTypes,
       required: isRequired || false,
       isFromScheme: true,
     });
@@ -206,17 +212,17 @@ export const convertJsonSchema = (
   return result;
 };
 
-export const getTypeFromUnion = (types: DialSchemePropertyType[]): string => {
+export const getTypesFromUnion = (types: DialSchemePropertyType[]): string[] => {
   const typesSet = new Set<string>();
 
   types.forEach((typeOption) => {
-    if (typeOption.type === TypeEntity.ARRAY) {
+    if (typeOption.type === TypeEntity.ARRAY || typeOption.type === TypeEntity.OBJECT) {
       typesSet.add(TypeEntity.OBJECT);
     } else if (typeOption.type === TypeEntity.BOOLEAN) {
       typesSet.add(TypeEntity.BOOLEAN);
     } else if (typeOption.type === TypeEntity.STRING) {
       typesSet.add(TypeEntity.STRING);
-    } else if (typeOption.type === TypeEntity.NUMBER) {
+    } else if (typeOption.type === TypeEntity.NUMBER || typeOption.type === TypeEntity.INTEGER) {
       typesSet.add(TypeEntity.NUMBER);
     } else if (typeOption.type === TypeEntity.NULL) {
       typesSet.add(TypeEntity.NULL);
@@ -225,15 +231,9 @@ export const getTypeFromUnion = (types: DialSchemePropertyType[]): string => {
     }
   });
 
-  if (typesSet.has(TypeEntity.NULL)) {
-    typesSet.delete(TypeEntity.NULL);
-  }
+  typesSet.delete(TypeEntity.NULL);
 
-  if (typesSet.size === 1) {
-    return [...typesSet][0];
-  }
-
-  return TypeEntity.OBJECT;
+  return typesSet.size ? [...typesSet] : [TypeEntity.OBJECT];
 };
 
 export const convertAppPropertiesToArray = (
@@ -388,7 +388,9 @@ export const getAppPropertiesColumns = (
               label: t(TypeI18nKey.Object),
             },
           ];
-          return data.isFromScheme ? items.filter((i) => i.value === data.type) : items;
+          if (!data.isFromScheme) return items;
+          const allowedTypes = data.allowedTypes ?? [data.type];
+          return items.filter((i) => allowedTypes.includes(i.value));
         },
         onChange: onChangeSelect,
         isReadonly: readOnly,
