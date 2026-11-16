@@ -46,7 +46,7 @@ const ColumnRow: FC<Props> = ({ field }) => {
         <span
           // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={hasDetails || isTruncated ? 0 : undefined}
-          className="flex min-w-0 flex-1 items-center gap-2 rounded"
+          className="flex min-w-0 flex-1 items-center gap-2 rounded focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary"
         >
           <span ref={labelRef} className="truncate text-primary dial-tiny-text">
             {label}
