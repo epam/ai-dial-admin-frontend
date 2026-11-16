@@ -99,6 +99,7 @@ const ViewControl: FC<Props> = ({ items, paramsView, setParamsView, onSave, isCh
         options={items}
         value={paramsView}
         onChange={(v) => onChange(v as string)}
+        className="w-auto"
       />
       {createPortal(
         <ConfirmationPopup
