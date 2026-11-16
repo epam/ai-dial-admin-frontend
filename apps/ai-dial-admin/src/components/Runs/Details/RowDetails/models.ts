@@ -10,11 +10,14 @@ export type RowDetailDeltaFilter = NumericGridFilter;
 /**
  * What a metric's `metricInfos` entry says about one run's value for a field. `error` is the leaf's own message
  * (`metricInfos[group][leaf].error`), or the group-level one written beside the leaf entries when the leaf has none.
+ * `details` is whatever else the leaf entry holds — the keys a metric defines for itself, such as Set Comparison's
+ * `true_positives` — serialized as text.
  */
 export interface MetricFieldInfo {
   reason: string | null;
   logs: string | null;
   error: string | null;
+  details: string | null;
 }
 
 export interface RowDetailField {

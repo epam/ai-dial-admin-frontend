@@ -5,7 +5,7 @@ import { FC } from 'react';
 import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
-import { METRIC_INFO_SECTION_I18N } from '@/src/components/Runs/Details/ValuePopups/constants';
+import { INFO_SECTIONS, METRIC_INFO_SECTION_I18N } from '@/src/components/Runs/Details/ValuePopups/constants';
 import MetricInfoCard from '@/src/components/Runs/Details/ValuePopups/MetricInfoCard';
 import { MetricInfoSection, ScoreRunData } from '@/src/components/Runs/Details/ValuePopups/models';
 import ScoreChip from '@/src/components/Runs/Details/ValuePopups/ScoreChip';
@@ -20,8 +20,6 @@ interface Props {
   reasonHighlights: TextDiffRange[];
   onToggleSection: (section: MetricInfoSection) => void;
 }
-
-const INFO_SECTIONS = [MetricInfoSection.Reason, MetricInfoSection.Logs];
 
 const ScoreColumn: FC<Props> = ({ data, hasRunHeader, openSection, reasonHighlights, onToggleSection }) => {
   const t = useI18n();

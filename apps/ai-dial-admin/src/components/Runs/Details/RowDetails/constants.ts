@@ -39,7 +39,14 @@ export const ROW_DETAIL_HTTP_LABEL = 'HTTP';
 /** Execution Result pivot defaults — Duration hidden; Request/Response bodies visible. */
 export const EXECUTION_RESULT_DEFAULT_HIDDEN_FIELDS = new Set<string>([ROW_DETAIL_DURATION_FIELD_KEY]);
 
-/** Keys of a leaf's `metricInfos` entry that the compare score view shows. */
+/** Keys of a leaf's `metricInfos` entry that the score popup shows on cards of their own. */
 export const METRIC_INFO_REASON_KEY = 'reason';
 export const METRIC_INFO_LOGS_KEY = 'verbose_logs';
 export const METRIC_INFO_ERROR_KEY = 'error';
+
+/** Every other key of a leaf's entry is the metric's own and goes to `details`. */
+export const METRIC_INFO_CARD_KEYS = new Set<string>([
+  METRIC_INFO_REASON_KEY,
+  METRIC_INFO_LOGS_KEY,
+  METRIC_INFO_ERROR_KEY,
+]);

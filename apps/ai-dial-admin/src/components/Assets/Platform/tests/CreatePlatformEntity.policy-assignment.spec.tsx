@@ -65,6 +65,8 @@ describe('CreatePlatformEntity — policy assignment creation', () => {
     const costObjectQuery = { name: new RegExp(PolicyAssignmentsI18nKey.CostObject) };
     const policyQuery = { name: new RegExp(PolicyAssignmentsI18nKey.Policy) };
     await screen.findByRole('combobox', policyQuery);
+    // The popup moves focus to its dialog once it has mounted; a click made before that is taken back from the input.
+    await waitFor(() => expect(screen.getByRole('dialog')).toHaveFocus());
     await user.type(screen.getByRole('textbox', costObjectQuery), 'team-a');
     await waitFor(() => expect(screen.getByRole('textbox', costObjectQuery)).toHaveValue('team-a'));
     await user.type(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` }), 'ta-x');
