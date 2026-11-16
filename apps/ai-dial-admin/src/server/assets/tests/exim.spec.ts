@@ -253,6 +253,31 @@ describe('Server :: Assets :: exim :: importAssetsExport', () => {
     expect(result.importResults[0].status).toBe(ImportStatus.FAILED);
   });
 
+  test("a rejected write carries Core's message; an invalid id carries none", async () => {
+    const coreMessage = "Field 'CLIENT_SECRET' is required for OAUTH authentication.";
+    const assetApi = {
+      list: vi.fn().mockResolvedValue([]),
+      put: vi.fn().mockResolvedValue({ success: false, errorMessage: coreMessage }),
+    } as any;
+
+    const result = await importAssetsExport(
+      CONFIG,
+      assetApi,
+      {} as any,
+      {
+        widgets: [
+          { id: 'prompts/public/source/ok__1.0', name: 'ok' },
+          { id: 'elsewhere/public/bad__1.0', name: 'bad' },
+        ],
+      } as any,
+      baseOptions,
+    );
+
+    expect(result.importResults[0]).toMatchObject({ status: ImportStatus.FAILED, error: coreMessage });
+    expect(result.importResults[1].status).toBe(ImportStatus.FAILED);
+    expect(result.importResults[1].error).toBeUndefined();
+  });
+
   test('applies transformForPut before writing, and strips `_metadata` around it', async () => {
     const config: AssetEximConfig<Widget> = {
       ...CONFIG,

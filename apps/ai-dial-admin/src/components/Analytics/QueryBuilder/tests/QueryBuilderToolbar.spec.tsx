@@ -23,7 +23,7 @@ describe('QueryBuilder :: QueryBuilderToolbar', () => {
   test('renders the time filter and Run, and no source selector', () => {
     renderToolbar();
 
-    expect(screen.queryByRole('combobox', { name: 'QueryBuilder.Source' })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: /^QueryBuilder.Source/ })).toBeNull();
     expect(screen.getByText(/Telemetry.TimePeriod/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeInTheDocument();
   });

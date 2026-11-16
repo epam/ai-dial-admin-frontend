@@ -55,8 +55,12 @@ describe('RateLimitSchedule', () => {
   test('renders the schedule controls with their labels and a time picker', () => {
     renderRateLimitSchedule({ schedule: SCHEDULE });
 
-    expect(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.TimezoneLabel })).toBeTruthy();
-    expect(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.WeekStartDayLabel })).toBeTruthy();
+    expect(
+      screen.getByRole('combobox', { name: new RegExp(`^${SystemPropertiesI18nKey.TimezoneLabel}`) }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('combobox', { name: new RegExp(`^${SystemPropertiesI18nKey.WeekStartDayLabel}`) }),
+    ).toBeTruthy();
     expect(getResetTime()).toHaveValue('09:30');
     expect(screen.getByRole('button', { name: 'Choose time' })).toBeTruthy();
     expect(screen.getByText(SystemPropertiesI18nKey.RateLimitScheduleDescription)).toBeTruthy();
@@ -65,12 +69,12 @@ describe('RateLimitSchedule', () => {
   test('reflects the stored timezone and week start day', () => {
     renderRateLimitSchedule({ schedule: SCHEDULE });
 
-    expect(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.TimezoneLabel })).toHaveDisplayValue(
-      'Europe/Warsaw',
-    );
-    expect(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.WeekStartDayLabel })).toHaveDisplayValue(
-      SystemPropertiesI18nKey.WeekdaySunday,
-    );
+    expect(
+      screen.getByRole('combobox', { name: new RegExp(`^${SystemPropertiesI18nKey.TimezoneLabel}`) }),
+    ).toHaveAccessibleName(/Europe\/Warsaw/);
+    expect(
+      screen.getByRole('combobox', { name: new RegExp(`^${SystemPropertiesI18nKey.WeekStartDayLabel}`) }),
+    ).toHaveAccessibleName(new RegExp(SystemPropertiesI18nKey.WeekdaySunday));
   });
 
   test('displays Core defaults without materializing them on focus or opening the picker', async () => {
@@ -78,10 +82,12 @@ describe('RateLimitSchedule', () => {
     const onChangeRateLimitSchedule = vi.fn();
     renderRateLimitSchedule({ onChangeRateLimitSchedule });
 
-    expect(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.TimezoneLabel })).toHaveDisplayValue('UTC');
-    expect(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.WeekStartDayLabel })).toHaveDisplayValue(
-      SystemPropertiesI18nKey.WeekdayMonday,
-    );
+    expect(
+      screen.getByRole('combobox', { name: new RegExp(`^${SystemPropertiesI18nKey.TimezoneLabel}`) }),
+    ).toHaveAccessibleName(/UTC/);
+    expect(
+      screen.getByRole('combobox', { name: new RegExp(`^${SystemPropertiesI18nKey.WeekStartDayLabel}`) }),
+    ).toHaveAccessibleName(new RegExp(SystemPropertiesI18nKey.WeekdayMonday));
     expect(getResetTime()).toHaveValue('00:00');
     await user.click(getResetTime());
     await user.click(screen.getByRole('button', { name: 'Choose time' }));
@@ -96,7 +102,7 @@ describe('RateLimitSchedule', () => {
     const user = userEvent.setup();
     renderRateLimitSchedule({ schedule: SCHEDULE });
 
-    await user.click(screen.getByRole('combobox', { name: SystemPropertiesI18nKey.TimezoneLabel }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${SystemPropertiesI18nKey.TimezoneLabel}`) }));
     await user.type(screen.getByPlaceholderText(BasicI18nKey.Search), 'Warsaw');
 
     expect(screen.getByRole('option', { name: 'Europe/Warsaw' })).toBeTruthy();
@@ -225,8 +231,10 @@ describe('RateLimitSchedule', () => {
     useAppContext().isReadOnlyAdmin = true;
     renderRateLimitSchedule({ schedule: SCHEDULE, onChangeRateLimitSchedule });
 
-    const timezone = screen.getByRole('combobox', { name: SystemPropertiesI18nKey.TimezoneLabel });
-    const weekStartDay = screen.getByRole('combobox', { name: SystemPropertiesI18nKey.WeekStartDayLabel });
+    const timezone = screen.getByRole('combobox', { name: new RegExp(`^${SystemPropertiesI18nKey.TimezoneLabel}`) });
+    const weekStartDay = screen.getByRole('combobox', {
+      name: new RegExp(`^${SystemPropertiesI18nKey.WeekStartDayLabel}`),
+    });
     const clock = screen.getByRole('button', { name: 'Choose time' });
 
     expect(timezone).toBeDisabled();

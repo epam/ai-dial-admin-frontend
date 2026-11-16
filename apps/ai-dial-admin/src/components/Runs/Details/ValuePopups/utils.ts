@@ -8,7 +8,8 @@ import {
   getRowDetailRunValue,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/run-field-values';
 
-import { FormattedInfoText, ScoreChipClasses, ScoreRunData } from './models';
+import { INFO_SECTIONS } from './constants';
+import { FormattedInfoText, MetricInfoSection, ScoreChipClasses, ScoreRunData } from './models';
 
 /** A value is a score only inside the `[0, 1]` range the score buckets cover — the grid cells apply the same bound. */
 const parseScore = (raw: string | null): number | null => {
@@ -60,6 +61,15 @@ export const getScoreRunData = (
     isFailed,
     reason: formatInfoText(ownReason ?? errorReason),
     isReasonError: errorReason != null,
+    details: formatInfoText(info?.details ?? null),
     logs: formatInfoText(info?.logs ?? null),
   };
 };
+
+/**
+ * The card a score popup opens with: the first one, in display order, that any column has content for. That is the
+ * reason whenever there is one; a metric without it (Set Comparison) opens on its details instead of on a
+ * collapsed stack of cards.
+ */
+export const getDefaultOpenSection = (columns: ScoreRunData[]): MetricInfoSection | null =>
+  INFO_SECTIONS.find((section) => columns.some((column) => column[section] != null)) ?? null;

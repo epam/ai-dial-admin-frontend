@@ -119,7 +119,7 @@ describe('QueryBuilder', () => {
   test('renders toolbar, results empty state, and builder rail sections', () => {
     renderBuilder();
 
-    expect(screen.queryByRole('combobox', { name: 'QueryBuilder.Source' })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: /^QueryBuilder.Source/ })).toBeNull();
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeEnabled();
     expect(screen.getByText('QueryBuilder.ResultsEmptyDescription')).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'QueryBuilder.AggregateMode' })).toBeInTheDocument();
@@ -931,7 +931,7 @@ describe('QueryBuilder :: SQL view Run', () => {
     expect(translateSqlToQuery).toHaveBeenCalled();
 
     await user.click(await screen.findByRole('radio', { name: 'QueryBuilder.ViewChart' }));
-    expect(await screen.findByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toBeInTheDocument();
+    expect(await screen.findByRole('combobox', { name: /^QueryBuilder.ChartXAxis/ })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartYAxis/ })).toBeInTheDocument();
   });
 
@@ -957,7 +957,7 @@ describe('QueryBuilder :: SQL view Run', () => {
     await screen.findByText('grid rows: 2');
 
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
-    expect(await screen.findByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toBeInTheDocument();
+    expect(await screen.findByRole('combobox', { name: /^QueryBuilder.ChartXAxis/ })).toBeInTheDocument();
   });
 
   test('a translation that rejects outright still shows the result and clears the running state', async () => {

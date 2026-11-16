@@ -61,14 +61,14 @@ describe('TargetField', () => {
   test('starts on the Application target type when there is no target yet', () => {
     renderField();
 
-    expect(typeSelect()).toHaveDisplayValue(AliasI18nKey.TargetTypeApplication);
+    expect(typeSelect()).toHaveAccessibleName(new RegExp(AliasI18nKey.TargetTypeApplication));
     expect(screen.getByRole('button', { name: AliasI18nKey.SelectTarget })).toBeTruthy();
   });
 
   test('reads the target type from an existing target and offers to change the target', () => {
     renderField({ target: { path: 'toolsets/public/search' } });
 
-    expect(typeSelect()).toHaveDisplayValue(AliasI18nKey.TargetTypeToolset);
+    expect(typeSelect()).toHaveAccessibleName(new RegExp(AliasI18nKey.TargetTypeToolset));
     expect(screen.getByRole('textbox', { name: new RegExp(AliasI18nKey.Target) })).toHaveProperty(
       'value',
       'toolsets/public/search',
@@ -153,7 +153,7 @@ describe('TargetField', () => {
   test('shows the default presentation of the target type when none is stored', () => {
     renderField({ target: { path: 'toolsets/public/x' } });
 
-    expect(presentAsSelect()).toHaveDisplayValue(AliasI18nKey.PresentAsToolset);
+    expect(presentAsSelect()).toHaveAccessibleName(new RegExp(AliasI18nKey.PresentAsToolset));
   });
 
   test('does not store a presentation equal to the default, and stores a different one', async () => {

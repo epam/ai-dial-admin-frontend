@@ -8,8 +8,12 @@ import { MetricInfoSection } from './models';
 
 export const METRIC_INFO_SECTION_I18N: Record<MetricInfoSection, RunsI18nKey> = {
   [MetricInfoSection.Reason]: RunsI18nKey.MetricReason,
+  [MetricInfoSection.Details]: RunsI18nKey.MetricDetails,
   [MetricInfoSection.Logs]: RunsI18nKey.MetricLogs,
 };
+
+/** The cards of a score column, top to bottom: details is a short summary, logs the long tail behind it. */
+export const INFO_SECTIONS = [MetricInfoSection.Reason, MetricInfoSection.Details, MetricInfoSection.Logs];
 
 // A score is a chip on its bucket colour; an error or a missing value is plain text on the Score card, as
 // designed (frames `Score_Error`, `Score_0`, `Score_1`).

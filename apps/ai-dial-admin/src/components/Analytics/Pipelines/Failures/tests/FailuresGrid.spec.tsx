@@ -170,7 +170,7 @@ describe('FailuresGrid', () => {
     const failures = failuresRead({ items: [dlqItem()] });
     renderGrid(failures);
 
-    await user.click(screen.getByRole('combobox', { name: AnalyticsPipelinesI18nKey.FailuresPath }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsPipelinesI18nKey.FailuresPath}`) }));
     await user.click(screen.getByRole('option', { name: AnalyticsPipelinesI18nKey.FailuresPathBackfill }));
 
     expect(failures.setLane).toHaveBeenCalledWith(DlqLane.Backfill);
@@ -179,7 +179,9 @@ describe('FailuresGrid', () => {
   test('replaces the path control with the run while a run filter is in force', () => {
     renderGrid(failuresRead({ items: [dlqItem({ run_id: 'run-7' })], filters: { runId: 'run-7' } }));
 
-    expect(screen.queryByRole('combobox', { name: AnalyticsPipelinesI18nKey.FailuresPath })).toBeNull();
+    expect(
+      screen.queryByRole('combobox', { name: new RegExp(`^${AnalyticsPipelinesI18nKey.FailuresPath}`) }),
+    ).toBeNull();
     expect(screen.getByRole('button', { name: AnalyticsPipelinesI18nKey.FailuresClearRun })).toBeTruthy();
   });
 
