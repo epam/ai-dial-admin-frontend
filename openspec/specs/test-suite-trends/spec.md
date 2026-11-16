@@ -311,10 +311,10 @@ below the `xl` breakpoint). The card SHALL:
   `Score` and the formatted overall score
 - draw the threshold line from each run’s snapshot `overallScoreThreshold` (including `0`) as 1px
   dashed horizontal segments in the accent-secondary stroke color, with a left-side label
-  `Thld (value)` at the start of the first segment for each distinct threshold value (shortened so
-  the label is not clipped on the last run's short segment; when the label still would not fit
-  inside the last run's segment it is right-aligned to the chart's right edge instead); suppress repeated labels when the same
-  value reappears after a gap or another threshold
+  `Thld (value)` at the start of every horizontal segment, including a segment whose value already
+  appeared earlier (shortened so the label is not clipped on the last run's short segment; when the
+  label still would not fit inside the last run's segment it is right-aligned to the chart's right
+  edge instead)
 - show the full `Threshold (value)` text in a tooltip when a horizontal threshold segment or its label
   is hovered
 - merge neighboring runs that share the same snapshot threshold into one continuous dashed segment
@@ -347,11 +347,11 @@ below the `xl` breakpoint). The card SHALL:
 - **WHEN** a run in the middle of the Trends window has no snapshot `overallScoreThreshold`
 - **THEN** the threshold line has a gap at that run and does not connect across it
 
-#### Scenario: Repeated threshold values are labeled once
+#### Scenario: Repeated threshold values are labeled on each segment
 
 - **WHEN** the Trends window has snapshot thresholds `0.6`, unset, `0.8`, and `0.6`
-- **THEN** all threshold segments remain visible with a gap at the unset run, and only the first
-  segment at each distinct value shows its label (`Threshold (0.6)` and `Threshold (0.8)`)
+- **THEN** all threshold segments remain visible with a gap at the unset run, and each horizontal
+  segment shows its label (`Thld (0.6)`, `Thld (0.8)`, and `Thld (0.6)` again)
 
 #### Scenario: No threshold line when unset
 
