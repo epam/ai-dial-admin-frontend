@@ -2604,7 +2604,7 @@ export default {
         SkippedTitle: '{count} {item} import skipped',
         SkippedDescription: 'Files skipped as {item} with the same properties already exists in the system: {list}',
         ErrorTitle: '{count} {item} import failed',
-        ErrorDescription: 'Error occured while importing: {list}',
+        ErrorDescription: 'Error occured while importing',
       },
       Move: {
         Title: '{item} moved successfully',

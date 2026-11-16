@@ -216,7 +216,7 @@ export const importAssetsExport = async <T extends { id?: string; _metadata?: un
       existingPaths.add(targetPath);
       circuitBreaker.recordSuccess();
     } else {
-      importResults.push({ sourcePath, targetPath, status: ImportStatus.FAILED });
+      importResults.push({ sourcePath, targetPath, status: ImportStatus.FAILED, error: result.errorMessage });
       circuitBreaker.recordFailure();
     }
   }
