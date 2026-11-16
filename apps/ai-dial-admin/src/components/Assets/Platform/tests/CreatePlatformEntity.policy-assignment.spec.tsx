@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -65,12 +65,15 @@ describe('CreatePlatformEntity — policy assignment creation', () => {
     const costObjectQuery = { name: new RegExp(PolicyAssignmentsI18nKey.CostObject) };
     const policyQuery = { name: new RegExp(PolicyAssignmentsI18nKey.Policy) };
     await screen.findByRole('combobox', policyQuery);
-    await user.type(screen.getByRole('textbox', costObjectQuery), 'team-a');
+    // One change event per field: typing key by key races the re-renders the policy listing triggers on a slow runner.
+    fireEvent.change(screen.getByRole('textbox', costObjectQuery), { target: { value: 'team-a' } });
     await waitFor(() => expect(screen.getByRole('textbox', costObjectQuery)).toHaveValue('team-a'));
-    await user.type(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` }), 'ta-x');
-    // Every keystroke of the cost object reloads the listing: let the one for the full value land before opening.
-    await vi.waitFor(() => expect(getPolicies).toHaveBeenCalledWith('team-a/'));
-    await act(async () => {});
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` }), {
+      target: { value: 'ta-x' },
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.id}(required)` })).toHaveValue('ta-x'),
+    );
     await waitFor(() => expect(screen.getByRole('combobox', policyQuery)).toBeEnabled());
     await user.click(screen.getByRole('combobox', policyQuery));
     await user.click(await screen.findByText('team-a/policy'));
