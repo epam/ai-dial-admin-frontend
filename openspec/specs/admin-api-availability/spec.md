@@ -78,7 +78,7 @@ The `Content` component SHALL NOT render the `Footer`, and SHALL NOT start the `
 
 ### Requirement: Direct navigation to admin-API-only routes redirects home
 
-The system SHALL redirect to `ApplicationRoute.Home`, before issuing any admin-backend request, when `process.env.DIAL_ADMIN_API_URL` is unset and a user navigates directly to any route owned exclusively by the Entities group (`/models`, `/applications`, `/interceptors`, `/toolsets`, `/routes`), the Builders group (`/adapters`, `/application-runners`, `/interceptor-templates`), the Access Management group (`/roles`, `/keys`), the Audit group (`/activity-audit`, `/usage-log`), or the Import/Export actions (`/import-config`, `/export-config`, which redirect only when Deployments and Analytics are also off, and otherwise omit the Configuration scope) — including every `[id]` and `[id]/[subId]` sub-route under them — **except** the `[id]` detail route of `/models`, `/applications`, `/interceptors`, `/routes`, `/roles`, and `/toolsets`, which SHALL render instead of redirecting when the request carries a `configFile=true` query parameter, per `config-file-entity-views`. The Dashboards route is not in this list: `/dashboard` redirects to `/dashboards`, which serves the analytics page when both analytics flags are on and otherwise answers as not found without the admin API, per `analytics/dashboards`.
+The system SHALL redirect to `ApplicationRoute.Home`, before issuing any admin-backend request, when `process.env.DIAL_ADMIN_API_URL` is unset and a user navigates directly to any route owned exclusively by the Entities group (`/models`, `/applications`, `/interceptors`, `/toolsets`, `/routes`), the Builders group (`/adapters`, `/application-runners`, `/interceptor-templates`), the Access Management group (`/roles`, `/keys`), the Audit group (`/activity-audit`, `/usage-log`), or the Import/Export actions (`/import-config`, `/export-config`, which redirect only when Deployments and Analytics are also off, and otherwise omit the Configuration scope) — including every `[id]` and `[id]/[subId]` sub-route under them — **except** the `[id]` detail route of `/models`, `/applications`, `/interceptors`, `/routes`, `/roles`, and `/toolsets`, which SHALL render instead of redirecting when the request carries a `configFile=true` query parameter, per `config-file-entity-views`, and **except** the `/activity-audit/[id]` detail route, which SHALL render instead of redirecting when `ANALYTICS_ENABLED` is `true` and the id is not the system-rollback id — an analytics Audit tab and the analytics view of the shared list both open their rows there — and SHALL then issue no admin-backend lookup for the activity. The Dashboards route is not in this list: `/dashboard` redirects to `/dashboards`, which serves the analytics page when both analytics flags are on and otherwise answers as not found without the admin API, per `analytics/dashboards`.
 
 #### Scenario: Bookmarked entity URL redirects when the admin API is disabled
 
@@ -86,6 +86,19 @@ The system SHALL redirect to `ApplicationRoute.Home`, before issuing any admin-b
 - **AND** `DIAL_ADMIN_API_URL` is unset
 - **THEN** the server issues a redirect to `ApplicationRoute.Home`
 - **AND** no admin-backend call is made for that page
+
+#### Scenario: Analytics activity detail renders when the admin API is disabled
+
+- **GIVEN** `DIAL_ADMIN_API_URL` is unset and `ANALYTICS_ENABLED` is `true`
+- **WHEN** a user opens `/<lang>/activity-audit/<activityId>` from a pipeline or table Audit tab
+- **THEN** the page renders the activity resolved from the analytics backend
+- **AND** no admin-backend call is made for that page
+
+#### Scenario: System rollback still redirects when the admin API is disabled
+
+- **GIVEN** `DIAL_ADMIN_API_URL` is unset and `ANALYTICS_ENABLED` is `true`
+- **WHEN** a user navigates to the system-rollback id under `/<lang>/activity-audit`
+- **THEN** the server issues a redirect to `ApplicationRoute.Home`
 
 #### Scenario: Routes render normally when the admin API is enabled
 
