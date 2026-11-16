@@ -18,6 +18,7 @@ import {
 } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ImportFileType } from '@/src/types/import';
+import { ImportResult } from '@/src/components/Assets/types';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 import { CoreResourceEntityMetadata } from '@/src/models/dial/resource';
 
@@ -576,6 +577,34 @@ export const getExportNotificationContent = (
   }
 };
 
+/**
+ * Lists failed imports grouped by Core's reason: a `reason:` header, then its paths one per line. Items
+ * with no reason come last, under the generic import-error header.
+ */
+export const getImportErrorDescription = (
+  failedResults: ImportResult[],
+  t: (key: string, options?: Record<string, string | number>) => string,
+): string => {
+  const pathsByReason = new Map<string, string[]>();
+  const pathsWithoutReason: string[] = [];
+
+  failedResults.forEach(({ error, targetPath }) => {
+    const reason = error?.trim();
+    if (!reason) {
+      pathsWithoutReason.push(targetPath);
+      return;
+    }
+    pathsByReason.set(reason, [...(pathsByReason.get(reason) ?? []), targetPath]);
+  });
+
+  const groups = Array.from(pathsByReason, ([reason, paths]) => ({ header: reason, paths }));
+  if (pathsWithoutReason.length > 0) {
+    groups.push({ header: t(FileManagerI18nKey.ImportErrorDescription), paths: pathsWithoutReason });
+  }
+
+  return groups.map(({ header, paths }) => [`${header}:`, ...paths.map((path) => ` ${path}`)].join('\n')).join('\n');
+};
+
 export const getImportNotificationContent = (
   view: ApplicationRoute,
   importResults: { targetPath: string; status: string; error?: string }[] | undefined,
@@ -586,7 +615,6 @@ export const getImportNotificationContent = (
   const successfullyItems = importResults?.filter((result) => result.status === 'success') || [];
   const failedResults = importResults?.filter((result) => result.status === 'failure') || [];
   const failedItems = failedResults.map((result) => result.targetPath);
-  const failedMessages = Array.from(new Set(failedResults.map((result) => result.error || result.targetPath)));
   const skippedItems =
     importResults?.filter((result) => result.status === 'skipped').map((result) => result.targetPath) || [];
   const isImportSeveralItems = successfullyItems.length > 1;
@@ -638,12 +666,7 @@ export const getImportNotificationContent = (
                 item: failedItems.length > 1 ? t(FileManagerI18nKey.Files) : t(FileManagerI18nKey.File),
               })
             : '',
-        errorDescription:
-          failedItems.length > 0
-            ? t(FileManagerI18nKey.ImportErrorDescription, {
-                list: failedMessages.join(', '),
-              })
-            : '',
+        errorDescription: failedItems.length > 0 ? getImportErrorDescription(failedResults, t) : '',
       };
     }
     case ApplicationRoute.Prompts: {
@@ -692,12 +715,7 @@ export const getImportNotificationContent = (
                 item: failedItems.length > 1 ? t(FileManagerI18nKey.Prompts) : t(FileManagerI18nKey.Prompt),
               })
             : '',
-        errorDescription:
-          failedItems.length > 0
-            ? t(FileManagerI18nKey.ImportErrorDescription, {
-                list: failedMessages.join(', '),
-              })
-            : '',
+        errorDescription: failedItems.length > 0 ? getImportErrorDescription(failedResults, t) : '',
       };
     }
     case ApplicationRoute.AssetsApplications: {
@@ -746,12 +764,7 @@ export const getImportNotificationContent = (
                 item: failedItems.length > 1 ? t(FileManagerI18nKey.Applications) : t(FileManagerI18nKey.Application),
               })
             : '',
-        errorDescription:
-          failedItems.length > 0
-            ? t(FileManagerI18nKey.ImportErrorDescription, {
-                list: failedMessages.join(', '),
-              })
-            : '',
+        errorDescription: failedItems.length > 0 ? getImportErrorDescription(failedResults, t) : '',
       };
     }
     case ApplicationRoute.AssetsToolsets: {
@@ -800,12 +813,7 @@ export const getImportNotificationContent = (
                 item: failedItems.length > 1 ? t(FileManagerI18nKey.Toolsets) : t(FileManagerI18nKey.Toolset),
               })
             : '',
-        errorDescription:
-          failedItems.length > 0
-            ? t(FileManagerI18nKey.ImportErrorDescription, {
-                list: failedMessages.join(', '),
-              })
-            : '',
+        errorDescription: failedItems.length > 0 ? getImportErrorDescription(failedResults, t) : '',
       };
     }
     default:

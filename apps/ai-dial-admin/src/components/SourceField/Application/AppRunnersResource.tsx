@@ -161,7 +161,7 @@ const AppRunnersResource: FC<Props> = ({
   ) : (
     <div className="flex mt-1">
       <div className="flex gap-2 items-end">
-        <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
+        <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
           <Label label={label} required={!isOptional} htmlFor="sourceEntity" />
           <InputPopup
             disabled={isFieldDisabled || isRunnerResolving}
