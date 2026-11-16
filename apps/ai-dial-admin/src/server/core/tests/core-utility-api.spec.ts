@@ -1,4 +1,4 @@
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { CORE_TEST_URL, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
@@ -9,6 +9,8 @@ fetch.enableMocks();
 
 describe('Server :: Core :: CoreUtilityApi', () => {
   const instance = new CoreUtilityApi({ host: TEST_URL });
+  // `getUserInfo` goes through the SDK, which needs an absolute host.
+  const sdkInstance = new CoreUtilityApi({ host: CORE_TEST_URL });
 
   beforeEach(() => {
     fetch.resetMocks();
@@ -86,10 +88,13 @@ describe('Server :: Core :: CoreUtilityApi', () => {
       { headers: { 'content-type': 'application/json' } },
     );
 
-    const result = await instance.getUserInfo(TOKEN_MOCK);
+    const result = await sdkInstance.getUserInfo(TOKEN_MOCK);
 
-    const [calledUrl] = fetch.mock.calls[0];
-    expect(calledUrl).toContain('/v1/user/info');
+    // The SDK hands `fetch` a `Request`, not a URL string.
+    expect(fetch).toHaveBeenCalledWith(
+      expect.objectContaining({ url: 'http://core.test/v1/user/info', method: 'GET' }),
+      expect.anything(),
+    );
     expect(result.response?.userInfo).toEqual({ id: 'user-1', email: 'user@example.com' });
   });
 
@@ -98,7 +103,7 @@ describe('Server :: Core :: CoreUtilityApi', () => {
       headers: { 'content-type': 'application/json' },
     });
 
-    const result = await instance.getUserInfo(TOKEN_MOCK);
+    const result = await sdkInstance.getUserInfo(TOKEN_MOCK);
 
     expect(result.response?.userInfo).toEqual({ id: 'proj-1', email: '' });
   });
@@ -106,9 +111,10 @@ describe('Server :: Core :: CoreUtilityApi', () => {
   test('getUserInfo passes through a failed response unchanged', async () => {
     fetch.mockResponseOnce('Unauthorized', { status: 401 });
 
-    const result = await instance.getUserInfo(TOKEN_MOCK);
+    const result = await sdkInstance.getUserInfo(TOKEN_MOCK);
 
     expect(result.success).toBe(false);
+    expect(result.status).toBe(401);
     expect(result.response).toBeUndefined();
   });
   test('getUserRoleAssignments calls the Core user role-assignments route and returns the access', async () => {

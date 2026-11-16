@@ -297,12 +297,12 @@ export class BaseApi {
     });
   }
 
-  private setLoggerRequestInfoError(res: Response) {
+  protected setLoggerRequestInfoError(res: Response) {
     errorLog(`Request status ${res.status}`);
     errorLog(`Request error Url  ${res.url}`);
   }
 
-  private setLoggerRequestError(error: string, res: Response) {
+  protected setLoggerRequestError(error: string, res: Response) {
     const errObject = getParsedError(error);
     errorLog(`Request error ${res.status}`);
     errorLog(`${errObject.error} ${errObject.message}`);

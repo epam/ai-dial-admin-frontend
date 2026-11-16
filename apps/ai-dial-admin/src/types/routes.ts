@@ -31,6 +31,7 @@ export enum ApplicationRoute {
   // Assets
   AssetsApplications = '/assets-applications',
   AssetsToolsets = '/assets-toolsets',
+  AssetsAliases = '/assets-aliases',
   Conversations = '/conversations',
   Prompts = '/prompts',
   Files = '/files',

@@ -52,6 +52,7 @@ const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.PlatformPolicyAssignments]: FileManagerI18nKey.PolicyAssignments,
   [ApplicationRoute.AssetsApplications]: FileManagerI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: FileManagerI18nKey.Toolsets,
+  [ApplicationRoute.AssetsAliases]: FileManagerI18nKey.Aliases,
   [ApplicationRoute.Prompts]: FileManagerI18nKey.Prompts,
   [ApplicationRoute.Files]: FileManagerI18nKey.Files,
   [ApplicationRoute.Conversations]: FileManagerI18nKey.Conversations,

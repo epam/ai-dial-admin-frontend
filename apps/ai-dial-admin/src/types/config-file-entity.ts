@@ -17,6 +17,7 @@ export enum ConfigFileEntityType {
   Toolsets = 'toolsets',
   Translators = 'translators',
   Routers = 'routers',
+  Aliases = 'aliases',
 }
 
 /** Why a config-file read produced no data, so a caller cannot mistake a refusal for an empty population. */

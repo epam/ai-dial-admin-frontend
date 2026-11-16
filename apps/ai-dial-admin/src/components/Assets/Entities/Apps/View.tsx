@@ -10,6 +10,7 @@ import { moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applicat
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import TabsContent from '@/src/components/Applications/View/TabsContent';
 import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
+import ApplicationGrafanaLinks from '@/src/components/Assets/ApplicationGrafanaLinks/ApplicationGrafanaLinks';
 import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -33,6 +34,7 @@ import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { changePath, removeTrailingSlash } from '@/src/utils/files/path';
+import { GrafanaTraceLinks } from '@/src/utils/grafana/models';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -52,6 +54,7 @@ interface Props {
   catalogSchemas?: CatalogSchemaOptions;
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
+  grafanaLinks?: GrafanaTraceLinks | null;
 }
 
 const AppView: FC<Props> = ({
@@ -65,6 +68,7 @@ const AppView: FC<Props> = ({
   translators,
   catalogSchemas,
   optionWarnings,
+  grafanaLinks,
 }) => {
   const t = useI18n();
   const router = useRouter();
@@ -305,7 +309,9 @@ const AppView: FC<Props> = ({
         onChangeActiveTab={onChangeActiveTab}
         onRemove={removeApp}
         getAssetContext={useAppsFolder}
-      />
+      >
+        <ApplicationGrafanaLinks links={grafanaLinks} />
+      </AssetHeader>
 
       <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled && !(activeTab === EntityViewTab.Parameters) ? (

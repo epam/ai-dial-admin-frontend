@@ -114,3 +114,21 @@ describe('SimpleButtonsWrapper :: isSaveDisabled', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
   });
 });
+
+describe('SimpleButtonsWrapper :: children', () => {
+  test('renders children beside Delete and drops them once the entity has unsaved changes', () => {
+    const { rerender } = render(
+      <SimpleButtonsWrapper {...baseProps}>
+        <a href="https://example.com">extra-link</a>
+      </SimpleButtonsWrapper>,
+    );
+    expect(screen.getByRole('link', { name: 'extra-link' })).toBeInTheDocument();
+
+    rerender(
+      <SimpleButtonsWrapper {...baseProps} isChanged>
+        <a href="https://example.com">extra-link</a>
+      </SimpleButtonsWrapper>,
+    );
+    expect(screen.queryByRole('link', { name: 'extra-link' })).toBeNull();
+  });
+});

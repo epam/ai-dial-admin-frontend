@@ -311,6 +311,35 @@ describe('OutputsEditor — an application-route transform', () => {
     expect(screen.getByText(AnalyticsPipelinesI18nKey.OutputSourceIdentity)).toBeTruthy();
   });
 
+  test('presents no prose, which a route call never sends to a model', () => {
+    render(
+      <Host
+        type={TransformType.Llm}
+        preset={TransformPreset.DialAppRoute}
+        seed={[{ name: 'topic', prose: 'Stored note.' }]}
+      />,
+    );
+
+    expect(screen.queryByLabelText(`${AnalyticsPipelinesI18nKey.OutputProse} 1`)).toBeNull();
+    expect(sourceField()).toBeTruthy();
+  });
+
+  test('keeps a stored prose on the output when the source is edited', () => {
+    render(
+      <Host
+        type={TransformType.Llm}
+        preset={TransformPreset.DialAppRoute}
+        seed={[{ name: 'topic', prose: 'Stored note.' }]}
+      />,
+    );
+
+    fireEvent.change(sourceField(), { target: { value: 'intent.topic' } });
+
+    expect(onOutputsChange).toHaveBeenLastCalledWith([
+      { name: 'topic', prose: 'Stored note.', source: 'intent.topic' },
+    ]);
+  });
+
   test('keeps the jsonata field under chat completion', () => {
     render(<Host type={TransformType.Llm} seed={[{ name: 'topic', jsonata: 'for_chat', source: 'intent.topic' }]} />);
 

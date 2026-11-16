@@ -3,8 +3,6 @@
 import { Spinner } from '@epam/ai-dial-ui-kit';
 import { FC, lazy, Suspense } from 'react';
 
-import { hasPublicSource } from '@/src/utils/files/asset-sources';
-import { ENTITY_SELECT_CONFIGS } from './constants';
 import { EntitySelectType, PickedEntity } from './models';
 import PublicEntityTree from './PublicEntityTree';
 
@@ -23,19 +21,24 @@ interface Props {
   onChangeSelectedPaths?: (paths: string[]) => void;
   /** Multi-selection over every source the entity has (Public tree, Platform, config.json), tab by tab. */
   onChangeSelectedEntities?: (entities: PickedEntity[]) => void;
+  /** Single selection over the same sources: a pick on one tab replaces a pick on another; `null` when none. */
+  onChangeSelectedEntity?: (entity: PickedEntity | null) => void;
 }
 
-const EntitySelectManager: FC<Props> = ({ onChangeSelectedEntities, ...treeProps }) => {
-  const { route } = ENTITY_SELECT_CONFIGS[treeProps.entityType];
-
-  // An entity with one source (a skill, a file) is just its tree.
-  if (!onChangeSelectedEntities || !hasPublicSource(route)) {
+const EntitySelectManager: FC<Props> = ({ onChangeSelectedEntities, onChangeSelectedEntity, ...treeProps }) => {
+  // An entity that is browsed on its own (a skill, a file) never passes a multi-source callback, so it is just
+  // its tree. Whoever passes one wants every source the entity has, which for a model is no tree at all.
+  if (!onChangeSelectedEntities && !onChangeSelectedEntity) {
     return <PublicEntityTree {...treeProps} />;
   }
 
   return (
     <Suspense fallback={<Spinner size={40} fullWidth />}>
-      <TabbedEntityPicker {...treeProps} onChangeSelectedEntities={onChangeSelectedEntities} />
+      <TabbedEntityPicker
+        {...treeProps}
+        onChangeSelectedEntities={onChangeSelectedEntities}
+        onChangeSelectedEntity={onChangeSelectedEntity}
+      />
     </Suspense>
   );
 };

@@ -11,8 +11,7 @@ export const CORE_PUBLICATION_UPDATE_URL = 'v1/ops/publication/update';
 export const CORE_PUBLICATION_CREATE_URL = 'v1/ops/publication/create';
 export const CORE_PUBLICATION_RULES_URL = 'v1/ops/publication/rule/list';
 
-/** DIAL Core file/bucket endpoints used by the publication file flow. */
-export const CORE_BUCKET_URL = 'v1/bucket';
+/** DIAL Core file endpoints used by the publication file flow. */
 export const CORE_FILES_URL = 'v1/files';
 export const CORE_FILES_METADATA_URL = 'v1/metadata/files';
 
@@ -49,6 +48,8 @@ export const ROUTES_PREFIX = 'routes/platform/';
 export const KEYS_PREFIX = 'keys/platform/';
 export const POLICIES_PREFIX = 'policies/platform/';
 export const POLICY_ASSIGNMENTS_PREFIX = 'policy_assignments/platform/';
+/** Aliases are dual-bucket like applications: the bucket is part of the path (`public/<name>`, `platform/<name>`). */
+export const ALIASES_PREFIX = 'aliases/';
 
 export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.APPLICATION]: APPLICATIONS_PREFIX,
@@ -69,6 +70,7 @@ export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.PROJECT_KEY]: KEYS_PREFIX,
   [ResourceType.POLICY]: POLICIES_PREFIX,
   [ResourceType.POLICY_ASSIGNMENT]: POLICY_ASSIGNMENTS_PREFIX,
+  [ResourceType.ALIAS]: ALIASES_PREFIX,
 };
 
 /** Hardcoded list path — the backend always lists `publications/public/`. */

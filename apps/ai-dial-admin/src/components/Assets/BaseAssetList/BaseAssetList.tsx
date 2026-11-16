@@ -37,7 +37,7 @@ import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
-import { hasPublicSource } from '@/src/utils/files/asset-sources';
+import { hasPublicTree } from '@/src/utils/files/asset-sources';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -527,7 +527,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImportEn
   return (
     <>
       <FileManager
-        label={hasPublicSource(view) ? undefined : t(getFileManagerLabel(view))}
+        label={hasPublicTree(view) ? undefined : t(getFileManagerLabel(view))}
         columnDefs={columnDefs}
         getContext={getContext}
         view={view}

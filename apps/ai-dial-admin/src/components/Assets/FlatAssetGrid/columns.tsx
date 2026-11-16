@@ -7,6 +7,7 @@ import { AUTHOR_COLUMN, CREATED_AT_COLUMN, UPDATED_AT_COLUMN } from '@/src/const
 import { displayNameFilterValue } from '@/src/constants/grid-columns/formatters';
 import { nameColumnSizing } from '@/src/constants/grid-columns/configs';
 import { AssetSource } from '@/src/models/dial/asset-source';
+import { FlatAssetSource } from './models';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCostObjectOfRecord } from '@/src/utils/policies/path';
 
@@ -34,11 +35,11 @@ interface ColumnLabels {
 
 /**
  * The flat grid's data columns. config.json lists names only (Core's config-file route returns nothing else);
- * Platform adds the metadata every flat platform view already showed, plus the cost object where one applies.
+ * Platform and a flat Public source add the metadata every flat platform view already showed, plus the cost object where one applies.
  */
 export const getFlatAssetColumns = (
   view: ApplicationRoute,
-  source: AssetSource.Platform | AssetSource.ConfigFile,
+  source: FlatAssetSource,
   getHref: EntityHrefGetter,
   labels: ColumnLabels,
 ): ColDef[] => {

@@ -102,6 +102,7 @@ const resolveDeploymentActivity = (activity: DialActivity) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.stubEnv('DIAL_ADMIN_API_URL', 'https://admin-be.example.com');
   // clearAllMocks keeps implementations, so a lookup one test resolved or rejected would answer the next test's
   // probe too. Re-arm every backend as "does not own the activity"; a test overrides the one it is about.
   missAdminActivity();
@@ -353,6 +354,30 @@ describe('getActivityAuditDetailData :: analytics activities', () => {
  * not decide the outcome of a later one. Every case here rejects a probe rather than resolving it
  * with `success: false`, which is the distinction the rest of this suite never draws.
  */
+describe('getActivityAuditDetailData :: an install without the admin backend', () => {
+  test('Should resolve an analytics activity without issuing the admin lookup', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', void 0);
+    vi.stubEnv('ANALYTICS_ENABLED', 'true');
+    vi.mocked(analyticsAuditApi.getActivityById).mockResolvedValue({ success: true, response: ANALYTICS_ACTIVITY });
+
+    const result = await getActivityAuditDetailData(ANALYTICS_ACTIVITY.activityId, TOKEN_MOCK);
+
+    expect(result.activity).toEqual(ANALYTICS_ACTIVITY);
+    expect(activityAuditApi.getActivityById).not.toHaveBeenCalled();
+    expect(errorObjLog).not.toHaveBeenCalled();
+  });
+
+  test('Should return an empty result when no remaining backend owns the activity', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', void 0);
+    vi.stubEnv('ANALYTICS_ENABLED', 'true');
+
+    const result = await getActivityAuditDetailData('unknown', TOKEN_MOCK);
+
+    expect(result.activity).toBeNull();
+    expect(activityAuditApi.getActivityById).not.toHaveBeenCalled();
+  });
+});
+
 describe('getActivityAuditDetailData :: a backend that rejects instead of answering', () => {
   const FETCH_FAILED = new TypeError('fetch failed');
 

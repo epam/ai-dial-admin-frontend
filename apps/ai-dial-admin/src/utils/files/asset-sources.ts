@@ -3,21 +3,30 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getConfigFileEntityType } from '@/src/utils/files/root-folder';
 
 /** The listings that also hold a hierarchical `public/` tree beside their flat sources. */
-const PUBLIC_SOURCE_VIEWS: readonly ApplicationRoute[] = [
+const PUBLIC_TREE_VIEWS: readonly ApplicationRoute[] = [
   ApplicationRoute.AssetsApplications,
   ApplicationRoute.AssetsToolsets,
 ];
 
+/** The listings whose Public source is flat, like their Platform one: Core allows no folders under `aliases/public/`. */
+const FLAT_PUBLIC_VIEWS: readonly ApplicationRoute[] = [ApplicationRoute.AssetsAliases];
+
 export interface AssetSourceCounts {
+  [AssetSource.Public]?: number;
   [AssetSource.Platform]?: number;
   [AssetSource.ConfigFile]?: number;
 }
 
-export const hasPublicSource = (view: ApplicationRoute): boolean => PUBLIC_SOURCE_VIEWS.includes(view);
+export const hasPublicTree = (view: ApplicationRoute): boolean => PUBLIC_TREE_VIEWS.includes(view);
+
+export const hasFlatPublic = (view: ApplicationRoute): boolean => FLAT_PUBLIC_VIEWS.includes(view);
+
+/** Whether the listing has a Public tab at all, as a tree or as a flat grid. */
+export const hasPublicSource = (view: ApplicationRoute): boolean => hasPublicTree(view) || hasFlatPublic(view);
 
 /**
  * The tabs a listing offers, in display order. Platform and config.json are admin-only, so a caller in unit
- * mode keeps only what their units can reach: the public tree for Applications and Toolsets.
+ * mode keeps only the Public source, where the listing has one.
  */
 export const getAvailableSources = (view: ApplicationRoute, isUnitMode: boolean): AssetSource[] => {
   if (hasPublicSource(view)) {
@@ -28,6 +37,7 @@ export const getAvailableSources = (view: ApplicationRoute, isUnitMode: boolean)
   return hasConfigFile ? [AssetSource.Platform, AssetSource.ConfigFile] : [AssetSource.Platform];
 };
 
+/** Public wherever the listing has a Public source, Platform elsewhere. */
 export const getDefaultSource = (view: ApplicationRoute): AssetSource =>
   hasPublicSource(view) ? AssetSource.Public : AssetSource.Platform;
 
@@ -47,19 +57,20 @@ export const parseSourceParam = (
 };
 
 /**
- * The count shown after the title. Public is a tree and is not counted, so a listing that has one shows no
- * count; otherwise it is the sum of its flat sources, and a source whose read failed (no count) withholds it
+ * The count shown after the title. A public tree is not counted, so a listing that has one shows no count;
+ * otherwise it is the sum of the listing's sources, and a source whose read failed (no count) withholds it
  * rather than showing a partial total.
  */
-export const getHeaderCount = (sources: readonly AssetSource[], counts: AssetSourceCounts): number | undefined => {
-  if (sources.includes(AssetSource.Public)) {
+export const getHeaderCount = (
+  view: ApplicationRoute,
+  sources: readonly AssetSource[],
+  counts: AssetSourceCounts,
+): number | undefined => {
+  if (hasPublicTree(view)) {
     return undefined;
   }
 
-  const flatSources = sources.filter(
-    (source): source is AssetSource.Platform | AssetSource.ConfigFile => source !== AssetSource.Public,
-  );
-  const values = flatSources.map((source) => counts[source]);
+  const values = sources.map((source) => counts[source]);
   if (values.some((value) => value == null)) {
     return undefined;
   }
