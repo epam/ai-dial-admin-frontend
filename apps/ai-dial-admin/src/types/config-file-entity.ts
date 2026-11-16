@@ -16,6 +16,7 @@ export enum ConfigFileEntityType {
   Applications = 'applications',
   Toolsets = 'toolsets',
   Translators = 'translators',
+  Plugins = 'plugins',
   Routers = 'routers',
   Aliases = 'aliases',
 }

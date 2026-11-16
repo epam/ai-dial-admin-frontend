@@ -31,6 +31,14 @@ const ALIASES_CONFIG: MenuGroupConfiguration[] = [
   },
 ];
 
+const PLUGINS_CONFIG: MenuGroupConfiguration[] = [
+  {
+    key: MenuI18nKey.AiGateway,
+    descriptionKey: MenuI18nKey.AiGatewayDescription,
+    items: [{ key: MenuI18nKey.PlatformPlugins, href: ApplicationRoute.PlatformPlugins }],
+  },
+];
+
 const FOLDERS_CONFIG: MenuGroupConfiguration[] = [
   {
     key: MenuI18nKey.Governance,
@@ -70,6 +78,10 @@ describe('filterMenuForUnitMode', () => {
 
   test('never offers Aliases to a unit user, whichever namespaces they can read', () => {
     expect(filterMenuForUnitMode(ALIASES_CONFIG, () => true)).toEqual([]);
+  });
+
+  test('never offers Plugins to a unit user, whichever namespaces they can read', () => {
+    expect(filterMenuForUnitMode(PLUGINS_CONFIG, () => true)).toEqual([]);
   });
 
   test('drops a group left with no items', () => {

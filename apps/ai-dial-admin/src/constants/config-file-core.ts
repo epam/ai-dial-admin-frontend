@@ -37,6 +37,7 @@ export const READABLE_CONFIG_FILE_TYPES: ReadonlySet<ConfigFileEntityType> = new
   ConfigFileEntityType.Schemas,
   ConfigFileEntityType.CatalogSchemas,
   ConfigFileEntityType.Translators,
+  ConfigFileEntityType.Plugins,
   ConfigFileEntityType.Routers,
   ConfigFileEntityType.Aliases,
 ]);

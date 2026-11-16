@@ -68,6 +68,7 @@ export const MENU_ITEM_ICONS: Partial<Record<MenuI18nKey, Icon>> = {
   [MenuI18nKey.Toolsets]: IconTool,
   [MenuI18nKey.PlatformRouters]: IconArrowsSplit,
   [MenuI18nKey.PlatformTranslators]: IconLanguage,
+  [MenuI18nKey.PlatformPlugins]: IconPlug,
   [MenuI18nKey.PlatformAliases]: IconArrowsRight,
   [MenuI18nKey.Routes]: IconRoute,
   [MenuI18nKey.PlatformRoutes]: IconRoute,

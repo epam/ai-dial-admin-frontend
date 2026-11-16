@@ -11,6 +11,7 @@ import PolicyCreateProperties from '@/src/components/Assets/Platform/Policies/Cr
 import PolicyAssignmentCreateProperties from '@/src/components/Assets/Platform/PolicyAssignments/CreateProperties';
 import RouteCreateProperties from '@/src/components/Assets/Platform/Routes/CreateProperties';
 import TranslatorCreateProperties from '@/src/components/Assets/Platform/Translators/CreateProperties';
+import PluginCreateProperties from '@/src/components/Assets/Platform/Plugins/CreateProperties';
 import ProjectCreateProperties from '@/src/components/Assets/Artifacts/Projects/CreateProperties';
 import SkillCreateProperties from '@/src/components/Assets/Artifacts/Skills/CreateProperties';
 import {
@@ -131,6 +132,20 @@ const Properties = <T extends object>({
         names={props.names}
         isUniqueNameError={isUniqueNameError}
         onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  // Ahead of `isSimpleEntity` for the same reason as Route above: `Plugin` is a plain POJO with only
+  // `type` and `settings` (see `PluginCreateProperties`).
+  if (view === ApplicationRoute.PlatformPlugins) {
+    return (
+      <PluginCreateProperties
+        entity={entity as { name?: string }}
+        names={props.names}
+        isUniqueNameError={isUniqueNameError}
+        onChangeEntity={props.onChangeEntity}
+        isModal={props.isModal}
       />
     );
   }

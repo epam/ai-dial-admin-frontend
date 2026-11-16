@@ -97,6 +97,7 @@ describe('Root Folder Utils :: isNestedPlatformView', () => {
 describe('Root Folder Utils :: config-file entity types', () => {
   test('maps supported views to Core config-file types and excludes Keys', () => {
     expect(getConfigFileEntityType(ApplicationRoute.PlatformTranslators)).toBe('translators');
+    expect(getConfigFileEntityType(ApplicationRoute.PlatformPlugins)).toBe('plugins');
     expect(getConfigFileEntityType(ApplicationRoute.PlatformCatalogSchemas)).toBe('catalog_schemas');
     expect(getConfigFileEntityType(ApplicationRoute.PlatformKeys)).toBeUndefined();
   });

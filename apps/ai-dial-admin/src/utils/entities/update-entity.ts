@@ -12,6 +12,7 @@ const createEntityMap: Record<string, UpdateI18nKey> = {
   [ApplicationRoute.PlatformPolicies]: UpdateI18nKey.Policy,
   [ApplicationRoute.PlatformPolicyAssignments]: UpdateI18nKey.PolicyAssignment,
   [ApplicationRoute.PlatformTranslators]: UpdateI18nKey.Translator,
+  [ApplicationRoute.PlatformPlugins]: UpdateI18nKey.Plugin,
   [ApplicationRoute.AssetsAliases]: UpdateI18nKey.Alias,
   [ApplicationRoute.PlatformRouters]: UpdateI18nKey.Router,
   [ApplicationRoute.PlatformRoles]: UpdateI18nKey.Role,

@@ -13,6 +13,7 @@ import {
   mergeKeyResource,
   mergeModelResource,
   mergePolicyAssignmentResource,
+  mergePluginResource,
   mergePolicyResource,
   mergePrompt,
   mergeRoleResource,
@@ -257,6 +258,23 @@ describe('Server :: Core :: asset-metadata', () => {
         folderId: '',
         author: 'frank',
         updatedAt: '666',
+      },
+    });
+  });
+
+  test('mergePluginResource grafts name/path/folderId/author/updatedAt under _metadata (flat, no version), rest from content', () => {
+    const content = { type: 'forward', settings: { deployment: 'gpt-4' } };
+    const meta = metadata({ url: 'plugins/platform/my-plugin', author: 'heidi', updatedAt: 888 });
+
+    expect(mergePluginResource(content, meta)).toEqual({
+      type: 'forward',
+      settings: { deployment: 'gpt-4' },
+      _metadata: {
+        name: 'my-plugin',
+        path: 'my-plugin',
+        folderId: '',
+        author: 'heidi',
+        updatedAt: '888',
       },
     });
   });

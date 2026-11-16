@@ -99,6 +99,11 @@ vi.mock('@/src/context/assets/TranslatorsFolderContext', () => ({
   TranslatorsFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
+vi.mock('@/src/context/assets/PluginsFolderContext', () => ({
+  usePluginsFolder: () => ({ fetchFiles: vi.fn() }),
+  PluginsFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
 vi.mock('@/src/context/assets/RoutersFolderContext', () => ({
   useRoutersFolder: () => ({ fetchFiles: vi.fn() }),
   RoutersFolderProvider: ({ children }: any) => <div>{children}</div>,

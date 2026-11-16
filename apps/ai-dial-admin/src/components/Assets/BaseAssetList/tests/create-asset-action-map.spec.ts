@@ -6,6 +6,7 @@ import { createRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 import { createCatalogSchema } from '@/src/app/[lang]/platform-catalog-schemas/actions';
 import { createInterceptor } from '@/src/app/[lang]/platform-interceptors/actions';
 import { createTranslator } from '@/src/app/[lang]/platform-translators/actions';
+import { createPlugin } from '@/src/app/[lang]/platform-plugins/actions';
 import { createRoute } from '@/src/app/[lang]/platform-routes/actions';
 import { createRole } from '@/src/app/[lang]/platform-roles/actions';
 import { createKey } from '@/src/app/[lang]/platform-keys/actions';
@@ -38,6 +39,10 @@ vi.mock('@/src/app/[lang]/platform-interceptors/actions', async (importOriginal)
 vi.mock('@/src/app/[lang]/platform-translators/actions', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/src/app/[lang]/platform-translators/actions')>()),
   createTranslator: vi.fn(),
+}));
+vi.mock('@/src/app/[lang]/platform-plugins/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/platform-plugins/actions')>()),
+  createPlugin: vi.fn(),
 }));
 vi.mock('@/src/app/[lang]/platform-routes/actions', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/src/app/[lang]/platform-routes/actions')>()),
@@ -80,6 +85,7 @@ describe('CreateAssetActionMap', () => {
       createTranslator,
       { name: 'translator', baseUrl: 'https://translator.example.com' },
     ],
+    [ApplicationRoute.PlatformPlugins, createPlugin, { name: 'plugin', type: 'forward', settings: {} }],
     [ApplicationRoute.PlatformRoutes, createRoute, { name: 'route', paths: ['/v1'] }],
     [ApplicationRoute.PlatformRoles, createRole, { name: 'role', costLimit: { minute: 1 } }],
     [ApplicationRoute.PlatformKeys, createKey, { name: 'key', key: 'secret' }],

@@ -22,6 +22,7 @@ import {
 } from '@/src/app/[lang]/platform-interceptors/actions';
 import { bulkDeleteRouters, createRouter, getRouter } from '@/src/app/[lang]/platform-routers/actions';
 import { bulkDeleteTranslators, createTranslator, getTranslator } from '@/src/app/[lang]/platform-translators/actions';
+import { bulkDeletePlugins, createPlugin, getPlugin } from '@/src/app/[lang]/platform-plugins/actions';
 import { bulkDeleteAliases, createAlias, getAlias } from '@/src/app/[lang]/assets-aliases/actions';
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/platform-models/actions';
 import { bulkDeleteKeys, createKey, getKey } from '@/src/app/[lang]/platform-keys/actions';
@@ -65,6 +66,7 @@ import { useInterceptorsFolder } from '@/src/context/assets/InterceptorsFolderCo
 import { useRoutersFolder } from '@/src/context/assets/RoutersFolderContext';
 import { useAliasesFolder } from '@/src/context/assets/AliasesFolderContext';
 import { useTranslatorsFolder } from '@/src/context/assets/TranslatorsFolderContext';
+import { usePluginsFolder } from '@/src/context/assets/PluginsFolderContext';
 import { useKeysFolder } from '@/src/context/assets/KeysFolderContext';
 import { useRolesFolder } from '@/src/context/assets/RolesFolderContext';
 import { usePoliciesFolder } from '@/src/context/assets/PoliciesFolderContext';
@@ -254,6 +256,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Interceptors;
     case ApplicationRoute.PlatformTranslators:
       return FileManagerI18nKey.Translators;
+    case ApplicationRoute.PlatformPlugins:
+      return FileManagerI18nKey.Plugins;
     case ApplicationRoute.PlatformRouters:
       return FileManagerI18nKey.Routers;
     case ApplicationRoute.PlatformRoutes:
@@ -329,6 +333,11 @@ export const getEmptyStateContent = (
       return {
         title: t(FileManagerI18nKey.TranslatorsEmptyStateTitle),
         description: t(FileManagerI18nKey.TranslatorsEmptyStateDescription),
+      };
+    case ApplicationRoute.PlatformPlugins:
+      return {
+        title: t(FileManagerI18nKey.PluginsEmptyStateTitle),
+        description: t(FileManagerI18nKey.PluginsEmptyStateDescription),
       };
     case ApplicationRoute.PlatformRouters:
       return {
@@ -451,6 +460,7 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.PlatformCatalogSchemas]: useCatalogSchemasFolder,
   [ApplicationRoute.PlatformInterceptors]: useInterceptorsFolder,
   [ApplicationRoute.PlatformTranslators]: useTranslatorsFolder,
+  [ApplicationRoute.PlatformPlugins]: usePluginsFolder,
   [ApplicationRoute.PlatformRouters]: useRoutersFolder,
   [ApplicationRoute.PlatformRoutes]: useRoutesFolder,
   [ApplicationRoute.PlatformRoles]: useRolesFolder,
@@ -472,6 +482,7 @@ export const GetAssetActionMap = {
   [ApplicationRoute.PlatformCatalogSchemas]: getCatalogSchema,
   [ApplicationRoute.PlatformInterceptors]: getInterceptor,
   [ApplicationRoute.PlatformTranslators]: getTranslator,
+  [ApplicationRoute.PlatformPlugins]: getPlugin,
   [ApplicationRoute.PlatformRouters]: getRouter,
   [ApplicationRoute.PlatformRoutes]: getRoute,
   [ApplicationRoute.PlatformRoles]: getRole,
@@ -545,6 +556,9 @@ export const CreateAssetActionMap: Record<CreateAssetRoute, CreateAssetAction> =
   [ApplicationRoute.PlatformTranslators]: sanitizePlatformCreateAsset(
     createTranslator as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
   ),
+  [ApplicationRoute.PlatformPlugins]: sanitizePlatformCreateAsset(
+    createPlugin as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
   [ApplicationRoute.PlatformRouters]: sanitizePlatformCreateAsset(
     createRouter as unknown as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
   ),
@@ -617,6 +631,7 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.PlatformCatalogSchemas]: bulkDeleteCatalogSchemas,
   [ApplicationRoute.PlatformInterceptors]: bulkDeleteInterceptors,
   [ApplicationRoute.PlatformTranslators]: bulkDeleteTranslators,
+  [ApplicationRoute.PlatformPlugins]: bulkDeletePlugins,
   [ApplicationRoute.PlatformRouters]: bulkDeleteRouters,
   [ApplicationRoute.PlatformRoutes]: bulkDeleteRoutes,
   [ApplicationRoute.PlatformRoles]: bulkDeleteRoles,

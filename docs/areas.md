@@ -36,6 +36,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `AiGateway/Toolsets`       | `assets-toolsets`          | `Assets/Entities/Toolsets`, `Assets/Platform/Toolsets` |
 | `AiGateway/Routers`        | `platform-routers`         | `Assets/Platform/Routers`                              |
 | `AiGateway/Translators`    | `platform-translators`     | `Assets/Platform/Translators`                          |
+| `AiGateway/Plugins`        | `platform-plugins`         | `Assets/Platform/Plugins`                              |
 | `AiGateway/Routes`         | `platform-routes`          | `Assets/Platform/Routes`                               |
 | `AiGateway/Applications`   | `assets-applications`      | `Assets/Entities/Apps`, `Assets/Platform/Applications` |
 | `AiGateway/AppRunners`     | `platform-app-runners`     | `Assets/Platform/AppRunners`                           |

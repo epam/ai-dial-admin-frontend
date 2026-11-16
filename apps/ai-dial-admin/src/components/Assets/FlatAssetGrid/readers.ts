@@ -12,6 +12,7 @@ import { getConfigFileRoles, getRoles } from '@/src/app/[lang]/platform-roles/ac
 import { getConfigFileRouters, getRouters } from '@/src/app/[lang]/platform-routers/actions';
 import { getConfigFileRoutes, getRoutes } from '@/src/app/[lang]/platform-routes/actions';
 import { getConfigFileTranslators, getTranslators } from '@/src/app/[lang]/platform-translators/actions';
+import { getConfigFilePlugins, getPlugins } from '@/src/app/[lang]/platform-plugins/actions';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetSource } from '@/src/models/dial/asset-source';
 import { ConfigFileReadResult } from '@/src/models/dial/config-file';
@@ -42,6 +43,7 @@ const FLAT_READERS: Partial<Record<ApplicationRoute, FlatReader>> = {
   },
   [ApplicationRoute.PlatformInterceptors]: { list: getInterceptors, listConfigFileNames: getConfigFileInterceptors },
   [ApplicationRoute.PlatformTranslators]: { list: getTranslators, listConfigFileNames: getConfigFileTranslators },
+  [ApplicationRoute.PlatformPlugins]: { list: getPlugins, listConfigFileNames: getConfigFilePlugins },
   [ApplicationRoute.PlatformRouters]: { list: getRouters, listConfigFileNames: getConfigFileRouters },
   [ApplicationRoute.PlatformRoutes]: { list: getRoutes, listConfigFileNames: getConfigFileRoutes },
   [ApplicationRoute.PlatformRoles]: { list: getRoles, listConfigFileNames: getConfigFileRoles },

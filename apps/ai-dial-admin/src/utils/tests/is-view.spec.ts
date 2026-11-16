@@ -164,6 +164,7 @@ describe('isCatalogView', () => {
       ApplicationRoute.PlatformModels,
       ApplicationRoute.PlatformInterceptors,
       ApplicationRoute.PlatformTranslators,
+      ApplicationRoute.PlatformPlugins,
       ApplicationRoute.PlatformRoutes,
       ApplicationRoute.PlatformAppRunners,
       ApplicationRoute.PlatformCatalogSchemas,

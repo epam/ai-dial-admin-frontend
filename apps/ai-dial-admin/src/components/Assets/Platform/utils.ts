@@ -15,6 +15,8 @@ export const getInitialPlatformEntity = <T extends BaseEntity>(
       return { name: '', description: '', userRoles: [], ...initialValues } as unknown as T;
     case ApplicationRoute.PlatformTranslators:
       return { name: '', ...initialValues } as unknown as T;
+    case ApplicationRoute.PlatformPlugins:
+      return { name: '', type: '', settings: {}, ...initialValues } as unknown as T;
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
       return { name: '', description: '', user_roles: [], ...initialValues } as unknown as T;

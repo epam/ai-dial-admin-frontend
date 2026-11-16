@@ -44,6 +44,7 @@ const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.PlatformCatalogSchemas]: FileManagerI18nKey.CatalogSchemas,
   [ApplicationRoute.PlatformInterceptors]: FileManagerI18nKey.Interceptors,
   [ApplicationRoute.PlatformTranslators]: FileManagerI18nKey.Translators,
+  [ApplicationRoute.PlatformPlugins]: FileManagerI18nKey.Plugins,
   [ApplicationRoute.PlatformRouters]: FileManagerI18nKey.Routers,
   [ApplicationRoute.PlatformRoutes]: FileManagerI18nKey.Routes,
   [ApplicationRoute.PlatformRoles]: FileManagerI18nKey.Roles,
