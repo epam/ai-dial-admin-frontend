@@ -38,17 +38,21 @@ export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcr
     return [];
   }
 
-  return pathSegments.map((pathSegment, index) => {
+  return pathSegments.flatMap((pathSegment, index) => {
     const configSegment = config.segments[index];
+    if (configSegment.isHidden) return [];
+
     const translated = TRANSLATE_BREADCRUMBS[pathSegment as keyof typeof TRANSLATE_BREADCRUMBS];
     const defaultHref =
       configSegment.href !== false ? `/${[locale, ...pathSegments.slice(0, index + 1)].filter(Boolean).join('/')}` : '';
 
-    return {
-      key: translated ? (translated as unknown as MenuI18nKey) : configSegment.i18nKey,
-      name: decodePathSegment(pathSegment),
-      href: defaultHref,
-    };
+    return [
+      {
+        key: translated ? (translated as unknown as MenuI18nKey) : configSegment.i18nKey,
+        name: decodePathSegment(pathSegment),
+        href: defaultHref,
+      },
+    ];
   });
 }
 

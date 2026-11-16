@@ -5,15 +5,19 @@ import { MutableRefObject, useCallback, useEffect, useRef, useState } from 'reac
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { updateSavedQuery } from '@/src/app/[lang]/queries/actions';
+import { deleteSavedQuery, updateSavedQuery } from '@/src/app/[lang]/queries/actions';
 import { QueryMetadataForm } from '@/src/components/Analytics/Queries/models';
-import { toBuilderRestore, toSavedQueryRequest } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
+import {
+  toBuilderRestore,
+  toMetadataReplaceRequest,
+  toSavedQueryRequest,
+} from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import {
   describeSavedQueryError,
   isSavedQueryGone,
   resolveSavedQueryErrorCode,
 } from '@/src/components/Analytics/QueryBuilder/utils/saved-query-error';
-import { KNOWN_TIME_PERIODS } from '@/src/constants/analytics/queries';
+import { DEFAULT_SAVED_QUERY_SCOPE, KNOWN_TIME_PERIODS } from '@/src/constants/analytics/queries';
 import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
 import { ErrorI18nKey, QueriesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
@@ -29,6 +33,7 @@ import {
   SavedQuery,
   SavedQueryCaptureInput,
   SavedQueryEditor,
+  SavedQueryMetadata,
   SavedQueryRestore,
   SavedQueryScope,
   SavedQueryTimeAction,
@@ -70,6 +75,8 @@ export interface SavedQueryPageInput {
   clearResult: () => void;
 }
 
+const DRAFT_METADATA: SavedQueryMetadata = { name: '', scope: DEFAULT_SAVED_QUERY_SCOPE };
+
 export const useSavedQueryPage = (input: SavedQueryPageInput) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
@@ -82,6 +89,7 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSaveAsOpen, setIsSaveAsOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   // `applyRestore` must not depend on `input`, or it would be rebuilt every render and the seed effect
   // would reset the builder while the user types. It therefore reads the current values through this
@@ -93,9 +101,11 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
 
   // Recomputed every render rather than memoized: it derives from nine pieces of live state, so the
   // dependency list would be the state itself, and building the payload is a cheap object walk.
-  const liveRequest = savedQuery ? toSavedQueryRequest(captureFrom(savedQuery, input)) : null;
+  const liveRequest = toSavedQueryRequest(captureFrom(savedQuery ?? DRAFT_METADATA, input));
 
-  const isDirty = !!baseline && !!liveRequest && JSON.stringify(liveRequest) !== baseline;
+  const isDirty = !!baseline && JSON.stringify(liveRequest) !== baseline;
+  const isDirtyRef = useRef(isDirty);
+  isDirtyRef.current = isDirty;
 
   const applyRestore = useCallback(
     (saved: SavedQuery) => {
@@ -152,8 +162,13 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedQuery?.id, applyRestore]);
 
+  useEffect(() => {
+    if (inputRef.current.savedQuery) return;
+    setBaseline(JSON.stringify(toSavedQueryRequest(captureFrom(DRAFT_METADATA, inputRef.current))));
+  }, []);
+
   const onSave = useCallback(async () => {
-    if (!savedQuery || !liveRequest) return;
+    if (!savedQuery) return;
     setIsSaving(true);
     let res: Awaited<ReturnType<typeof updateSavedQuery>>;
     try {
@@ -178,6 +193,7 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
       );
       if (isSavedQueryGone(resolveSavedQueryErrorCode(res))) {
         router.push(ApplicationRoute.AnalyticsQueries);
+        router.refresh();
       }
       return;
     }
@@ -206,8 +222,11 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
 
   // Reads through `inputRef`, so the callback stays stable and takes the live values at submit time.
   const buildSaveAsRequest = useCallback(
-    (meta: QueryMetadataForm) => toSavedQueryRequest(captureFrom(meta, inputRef.current)),
-    [],
+    (meta: QueryMetadataForm) =>
+      savedQuery && !isDirtyRef.current
+        ? toMetadataReplaceRequest(savedQuery, meta)
+        : toSavedQueryRequest(captureFrom(meta, inputRef.current)),
+    [savedQuery],
   );
 
   // Leaves `savedQuery` and the baseline alone: the edits now also live in the new query, but against
@@ -230,12 +249,16 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
           </>,
         ),
       );
+      router.refresh();
     },
-    [showNotification, t, currentLocale],
+    [showNotification, t, currentLocale, router],
   );
+
+  const onRemove = useCallback((id: string) => deleteSavedQuery(decodeURIComponent(id)), []);
 
   return {
     savedQuery,
+    isDraft: !savedQuery,
     isDirty,
     isWritable,
     isSaving,
@@ -250,6 +273,10 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
     onCloseSaveAs: () => setIsSaveAsOpen(false),
     buildSaveAsRequest,
     onSaveAsCreated,
+    isDeleteOpen,
+    onOpenDelete: () => setIsDeleteOpen(true),
+    onCloseDelete: () => setIsDeleteOpen(false),
+    onRemove,
   };
 };
 

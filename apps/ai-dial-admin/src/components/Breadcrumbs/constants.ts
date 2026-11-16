@@ -277,7 +277,7 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
         name: 'Queries',
         i18nKey: MenuI18nKey.Queries,
       },
-      { name: 'Id', href: false },
+      { name: 'Id', href: false, isHidden: true },
     ],
   },
   [ApplicationRoute.AnalyticsTables]: {

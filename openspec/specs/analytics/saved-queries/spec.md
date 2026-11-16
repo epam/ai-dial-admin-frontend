@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Saved queries as addressable objects: the storage contract, the list page, create/duplicate/edit/delete, loading a stored query into the builder, unsaved-change handling, and scope-based permission gating.
+Saved queries as addressable objects: the storage contract, saving a draft as a new query, Save as, edit and delete on the query page, loading a stored query into the builder, unsaved-change handling, and scope-based permission gating. Listing and opening saved queries is `analytics/source-panel`.
 
 ## Requirements
 

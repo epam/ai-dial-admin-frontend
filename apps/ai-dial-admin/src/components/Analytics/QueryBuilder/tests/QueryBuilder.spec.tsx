@@ -119,7 +119,7 @@ describe('QueryBuilder', () => {
   test('renders toolbar, results empty state, and builder rail sections', () => {
     renderBuilder();
 
-    expect(screen.getByRole('combobox', { name: 'QueryBuilder.Source' })).toHaveDisplayValue(/dial_usage_log/);
+    expect(screen.queryByRole('combobox', { name: 'QueryBuilder.Source' })).toBeNull();
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeEnabled();
     expect(screen.getByText('QueryBuilder.ResultsEmptyDescription')).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'QueryBuilder.AggregateMode' })).toBeInTheDocument();
@@ -514,7 +514,7 @@ describe('QueryBuilder AI view', () => {
     expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewAi' })).toBeInTheDocument();
   });
 
-  test('toolbar Run and Copy are hidden while the AI view is active; entity and time controls remain', async () => {
+  test('toolbar Run and Copy are hidden while the AI view is active; the time control remains', async () => {
     const user = userEvent.setup();
     setQueryAssistantEnabled(true);
     renderBuilder();
@@ -524,7 +524,6 @@ describe('QueryBuilder AI view', () => {
 
     expect(screen.queryByRole('button', { name: 'QueryBuilder.Run' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Buttons.Copy' })).not.toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'QueryBuilder.Source' })).toHaveDisplayValue(/dial_usage_log/);
     expect(screen.getByText(/Telemetry.TimePeriod/)).toBeInTheDocument();
   });
 
@@ -715,25 +714,6 @@ describe('QueryBuilder AI view', () => {
     expect(runButtons[1]).toBeEnabled();
   });
 
-  test('changing the entity clears the conversation and the loaded query', async () => {
-    const user = userEvent.setup();
-    setQueryAssistantEnabled(true);
-    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
-    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: [] } } as never);
-    vi.mocked(getEntitySchema).mockResolvedValue({ success: true, response: { fields: FIELDS } });
-
-    renderBuilder({ initialEntities: [{ name: 'dial_usage_log' }, { name: 'feedback' }] });
-    const runButton = await sendMessage(user, '```sql\nSELECT 1\n```');
-    await user.click(runButton);
-    await vi.waitFor(() => expect(runButton).toBeDisabled());
-
-    await user.click(screen.getByRole('combobox', { name: 'QueryBuilder.Source' }));
-    await user.click(await screen.findByRole('option', { name: 'feedback' }));
-
-    expect(screen.queryByText('SELECT 1')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'QueryBuilder.Run' })).not.toBeInTheDocument();
-  });
-
   test('leaving the AI view and coming back keeps the conversation and which message is loaded', async () => {
     const user = userEvent.setup();
     setQueryAssistantEnabled(true);
@@ -794,32 +774,6 @@ describe('QueryBuilder AI view', () => {
 
     await vi.waitFor(() => expect(showNotificationMock).toHaveBeenCalled());
     expect(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' })).toBeEnabled();
-  });
-
-  test('a reply still in flight when the entity changes does not land in the new conversation', async () => {
-    const user = userEvent.setup();
-    setQueryAssistantEnabled(true);
-    vi.mocked(getEntitySchema).mockResolvedValue({ success: true, response: { fields: FIELDS } });
-    let resolveReply: (value: unknown) => void = () => undefined;
-    vi.mocked(generateQuery).mockReturnValue(new Promise((resolve) => (resolveReply = resolve)) as never);
-
-    renderBuilder({ initialEntities: [{ name: 'dial_usage_log' }, { name: 'feedback' }] });
-    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewAi' }));
-    await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'cost by deployment');
-    await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSend' }));
-
-    await user.click(screen.getByRole('combobox', { name: 'QueryBuilder.Source' }));
-    await user.click(await screen.findByRole('option', { name: 'feedback' }));
-    resolveReply({
-      success: true,
-      response: {
-        choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'late reply' } }],
-      },
-    });
-
-    await vi.waitFor(() => expect(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' })).toBeEnabled());
-    expect(screen.queryByText('late reply')).not.toBeInTheDocument();
-    expect(screen.queryByText('cost by deployment')).not.toBeInTheDocument();
   });
 
   test('a message whose schema read fails in transit still runs as SQL', async () => {
@@ -1043,25 +997,6 @@ describe('QueryBuilder :: SQL view Run', () => {
     const editor = (await screen.findByLabelText('json-editor')) as HTMLTextAreaElement;
     expect(editor).toHaveDisplayValue(/"value": "minute"/);
     expect(editor).toHaveDisplayValue(/"value": "30"/);
-  });
-
-  test('changing the source while the JSON view is open re-seeds its buffer', async () => {
-    const user = userEvent.setup();
-    vi.mocked(getEntitySchema).mockResolvedValue({
-      success: true,
-      response: { fields: [{ name: 'started_at', type: AnalyticsFieldType.Timestamp, source: 'started_at' }] },
-    });
-    renderBuilder({ initialEntities: [...ENTITIES, { name: 'dial_sessions' }] });
-
-    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
-    await user.click(screen.getByRole('combobox', { name: 'QueryBuilder.Source' }));
-    await user.click(screen.getByRole('option', { name: 'dial_sessions' }));
-
-    const editor = (await screen.findByLabelText('json-editor')) as HTMLTextAreaElement;
-    await vi.waitFor(() => expect(editor).toHaveDisplayValue(/"entity": "dial_sessions"/));
-    // The new source's own timestamp column carries the bound, not the previous source's.
-    expect(editor).toHaveDisplayValue(/"name": "started_at"/);
-    expect(editor.value).not.toContain('request_time');
   });
 
   test('a time filter change leaves an edited JSON buffer alone', async () => {

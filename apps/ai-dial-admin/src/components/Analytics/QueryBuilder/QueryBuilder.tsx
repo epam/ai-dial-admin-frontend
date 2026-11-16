@@ -4,8 +4,9 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { GhostButton, Spinner, OutlinedButton, NoDataContent, SegmentedControl } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
-import { IconPencilMinus, IconSparkles } from '@tabler/icons-react';
+import { IconPencilMinus, IconSparkles, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
+import { createPortal } from 'react-dom';
 
 import { getEntitySchema, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/queries/actions';
 import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
@@ -22,6 +23,7 @@ import ModeSwitcher from '@/src/components/Analytics/QueryBuilder/Mode/ModeSwitc
 import AddToDashboardButton from '@/src/components/Analytics/CustomDashboards/AddToDashboard/AddToDashboardButton';
 import DiscardQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DiscardQueryPopup';
 import PageSection from '@/src/components/Analytics/QueryBuilder/Page/PageSection';
+import { useSourcePanelUnsavedWork } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
 import BuilderRail from '@/src/components/Analytics/QueryBuilder/Rail/BuilderRail';
 import CollapsedRail from '@/src/components/Analytics/QueryBuilder/Rail/CollapsedRail';
 import ResultArea from '@/src/components/Analytics/QueryBuilder/Result/ResultArea';
@@ -34,6 +36,8 @@ import { useSavedQueryPage } from '@/src/components/Analytics/QueryBuilder/use-s
 import DuplicateQuery from '@/src/components/Analytics/Queries/Modals/DuplicateQuery';
 import EditQuery from '@/src/components/Analytics/Queries/Modals/EditQuery';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
+import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
+import DiscardModal from '@/src/components/EntityView/Modals/Discard/Discard';
 import { fieldsToOptions, havingFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { buildQuery, hasDroppedCondition } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { isBuilderRepresentable, parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
@@ -77,6 +81,7 @@ import {
   QueryTimeBound,
 } from '@/src/models/analytics/query-builder';
 import { TimeRange } from '@/src/models/time-range';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -88,10 +93,9 @@ interface Props {
   initialEntityName: string;
   initialFields: AnalyticsEntityField[];
   initialFunctions: QueryFunction[];
-  // The heading. A saved query supplies its own name; absent only while the standalone builder route
-  // still exists, which the queries entity workflow retires.
   name?: string;
   savedQuery?: SavedQuery;
+  onResetDraft?: () => void;
 }
 
 const QueryBuilder: FC<Props> = ({
@@ -101,6 +105,7 @@ const QueryBuilder: FC<Props> = ({
   initialFunctions,
   name,
   savedQuery,
+  onResetDraft,
 }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
@@ -128,8 +133,7 @@ const QueryBuilder: FC<Props> = ({
   const [sqlError, setSqlError] = useState<string | null>(null);
   const lastGeneratedSql = useRef('');
   const [pendingView, setPendingView] = useState<QueryBuilderView | null>(null);
-  const [isLoadingSchema, setIsLoadingSchema] = useState(false);
-  const [schemaError, setSchemaError] = useState<string | null>(null);
+  const [isResetOpen, setIsResetOpen] = useState(false);
   const [railCollapsed, setRailCollapsed] = useState(false);
   const [result, setResult] = useState<StructuredQueryResult | null>(null);
   const [resultMeta, setResultMeta] = useState<ExecutedQueryMeta | null>(null);
@@ -148,18 +152,6 @@ const QueryBuilder: FC<Props> = ({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiLoadedMessageIndex, setAiLoadedMessageIndex] = useState<number | null>(null);
   const aiConversation = useAiConversation();
-  // Remounts AiPanel (clearing its prompt draft) only on an explicit user entity switch — not on
-  // `state.entityName` directly, since running a message can itself change entityName (the generated
-  // query may target a different entity than the one currently selected) and must NOT wipe the chat.
-  const [aiConversationKey, setAiConversationKey] = useState(0);
-
-  const resetAiQuery = () => {
-    setAiLoading(false);
-    setAiLoadedMessageIndex(null);
-    aiConversation.reset();
-    setAiConversationKey((key) => key + 1);
-  };
-
   const timeFilter = useTimeFilter();
 
   // SSR-safe: the server renders the rail expanded; the persisted flag applies after mount.
@@ -191,37 +183,6 @@ const QueryBuilder: FC<Props> = ({
 
   const refresh = useCallback(() => setState((prev) => ({ ...prev })), []);
   const patch = useCallback((partial: Partial<QueryBuilderState>) => setState((prev) => ({ ...prev, ...partial })), []);
-
-  const onSelectEntity = async (name: string) => {
-    resetAiQuery();
-    setIsLoadingSchema(true);
-    setSchemaError(null);
-    const schemaRead = await getEntitySchema(name);
-    const nextState: QueryBuilderState = {
-      ...createInitialState(state.functions),
-      entityName: name,
-      fields: schemaRead.response?.fields ?? [],
-    };
-    setState(nextState);
-    if (!schemaRead.response) {
-      setSchemaError(t(QueryBuilderI18nKey.SchemaLoadFailed));
-      showNotification(
-        getErrorNotification(
-          schemaRead.errorHeader ?? t(QueryBuilderI18nKey.SchemaLoadFailed),
-          schemaRead.errorMessage,
-          schemaRead.requestId,
-        ),
-      );
-    }
-    // The new source has its own timestamp column — or none — so the bound is resolved against the
-    // schema just loaded rather than the one this render still holds.
-    const timestamp = findTimestampField(nextState.fields);
-    syncJsonBuffer(
-      nextState,
-      timestamp ? { field: timestamp, range: getCurrentTimeRange(), period: boundPeriod } : null,
-    );
-    setIsLoadingSchema(false);
-  };
 
   const fieldsLoaded = state.fields.length > 0;
   const timestampField = useMemo(() => findTimestampField(state.fields), [state.fields]);
@@ -610,6 +571,22 @@ const QueryBuilder: FC<Props> = ({
 
   const runDisabled = !fieldsLoaded || (isJsonView && jsonInvalid) || (isSqlView && !sqlText.trim());
 
+  const saveAsButton = (
+    <OutlinedButton
+      className={saveAsClassName}
+      label={t(savedQueryPage.isDraft ? QueriesI18nKey.SaveAsQuery : ButtonsI18nKey.SaveAs)}
+      onClick={savedQueryPage.onOpenSaveAs}
+      disabled={runDisabled || savedQueryPage.isSaving}
+    />
+  );
+
+  const onConfirmReset = () => {
+    setIsResetOpen(false);
+    onResetDraft?.();
+  };
+
+  useSourcePanelUnsavedWork(savedQueryPage.isDirty, savedQueryPage.isDraft ? onResetDraft : savedQueryPage.onDiscard);
+
   return (
     <QueryBuilderContext.Provider value={contextValue}>
       <div className="relative flex min-h-0 w-full flex-1 flex-col">
@@ -617,9 +594,6 @@ const QueryBuilder: FC<Props> = ({
           <h1 className="dial-h1-text">{name ?? t(QueriesI18nKey.Title)}</h1>
           {entities.length > 0 && (
             <QueryBuilderToolbar
-              entities={entities}
-              selectedEntityName={state.entityName}
-              onSelectEntity={onSelectEntity}
               timePeriod={timeFilter.timePeriod}
               onTimePeriodChange={onChangeTimePeriod}
               timeRange={timeFilter.timeRange}
@@ -638,20 +612,27 @@ const QueryBuilder: FC<Props> = ({
               {featureFlags.analyticsCustomDashboardsEnabled &&
                 savedQueryPage.savedQuery &&
                 !savedQueryPage.isDirty && <AddToDashboardButton savedQuery={savedQueryPage.savedQuery} />}
-              {savedQueryPage.isDirty && (
+              {savedQueryPage.savedQuery && savedQueryPage.isWritable && (
+                <GhostButton
+                  label={t(ButtonsI18nKey.Delete)}
+                  iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+                  onClick={savedQueryPage.onOpenDelete}
+                />
+              )}
+              {savedQueryPage.isDraft && savedQueryPage.isDirty && (
+                <GhostButton label={t(ButtonsI18nKey.Reset)} onClick={() => setIsResetOpen(true)} />
+              )}
+              {savedQueryPage.savedQuery && savedQueryPage.isDirty ? (
                 <ChangedEntityButtons
                   isSaveAllowed={savedQueryPage.isWritable}
                   disableSave={runDisabled || savedQueryPage.isSaving}
                   onDiscard={savedQueryPage.onDiscard}
                   onSave={savedQueryPage.onSave}
                 >
-                  <OutlinedButton
-                    className={saveAsClassName}
-                    label={t(ButtonsI18nKey.SaveAs)}
-                    onClick={savedQueryPage.onOpenSaveAs}
-                    disabled={runDisabled || savedQueryPage.isSaving}
-                  />
+                  {saveAsButton}
                 </ChangedEntityButtons>
+              ) : (
+                saveAsButton
               )}
               {fieldsLoaded && !isAiView && (
                 <CopyButton
@@ -699,11 +680,7 @@ const QueryBuilder: FC<Props> = ({
                 }
               >
                 {!fieldsLoaded ? (
-                  isLoadingSchema ? (
-                    <Spinner size={40} fullWidth />
-                  ) : (
-                    <NoDataContent title={schemaError ?? t(QueryBuilderI18nKey.SchemaLoadFailed)} />
-                  )
+                  <NoDataContent title={t(QueryBuilderI18nKey.SchemaLoadFailed)} />
                 ) : isJsonView ? (
                   <div className="flex h-full min-h-0 flex-col gap-2">
                     {jsonInvalid && (
@@ -731,7 +708,6 @@ const QueryBuilder: FC<Props> = ({
                   </div>
                 ) : isAiView ? (
                   <AiPanel
-                    key={aiConversationKey}
                     conversation={aiConversation}
                     onRunMessage={onRunAiMessage}
                     loadedMessageIndex={aiLoadedMessageIndex}
@@ -834,14 +810,33 @@ const QueryBuilder: FC<Props> = ({
         />
       )}
 
-      {savedQueryPage.isSaveAsOpen && savedQueryPage.savedQuery && (
+      {savedQueryPage.isSaveAsOpen && (
         <DuplicateQuery
           query={savedQueryPage.savedQuery}
-          header={t(QueriesI18nKey.SaveQueryAs)}
-          submitLabel={t(ButtonsI18nKey.Save)}
           buildRequest={savedQueryPage.buildSaveAsRequest}
-          onCreated={savedQueryPage.onSaveAsCreated}
+          onCreated={savedQueryPage.isDraft ? undefined : savedQueryPage.onSaveAsCreated}
           onClose={savedQueryPage.onCloseSaveAs}
+        />
+      )}
+
+      {savedQueryPage.isDeleteOpen &&
+        savedQueryPage.savedQuery &&
+        createPortal(
+          <DeleteConfirmationModal<SavedQuery>
+            view={ApplicationRoute.AnalyticsQueries}
+            entity={savedQueryPage.savedQuery}
+            isSelectedView
+            onRemoveEntity={savedQueryPage.onRemove}
+            onCloseModal={savedQueryPage.onCloseDelete}
+          />,
+          document.body,
+        )}
+
+      {isResetOpen && (
+        <DiscardModal
+          onConfirm={onConfirmReset}
+          onClose={() => setIsResetOpen(false)}
+          onCancel={() => setIsResetOpen(false)}
         />
       )}
 
