@@ -19,7 +19,7 @@ const SuiteScorePillTooltip: FC<Props> = ({
   avgScoreDisplay,
   avgCostDisplay,
 }) => (
-  <div data-testid="suite-score-pill-tooltip" className="flex min-w-[12rem] flex-col gap-1 px-3 py-2">
+  <div className="flex min-w-[12rem] flex-col gap-1 px-3 py-2">
     <div className="flex items-center justify-between gap-4">
       <span className="dial-small-semi-text text-control-inverted truncate">{suiteName}</span>
       <span className="dial-small-text text-control-inverted shrink-0 whitespace-nowrap">{runsLabel}</span>

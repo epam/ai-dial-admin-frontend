@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import EvalTrendsTab from '@/src/components/EvalTrendsTab/EvalTrendsTab';
@@ -104,7 +104,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   Tooltip: ({ children, tooltip }: { children: React.ReactNode; tooltip?: React.ReactNode }) => (
     <div>
       {children}
-      {tooltip}
+      {tooltip ? <div role="tooltip">{tooltip}</div> : null}
     </div>
   ),
 }));
@@ -202,14 +202,15 @@ describe('EvalTrendsTab', () => {
 
     render(<EvalTrendsTab deploymentId="gpt-4" />);
 
-    const tooltip = await screen.findByTestId('suite-score-pill-tooltip');
+    const suiteButton = await screen.findByRole('button', { name: /ragas/i });
+    const tooltip = await within(suiteButton).findByRole('tooltip');
     expect(tooltip).toHaveTextContent('ragas');
     expect(tooltip).toHaveTextContent(TestSuitesI18nKey.EvalTrendsLastRuns);
     expect(tooltip).toHaveTextContent(TestSuitesI18nKey.EvalTrendsAvgOverallScore);
     expect(tooltip).toHaveTextContent(TestSuitesI18nKey.EvalTrendsAvgCost);
     expect(tooltip).toHaveTextContent('0.580');
     expect(tooltip).toHaveTextContent('$0.76');
-    expect(screen.getByRole('button', { name: /ragas/i })).toHaveTextContent('0.580');
+    expect(suiteButton).toHaveTextContent('0.580');
     expect(screen.getByRole('button', { name: 'no-score' })).not.toHaveTextContent('0.');
   });
 
@@ -220,7 +221,7 @@ describe('EvalTrendsTab', () => {
     render(<EvalTrendsTab deploymentId="app-1" />);
 
     expect(await screen.findByTestId('trends')).toHaveTextContent('trends-for-suite-1');
-    expect(screen.getByRole('button', { name: 'suite-one' })).toBeInTheDocument();
-    expect(screen.queryByTestId('suite-score-pill-tooltip')).not.toBeInTheDocument();
+    const suiteButton = screen.getByRole('button', { name: 'suite-one' });
+    expect(within(suiteButton).queryByRole('tooltip')).not.toBeInTheDocument();
   });
 });
