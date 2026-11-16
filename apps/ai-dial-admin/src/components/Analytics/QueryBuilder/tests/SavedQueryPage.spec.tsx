@@ -460,7 +460,8 @@ describe('QueryBuilder — a stored saved query', () => {
       const dialog = await screen.findByRole('dialog');
       await user.click(within(dialog).getByRole('button', { name: 'Buttons.Delete' }));
 
-      await vi.waitFor(() => expect(mockPush).toHaveBeenCalledWith('/queries'));
+      await waitFor(() => expect(dialog).not.toBeInTheDocument());
+      expect(mockPush).toHaveBeenCalledWith('/queries');
       expect(deleteSavedQuery).toHaveBeenCalledWith('sq_1');
       expect(mockRefresh).toHaveBeenCalled();
     });
@@ -867,7 +868,8 @@ describe('QueryBuilder — a draft', () => {
     });
     await user.click(submitButton);
 
-    await vi.waitFor(() => expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('sq_new')));
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('sq_new'));
     const request = createdRequest();
     expect(request.name).toBe('From a draft');
     expect(request.scope).toBe(SavedQueryScope.Personal);
