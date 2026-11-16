@@ -92,14 +92,11 @@ const OutputsEditor: FC<Props> = ({
   );
 
   const isSql = type === TransformType.Sql;
-  const expressionMember = isRoutePreset(preset) ? 'source' : 'jsonata';
-  const expressionLabel = t(
-    isRoutePreset(preset) ? AnalyticsPipelinesI18nKey.OutputSource : AnalyticsPipelinesI18nKey.OutputJsonata,
-  );
+  const isRoute = isRoutePreset(preset);
+  const expressionMember = isRoute ? 'source' : 'jsonata';
+  const expressionLabel = t(isRoute ? AnalyticsPipelinesI18nKey.OutputSource : AnalyticsPipelinesI18nKey.OutputJsonata);
   const identityError = t(
-    isRoutePreset(preset)
-      ? AnalyticsPipelinesI18nKey.OutputSourceIdentity
-      : AnalyticsPipelinesI18nKey.OutputJsonataIdentity,
+    isRoute ? AnalyticsPipelinesI18nKey.OutputSourceIdentity : AnalyticsPipelinesI18nKey.OutputJsonataIdentity,
   );
 
   const writableColumns = useMemo(() => columns.filter((column) => column.tag !== SYSTEM_COLUMN_TAG), [columns]);
@@ -241,18 +238,20 @@ const OutputsEditor: FC<Props> = ({
                     </span>
                   )}
 
-                  <Textarea
-                    id={`transform-output-prose-${index}`}
-                    labelProps={{ label: t(AnalyticsPipelinesI18nKey.OutputProse) }}
-                    aria-label={named(AnalyticsPipelinesI18nKey.OutputProse)}
-                    value={row.text}
-                    // A placeholder rather than a value: what the service composes when nothing is typed,
-                    // shown without becoming a copy the operator then has to maintain.
-                    placeholder={column?.description ?? t(AnalyticsPipelinesI18nKey.OutputProseFromColumn)}
-                    disabled={isDisabled}
-                    rows={3}
-                    onChange={(value) => updateRow(row.id, { text: value })}
-                  />
+                  {!isRoute && (
+                    <Textarea
+                      id={`transform-output-prose-${index}`}
+                      labelProps={{ label: t(AnalyticsPipelinesI18nKey.OutputProse) }}
+                      aria-label={named(AnalyticsPipelinesI18nKey.OutputProse)}
+                      value={row.text}
+                      // A placeholder rather than a value: what the service composes when nothing is typed,
+                      // shown without becoming a copy the operator then has to maintain.
+                      placeholder={column?.description ?? t(AnalyticsPipelinesI18nKey.OutputProseFromColumn)}
+                      disabled={isDisabled}
+                      rows={3}
+                      onChange={(value) => updateRow(row.id, { text: value })}
+                    />
+                  )}
 
                   {/* One at a time, so the selection comes first and the field that belongs to it follows. */}
                   {hasRefinement && (
