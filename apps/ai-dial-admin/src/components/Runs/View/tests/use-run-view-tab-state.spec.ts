@@ -31,6 +31,41 @@ describe('Runs View :: useRunViewTabState', () => {
     expect(result.current.state.extractionResult.showTreePanel).toBe(true);
   });
 
+  test('starts with grouping off and no group collapsed', () => {
+    const { result } = renderHook(() => useRunViewTabState('run-1'));
+
+    expect(result.current.state.extractionResult.isGroupedByTestCase).toBe(false);
+    expect(result.current.state.extractionResult.collapsedGroupKeys).toEqual([]);
+  });
+
+  test('keeps the collapsed groups when grouping is switched off', () => {
+    const { result } = renderHook(() => useRunViewTabState('run-1'));
+
+    act(() => {
+      result.current.setExtractionResultState({ isGroupedByTestCase: true, collapsedGroupKeys: ['tc-1'] });
+    });
+    act(() => {
+      result.current.setExtractionResultState({ isGroupedByTestCase: false });
+    });
+
+    expect(result.current.state.extractionResult.collapsedGroupKeys).toEqual(['tc-1']);
+  });
+
+  test('forgets the grouping choice and the collapsed groups when the run changes', () => {
+    const { result, rerender } = renderHook(({ runId }) => useRunViewTabState(runId), {
+      initialProps: { runId: 'run-1' },
+    });
+
+    act(() => {
+      result.current.setExtractionResultState({ isGroupedByTestCase: true, collapsedGroupKeys: ['tc-1'] });
+    });
+
+    rerender({ runId: 'run-2' });
+
+    expect(result.current.state.extractionResult.isGroupedByTestCase).toBe(false);
+    expect(result.current.state.extractionResult.collapsedGroupKeys).toEqual([]);
+  });
+
   test('resetSummarySelections clears metric selections but keeps statistic', () => {
     const { result } = renderHook(() => useRunViewTabState('run-1'));
 

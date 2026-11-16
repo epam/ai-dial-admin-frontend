@@ -261,6 +261,9 @@
       @apply bg-transparent;
     }
   }
+  .ag-test-case-group-row {
+    @apply bg-layer-2;
+  }
   .ag-activity-row-clickable {
     cursor: pointer;
   }
