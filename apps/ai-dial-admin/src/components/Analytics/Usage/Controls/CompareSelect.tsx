@@ -14,7 +14,7 @@ interface Props {
   onChange: (compare: ComparePeriod) => void;
 }
 
-// Sized to its longest option: the 2.0 `Select` cannot shrink-wrap its own text (see `UsageControls`).
+// Sized to its longest option: the 2.0 `Select` field does not shrink-wrap the content-slot label (see `UsageControls`).
 const COMPARE_SELECT_WIDTH = 'w-[200px]';
 
 /** The window a dashboard compares against; shared by the usage dashboard and custom dashboards. */
