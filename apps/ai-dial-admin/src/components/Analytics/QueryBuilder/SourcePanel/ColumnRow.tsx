@@ -44,7 +44,6 @@ const ColumnRow: FC<Props> = ({ field }) => {
         }
       >
         <span
-          role="note"
           // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={hasDetails || isTruncated ? 0 : undefined}
           className="flex min-w-0 flex-1 items-center gap-2 rounded"
