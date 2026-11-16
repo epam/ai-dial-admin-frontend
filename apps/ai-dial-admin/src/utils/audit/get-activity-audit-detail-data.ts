@@ -187,7 +187,7 @@ export const getActivityAuditDetailData = async (
   activityId: string,
   token: Token,
 ): Promise<ActivityAuditDetailData> => {
-  let activity = await lookupActivity(ADMIN_LOOKUP, activityId, token);
+  let activity = process.env.DIAL_ADMIN_API_URL ? await lookupActivity(ADMIN_LOOKUP, activityId, token) : null;
   let isDeploymentActivity = false;
   let isAnalyticsActivity = false;
 
