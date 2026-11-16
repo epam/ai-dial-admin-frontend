@@ -428,7 +428,6 @@ export enum DuplicateI18nKey {
   ApplicationRunner = 'DuplicateEntity.Entities.ApplicationRunner',
   TestSuite = 'DuplicateEntity.Entities.TestSuite',
   Dataset = 'DuplicateEntity.Entities.Dataset',
-  Query = 'DuplicateEntity.Entities.Query',
 }
 
 export enum ButtonsI18nKey {
@@ -2994,25 +2993,16 @@ export enum QueryBuilderI18nKey {
 export enum QueriesI18nKey {
   Title = 'Queries.Title',
   BuilderRail = 'Queries.BuilderRail',
-  CreateQuery = 'Queries.CreateQuery',
   EditQuery = 'Queries.EditQuery',
   SaveQueryAs = 'Queries.SaveQueryAs',
+  SaveAsQuery = 'Queries.SaveAsQuery',
   SavedAsNewQuery = 'Queries.SavedAsNewQuery',
-  Name = 'Queries.Name',
-  Description = 'Queries.Description',
   Tag = 'Queries.Tag',
   Scope = 'Queries.Scope',
   ScopePersonal = 'Queries.ScopePersonal',
   ScopePersonalHint = 'Queries.ScopePersonalHint',
   ScopeCommon = 'Queries.ScopeCommon',
   ScopeCommonHint = 'Queries.ScopeCommonHint',
-  Source = 'Queries.Source',
-  Editor = 'Queries.Editor',
-  EditorBuilder = 'Queries.EditorBuilder',
-  EditorJson = 'Queries.EditorJson',
-  EditorSql = 'Queries.EditorSql',
-  SavedBy = 'Queries.SavedBy',
-  SavedByUnknown = 'Queries.SavedByUnknown',
   // Guidance shown alongside (or instead of) the service's own message, chosen by machine error code.
   ErrorGeneric = 'Queries.ErrorGeneric',
   ErrorValidation = 'Queries.ErrorValidation',
@@ -3020,6 +3010,26 @@ export enum QueriesI18nKey {
   ErrorForbidden = 'Queries.ErrorForbidden',
   ErrorNotFound = 'Queries.ErrorNotFound',
   ErrorPrincipalUnavailable = 'Queries.ErrorPrincipalUnavailable',
+}
+
+export enum QuerySourcePanelI18nKey {
+  Tabs = 'QuerySourcePanel.Tabs',
+  Tables = 'QuerySourcePanel.Tables',
+  Queries = 'QuerySourcePanel.Queries',
+  Collapse = 'QuerySourcePanel.Collapse',
+  Expand = 'QuerySourcePanel.Expand',
+  SearchTables = 'QuerySourcePanel.SearchTables',
+  SearchQueries = 'QuerySourcePanel.SearchQueries',
+  NoTables = 'QuerySourcePanel.NoTables',
+  QueriesLoadFailed = 'QuerySourcePanel.QueriesLoadFailed',
+  TableColumns = 'QuerySourcePanel.TableColumns',
+  ColumnsLoadFailed = 'QuerySourcePanel.ColumnsLoadFailed',
+  Retry = 'QuerySourcePanel.Retry',
+  ColumnName = 'QuerySourcePanel.ColumnName',
+  SensitiveData = 'QuerySourcePanel.SensitiveData',
+  ScopeFilter = 'QuerySourcePanel.ScopeFilter',
+  ScopeFilterActive = 'QuerySourcePanel.ScopeFilterActive',
+  ScopeAll = 'QuerySourcePanel.ScopeAll',
 }
 
 export enum AnalyticsTablesI18nKey {

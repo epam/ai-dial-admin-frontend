@@ -2,8 +2,14 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { createSavedQuery, translateSqlToQuery, updateSavedQuery } from '@/src/app/[lang]/queries/actions';
+import {
+  createSavedQuery,
+  deleteSavedQuery,
+  translateSqlToQuery,
+  updateSavedQuery,
+} from '@/src/app/[lang]/queries/actions';
 import QueryBuilder from '@/src/components/Analytics/QueryBuilder/QueryBuilder';
+import QueryBuilderDraft from '@/src/components/Analytics/QueryBuilder/QueryBuilderDraft';
 import { savedQueryPrimarySource } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
@@ -187,7 +193,7 @@ describe('QueryBuilder — a stored saved query', () => {
     expect(screen.getByRole('heading', { name: 'Top chats' })).toBeInTheDocument();
   });
 
-  test('opens a query joining two entities in the SQL view, with its first source selected', () => {
+  test('opens a query joining two entities in the SQL view without a failed schema load', () => {
     const composite = savedQuery({
       query: void 0,
       sql: 'SELECT c.chat_id FROM conversations c JOIN dial_usage_log u ON u.chat_id = c.chat_id',
@@ -198,7 +204,6 @@ describe('QueryBuilder — a stored saved query', () => {
 
     expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByLabelText('sql-editor')).toHaveValue(formatSql(composite.sql ?? ''));
-    expect(screen.getByRole('combobox', { name: /^QueryBuilder.Source/ })).toHaveAccessibleName(/conversations/);
     expect(screen.queryByText('QueryBuilder.SchemaLoadFailed')).not.toBeInTheDocument();
   });
 
@@ -416,6 +421,66 @@ describe('QueryBuilder — a stored saved query', () => {
     expect(await screen.findByText('Queries.EditQuery')).toBeInTheDocument();
   });
 
+  describe('Delete', () => {
+    const deleteButton = () => screen.queryByRole('button', { name: 'Buttons.Delete' });
+
+    beforeEach(() => {
+      vi.mocked(deleteSavedQuery).mockResolvedValue({ success: true });
+    });
+
+    test('is offered to a caller who may write the query', () => {
+      renderPage();
+
+      expect(deleteButton()).toBeEnabled();
+    });
+
+    test('is not offered on a common query to a caller who is not a full administrator', () => {
+      setFullAdmin(false);
+      renderPage(savedQuery({ scope: SavedQueryScope.Common }));
+
+      expect(deleteButton()).toBeNull();
+    });
+
+    test('asks for confirmation naming the query before deleting', async () => {
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(deleteButton()!);
+
+      const dialog = await screen.findByRole('dialog');
+      expect(within(dialog).getByText('Top chats')).toBeInTheDocument();
+      expect(deleteSavedQuery).not.toHaveBeenCalled();
+    });
+
+    test('deletes on confirmation and leaves for the draft builder', async () => {
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(deleteButton()!);
+      const dialog = await screen.findByRole('dialog');
+      await user.click(within(dialog).getByRole('button', { name: 'Buttons.Delete' }));
+
+      await waitFor(() => expect(dialog).not.toBeInTheDocument());
+      expect(mockPush).toHaveBeenCalledWith('/queries');
+      expect(deleteSavedQuery).toHaveBeenCalledWith('sq_1');
+      expect(mockRefresh).toHaveBeenCalled();
+    });
+
+    test('keeps the page and reports the failure when the delete fails', async () => {
+      const user = userEvent.setup();
+      vi.mocked(deleteSavedQuery).mockResolvedValue({ success: false, errorHeader: 'forbidden' });
+      renderPage();
+
+      await user.click(deleteButton()!);
+      const dialog = await screen.findByRole('dialog');
+      await user.click(within(dialog).getByRole('button', { name: 'Buttons.Delete' }));
+
+      await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
+      expect(mockPush).not.toHaveBeenCalled();
+      expect(screen.getByRole('heading', { name: 'Top chats', hidden: true })).toBeInTheDocument();
+    });
+  });
+
   describe('Save as', () => {
     const CREATED = savedQuery({ id: 'sq_new', name: 'Top chats (copy)' });
 
@@ -435,10 +500,25 @@ describe('QueryBuilder — a stored saved query', () => {
       await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
     };
 
-    test('is not offered while the page holds no unsaved changes', () => {
+    test('is offered without unsaved changes, while Save and Discard are not', () => {
       renderPage();
 
-      expect(saveAsButton()).toBeNull();
+      expect(saveAsButton()).toBeEnabled();
+      expect(saveButton()).toBeNull();
+      expect(discardButton()).toBeNull();
+    });
+
+    test('copies a clean query as stored', async () => {
+      const user = userEvent.setup();
+      const stored = savedQuery({ query: void 0, sql: 'SELECT 1 FROM dial_usage_log' });
+      renderPage(stored);
+
+      await user.click(saveAsButton()!);
+      const dialog = (await screen.findByText('Queries.SaveQueryAs')).closest('[role="dialog"]') as HTMLElement;
+      await user.click(within(dialog).getByRole('button', { name: 'Buttons.Save' }));
+
+      await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+      expect(createdRequest().sql).toBe('SELECT 1 FROM dial_usage_log');
     });
 
     test('is offered alongside Discard and Save once the query is edited', async () => {
@@ -697,6 +777,121 @@ describe('QueryBuilder — a stored saved query', () => {
 
       expect(saveButton()).toBeNull();
     });
+  });
+});
+
+describe('QueryBuilder — a draft', () => {
+  const CREATED = savedQuery({ id: 'sq_new', name: 'From a draft' });
+
+  const renderDraft = () =>
+    render(
+      <QueryBuilderDraft
+        initialEntities={ENTITIES}
+        initialEntityName="dial_usage_log"
+        initialFields={FIELDS}
+        initialFunctions={TEST_FUNCTIONS}
+        name="dial_usage_log"
+      />,
+    );
+
+  const saveAsQueryButton = () => screen.queryByRole('button', { name: 'Queries.SaveAsQuery' });
+  const resetButton = () => screen.queryByRole('button', { name: 'Buttons.Reset' });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    setFullAdmin(true);
+    vi.mocked(createSavedQuery).mockResolvedValue({ success: true, response: CREATED });
+  });
+
+  test('shows the table name as the heading and offers Save as query', () => {
+    renderDraft();
+
+    expect(screen.getByRole('heading', { name: 'dial_usage_log' })).toBeInTheDocument();
+    expect(saveAsQueryButton()).toBeEnabled();
+  });
+
+  test('offers no action that needs a stored query', () => {
+    renderDraft();
+
+    expect(screen.queryByRole('button', { name: 'Buttons.Edit' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Buttons.Delete' })).toBeNull();
+    expect(saveButton()).toBeNull();
+    expect(discardButton()).toBeNull();
+    expect(resetButton()).toBeNull();
+  });
+
+  test('offers Reset once the draft has changed', async () => {
+    const user = userEvent.setup();
+    renderDraft();
+
+    await addProjectionField(user);
+
+    expect(resetButton()).toBeEnabled();
+  });
+
+  test('returns to the starting state when Reset is confirmed', async () => {
+    const user = userEvent.setup();
+    renderDraft();
+    await addProjectionField(user);
+
+    await user.click(resetButton()!);
+    await user.click(await screen.findByRole('button', { name: 'Buttons.Discard' }));
+
+    await waitFor(() => expect(resetButton()).toBeNull());
+    expect(saveAsQueryButton()).toBeEnabled();
+  });
+
+  test('keeps the changes when Reset is cancelled', async () => {
+    const user = userEvent.setup();
+    renderDraft();
+    await addProjectionField(user);
+
+    await user.click(resetButton()!);
+    await user.click(await screen.findByRole('button', { name: 'Buttons.ContinueEditing' }));
+
+    expect(resetButton()).toBeEnabled();
+  });
+
+  test('saves the draft as a new query and opens it', async () => {
+    const user = userEvent.setup();
+    renderDraft();
+    await addProjectionField(user);
+
+    await user.click(saveAsQueryButton()!);
+    const dialog = (await screen.findByText('Queries.SaveQueryAs')).closest('[role="dialog"]') as HTMLElement;
+    const submitButton = within(dialog).getByRole('button', { name: 'Buttons.Save' });
+    expect(submitButton).toBeDisabled();
+
+    fireEvent.change(within(dialog).getByRole('textbox', { name: /EntityFields.displayName/ }), {
+      target: { value: 'From a draft' },
+    });
+    await user.click(submitButton);
+
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('sq_new'));
+    const request = createdRequest();
+    expect(request.name).toBe('From a draft');
+    expect(request.scope).toBe(SavedQueryScope.Personal);
+    expect(request.query?.entity).toBe('dial_usage_log');
+    expect(mockRefresh).toHaveBeenCalled();
+  });
+
+  test('keeps the modal open when saving the draft fails', async () => {
+    const user = userEvent.setup();
+    vi.mocked(createSavedQuery).mockResolvedValue({ success: false, errorHeader: 'validation_error' });
+    renderDraft();
+
+    await user.click(saveAsQueryButton()!);
+    const dialog = (await screen.findByText('Queries.SaveQueryAs')).closest('[role="dialog"]') as HTMLElement;
+    fireEvent.change(within(dialog).getByRole('textbox', { name: /EntityFields.displayName/ }), {
+      target: { value: 'From a draft' },
+    });
+    await user.click(within(dialog).getByRole('button', { name: 'Buttons.Save' }));
+
+    await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(screen.getByText('Queries.SaveQueryAs')).toBeInTheDocument();
   });
 });
 

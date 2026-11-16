@@ -2,20 +2,16 @@
 
 import { FC, ReactNode } from 'react';
 
-import { PrimaryButton, Select } from '@epam/ai-dial-ui-kit';
+import { PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { AnalyticsEntity } from '@/src/models/analytics/entity';
 import { TimeRange } from '@/src/models/time-range';
 
 interface Props {
-  entities: AnalyticsEntity[];
-  selectedEntityName: string;
-  onSelectEntity: (name: string) => void;
   timePeriod: string;
   onTimePeriodChange: (value: string) => void;
   timeRange: TimeRange;
@@ -27,9 +23,6 @@ interface Props {
 }
 
 const QueryBuilderToolbar: FC<Props> = ({
-  entities,
-  selectedEntityName,
-  onSelectEntity,
   timePeriod,
   onTimePeriodChange,
   timeRange,
@@ -43,15 +36,6 @@ const QueryBuilderToolbar: FC<Props> = ({
 
   return (
     <div className="flex w-full flex-wrap items-center gap-3">
-      <div className="w-[260px]">
-        <Select
-          prefix={`${t(QueryBuilderI18nKey.Source)}: `}
-          ariaLabel={t(QueryBuilderI18nKey.Source)}
-          options={entities.map((e) => ({ value: e.name, label: e.name }))}
-          value={selectedEntityName}
-          onChange={(value) => onSelectEntity(value as string)}
-        />
-      </div>
       <TimeFilter
         timePeriod={timePeriod}
         onTimePeriodChange={onTimePeriodChange}

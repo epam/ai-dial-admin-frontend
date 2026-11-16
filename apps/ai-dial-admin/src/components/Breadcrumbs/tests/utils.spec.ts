@@ -108,6 +108,13 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(config[1].key).toEqual(RunsI18nKey.RunComparison);
     expect(config[1].name).toEqual('compare');
   });
+
+  test('Should leave a saved query id out of the breadcrumbs', () => {
+    const config = getBreadcrumbs('/en/queries/sq_1', 'en');
+    expect(config.length).toEqual(1);
+    expect(config[0].href).toEqual('/en/queries');
+    expect(config[0].key).toEqual(MenuI18nKey.Queries);
+  });
 });
 
 describe('Breadcrumbs :: getEntityFolderPath', () => {

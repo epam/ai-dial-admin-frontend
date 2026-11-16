@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import QueryBuilder from '@/src/components/Analytics/QueryBuilder/QueryBuilder';
+import QueryPageShell from '@/src/components/Analytics/QueryBuilder/SourcePanel/QueryPageShell';
 import { savedQueryPrimarySource } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -51,14 +52,17 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
 
   return (
     <SaveValidationContextProvider>
-      <QueryBuilder
-        initialEntities={entities}
-        initialEntityName={savedQueryPrimarySource(savedQuery)}
-        initialFields={fields}
-        initialFunctions={functions}
-        name={savedQuery.name}
-        savedQuery={savedQuery}
-      />
+      <QueryPageShell currentQueryId={savedQuery.id}>
+        <QueryBuilder
+          key={savedQuery.id}
+          initialEntities={entities}
+          initialEntityName={savedQueryPrimarySource(savedQuery)}
+          initialFields={fields}
+          initialFunctions={functions}
+          name={savedQuery.name}
+          savedQuery={savedQuery}
+        />
+      </QueryPageShell>
     </SaveValidationContextProvider>
   );
 }

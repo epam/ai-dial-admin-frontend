@@ -5,7 +5,6 @@ import {
   readChartYFields,
   toMetadataReplaceRequest,
   savedQueryPrimarySource,
-  savedQuerySourcesLabel,
   toBuilderRestore,
   toSavedQueryRequest,
 } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
@@ -361,22 +360,6 @@ describe('savedQueryPrimarySource', () => {
     expect(savedQueryPrimarySource({})).toBe('');
   });
 });
-
-describe('savedQuerySourcesLabel', () => {
-  test('joins every source', () => {
-    expect(savedQuerySourcesLabel(['conversations', 'dial_usage_log'])).toBe('conversations, dial_usage_log');
-  });
-
-  test('renders a single-name source from an older service', () => {
-    expect(savedQuerySourcesLabel('dial_usage_log' as unknown as string[])).toBe('dial_usage_log');
-  });
-
-  test('renders an absent or empty source as an empty label', () => {
-    expect(savedQuerySourcesLabel(void 0)).toBe('');
-    expect(savedQuerySourcesLabel([])).toBe('');
-  });
-});
-
 describe('toBuilderRestore', () => {
   const saved = (overrides?: Partial<SavedQuery>): SavedQuery => ({
     id: 'sq_1',

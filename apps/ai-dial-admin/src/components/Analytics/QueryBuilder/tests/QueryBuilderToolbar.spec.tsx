@@ -3,17 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import QueryBuilderToolbar from '@/src/components/Analytics/QueryBuilder/Toolbar/QueryBuilderToolbar';
-import { AnalyticsEntity } from '@/src/models/analytics/entity';
-
-const ENTITIES: AnalyticsEntity[] = [{ name: 'dial_usage_log' }, { name: 'feedback' }];
-
 const RANGE = { startDate: new Date('2026-07-01T00:00:00.000Z'), endDate: new Date('2026-07-13T00:00:00.000Z') };
 
 const renderToolbar = (overrides: Partial<Parameters<typeof QueryBuilderToolbar>[0]> = {}) => {
   const props = {
-    entities: ENTITIES,
-    selectedEntityName: 'dial_usage_log',
-    onSelectEntity: vi.fn(),
     timePeriod: '2d',
     onTimePeriodChange: vi.fn(),
     timeRange: RANGE,
@@ -27,10 +20,10 @@ const renderToolbar = (overrides: Partial<Parameters<typeof QueryBuilderToolbar>
 };
 
 describe('QueryBuilder :: QueryBuilderToolbar', () => {
-  test('renders source select, time filter, and Run', () => {
+  test('renders the time filter and Run, and no source selector', () => {
     renderToolbar();
 
-    expect(screen.getByRole('combobox', { name: /^QueryBuilder.Source/ })).toHaveAccessibleName(/dial_usage_log/);
+    expect(screen.queryByRole('combobox', { name: /^QueryBuilder.Source/ })).toBeNull();
     expect(screen.getByText(/Telemetry.TimePeriod/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeInTheDocument();
   });
@@ -56,9 +49,6 @@ describe('QueryBuilder :: QueryBuilderToolbar', () => {
   test('renders extra actions via children', () => {
     render(
       <QueryBuilderToolbar
-        entities={ENTITIES}
-        selectedEntityName="dial_usage_log"
-        onSelectEntity={vi.fn()}
         timePeriod="2d"
         onTimePeriodChange={vi.fn()}
         timeRange={RANGE}

@@ -131,8 +131,6 @@ export const toMetadataReplaceRequest = (saved: SavedQuery, meta: SavedQueryMeta
     chart: saved.chart,
   });
 
-// `functions` is null for the saved-queries grid, which has no catalog loaded — see
-// isBuilderRepresentable for what that leaves unchecked.
 export const deriveSavedQueryEditor = (
   saved: Pick<SavedQuery, 'sql' | 'query'>,
   functions: QueryFunction[] | null,
@@ -150,16 +148,12 @@ const savedQuerySources = (source: SavedQuery['source']): string[] => {
 };
 
 // The one entity a saved query is treated as being about, for every consumer needing exactly one: the
-// schema prefetch, the source selector, SQL autocomplete, and the assistant's schema message. A SQL
+// schema prefetch, SQL autocomplete, and the assistant's schema message. A SQL
 // body falls back to the first source, which for a composite statement is the alphabetically first
 // entity the service reports — arbitrary but stable, and better than no field suggestions at all.
 // `''` means nothing resolved, which callers read as "load no schema".
 export const savedQueryPrimarySource = (saved: Pick<SavedQuery, 'query' | 'source'>): string =>
   saved.query?.entity ?? savedQuerySources(saved.source)[0] ?? '';
-
-// Every source a query reads, as one display string — for the Queries grid, where the full set belongs
-// on screen rather than the single primary source.
-export const savedQuerySourcesLabel = (source: SavedQuery['source']): string => savedQuerySources(source).join(', ');
 
 const parseInstant = (value: string): Date | null => {
   const date = new Date(value);

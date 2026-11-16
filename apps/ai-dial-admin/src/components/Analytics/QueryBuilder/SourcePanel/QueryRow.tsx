@@ -1,0 +1,62 @@
+'use client';
+
+import { FC } from 'react';
+
+import { Badge, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
+import Link from 'next/link';
+
+import { useSourcePanel } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
+import { QueriesI18nKey } from '@/src/constants/i18n';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
+import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+
+interface Props {
+  query: SavedQuery;
+  isCurrent: boolean;
+}
+
+const SCOPE_I18N: Record<SavedQueryScope, QueriesI18nKey> = {
+  [SavedQueryScope.Personal]: QueriesI18nKey.ScopePersonal,
+  [SavedQueryScope.Common]: QueriesI18nKey.ScopeCommon,
+};
+
+const QueryRow: FC<Props> = ({ query, isCurrent }) => {
+  const t = useI18n();
+  const locale = useCurrentLocale();
+  const { onNavigate } = useSourcePanel();
+
+  const href = `/${locale}${getUrnForEntity(ApplicationRoute.AnalyticsQueries, query)}`;
+
+  return (
+    <li>
+      <Tooltip
+        asChild
+        placement={TooltipPlacement.Right}
+        contentClassName="max-w-[320px]"
+        tooltip={
+          <span className="flex flex-col items-start gap-1">
+            <Badge label={t(SCOPE_I18N[query.scope])} />
+            {query.description && <span>{query.description}</span>}
+          </span>
+        }
+      >
+        <Link
+          href={href}
+          aria-current={isCurrent ? 'page' : undefined}
+          className={classNames(
+            'flex min-h-8 items-center rounded px-3 py-1 text-primary dial-tiny-text [overflow-wrap:anywhere] hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha',
+            isCurrent && 'bg-accent-primary-alpha',
+          )}
+          onClick={(event) => onNavigate(event, href)}
+        >
+          {query.name}
+        </Link>
+      </Tooltip>
+    </li>
+  );
+};
+
+export default QueryRow;

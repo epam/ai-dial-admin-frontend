@@ -10,7 +10,6 @@ import { useRouter } from 'next/navigation';
 import { createSavedQuery } from '@/src/app/[lang]/queries/actions';
 import QueryProperties from '@/src/components/Analytics/Queries/Properties/QueryProperties';
 import { QueryMetadataForm } from '@/src/components/Analytics/Queries/models';
-import { toMetadataReplaceRequest } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import { describeSavedQueryError } from '@/src/components/Analytics/QueryBuilder/utils/saved-query-error';
 import { ButtonsI18nKey, ErrorI18nKey, QueriesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
@@ -20,19 +19,14 @@ import { useI18n } from '@/src/locales/client';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
-import { getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 interface Props {
-  query: SavedQuery;
+  query?: SavedQuery;
   onClose: () => void;
-  // The query page's Save as reuses this modal. It supplies the live, unsaved body instead of the stored
-  // one, and handles success itself, because it keeps the user on the source page rather than navigating.
-  buildRequest?: (meta: QueryMetadataForm) => SavedQueryRequest;
+  buildRequest: (meta: QueryMetadataForm) => SavedQueryRequest;
   onCreated?: (created: SavedQuery) => void;
-  header?: string;
-  submitLabel?: string;
 }
 
 // Deliberately not the shared `getClonedEntityName`, which returns the name untouched once it contains
@@ -42,16 +36,16 @@ interface Props {
 // also misfires on prose names ("chat copywriting stats"), which entity identifiers never look like.
 const copiedName = (name: string): string => `${name} (copy)`;
 
-const formFromQuery = (query: SavedQuery, isFullAdmin: boolean): QueryMetadataForm => ({
-  name: copiedName(query.name),
-  description: query.description ?? '',
-  tag: query.tag ?? '',
+const formFromQuery = (query: SavedQuery | undefined, isFullAdmin: boolean): QueryMetadataForm => ({
+  name: query ? copiedName(query.name) : '',
+  description: query?.description ?? '',
+  tag: query?.tag ?? '',
   // The copy has to be one its creator can write. Only a full administrator may write the common scope,
   // so for anyone else the copy of a common query lands in their personal scope instead of failing on save.
-  scope: isFullAdmin ? query.scope : SavedQueryScope.Personal,
+  scope: query && isFullAdmin ? query.scope : SavedQueryScope.Personal,
 });
 
-const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated, header, submitLabel }) => {
+const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated }) => {
   const t = useI18n();
   const router = useRouter();
   const { isFullAdmin } = useAppContext();
@@ -67,7 +61,7 @@ const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated, he
     // pre-flight check against the existing list.
     let res: Awaited<ReturnType<typeof createSavedQuery>>;
     try {
-      res = await createSavedQuery(buildRequest ? buildRequest(form) : toMetadataReplaceRequest(query, form));
+      res = await createSavedQuery(buildRequest(form));
     } catch {
       // A transport failure carries no envelope to branch on; without this the submit stayed disabled
       // with nothing reported.
@@ -103,18 +97,19 @@ const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated, he
     );
     onClose();
     router.push(getUrnForEntity(ApplicationRoute.AnalyticsQueries, created));
-  }, [form, query, buildRequest, onCreated, showNotification, t, onClose, router]);
+    router.refresh();
+  }, [form, buildRequest, onCreated, showNotification, t, onClose, router]);
 
   return (
     <Popup
       open
-      header={header ?? getCloneTitle(ApplicationRoute.AnalyticsQueries, t)}
+      header={t(QueriesI18nKey.SaveQueryAs)}
       portalId="DuplicateQueryModal"
       size={PopupSize.Md}
       onClose={onClose}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
-        submitLabel: submitLabel ?? t(ButtonsI18nKey.Duplicate),
+        submitLabel: t(ButtonsI18nKey.Save),
         isSubmitDisabled: !isValid || !form.name.trim() || isSaving,
         onCancel: onClose,
         onSubmit: onSubmit,
