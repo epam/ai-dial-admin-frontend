@@ -41,7 +41,8 @@ stored by the analytics service as one value per instance. The tab SHALL be offe
 enabled.
 
 The tab SHALL present one row per pair with a deployment control, a route control and a remove action, plus an
-action that adds an empty row. Each remove action SHALL carry an accessible name that identifies its row.
+action that adds an empty row. Each remove action SHALL carry an accessible name that identifies its row. The two controls of a row
+SHALL stay aligned with each other when one of them shows a validation message.
 
 The tab SHALL state, as visible text, what the list governs: that an enrichment pipeline calling an
 application route can be enabled only when its pair is listed.

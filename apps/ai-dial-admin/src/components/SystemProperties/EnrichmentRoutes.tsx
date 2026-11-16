@@ -2,12 +2,12 @@
 
 import { FC } from 'react';
 
-import { GhostButton, GhostIconButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton, GhostIconButton, Label } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 
 import EnrichmentRouteFields from '@/src/components/Analytics/Common/EnrichmentRouteFields';
 import { useEnrichmentRouteSuggestions } from '@/src/components/Analytics/Common/use-enrichment-route-suggestions';
-import { SystemPropertiesI18nKey } from '@/src/constants/i18n';
+import { AnalyticsPipelinesI18nKey, SystemPropertiesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -35,12 +35,25 @@ const EnrichmentRoutes: FC<Props> = ({ routes }) => {
         {t(SystemPropertiesI18nKey.EnrichmentRoutesDescription)}
       </p>
       <div className="flex flex-col gap-4 max-w-[720px]">
+        {rows.length > 0 && (
+          <div className="-mb-2 flex flex-row gap-3">
+            <Label label={t(AnalyticsPipelinesI18nKey.RouteDeployment)} containerClassName="min-w-0 flex-1" />
+            <Label label={t(AnalyticsPipelinesI18nKey.Route)} containerClassName="min-w-0 flex-1" />
+            <span className="w-10 shrink-0" />
+          </div>
+        )}
         {rows.map((row, index) => {
           const position = ` ${index + 1}`;
 
           return (
-            <div key={row.id} role="group" aria-label={`${title}${position}`} className="flex flex-row items-end gap-3">
+            <div
+              key={row.id}
+              role="group"
+              aria-label={`${title}${position}`}
+              className="flex flex-row items-start gap-3"
+            >
               <EnrichmentRouteFields
+                hasLabels={false}
                 idPrefix={row.id}
                 deployment={row.deployment}
                 route={row.route}
@@ -52,7 +65,7 @@ const EnrichmentRoutes: FC<Props> = ({ routes }) => {
                 onChange={(patch) => onChangeRow(row.id, patch)}
               />
               <GhostIconButton
-                className="mb-1 shrink-0"
+                className="shrink-0"
                 icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
                 aria-label={`${t(SystemPropertiesI18nKey.EnrichmentRoutesRemove)}${position}`}
                 disabled={isDisabled}
