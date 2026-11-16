@@ -9,6 +9,7 @@ import {
   getEntityForUpdate,
   getExportNotificationContent,
   getGridActionLabels,
+  getImportErrorDescription,
   getImportNotificationContent,
   getIsNeedToMove,
   getMoveNotificationContent,
@@ -572,7 +573,7 @@ describe('getImportNotificationContent', () => {
       return `Import ${options?.count} ${options?.item} Failed`;
     }
     if (key === FileManagerI18nKey.ImportErrorDescription) {
-      return `Failed to import ${options?.list}`;
+      return 'Failed to import';
     }
     if (key === FileManagerI18nKey.ImportSkippedTitle) {
       return `Import ${options?.count} ${options?.item} Skipped`;
@@ -653,7 +654,21 @@ describe('getImportNotificationContent', () => {
     expect(result.title).toBe('Import File Success');
     expect(result.description).toBe('Successfully imported one File to /dest');
     expect(result.errorTitle).toBe('Import 1 File Failed');
-    expect(result.errorDescription).toBe('Failed to import /dest/file1.txt');
+    expect(result.errorDescription).toBe('Failed to import:\n /dest/file1.txt');
+  });
+
+  test('should return no error notification when no item failed', () => {
+    const importResults = [{ targetPath: '/dest/file1.txt', status: 'success' }];
+    const result = getImportNotificationContent(
+      ApplicationRoute.Files,
+      importResults,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
+
+    expect(result.errorTitle).toBe('');
+    expect(result.errorDescription).toBe('');
   });
 
   test('should return skipped notification for skipped import in Files view', () => {
@@ -817,7 +832,7 @@ describe('getImportNotificationContent', () => {
     );
 
     expect(result.errorTitle).toBe('Import 2 Applications Failed');
-    expect(result.errorDescription).toBe(`Failed to import ${duplicateError}`);
+    expect(result.errorDescription).toBe(`${duplicateError}:\n public/_app__1.0.0\n public/_app__1.0.0`);
   });
 
   test('should return correct notification for single toolset import in Toolsets view', () => {
@@ -1005,5 +1020,55 @@ describe.each([ApplicationRoute.Skills, ApplicationRoute.Projects])('%s folder a
 
   test('getGridActionLabels returns no options for a read-only admin', () => {
     expect(getGridActionLabels(view, true)).toEqual([]);
+  });
+});
+
+describe('getImportErrorDescription', () => {
+  const t = (key: string) => key;
+  const SECRET_REQUIRED = "Field 'CLIENT_SECRET' is required for OAUTH authentication.";
+  const SECRET_SHORT = "Field 'CLIENT_SECRET' must be at least 8 characters long";
+  const GENERIC_HEADER = `${FileManagerI18nKey.ImportErrorDescription}:`;
+
+  test('groups paths under each distinct reason, in first-seen order', () => {
+    const failed = [
+      { targetPath: 'public/a__1.0.0', status: 'failure', error: SECRET_REQUIRED },
+      { targetPath: 'public/b__1.0.0', status: 'failure', error: SECRET_SHORT },
+      { targetPath: 'public/c__1.0.0', status: 'failure', error: SECRET_REQUIRED },
+    ];
+
+    expect(getImportErrorDescription(failed, t)).toBe(
+      [`${SECRET_REQUIRED}:`, ' public/a__1.0.0', ' public/c__1.0.0', `${SECRET_SHORT}:`, ' public/b__1.0.0'].join(
+        '\n',
+      ),
+    );
+  });
+
+  test('shows a reason once and keeps every path when all items share it', () => {
+    const failed = [
+      { targetPath: '/dest/1.txt', status: 'failure', error: 'File too large' },
+      { targetPath: '/dest/2.txt', status: 'failure', error: 'File too large' },
+    ];
+
+    expect(getImportErrorDescription(failed, t)).toBe(['File too large:', ' /dest/1.txt', ' /dest/2.txt'].join('\n'));
+  });
+
+  test('lists items without a reason under the generic header', () => {
+    const failed = [
+      { targetPath: 'public/a', status: 'failure' },
+      { targetPath: 'public/b', status: 'failure', error: '   ' },
+    ];
+
+    expect(getImportErrorDescription(failed, t)).toBe([GENERIC_HEADER, ' public/a', ' public/b'].join('\n'));
+  });
+
+  test('puts the no-reason group last, even when such an item fails first', () => {
+    const failed = [
+      { targetPath: 'public/a', status: 'failure' },
+      { targetPath: 'public/b', status: 'failure', error: SECRET_SHORT },
+    ];
+
+    expect(getImportErrorDescription(failed, t)).toBe(
+      [`${SECRET_SHORT}:`, ' public/b', GENERIC_HEADER, ' public/a'].join('\n'),
+    );
   });
 });

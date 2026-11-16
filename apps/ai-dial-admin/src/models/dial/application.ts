@@ -66,6 +66,7 @@ export enum TypeEntity {
   ARRAY = 'array',
   STRING = 'string',
   NUMBER = 'number',
+  INTEGER = 'integer',
   NULL = 'null',
 }
 

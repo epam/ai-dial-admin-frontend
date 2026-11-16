@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -30,9 +30,14 @@ const unit: OrgUnit = {
   folder: 'public/Acme/Risk/',
 };
 
+// The popup's focus manager moves focus to the dialog once after mount; an interaction made before that is taken back.
+const waitForPopupFocus = async () => {
+  const dialog = await screen.findByRole('dialog');
+  await waitFor(() => expect(dialog).toHaveFocus());
+};
+
 const enterName = async (user: ReturnType<typeof userEvent.setup>, value: string) => {
-  // The popup's focus manager moves focus once after mount, which swallows the first interaction.
-  await user.click(await screen.findByRole('dialog'));
+  await waitForPopupFocus();
   await user.click(screen.getByRole('textbox', { name: new RegExp(FoldersI18nKey.UnitName) }));
   await user.paste(value);
 };
@@ -106,7 +111,7 @@ describe('RenameUnitModal', () => {
     const onRenamed = vi.fn();
     render(<RenameUnitModal unit={unit} onClose={vi.fn()} onRenamed={onRenamed} />);
 
-    await user.click(await screen.findByRole('dialog'));
+    await waitForPopupFocus();
     const input = screen.getByRole('textbox', { name: FoldersI18nKey.UnitDisplayName });
     await user.click(input);
     await user.clear(input);

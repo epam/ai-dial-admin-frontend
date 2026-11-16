@@ -114,7 +114,7 @@ describe('PivotValueCell', () => {
           isMetric: true,
           isScoreIndicator: true,
           primaryRaw: '0.5',
-          primaryInfo: { reason: 'Low overlap', logs: 'verbose details', error: null },
+          primaryInfo: { reason: 'Low overlap', logs: 'verbose details', error: null, details: null },
         })}
       />,
     );

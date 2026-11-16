@@ -40,6 +40,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `AiGateway/Applications`   | `assets-applications`      | `Assets/Entities/Apps`, `Assets/Platform/Applications` |
 | `AiGateway/AppRunners`     | `platform-app-runners`     | `Assets/Platform/AppRunners`                           |
 | `AiGateway/CatalogSchemas` | `platform-catalog-schemas` | `Assets/Platform/CatalogSchemas`                       |
+| `AiGateway/Aliases`        | `assets-aliases`           | `Assets/Entities/Aliases`                              |
 
 ### `Artifacts`
 

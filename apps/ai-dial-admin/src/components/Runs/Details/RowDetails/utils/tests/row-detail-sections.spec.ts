@@ -78,8 +78,8 @@ describe('buildRowDetailSections', () => {
       .find((section) => section.key === 'metric:Accuracy')
       ?.rows.find((row) => row.fieldKey === 'precision');
 
-    expect(precisionRow?.primaryInfo).toEqual({ reason: 'primary reason', logs: null, error: null });
-    expect(precisionRow?.secondaryInfo).toEqual({ reason: null, logs: 'secondary logs', error: null });
+    expect(precisionRow?.primaryInfo).toEqual({ reason: 'primary reason', logs: null, error: null, details: null });
+    expect(precisionRow?.secondaryInfo).toEqual({ reason: null, logs: 'secondary logs', error: null, details: null });
   });
 
   test('leaves secondary info empty without a compared result', () => {
@@ -279,7 +279,12 @@ describe('buildRowDetailSections', () => {
       ?.rows.find((row) => row.fieldKey === 'score');
 
     expect(scoreRow?.primaryFailed).toBe(true);
-    expect(scoreRow?.primaryInfo).toEqual({ reason: null, logs: null, error: '422 Unprocessable Content' });
+    expect(scoreRow?.primaryInfo).toEqual({
+      reason: null,
+      logs: null,
+      error: '422 Unprocessable Content',
+      details: null,
+    });
   });
 });
 

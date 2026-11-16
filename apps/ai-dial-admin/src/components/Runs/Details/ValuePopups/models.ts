@@ -2,6 +2,7 @@ import { CompareRun } from '@/src/components/Runs/Compare/models';
 
 export enum MetricInfoSection {
   Reason = 'reason',
+  Details = 'details',
   Logs = 'logs',
 }
 
@@ -14,6 +15,7 @@ export interface ScoreRunData {
   reason: FormattedInfoText | null;
   /** The reason text is the metric's error message, because the failed metric has no reason of its own. */
   isReasonError: boolean;
+  details: FormattedInfoText | null;
   logs: FormattedInfoText | null;
 }
 

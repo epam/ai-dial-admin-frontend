@@ -1,7 +1,13 @@
 import { describe, expect, test } from 'vitest';
 
 import { getCompareRuns } from '@/src/components/Runs/Compare/utils';
-import { formatInfoText, getScoreChipClasses, getScoreRunData } from '@/src/components/Runs/Details/ValuePopups/utils';
+import {
+  formatInfoText,
+  getDefaultOpenSection,
+  getScoreChipClasses,
+  getScoreRunData,
+} from '@/src/components/Runs/Details/ValuePopups/utils';
+import { MetricInfoSection, ScoreRunData } from '@/src/components/Runs/Details/ValuePopups/models';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 
@@ -59,8 +65,8 @@ describe('Runs/FieldCompare :: getScoreChipClasses', () => {
 describe('Runs/FieldCompare :: getScoreRunData', () => {
   test('Should read each run from its own slot', () => {
     const field = makeField({
-      primaryInfo: { reason: 'primary reason', logs: 'primary logs', error: null },
-      secondaryInfo: { reason: 'secondary reason', logs: null, error: null },
+      primaryInfo: { reason: 'primary reason', logs: 'primary logs', error: null, details: null },
+      secondaryInfo: { reason: 'secondary reason', logs: null, error: null, details: null },
     });
 
     const primary = getScoreRunData(field, primaryRun, 'Run A', true);
@@ -78,7 +84,7 @@ describe('Runs/FieldCompare :: getScoreRunData', () => {
     const field = makeField({
       primaryRaw: null,
       primaryFailed: true,
-      primaryInfo: { reason: null, logs: null, error: '422 Unprocessable Content' },
+      primaryInfo: { reason: null, logs: null, error: '422 Unprocessable Content', details: null },
     });
 
     const primary = getScoreRunData(field, primaryRun, 'Run A', true);
@@ -93,7 +99,7 @@ describe('Runs/FieldCompare :: getScoreRunData', () => {
     const field = makeField({
       primaryRaw: null,
       primaryFailed: true,
-      primaryInfo: { reason: 'own reason', logs: null, error: 'group error' },
+      primaryInfo: { reason: 'own reason', logs: null, error: 'group error', details: null },
     });
 
     const primary = getScoreRunData(field, primaryRun, 'Run A', true);
@@ -103,21 +109,72 @@ describe('Runs/FieldCompare :: getScoreRunData', () => {
   });
 
   test('Should not show the group error for a metric that did not fail', () => {
-    const field = makeField({ primaryInfo: { reason: null, logs: null, error: 'other leaf failed' } });
+    const field = makeField({ primaryInfo: { reason: null, logs: null, error: 'other leaf failed', details: null } });
 
     expect(getScoreRunData(field, primaryRun, 'Run A', true).reason).toBeNull();
   });
 
-  test('Should leave reason and logs empty without info', () => {
+  test('Should leave reason, details and logs empty without info', () => {
     const data = getScoreRunData(makeField(), primaryRun, 'Run A', true);
 
     expect(data.reason).toBeNull();
+    expect(data.details).toBeNull();
     expect(data.logs).toBeNull();
+  });
+
+  test('Should format the details of a run as JSON from its own slot', () => {
+    const field = makeField({
+      primaryInfo: { reason: null, logs: null, error: null, details: '{"tp":1}' },
+    });
+
+    const primary = getScoreRunData(field, primaryRun, 'Run A', true);
+
+    expect(primary.details).toEqual({ text: '{\n  "tp": 1\n}', language: 'json' });
+    expect(getScoreRunData(field, secondaryRun, 'Run B', true).details).toBeNull();
+  });
+
+  test('Should not mistake the details for the reason of a failed metric', () => {
+    const field = makeField({
+      primaryRaw: null,
+      primaryFailed: true,
+      primaryInfo: { reason: null, logs: null, error: 'boom', details: '{"tp":1}' },
+    });
+
+    const primary = getScoreRunData(field, primaryRun, 'Run A', true);
+
+    expect(primary.reason?.text).toBe('boom');
+    expect(primary.details?.text).toBe('{\n  "tp": 1\n}');
   });
 
   test('Should mark the compared run missing only when there is no match', () => {
     expect(getScoreRunData(makeField(), secondaryRun, 'Run B', false).isMissing).toBe(true);
     expect(getScoreRunData(makeField(), secondaryRun, 'Run B', true).isMissing).toBe(false);
     expect(getScoreRunData(makeField(), primaryRun, 'Run A', false).isMissing).toBe(false);
+  });
+});
+
+describe('Runs/FieldCompare :: getDefaultOpenSection', () => {
+  const column = (overrides: Partial<ScoreRunData> = {}): ScoreRunData => ({
+    ...getScoreRunData(makeField(), primaryRun, 'Run A', true),
+    ...overrides,
+  });
+  const text = { text: 'x', language: 'plaintext' };
+
+  test('Should open the reason when any column has one', () => {
+    const columns = [column({ details: text, logs: text }), column({ reason: text })];
+
+    expect(getDefaultOpenSection(columns)).toBe(MetricInfoSection.Reason);
+  });
+
+  test('Should open the details when no column has a reason', () => {
+    expect(getDefaultOpenSection([column({ details: text, logs: text })])).toBe(MetricInfoSection.Details);
+  });
+
+  test('Should open the logs when they are all there is', () => {
+    expect(getDefaultOpenSection([column({ logs: text })])).toBe(MetricInfoSection.Logs);
+  });
+
+  test('Should open nothing when no column has any card', () => {
+    expect(getDefaultOpenSection([column(), column()])).toBeNull();
   });
 });

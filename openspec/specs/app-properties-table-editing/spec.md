@@ -22,8 +22,21 @@ The table SHALL derive display rows at render time from `applicationProperties: 
 - **THEN** the Type column shows "Object"
 
 #### Scenario: Schema row type comes from schema
-- **WHEN** a row is schema-derived
-- **THEN** the Type column shows the type defined in the schema regardless of the actual value
+- **WHEN** a row is schema-derived and its schema allows a single type
+- **THEN** the Type column shows that type regardless of the actual value
+
+#### Scenario: Multi-type schema row shows the type matching its value
+- **WHEN** a row is schema-derived and its `anyOf` / `oneOf` allows several types (for example `object` and `string`)
+- **THEN** the Type column shows the allowed type matching the current value, or the first allowed type when there is no value
+- **AND** the value cell uses the editor for that type (a JSON editor for `object`, a text input for `string`)
+
+#### Scenario: Multi-type schema row offers only its allowed types
+- **WHEN** a user opens the Type selector of a multi-type schema row
+- **THEN** it lists exactly the types the schema allows, and `null` is not offered
+
+#### Scenario: Switching a multi-type schema row resets the value
+- **WHEN** a user picks another allowed type on a multi-type schema row
+- **THEN** the value is reset to the default for that type and the row keeps its position and its key
 
 ### Requirement: Add row guarded against duplicate empty-key rows
 Clicking Add SHALL add a new empty-key row only if no empty-key row already exists. Subsequent Add clicks while an empty-key row is present SHALL be ignored silently.
@@ -116,9 +129,10 @@ Schema-derived rows SHALL NOT render an editable key cell or an editable type se
 - **WHEN** a user views a schema-derived row
 - **THEN** the key cell is displayed as plain text, not an input field
 
-#### Scenario: Schema row type selector is read-only
-- **WHEN** a user views a schema-derived row
-- **THEN** the type selector shows the schema type and cannot be changed
+#### Scenario: Schema row type selector is limited to the schema
+- **WHEN** a user views a schema-derived row with a single allowed type
+- **THEN** the type selector shows only that type
+- **AND** a row whose schema allows several types lets the user choose among those types only
 
 ### Requirement: Save path uses applicationProperties directly
 Server actions SHALL use `applicationProperties: Record<string, unknown>` directly when saving. No `applicationPropertiesTemp` conversion step SHALL exist in any save path.
