@@ -74,6 +74,16 @@ describe('queries layout', () => {
     });
   });
 
+  test('reports a table read that threw as a failure with no service details', async () => {
+    vi.mocked(getEntities).mockRejectedValue(new Error('network down'));
+
+    const layout = await renderLayout();
+
+    expect(layout.props.tables).toEqual([]);
+    expect(layout.props.tablesFailure).toEqual({});
+    expect(layout.props.queries).toEqual([PERSONAL, COMMON]);
+  });
+
   test('reads nothing when Analytics access is denied', async () => {
     vi.mocked(isAnalyticsForbidden).mockResolvedValue(true);
 

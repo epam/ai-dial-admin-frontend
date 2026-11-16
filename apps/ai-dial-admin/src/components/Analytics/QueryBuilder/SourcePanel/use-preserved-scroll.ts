@@ -1,5 +1,3 @@
-'use client';
-
 import { UIEvent, useCallback, useLayoutEffect, useRef } from 'react';
 
 import { useSourcePanel } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';

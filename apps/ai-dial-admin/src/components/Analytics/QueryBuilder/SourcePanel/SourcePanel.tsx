@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useId, useState } from 'react';
 
 import { ElementSize, GhostIconButton, Tabs } from '@epam/ai-dial-ui-kit';
 import { IconLayoutSidebarLeftCollapse } from '@tabler/icons-react';
@@ -26,6 +26,7 @@ const SourcePanel: FC<Props> = ({ defaultTab, currentTable, currentQueryId }) =>
   const { selectedTab, onSelectTab, isCollapsed, onToggleCollapsed } = useSourcePanel();
   const isNarrow = useIsTabletScreen();
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const contentId = useId();
 
   const activeTab = selectedTab ?? defaultTab;
   const isExpanded = isNarrow ? isOverlayOpen : !isCollapsed;
@@ -73,11 +74,12 @@ const SourcePanel: FC<Props> = ({ defaultTab, currentTable, currentQueryId }) =>
             size={ElementSize.Small}
             aria-label={t(QuerySourcePanelI18nKey.Collapse)}
             aria-expanded
+            aria-controls={contentId}
             icon={<IconLayoutSidebarLeftCollapse size={16} aria-hidden />}
             onClick={() => onToggleExpanded(false)}
           />
         </div>
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <div id={contentId} className="flex min-h-0 flex-1 flex-col gap-3">
           {activeTab === SourcePanelTab.Tables ? (
             <TablesTab currentTable={currentTable} />
           ) : (
