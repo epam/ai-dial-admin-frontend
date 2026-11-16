@@ -2565,6 +2565,7 @@ export enum RunsI18nKey {
   MetricFailedText = 'Runs.MetricFailedText',
   MetricScoreLabel = 'Runs.MetricScoreLabel',
   MetricReason = 'Runs.MetricReason',
+  MetricDetails = 'Runs.MetricDetails',
   MetricLogs = 'Runs.MetricLogs',
   NumericDiff = 'Runs.NumericDiff',
   TextDiff = 'Runs.TextDiff',

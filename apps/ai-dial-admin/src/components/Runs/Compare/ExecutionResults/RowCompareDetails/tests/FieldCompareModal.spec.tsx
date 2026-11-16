@@ -33,8 +33,8 @@ const makeField = (overrides: Partial<RowDetailField> = {}): RowDetailField => (
   isNumeric: true,
   isScoreIndicator: true,
   isMetric: true,
-  primaryInfo: { reason: 'primary reason', logs: 'primary logs', error: null },
-  secondaryInfo: { reason: 'secondary reason', logs: 'secondary logs', error: null },
+  primaryInfo: { reason: 'primary reason', logs: 'primary logs', error: null, details: null },
+  secondaryInfo: { reason: 'secondary reason', logs: 'secondary logs', error: null, details: null },
   ...overrides,
 });
 
@@ -129,8 +129,8 @@ describe('FieldCompareModal', () => {
     test('Should omit a section neither run has', () => {
       renderModal(
         makeField({
-          primaryInfo: { reason: 'primary reason', logs: null, error: null },
-          secondaryInfo: { reason: 'secondary reason', logs: null, error: null },
+          primaryInfo: { reason: 'primary reason', logs: null, error: null, details: null },
+          secondaryInfo: { reason: 'secondary reason', logs: null, error: null, details: null },
         }),
       );
 
@@ -161,7 +161,7 @@ describe('FieldCompareModal', () => {
         makeField({
           primaryRaw: null,
           primaryFailed: true,
-          primaryInfo: { reason: null, logs: null, error: '422 Unprocessable Content' },
+          primaryInfo: { reason: null, logs: null, error: '422 Unprocessable Content', details: null },
           secondaryInfo: undefined,
         }),
       );
@@ -193,6 +193,111 @@ describe('FieldCompareModal', () => {
         within(getColumn('Run A')).getByRole('button', { name: `copy ${RunsI18nKey.MetricLogs}` }),
       ).toBeInTheDocument();
     });
+
+    describe('details', () => {
+      const PRIMARY_DETAILS = '{\n  "tp": 1,\n  "false_positives": []\n}';
+      const SECONDARY_DETAILS = '{\n  "tp": 2\n}';
+
+      const getCardTitles = (column: HTMLElement) => {
+        const titles: string[] = [RunsI18nKey.MetricReason, RunsI18nKey.MetricDetails, RunsI18nKey.MetricLogs];
+        return within(column)
+          .getAllByRole('button')
+          .map((button) => button.textContent ?? '')
+          .filter((title) => titles.includes(title));
+      };
+
+      const makeFieldWithDetails = (overrides: Partial<RowDetailField> = {}) =>
+        makeField({
+          primaryInfo: { reason: 'primary reason', logs: 'primary logs', error: null, details: PRIMARY_DETAILS },
+          secondaryInfo: {
+            reason: 'secondary reason',
+            logs: 'secondary logs',
+            error: null,
+            details: SECONDARY_DETAILS,
+          },
+          ...overrides,
+        });
+
+      test('Should show the details card between reason and logs, collapsed behind the reason', () => {
+        renderModal(makeFieldWithDetails());
+
+        const left = getColumn('Run A');
+        expect(getCardTitles(left)).toEqual([
+          RunsI18nKey.MetricReason,
+          RunsI18nKey.MetricDetails,
+          RunsI18nKey.MetricLogs,
+        ]);
+        expect(
+          within(left).getByRole('button', { name: RunsI18nKey.MetricReason, expanded: true }),
+        ).toBeInTheDocument();
+        expect(
+          within(left).getByRole('button', { name: RunsI18nKey.MetricDetails, expanded: false }),
+        ).toBeInTheDocument();
+        expect(within(left).queryByText(/"tp": 1/)).not.toBeInTheDocument();
+      });
+
+      test('Should show each run its own details once the card is opened', async () => {
+        renderModal(makeFieldWithDetails());
+
+        await user.click(within(getColumn('Run A')).getByRole('button', { name: RunsI18nKey.MetricDetails }));
+
+        expect(within(getColumn('Run A')).getByText(/"tp": 1/)).toBeInTheDocument();
+        expect(within(getColumn('Run B')).getByText(/"tp": 2/)).toBeInTheDocument();
+      });
+
+      test('Should close the reason when the details open', async () => {
+        renderModal(makeFieldWithDetails());
+
+        await user.click(within(getColumn('Run A')).getByRole('button', { name: RunsI18nKey.MetricDetails }));
+
+        expect(screen.queryByText('primary reason')).not.toBeInTheDocument();
+        expect(screen.queryByText('primary logs')).not.toBeInTheDocument();
+        expect(
+          within(getColumn('Run B')).getByRole('button', { name: RunsI18nKey.MetricReason, expanded: false }),
+        ).toBeInTheDocument();
+      });
+
+      test('Should open the details when no run has a reason', () => {
+        renderModal(
+          makeFieldWithDetails({
+            primaryInfo: { reason: null, logs: null, error: null, details: PRIMARY_DETAILS },
+            secondaryInfo: { reason: null, logs: null, error: null, details: SECONDARY_DETAILS },
+          }),
+        );
+
+        expect(screen.getAllByRole('button', { name: RunsI18nKey.MetricDetails, expanded: true })).toHaveLength(2);
+        expect(within(getColumn('Run A')).getByText(/"tp": 1/)).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: RunsI18nKey.MetricReason })).not.toBeInTheDocument();
+      });
+
+      test('Should omit the details card of a run that has none', () => {
+        renderModal(
+          makeFieldWithDetails({
+            secondaryInfo: { reason: 'secondary reason', logs: null, error: null, details: null },
+          }),
+        );
+
+        expect(within(getColumn('Run A')).getByRole('button', { name: RunsI18nKey.MetricDetails })).toBeInTheDocument();
+        expect(
+          within(getColumn('Run B')).queryByRole('button', { name: RunsI18nKey.MetricDetails }),
+        ).not.toBeInTheDocument();
+      });
+
+      test('Should show no details card when no run has details', () => {
+        renderModal(makeField());
+
+        expect(screen.queryByRole('button', { name: RunsI18nKey.MetricDetails })).not.toBeInTheDocument();
+      });
+
+      test('Should offer copy and no fullscreen on the details card', () => {
+        renderModal(makeFieldWithDetails());
+
+        expect(
+          within(getColumn('Run A')).getByRole('button', { name: `copy ${RunsI18nKey.MetricDetails}` }),
+        ).toBeInTheDocument();
+        expect(screen.queryAllByRole('button', { name: RunsI18nKey.OpenFullscreen })).toHaveLength(0);
+      });
+    });
   });
 });
 
@@ -223,7 +328,7 @@ describe('ScoreModal — single run', () => {
       makeField({
         primaryRaw: null,
         primaryFailed: true,
-        primaryInfo: { reason: null, logs: null, error: '422 Unprocessable Content' },
+        primaryInfo: { reason: null, logs: null, error: '422 Unprocessable Content', details: null },
       }),
     );
 
@@ -244,5 +349,23 @@ describe('ScoreModal — single run', () => {
 
     expect(screen.getByRole('button', { name: RunsI18nKey.MetricReason, expanded: true })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: RunsI18nKey.MetricLogs, expanded: false })).toBeInTheDocument();
+  });
+
+  test('Should open the details of a metric that has no reason, as Set Comparison reports it', () => {
+    renderSingle(
+      makeField({
+        primaryInfo: {
+          reason: null,
+          logs: null,
+          error: null,
+          details: '{\n  "tp": 1,\n  "true_positives": [\n    "rust"\n  ]\n}',
+        },
+      }),
+    );
+
+    expect(screen.getByRole('button', { name: RunsI18nKey.MetricDetails, expanded: true })).toBeInTheDocument();
+    expect(screen.getByText(/"true_positives"/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: RunsI18nKey.MetricReason })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: RunsI18nKey.MetricLogs })).not.toBeInTheDocument();
   });
 });

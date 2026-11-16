@@ -2796,6 +2796,7 @@ export default {
     MetricFailedText: 'Metric evaluation failed',
     MetricScoreLabel: 'Score',
     MetricReason: 'reason',
+    MetricDetails: 'details',
     MetricLogs: 'logs',
     NumericDiff: 'Numeric',
     TextDiff: 'Text',

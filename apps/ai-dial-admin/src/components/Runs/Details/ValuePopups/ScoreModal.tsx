@@ -7,7 +7,7 @@ import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
 import { MetricInfoSection, ScoreRunData } from '@/src/components/Runs/Details/ValuePopups/models';
 import ScoreColumn from '@/src/components/Runs/Details/ValuePopups/ScoreColumn';
-import { getScoreRunData } from '@/src/components/Runs/Details/ValuePopups/utils';
+import { getDefaultOpenSection, getScoreRunData } from '@/src/components/Runs/Details/ValuePopups/utils';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
 import { TextDiffRanges } from '@/src/models/text-diff';
 import { getWordDiffRanges } from '@/src/utils/text-diff';
@@ -22,17 +22,13 @@ interface Props {
 
 const NO_DIFF: TextDiffRanges = { original: [], modified: [] };
 
-// Reason is what a reader opens this view for; logs are the long tail behind it.
-const DEFAULT_OPEN_SECTION = MetricInfoSection.Reason;
-
 const ScoreModal: FC<Props> = ({ field, runs, hasComparedMatch, getRunLabel, onClose }) => {
-  // One section at a time: both are tall, and two open at once would leave neither room to read.
-  const [openSection, setOpenSection] = useState<MetricInfoSection | null>(DEFAULT_OPEN_SECTION);
-
   const columns = useMemo<ScoreRunData[]>(
     () => runs.map((run) => getScoreRunData(field, run, getRunLabel(run), hasComparedMatch)),
     [field, runs, getRunLabel, hasComparedMatch],
   );
+  // One section at a time: the cards are tall, and several open at once would leave none of them room to read.
+  const [openSection, setOpenSection] = useState<MetricInfoSection | null>(() => getDefaultOpenSection(columns));
   const isComparison = columns.length > 1;
 
   const reasonDiff = useMemo(() => {
