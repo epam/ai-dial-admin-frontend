@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import EvalTrendsTab from '@/src/components/EvalTrendsTab/EvalTrendsTab';
@@ -8,12 +8,14 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 const getTestSuitesForDeploymentMock = vi.fn();
 const getDeploymentPeriodCostsMock = vi.fn();
+const getSuiteRecentRunAveragesMock = vi.fn();
 const onOpenInNewTabMock = vi.fn();
 const trendsRunCountChangeRef = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getTestSuitesForDeployment: (...args: unknown[]) => getTestSuitesForDeploymentMock(...args),
   getDeploymentPeriodCosts: (...args: unknown[]) => getDeploymentPeriodCostsMock(...args),
+  getSuiteRecentRunAverages: (...args: unknown[]) => getSuiteRecentRunAveragesMock(...args),
 }));
 
 vi.mock('@/src/utils/open-in-new-tab', () => ({
@@ -77,7 +79,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     ariaLabel,
     onChange,
   }: {
-    options: { value: string; label: string }[];
+    options: { value: string; label: string; rightControl?: React.ReactNode }[];
     value?: string;
     searchable?: boolean;
     searchPlaceholder?: string;
@@ -91,6 +93,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {options.map((option) => (
         <button key={option.value} type="button" onClick={() => onChange?.(option.value)}>
           {option.label}
+          {option.rightControl}
         </button>
       ))}
     </div>
@@ -98,19 +101,26 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   Badge: ({ label }: { label: string }) => <span>{label}</span>,
   BadgeVariant: { Filled: 'filled' },
   BadgeColor: { Green: 'green', Red: 'red' },
-  Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Tooltip: ({ children, tooltip }: { children: React.ReactNode; tooltip?: React.ReactNode }) => (
+    <div>
+      {children}
+      {tooltip ? <div role="tooltip">{tooltip}</div> : null}
+    </div>
+  ),
 }));
 
 describe('EvalTrendsTab', () => {
   beforeEach(() => {
     getTestSuitesForDeploymentMock.mockReset();
     getDeploymentPeriodCostsMock.mockReset();
+    getSuiteRecentRunAveragesMock.mockReset();
     onOpenInNewTabMock.mockReset();
     trendsRunCountChangeRef.mockReset();
     getDeploymentPeriodCostsMock.mockResolvedValue({
       current: { totalTestCaseCost: null, totalMetricEvalCost: null },
       previous: { totalTestCaseCost: null, totalMetricEvalCost: null },
     });
+    getSuiteRecentRunAveragesMock.mockResolvedValue([]);
   });
 
   test('shows the empty state when suite loading fails', async () => {
@@ -178,5 +188,40 @@ describe('EvalTrendsTab', () => {
     await waitFor(() => {
       expect(screen.getByText(TestSuitesI18nKey.TrendsPreviewRunsLastN)).toBeInTheDocument();
     });
+  });
+
+  test('shows a right-aligned score pill and tooltip for suites with an average score', async () => {
+    getTestSuitesForDeploymentMock.mockResolvedValue([
+      { id: 'suite-a', name: 'ragas' },
+      { id: 'suite-b', name: 'no-score' },
+    ]);
+    getSuiteRecentRunAveragesMock.mockResolvedValue([
+      { suiteId: 'suite-a', runCount: 10, avgScore: 0.58, avgCost: 0.76 },
+      { suiteId: 'suite-b', runCount: 2, avgScore: null, avgCost: 0.1 },
+    ]);
+
+    render(<EvalTrendsTab deploymentId="gpt-4" />);
+
+    const suiteButton = await screen.findByRole('button', { name: /ragas/i });
+    const tooltip = await within(suiteButton).findByRole('tooltip');
+    expect(tooltip).toHaveTextContent('ragas');
+    expect(tooltip).toHaveTextContent(TestSuitesI18nKey.EvalTrendsLastRuns);
+    expect(tooltip).toHaveTextContent(TestSuitesI18nKey.EvalTrendsAvgOverallScore);
+    expect(tooltip).toHaveTextContent(TestSuitesI18nKey.EvalTrendsAvgCost);
+    expect(tooltip).toHaveTextContent('0.580');
+    expect(tooltip).toHaveTextContent('$0.76');
+    expect(suiteButton).toHaveTextContent('0.580');
+    expect(screen.getByRole('button', { name: 'no-score' })).not.toHaveTextContent('0.');
+  });
+
+  test('keeps the suite list usable when recent-run averages fail to load', async () => {
+    getTestSuitesForDeploymentMock.mockResolvedValue([{ id: 'suite-1', name: 'suite-one' }]);
+    getSuiteRecentRunAveragesMock.mockRejectedValue(new Error('query failed'));
+
+    render(<EvalTrendsTab deploymentId="app-1" />);
+
+    expect(await screen.findByTestId('trends')).toHaveTextContent('trends-for-suite-1');
+    const suiteButton = screen.getByRole('button', { name: 'suite-one' });
+    expect(within(suiteButton).queryByRole('tooltip')).not.toBeInTheDocument();
   });
 });

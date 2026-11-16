@@ -2417,6 +2417,9 @@ export enum TestSuitesI18nKey {
   EvalTrendsMonthCostTitle = 'TestSuites.EvalTrendsMonthCostTitle',
   EvalTrendsBasedOnAllSuites = 'TestSuites.EvalTrendsBasedOnAllSuites',
   EvalTrendsDeltaVsPrevPeriod = 'TestSuites.EvalTrendsDeltaVsPrevPeriod',
+  EvalTrendsLastRuns = 'TestSuites.EvalTrendsLastRuns',
+  EvalTrendsAvgOverallScore = 'TestSuites.EvalTrendsAvgOverallScore',
+  EvalTrendsAvgCost = 'TestSuites.EvalTrendsAvgCost',
 
   TrendsSingleRunMessage = 'TestSuites.TrendsSingleRunMessage',
   TrendsTooltipRun = 'TestSuites.TrendsTooltipRun',

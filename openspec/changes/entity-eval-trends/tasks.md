@@ -33,9 +33,16 @@
 - [x] 5.2 Build the all-suites header, month cost card (delta badge + two-period tooltip), mount on
   Eval Trends when suites exist; add i18n and component coverage.
 
-## 6. Quality gates
+## 6. Suite dropdown score pills
 
-- [x] 6.1 Run focused Vitest specs, `typecheck` / `typecheck:specs`, and lint/format on touched
+- [x] 6.1 Add a structured-query builder for the latest up-to-10 runs per suite, aggregate average
+  overall score and cost client-side, expose a server action and hook; cover with unit specs.
+- [x] 6.2 Render right-aligned score pills with hover tooltips in the suite select open list; add
+  i18n and component coverage for pill/tooltip and failure (no pills, list still usable).
+
+## 7. Quality gates
+
+- [x] 7.1 Run focused Vitest specs, `typecheck` / `typecheck:specs`, and lint/format on touched
   files; resolve regressions.
 
 > Formal OpenSpec `spec-browser-verify` task omitted: AskQuestion was unavailable when drafting
