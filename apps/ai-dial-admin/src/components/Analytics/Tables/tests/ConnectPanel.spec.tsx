@@ -6,7 +6,7 @@ import { getTableAccess } from '@/src/app/[lang]/tables/actions';
 import ConnectPanel from '@/src/components/Analytics/Tables/ConnectPanel/ConnectPanel';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableType, TableGrantKey } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
 
@@ -39,7 +39,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(getTableAccess).mockResolvedValue({
     success: true,
-    response: { get: [], read: [], sensitive: [], write: ['analytics-writer'], modify: [] },
+    response: {
+      generation: 1,
+      roles: {
+        'analytics-writer': { privileges: [TableGrantKey.Write], rows: null, columns: null },
+        'analytics-reader': { privileges: [TableGrantKey.Read], rows: null, columns: null },
+      },
+      ineffective_grants: [],
+    },
   });
 });
 
@@ -107,10 +114,11 @@ describe('ConnectPanel :: tabs', () => {
 });
 
 describe('ConnectPanel :: roles', () => {
-  test('lists the write roles the backend returned', async () => {
+  test('lists the roles whose entry holds write, and no other role', async () => {
     renderPanel();
 
     expect(await screen.findByText('analytics-writer')).toBeInTheDocument();
+    expect(screen.queryByText('analytics-reader')).not.toBeInTheDocument();
     expect(screen.getByText(AnalyticsTablesI18nKey.ConnectAdminWrites)).toBeInTheDocument();
   });
 
@@ -124,7 +132,11 @@ describe('ConnectPanel :: roles', () => {
   test('names the consequence when no role grants write access', async () => {
     vi.mocked(getTableAccess).mockResolvedValue({
       success: true,
-      response: { get: [], read: [], sensitive: [], write: [], modify: [] },
+      response: {
+        generation: 1,
+        roles: { 'analytics-reader': { privileges: [TableGrantKey.Read], rows: null, columns: null } },
+        ineffective_grants: [],
+      },
     });
     renderPanel();
 

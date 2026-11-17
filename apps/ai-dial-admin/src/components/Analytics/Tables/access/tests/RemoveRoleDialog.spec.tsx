@@ -2,7 +2,12 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { PrivilegeMark, RoleRow, RowsCellKind } from '@/src/components/Analytics/Tables/access/models';
+import {
+  AccessChangeOutcome,
+  PrivilegeMark,
+  RoleRow,
+  RowsCellKind,
+} from '@/src/components/Analytics/Tables/access/models';
 import RemoveRoleDialog from '@/src/components/Analytics/Tables/access/RemoveRoleDialog';
 import { AnalyticsTableAccessI18nKey } from '@/src/constants/i18n';
 import { QueryExprType, QueryOperator, QueryValueType } from '@/src/models/analytics/query';
@@ -20,6 +25,8 @@ const row = (over: Partial<RoleRow> = {}): RoleRow => ({
   },
   isSensitive: false,
   rowsKind: RowsCellKind.All,
+  columns: null,
+  warnings: [],
   ...over,
 });
 
@@ -36,7 +43,7 @@ const renderDialog = (props: Partial<React.ComponentProps<typeof RemoveRoleDialo
     <RemoveRoleDialog
       tableName="project_costs_daily"
       row={row()}
-      onRemove={vi.fn().mockResolvedValue(true)}
+      onRemove={vi.fn().mockResolvedValue(AccessChangeOutcome.Done)}
       onClose={vi.fn()}
       {...props}
     />,
@@ -119,6 +126,19 @@ describe('RemoveRoleDialog', () => {
     expect(screen.queryByText(AnalyticsTableAccessI18nKey.RemoveRowLimit)).toBeNull();
   });
 
+  test('lists the column limit when the role has one', () => {
+    renderDialog({ row: row({ columns: ['project_id', 'region'] }) });
+
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.RemoveColumnLimit)).toBeInTheDocument();
+    expect(screen.getByText('project_id, region')).toBeInTheDocument();
+  });
+
+  test('lists no column limit for a role without one', () => {
+    renderDialog();
+
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.RemoveColumnLimit)).toBeNull();
+  });
+
   test('lists no access for a role that has only a row policy', () => {
     renderDialog({
       row: row({
@@ -138,26 +158,40 @@ describe('RemoveRoleDialog', () => {
 
   test('removes the role, shows a success notification and closes when confirmed', async () => {
     const user = userEvent.setup();
-    const onRemove = vi.fn().mockResolvedValue(true);
+    const onRemove = vi.fn().mockResolvedValue(AccessChangeOutcome.Done);
     const onClose = vi.fn();
     renderDialog({ onRemove, onClose });
 
     await user.click(screen.getByRole('button', { name: AnalyticsTableAccessI18nKey.RemoveRole }));
 
-    expect(onRemove).toHaveBeenCalledWith('team-x');
+    expect(onRemove).toHaveBeenCalledExactlyOnceWith('team-x');
     expect(showNotification).toHaveBeenCalledWith(
       expect.objectContaining({ title: AnalyticsTableAccessI18nKey.RoleRemoved }),
     );
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  test('stays open without a success notification when the removal fails', async () => {
+  test('closes without a success notification when the role was changed by someone else', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderDialog({ onRemove: vi.fn().mockResolvedValue(false), onClose });
+    renderDialog({ onRemove: vi.fn().mockResolvedValue(AccessChangeOutcome.Conflict), onClose });
 
     await user.click(screen.getByRole('button', { name: AnalyticsTableAccessI18nKey.RemoveRole }));
 
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(showNotification).not.toHaveBeenCalled();
+  });
+
+  test('stays open without a success notification when the removal fails', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const onRemove = vi.fn().mockResolvedValue(AccessChangeOutcome.Failed);
+    renderDialog({ onRemove, onClose });
+
+    await user.click(screen.getByRole('button', { name: AnalyticsTableAccessI18nKey.RemoveRole }));
+
+    expect(await screen.findByRole('button', { name: AnalyticsTableAccessI18nKey.RemoveRole })).toBeEnabled();
+    expect(onRemove).toHaveBeenCalledOnce();
     expect(showNotification).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
   });
