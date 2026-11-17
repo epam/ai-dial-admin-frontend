@@ -84,6 +84,7 @@ const permissions = {
   canModify: true,
   canChangeSensitive: true,
   isRowsRestricted: false,
+  isColumnsRestricted: false,
 };
 vi.mock('@/src/hooks/use-analytics-table-permissions', () => ({
   useAnalyticsTablePermissions: () => permissions,
@@ -211,6 +212,7 @@ const setPerms = (over: Partial<typeof permissions>) =>
       canModify: false,
       canChangeSensitive: false,
       isRowsRestricted: false,
+      isColumnsRestricted: false,
     },
     over,
   );
@@ -226,6 +228,7 @@ beforeEach(() => {
     canModify: true,
     canChangeSensitive: true,
     isRowsRestricted: false,
+    isColumnsRestricted: false,
   });
   Object.assign(accessState, { isTabOffered: true });
   // An enrichment table looks up its source table (see TableDetailView's grain-key-metadata effect);
@@ -236,7 +239,7 @@ beforeEach(() => {
   // exercise the header aren't tripped by an unhandled promise.
   vi.mocked(getTableAccess).mockResolvedValue({
     success: true,
-    response: { get: [], read: [], sensitive: [], write: [], modify: [] },
+    response: { generation: 0, roles: {}, ineffective_grants: [] },
   });
 });
 
@@ -1366,5 +1369,25 @@ describe('TableDetailView Rows restricted badge', () => {
     render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     expect(screen.queryByText(AnalyticsTableAccessI18nKey.RowsRestricted)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.ColumnsRestricted)).not.toBeInTheDocument();
+  });
+});
+
+describe('TableDetailView Columns restricted badge', () => {
+  test('is shown in the header when the service reports the viewer limited to some columns', () => {
+    permissions.isColumnsRestricted = true;
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.ColumnsRestricted)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.RowsRestricted)).not.toBeInTheDocument();
+  });
+
+  test('stands beside the Rows restricted badge when both limits apply', () => {
+    permissions.isRowsRestricted = true;
+    permissions.isColumnsRestricted = true;
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.RowsRestricted)).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.ColumnsRestricted)).toBeInTheDocument();
   });
 });
