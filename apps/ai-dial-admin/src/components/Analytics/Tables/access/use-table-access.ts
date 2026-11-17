@@ -123,13 +123,15 @@ export const useTableAccess = (name: string, isEnabled: boolean): TableAccessSta
         return { outcome: AccessChangeOutcome.Failed, errorMessage: res.errorMessage };
       }
 
-      const stored = res.response ?? { ...entry, generation: generation.current, role, ineffective_grants: [] };
-      generation.current = stored.generation;
-      setRoles(({ [role]: _replaced, ...rest }) =>
-        isEntryEmpty(stored)
-          ? rest
-          : { ...rest, [role]: { privileges: stored.privileges, rows: stored.rows, columns: stored.columns } },
-      );
+      const stored = res.response;
+      if (stored) {
+        generation.current = stored.generation;
+        setRoles(({ [role]: _replaced, ...rest }) =>
+          isEntryEmpty(stored)
+            ? rest
+            : { ...rest, [role]: { privileges: stored.privileges, rows: stored.rows, columns: stored.columns } },
+        );
+      }
       await reload();
 
       return { outcome: AccessChangeOutcome.Done, result: res.response };
