@@ -6,7 +6,9 @@ import {
   filterSourceTables,
   getDraftHref,
   getGroupKey,
+  getQueryGroupKey,
   groupColumnsByTag,
+  groupQueriesByTag,
   resolveDraftTable,
   toSourceTables,
 } from '@/src/components/Analytics/QueryBuilder/SourcePanel/utils/source-panel';
@@ -143,13 +145,82 @@ describe('resolveDraftTable', () => {
 });
 
 describe('getDraftHref', () => {
-  test('builds a localized draft link with the table name encoded', () => {
-    expect(getDraftHref('en', 'usage log')).toBe('/en/queries?table=usage%20log');
+  test('builds a localized link to the draft builder', () => {
+    expect(getDraftHref('en')).toBe('/en/queries');
   });
 });
 
 describe('getGroupKey', () => {
   test('scopes a tag to its table', () => {
     expect(getGroupKey('usage', 'cost')).toBe('usage:cost');
+  });
+});
+
+describe('getQueryGroupKey', () => {
+  test('prefixes the tag so it cannot match the key of a column group of a table named after it', () => {
+    expect(getQueryGroupKey('finance')).toBe('query-tag:finance');
+    expect(getQueryGroupKey('finance')).not.toBe(getGroupKey('finance', 'finance'));
+  });
+
+  test('keeps the case of the tag', () => {
+    expect(getQueryGroupKey('Finance')).not.toBe(getQueryGroupKey('finance'));
+  });
+});
+
+describe('groupQueriesByTag', () => {
+  const ids = (entries: SavedQuery[]) => entries.map((entry) => entry.id);
+
+  test('groups by tag, ordering the groups by tag name ignoring case', () => {
+    const tree = groupQueriesByTag([
+      query({ id: 'a', tag: 'cost' }),
+      query({ id: 'b', tag: 'Adoption' }),
+      query({ id: 'c', tag: 'Beta' }),
+      query({ id: 'd', tag: 'adoption' }),
+    ]);
+
+    expect(tree.groups.map((group) => group.tag)).toEqual(['Adoption', 'adoption', 'Beta', 'cost']);
+  });
+
+  test('keeps the incoming order inside a group', () => {
+    const tree = groupQueriesByTag([
+      query({ id: 'z', tag: 'cost' }),
+      query({ id: 'a', tag: 'cost' }),
+      query({ id: 'm', tag: 'cost' }),
+    ]);
+
+    expect(tree.groups).toHaveLength(1);
+    expect(ids(tree.groups[0].queries)).toEqual(['z', 'a', 'm']);
+  });
+
+  test('lists queries with a missing, empty or blank tag apart, in their incoming order', () => {
+    const tree = groupQueriesByTag([
+      query({ id: 'none' }),
+      query({ id: 'tagged', tag: 'cost' }),
+      query({ id: 'empty', tag: '' }),
+      query({ id: 'blank', tag: '   ' }),
+    ]);
+
+    expect(ids(tree.untagged)).toEqual(['none', 'empty', 'blank']);
+    expect(ids(tree.groups[0].queries)).toEqual(['tagged']);
+  });
+
+  test('puts tags that differ only by surrounding spaces in one group under the trimmed tag', () => {
+    const tree = groupQueriesByTag([query({ id: 'a', tag: ' cost ' }), query({ id: 'b', tag: 'cost' })]);
+
+    expect(tree.groups).toEqual([expect.objectContaining({ tag: 'cost' })]);
+    expect(ids(tree.groups[0].queries)).toEqual(['a', 'b']);
+  });
+
+  test('returns only untagged queries when none carries a tag', () => {
+    const untagged = [query({ id: 'a' }), query({ id: 'b' })];
+
+    expect(groupQueriesByTag(untagged)).toEqual({ groups: [], untagged });
+  });
+
+  test('returns an empty tree for no queries without mutating the input', () => {
+    const input: SavedQuery[] = [];
+
+    expect(groupQueriesByTag(input)).toEqual({ groups: [], untagged: [] });
+    expect(input).toEqual([]);
   });
 });

@@ -1,5 +1,4 @@
-import QueryBuilderDraft from '@/src/components/Analytics/QueryBuilder/QueryBuilderDraft';
-import QueryPageShell from '@/src/components/Analytics/QueryBuilder/SourcePanel/QueryPageShell';
+import QueryBuilderDraftPage from '@/src/components/Analytics/QueryBuilder/QueryBuilderDraftPage';
 import { resolveDraftTable } from '@/src/components/Analytics/QueryBuilder/SourcePanel/utils/source-panel';
 import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -11,12 +10,10 @@ import { getEntities, getEntitySchema, getFunctions } from './actions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: { searchParams: Promise<{ table?: string }> }) {
+export default async function Page() {
   if (await isAnalyticsForbidden()) {
     return <Page403 />;
   }
-
-  const { table } = await params.searchParams;
 
   let entities: AnalyticsEntity[] = [];
   let functions: QueryFunction[] = [];
@@ -28,7 +25,7 @@ export default async function Page(params: { searchParams: Promise<{ table?: str
     entities = entitiesRes.response ?? [];
     functions = functionsRes ?? [];
 
-    tableName = resolveDraftTable(entities, table);
+    tableName = resolveDraftTable(entities);
     if (tableName) {
       const schemaRead = await getEntitySchema(tableName);
       fields = schemaRead.response?.fields ?? [];
@@ -39,16 +36,12 @@ export default async function Page(params: { searchParams: Promise<{ table?: str
 
   return (
     <SaveValidationContextProvider>
-      <QueryPageShell currentTable={tableName}>
-        <QueryBuilderDraft
-          key={`draft:${tableName}`}
-          initialEntities={entities}
-          initialEntityName={tableName}
-          initialFields={fields}
-          initialFunctions={functions}
-          name={tableName || undefined}
-        />
-      </QueryPageShell>
+      <QueryBuilderDraftPage
+        initialEntities={entities}
+        initialEntityName={tableName}
+        initialFields={fields}
+        initialFunctions={functions}
+      />
     </SaveValidationContextProvider>
   );
 }

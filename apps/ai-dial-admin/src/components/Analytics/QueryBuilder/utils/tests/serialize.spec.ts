@@ -1,12 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import {
-  buildQuery,
-  getAggregateWarnings,
-  hasDroppedCondition,
-  hasDroppedProjectionColumn,
-  serializeNode,
-} from '@/src/components/Analytics/QueryBuilder/utils/serialize';
+import { buildQuery, serializeNode } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import {
   createAggregate,
   createGroup,
@@ -17,12 +11,7 @@ import {
   createSort,
 } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import {
-  FilterOperandKind,
-  FilterPredicateNode,
-  QueryBuilderState,
-  QueryBuilderWarning,
-} from '@/src/models/analytics/query-builder';
+import { FilterOperandKind, FilterPredicateNode, QueryBuilderState } from '@/src/models/analytics/query-builder';
 import {
   QueryLogicalOperator,
   QueryMode,
@@ -378,40 +367,6 @@ describe('buildQuery — aggregate mode', () => {
   });
 });
 
-describe('getAggregateWarnings', () => {
-  test('no warnings in row mode', () => {
-    expect(getAggregateWarnings(baseState())).toEqual([]);
-  });
-
-  test('empty aggregate query warns', () => {
-    const s = baseState();
-    s.mode = QueryMode.Aggregate;
-    expect(getAggregateWarnings(s)).toContain(QueryBuilderWarning.EmptyAggregate);
-  });
-
-  test('a function entry with an unfilled required argument is flagged', () => {
-    const s = baseState();
-    s.mode = QueryMode.Aggregate;
-    s.aggregates = [createAggregate(fnFixture('sum'))];
-    s.groupBy = [createFnRow(fnFixture('date_bin'))];
-    expect(getAggregateWarnings(s)).toContain(QueryBuilderWarning.MissingGroupByField);
-  });
-
-  // Aliases are prefilled and a cleared one falls back to the derived value at serialization, so a
-  // blank alias is no longer a state worth warning about.
-  test('a blank alias raises no warning', () => {
-    const s = baseState();
-    s.mode = QueryMode.Aggregate;
-    const fnRow = createFnRow(fnFixture('lower'), [{ field: 'deployment' }]);
-    fnRow.alias = '';
-    const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
-    agg.alias = '';
-    s.groupBy = [createColumnRow('project_id'), fnRow];
-    s.aggregates = [agg];
-    expect(getAggregateWarnings(s)).toEqual([]);
-  });
-});
-
 describe('buildQuery implicit measure', () => {
   test('aggregate mode without aggregates appends the catalog implicit measure (count)', () => {
     const s = baseState();
@@ -603,54 +558,6 @@ describe('serializeNode — function left operands', () => {
   });
 });
 
-describe('dropped-entry detection', () => {
-  test('flags a row-mode function column whose required argument is unfilled', () => {
-    const s = baseState();
-    s.select = [createColumnRow('project_id'), createFnRow(fnFixture('lower'))];
-
-    expect(hasDroppedProjectionColumn(s)).toBe(true);
-  });
-
-  test('does not flag a complete projection', () => {
-    const s = baseState();
-    s.select = [createColumnRow('project_id'), createFnRow(fnFixture('lower'), [{ field: 'project_id' }])];
-
-    expect(hasDroppedProjectionColumn(s)).toBe(false);
-  });
-
-  test('does not report a projection warning in aggregate mode', () => {
-    const s = baseState();
-    s.mode = QueryMode.Aggregate;
-    s.select = [createFnRow(fnFixture('lower'))];
-
-    expect(hasDroppedProjectionColumn(s)).toBe(false);
-  });
-
-  test('flags an incomplete condition at any nesting depth', () => {
-    const root = createGroup();
-    const nested = createGroup();
-    nested.children.push({ ...createPredicate(), fn: 'json_extract_string', args: [{ field: 'request_tags' }, {}] });
-    root.children.push(nested);
-
-    expect(hasDroppedCondition(root, TEST_FUNCTIONS)).toBe(true);
-  });
-
-  test('flags a condition naming a function the catalog does not serve', () => {
-    const root = createGroup();
-    root.children.push({ ...createPredicate(), fn: 'lower', args: [{ field: 'project_id' }] });
-
-    expect(hasDroppedCondition(root, [])).toBe(true);
-  });
-
-  test('does not flag complete or plain-column conditions', () => {
-    const root = createGroup();
-    root.children.push({ ...createPredicate(), field: 'project_id' });
-    root.children.push({ ...createPredicate(), fn: 'lower', args: [{ field: 'project_id' }] });
-
-    expect(hasDroppedCondition(root, TEST_FUNCTIONS)).toBe(false);
-  });
-});
-
 describe('serializeNode — function right operands', () => {
   const conditionAgainst = (node: Partial<FilterPredicateNode>) => {
     const group = createGroup();
@@ -718,10 +625,9 @@ describe('serializeNode — function right operands', () => {
     const group = conditionAgainst({ rightKind: FilterOperandKind.Function, rightFn: null, rightArgs: [] });
 
     expect(serializeNode(group, TEST_FUNCTIONS)).toBeNull();
-    expect(hasDroppedCondition(group, TEST_FUNCTIONS)).toBe(true);
   });
 
-  test('an incomplete nested call drops the condition and is flagged', () => {
+  test('an incomplete nested call drops the condition', () => {
     const group = conditionAgainst({
       rightKind: FilterOperandKind.Function,
       rightFn: 'date_sub',
@@ -730,7 +636,6 @@ describe('serializeNode — function right operands', () => {
     });
 
     expect(serializeNode(group, TEST_FUNCTIONS)).toBeNull();
-    expect(hasDroppedCondition(group, TEST_FUNCTIONS)).toBe(true);
   });
 
   test('a right-operand function left behind by a switch back to a literal is ignored', () => {
@@ -754,7 +659,6 @@ describe('serializeNode — function right operands', () => {
         },
       ],
     });
-    expect(hasDroppedCondition(group, TEST_FUNCTIONS)).toBe(false);
   });
 
   test('in keeps its array shape', () => {

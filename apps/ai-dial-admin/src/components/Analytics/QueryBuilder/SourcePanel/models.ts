@@ -26,6 +26,11 @@ export interface SourceTable {
   tagOrder?: string[];
 }
 
+export interface PendingNavigation {
+  href: string;
+  draftTable?: string;
+}
+
 export interface ColumnLoad {
   status: ColumnLoadStatus;
   fields: AnalyticsEntityField[];
@@ -34,6 +39,16 @@ export interface ColumnLoad {
 export interface ColumnGroup {
   tag: string;
   fields: AnalyticsEntityField[];
+}
+
+export interface QueryGroup {
+  tag: string;
+  queries: SavedQuery[];
+}
+
+export interface QueryTree {
+  groups: QueryGroup[];
+  untagged: SavedQuery[];
 }
 
 export interface TableColumnTree {
@@ -61,6 +76,7 @@ export interface SourcePanelContextValue {
   scrollPositions: MutableRefObject<Partial<Record<SourcePanelTab, number>>>;
   isCollapsed: boolean;
   onToggleCollapsed: (isCollapsed: boolean) => void;
-  onNavigate: (event: MouseEvent<HTMLAnchorElement>, href: string) => void;
+  draftTable: string | null;
+  onNavigate: (event: MouseEvent<HTMLAnchorElement>, href: string, draftTable?: string) => void;
   onRegisterUnsavedWork: (hasUnsavedWork: boolean, onDiscard?: () => void) => void;
 }

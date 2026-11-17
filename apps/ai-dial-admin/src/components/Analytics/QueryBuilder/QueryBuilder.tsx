@@ -2,45 +2,47 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { GhostButton, Spinner, OutlinedButton, NoDataContent, SegmentedControl } from '@epam/ai-dial-ui-kit';
-import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
-import { IconPencilMinus, IconSparkles, IconTrashX } from '@tabler/icons-react';
+import {
+  ButtonDropdown,
+  ButtonVariant,
+  GhostButton,
+  Spinner,
+  OutlinedButton,
+  NoDataContent,
+  PrimaryButton,
+  SegmentedControl,
+} from '@epam/ai-dial-ui-kit';
+import type { DropdownItem, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
+import { IconCopy, IconPencilMinus, IconPlayerPlay, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { createPortal } from 'react-dom';
 
 import { getEntitySchema, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/queries/actions';
 import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
-import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import AiPanel from '@/src/components/Analytics/QueryBuilder/Ai/AiPanel';
+import AiSidePanel from '@/src/components/Analytics/QueryBuilder/Ai/AiSidePanel';
 import { useAiConversation } from '@/src/components/Analytics/QueryBuilder/Ai/use-ai-conversation';
-import Aggregates from '@/src/components/Analytics/QueryBuilder/Aggregate/Aggregates';
-import GroupBySection from '@/src/components/Analytics/QueryBuilder/Aggregate/GroupBySection';
-import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
-import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
-import FilterGroup from '@/src/components/Analytics/QueryBuilder/Filter/FilterGroup';
-import ModeSwitcher from '@/src/components/Analytics/QueryBuilder/Mode/ModeSwitcher';
 import AddToDashboardButton from '@/src/components/Analytics/CustomDashboards/AddToDashboard/AddToDashboardButton';
+import ChipBar from '@/src/components/Analytics/QueryBuilder/Chips/ChipBar';
+import { PeriodControl } from '@/src/components/Analytics/QueryBuilder/Chips/models';
+import BuilderArea from '@/src/components/Analytics/QueryBuilder/Layout/BuilderArea';
+import QueryHeader from '@/src/components/Analytics/QueryBuilder/Layout/QueryHeader';
 import DiscardQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DiscardQueryPopup';
-import PageSection from '@/src/components/Analytics/QueryBuilder/Page/PageSection';
-import { useSourcePanelUnsavedWork } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
-import BuilderRail from '@/src/components/Analytics/QueryBuilder/Rail/BuilderRail';
-import CollapsedRail from '@/src/components/Analytics/QueryBuilder/Rail/CollapsedRail';
+import {
+  useSourcePanelUnsavedWork,
+  useSourceTableDescription,
+} from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
 import ResultArea from '@/src/components/Analytics/QueryBuilder/Result/ResultArea';
-import SelectProjection from '@/src/components/Analytics/QueryBuilder/Select/SelectProjection';
-import SortKeys from '@/src/components/Analytics/QueryBuilder/Sort/SortKeys';
 import SqlEditor from '@/src/components/Analytics/QueryBuilder/Sql/SqlEditor';
-import QueryBuilderToolbar from '@/src/components/Analytics/QueryBuilder/Toolbar/QueryBuilderToolbar';
 import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
 import { useSavedQueryPage } from '@/src/components/Analytics/QueryBuilder/use-saved-query-page';
 import DuplicateQuery from '@/src/components/Analytics/Queries/Modals/DuplicateQuery';
 import EditQuery from '@/src/components/Analytics/Queries/Modals/EditQuery';
-import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import DiscardModal from '@/src/components/EntityView/Modals/Discard/Discard';
-import { fieldsToOptions, havingFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
-import { buildQuery, hasDroppedCondition } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
-import { isBuilderRepresentable, parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
+import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
+import { isChipRepresentable, parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
 import {
   countCsvRecords,
   getPartialExportNotice,
@@ -48,18 +50,14 @@ import {
 } from '@/src/components/Analytics/QueryBuilder/utils/csv-export';
 import { buildExecutedMeta } from '@/src/components/Analytics/QueryBuilder/utils/executed-meta';
 import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
-import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
+import { createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import {
-  DEFAULT_CHART_CONFIG,
-  JSON_INDENT,
-  LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY,
-  WARNING_I18N,
-} from '@/src/constants/analytics/query-builder';
-import { ButtonsI18nKey, QueriesI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
+import { ButtonsI18nKey, QueriesI18nKey, QueryBuilderI18nKey, QueryChipsI18nKey } from '@/src/constants/i18n';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { useReadFailureNotification } from '@/src/hooks/use-read-failure-notification';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -67,25 +65,23 @@ import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 import { SavedQuery } from '@/src/models/analytics/saved-query';
-import { QueryMode, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
+import { StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import {
   ChartConfig,
   ExecutedQueryMeta,
-  QueryBuilderColor,
   QueryBuilderState,
   QueryBuilderView,
-  QueryBuilderWarning,
   QueryRequestKind,
   QueryResultView,
   QueryRunRequest,
   QueryTimeBound,
 } from '@/src/models/analytics/query-builder';
+import { ReadFailure } from '@/src/models/server-action';
 import { TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { downloadFile } from '@/src/utils/download';
+import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 import { BASE_BUTTON_ICON_PROPS, SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS } from '@/src/constants/main-layout';
 
 interface Props {
@@ -95,8 +91,12 @@ interface Props {
   initialFunctions: QueryFunction[];
   name?: string;
   savedQuery?: SavedQuery;
+  translatedSql?: string | null;
+  translationFailure?: ReadFailure | null;
   onResetDraft?: () => void;
 }
+
+const AI_PANEL_STORAGE_KEY = 'query-builder-ai-panel-open';
 
 const QueryBuilder: FC<Props> = ({
   initialEntities,
@@ -105,6 +105,8 @@ const QueryBuilder: FC<Props> = ({
   initialFunctions,
   name,
   savedQuery,
+  translatedSql,
+  translationFailure,
   onResetDraft,
 }) => {
   const t = useI18n();
@@ -112,6 +114,9 @@ const QueryBuilder: FC<Props> = ({
   // A run the operator walks away from is cancelled with the view rather than left to finish unseen.
   const { runQuery, runSql, exportCsv } = useAnalyticsQuery();
   const { featureFlags } = useAppContext();
+  const tableDescription = useSourceTableDescription(initialEntityName);
+
+  useReadFailureNotification(translationFailure, QueryBuilderI18nKey.SqlTranslateFailed);
 
   const [state, setState] = useState<QueryBuilderState>(() => ({
     ...createInitialState(initialFunctions),
@@ -120,11 +125,6 @@ const QueryBuilder: FC<Props> = ({
   }));
   const [entities] = useState<AnalyticsEntity[]>(initialEntities);
   const [view, setView] = useState<QueryBuilderView>(QueryBuilderView.Form);
-  const [jsonText, setJsonText] = useState('');
-  const [jsonInvalid, setJsonInvalid] = useState(false);
-  // Diverged: the JSON holds a valid query the visual builder cannot display (filter nesting deeper
-  // than root + one group level). It stays editable and runnable; only switching to Builder is guarded.
-  const [jsonDiverged, setJsonDiverged] = useState(false);
   // SQL seeds from the builder by translating the current query through the backend (authoritative);
   // leaving *edited* SQL for the Builder attempts the reverse translation and only falls back to the
   // discard guard when that fails or yields a query the builder cannot represent.
@@ -134,7 +134,7 @@ const QueryBuilder: FC<Props> = ({
   const lastGeneratedSql = useRef('');
   const [pendingView, setPendingView] = useState<QueryBuilderView | null>(null);
   const [isResetOpen, setIsResetOpen] = useState(false);
-  const [railCollapsed, setRailCollapsed] = useState(false);
+  const [isDiscardOpen, setIsDiscardOpen] = useState(false);
   const [result, setResult] = useState<StructuredQueryResult | null>(null);
   const [resultMeta, setResultMeta] = useState<ExecutedQueryMeta | null>(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -150,14 +150,10 @@ const QueryBuilder: FC<Props> = ({
   // first run does not reset the axes the author saved. The ordinary reset resumes afterwards.
   const isChartConfigKept = useRef(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
   const [aiLoadedMessageIndex, setAiLoadedMessageIndex] = useState<number | null>(null);
   const aiConversation = useAiConversation();
   const timeFilter = useTimeFilter();
-
-  // SSR-safe: the server renders the rail expanded; the persisted flag applies after mount.
-  useEffect(() => {
-    setRailCollapsed(getFromLocalStorage(LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY) === 'true');
-  }, []);
 
   // Axis picks belong to one result: a new run gets fresh defaults derived from its own query. The
   // one exception is a configuration just restored from a stored query — resetting that on the first
@@ -170,10 +166,14 @@ const QueryBuilder: FC<Props> = ({
     setChartConfig(DEFAULT_CHART_CONFIG);
   }, [result]);
 
-  const onToggleRail = (collapsed: boolean) => {
-    setRailCollapsed(collapsed);
-    setToLocalStorage(LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY, String(collapsed));
-  };
+  useEffect(() => {
+    setIsAiPanelOpen(getFromLocalStorage(AI_PANEL_STORAGE_KEY) === 'true');
+  }, []);
+
+  const onToggleAiPanel = useCallback((isOpen: boolean) => {
+    setIsAiPanelOpen(isOpen);
+    setToLocalStorage(AI_PANEL_STORAGE_KEY, String(isOpen));
+  }, []);
 
   const clearResult = useCallback(() => {
     setResult(null);
@@ -197,13 +197,8 @@ const QueryBuilder: FC<Props> = ({
     () => timeBoundOf(getCurrentTimeRange(), boundPeriod),
     [timeBoundOf, getCurrentTimeRange, boundPeriod],
   );
-  const query = useMemo(() => buildQuery(state, timeBound), [state, timeBound]);
-  const json = useMemo(() => JSON.stringify(query, null, JSON_INDENT), [query]);
   const contextValue = useMemo(() => ({ state, refresh, patch }), [state, refresh, patch]);
-  const isAggregate = state.mode === QueryMode.Aggregate;
-  const isJsonView = view === QueryBuilderView.Json;
   const isSqlView = view === QueryBuilderView.Sql;
-  const isAiView = view === QueryBuilderView.Ai;
 
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
@@ -220,10 +215,7 @@ const QueryBuilder: FC<Props> = ({
     setState,
     sqlText,
     setSqlText,
-    jsonText,
-    setJsonText,
-    isJsonDiverged: jsonDiverged,
-    setJsonDiverged,
+    translatedSql,
     setView,
     lastGeneratedSql,
     isSqlView,
@@ -242,17 +234,7 @@ const QueryBuilder: FC<Props> = ({
 
   const viewOptions: SegmentedControlItem<QueryBuilderView>[] = [
     { value: QueryBuilderView.Form, label: t(QueryBuilderI18nKey.ViewForm) },
-    { value: QueryBuilderView.Json, label: t(QueryBuilderI18nKey.ViewJson) },
     { value: QueryBuilderView.Sql, label: t(QueryBuilderI18nKey.ViewSql) },
-    ...(featureFlags.queryAssistantEnabled
-      ? [
-          {
-            value: QueryBuilderView.Ai,
-            label: t(QueryBuilderI18nKey.ViewAi),
-            icon: <IconSparkles size={16} stroke={2} />,
-          },
-        ]
-      : []),
   ];
 
   const sqlEdited = !!sqlText.trim() && sqlText !== lastGeneratedSql.current;
@@ -275,10 +257,10 @@ const QueryBuilder: FC<Props> = ({
   // A ge/le pair on the timestamp field belongs to the toolbar control, not the visual filter tree.
   // Returns the just-computed state/time bound (not the stale `state` closure) so a caller that needs
   // to build and run a query in the same synchronous handler doesn't have to wait for a re-render.
-  const hydrateBuilderFromQuery = async (
+  const hydrateBuilderFromQuery = (
     parsed: StructuredQuery,
-  ): Promise<{ fields: AnalyticsEntityField[]; state: QueryBuilderState; timeBound: QueryTimeBound | null }> => {
-    const fields = await resolveFieldsForEntity(parsed.entity ?? state.entityName);
+    fields: AnalyticsEntityField[],
+  ): { state: QueryBuilderState; timeBound: QueryTimeBound | null } => {
     const timestamp = findTimestampField(fields);
     const lifted = timestamp ? liftTimeRange(parsed.filter, timestamp, state.functions) : null;
     const forState = lifted ? { ...parsed, filter: lifted.rest } : parsed;
@@ -295,7 +277,7 @@ const QueryBuilder: FC<Props> = ({
 
     const period = lifted?.periodId ?? (lifted?.range ? undefined : boundPeriod);
     const range = lifted?.range ?? (lifted?.periodId ? getTimeRangeById(lifted.periodId) : getCurrentTimeRange());
-    return { fields, state: nextState, timeBound: timestamp ? { field: timestamp, range, period } : null };
+    return { state: nextState, timeBound: timestamp ? { field: timestamp, range, period } : null };
   };
 
   // Entering SQL seeds the editor from the backend translation of the current builder query — the
@@ -325,46 +307,29 @@ const QueryBuilder: FC<Props> = ({
     setSqlLoading(false);
   };
 
-  const leaveSqlBuffer = async (next: QueryBuilderView): Promise<void> => {
+  const leaveSqlBuffer = async (): Promise<void> => {
     const translated = await translateSqlOrNull(sqlText);
-    const isRepresentable = !!translated && isBuilderRepresentable(translated, state.functions);
+    const fields = translated ? await resolveFieldsForEntity(translated.entity ?? state.entityName) : [];
 
-    if (!translated || (next === QueryBuilderView.Form && !isRepresentable)) {
-      setPendingView(next);
+    if (!translated || !isChipRepresentable(translated, state.functions, fields)) {
+      setPendingView(QueryBuilderView.Form);
       return;
     }
 
-    if (isRepresentable) {
-      await hydrateBuilderFromQuery(translated);
-    }
+    hydrateBuilderFromQuery(translated, fields);
     setSqlText('');
     setSqlError(null);
     lastGeneratedSql.current = '';
-
-    if (next === QueryBuilderView.Json) {
-      setJsonText(JSON.stringify(translated, null, JSON_INDENT));
-      setJsonInvalid(false);
-      setJsonDiverged(!isRepresentable);
-    }
-    setView(next);
+    setView(QueryBuilderView.Form);
   };
 
   const onChangeView = async (next: QueryBuilderView) => {
     if (next === view) return;
-    const isStructuredView = next === QueryBuilderView.Form || next === QueryBuilderView.Json;
     // Judged by the SQL buffer, not the view being left: SQL the builder was never hydrated from can sit
     // in the buffer while another view is active, and the builder would then show an older query.
-    if (sqlEdited && isStructuredView) {
-      await leaveSqlBuffer(next);
+    if (sqlEdited && next === QueryBuilderView.Form) {
+      await leaveSqlBuffer();
       return;
-    }
-    if (next === QueryBuilderView.Form && isJsonView && jsonDiverged) {
-      setPendingView(next);
-      return;
-    }
-    if (next === QueryBuilderView.Json && !jsonDiverged) {
-      setJsonText(json);
-      setJsonInvalid(false);
     }
     // Entering SQL seeds asynchronously from the backend; user-edited SQL is never overwritten.
     if (next === QueryBuilderView.Sql && !sqlEdited) {
@@ -379,61 +344,13 @@ const QueryBuilder: FC<Props> = ({
     setSqlText('');
     setSqlError(null);
     lastGeneratedSql.current = '';
-    setJsonInvalid(false);
-    setJsonDiverged(false);
-    const resetState = {
+    setState({
       ...createInitialState(state.functions),
       entityName: state.entityName,
       fields: state.fields,
-    };
-    setState(resetState);
-    setJsonText(
-      pendingView === QueryBuilderView.Json ? JSON.stringify(buildQuery(resetState, timeBound), null, JSON_INDENT) : '',
-    );
+    });
     setView(pendingView ?? QueryBuilderView.Form);
     setPendingView(null);
-  };
-
-  // The JSON buffer is the user's once they edit it, but until it diverges it is only a rendering of
-  // the built query — and the toolbar's time filter is part of that query. Without this, a period
-  // picked while the JSON view is open would neither show there nor reach Run, which executes the
-  // buffer verbatim, until the view was switched away and back.
-  // Takes the state and bound explicitly: the callers below have just computed the new ones, and the
-  // `state` of this render is still the old one.
-  const syncJsonBuffer = (nextState: QueryBuilderState, bound: QueryTimeBound | null) => {
-    if (!isJsonView || jsonDiverged) return;
-    setJsonText(JSON.stringify(buildQuery(nextState, bound), null, JSON_INDENT));
-    setJsonInvalid(false);
-  };
-
-  const onChangeTimePeriod = (period: string) => {
-    timeFilter.onTimePeriodChange(period);
-    syncJsonBuffer(state, timeBoundOf(getTimeRangeById(period), period));
-  };
-
-  // Picking a preset fires both callbacks — the period first, then its resolved range with
-  // `isCustom` false. Only the custom path syncs here: re-syncing on that second call would rebuild
-  // the buffer from this render's stale period and undo what the period handler just wrote.
-  const onChangeTimeRange = (range: TimeRange, isCustom?: boolean) => {
-    timeFilter.onTimeRangeChange(range, isCustom);
-    if (isCustom) syncJsonBuffer(state, timeBoundOf(range));
-  };
-
-  const onChangeJson = (text: string | undefined) => {
-    const value = text ?? '';
-    setJsonText(value);
-    try {
-      const parsed = JSON.parse(value) as StructuredQuery;
-      setJsonInvalid(false);
-      if (!isBuilderRepresentable(parsed, state.functions)) {
-        setJsonDiverged(true);
-        return;
-      }
-      setJsonDiverged(false);
-      void hydrateBuilderFromQuery(parsed);
-    } catch {
-      setJsonInvalid(true);
-    }
   };
 
   const onChangeSql = (value: string) => {
@@ -455,17 +372,19 @@ const QueryBuilder: FC<Props> = ({
     let request: QueryRunRequest = { kind: QueryRequestKind.Sql, sql };
     const loadAsSql = () => {
       setSqlText(formatSql(sql));
+      setSqlError(null);
       lastGeneratedSql.current = '';
+      setView(QueryBuilderView.Sql);
     };
     try {
-      if (translated && isBuilderRepresentable(translated, state.functions)) {
-        const hydrated = await hydrateBuilderFromQuery(translated);
-        runFields = hydrated.fields;
+      const fields = translated ? await resolveFieldsForEntity(translated.entity ?? state.entityName) : [];
+      if (translated && isChipRepresentable(translated, state.functions, fields)) {
+        const hydrated = hydrateBuilderFromQuery(translated, fields);
+        runFields = fields;
         runEntityName = hydrated.state.entityName;
         setSqlText('');
-        setJsonText('');
-        setJsonDiverged(false);
         lastGeneratedSql.current = '';
+        setView(QueryBuilderView.Form);
         request = { kind: QueryRequestKind.Structured, query: buildQuery(hydrated.state, hydrated.timeBound) };
       } else {
         loadAsSql();
@@ -503,13 +422,6 @@ const QueryBuilder: FC<Props> = ({
     if (isSqlView) {
       if (!sqlText.trim()) return;
       request = { kind: QueryRequestKind.Sql, sql: sqlText };
-    } else if (isJsonView) {
-      try {
-        // The JSON view runs the query as written — including edits the builder cannot display.
-        request = { kind: QueryRequestKind.Structured, query: JSON.parse(jsonText) as StructuredQuery };
-      } catch {
-        return;
-      }
     } else {
       const freshBound = timeBoundOf(getCurrentTimeRange(), boundPeriod);
       request = { kind: QueryRequestKind.Structured, query: buildQuery(state, freshBound) };
@@ -569,16 +481,86 @@ const QueryBuilder: FC<Props> = ({
     }
   };
 
-  const runDisabled = !fieldsLoaded || (isJsonView && jsonInvalid) || (isSqlView && !sqlText.trim());
+  const runDisabled = !fieldsLoaded || (isSqlView && !sqlText.trim());
+  const isSaveBlocked = runDisabled && !(fieldsLoaded && savedQueryPage.hasUnloadedBody);
 
-  const saveAsButton = (
-    <OutlinedButton
-      className={saveAsClassName}
-      label={t(savedQueryPage.isDraft ? QueriesI18nKey.SaveAsQuery : ButtonsI18nKey.SaveAs)}
-      onClick={savedQueryPage.onOpenSaveAs}
-      disabled={runDisabled || savedQueryPage.isSaving}
-    />
+  const isSaveDisabled = isSaveBlocked || savedQueryPage.isSaving;
+
+  const saveItems: DropdownItem[] = [
+    { key: 'save', label: t(ButtonsI18nKey.Save), onClick: () => void savedQueryPage.onSave() },
+    { key: 'save-as', label: t(QueriesI18nKey.SaveAsNewQuery), onClick: savedQueryPage.onOpenSaveAs },
+  ];
+
+  const renderDraftActions = () => (
+    <>
+      {savedQueryPage.isDirty && <GhostButton label={t(ButtonsI18nKey.Reset)} onClick={() => setIsResetOpen(true)} />}
+      <OutlinedButton
+        className={saveAsClassName}
+        label={t(QueriesI18nKey.SaveAsQuery)}
+        onClick={savedQueryPage.onOpenSaveAs}
+        disabled={isSaveDisabled}
+      />
+    </>
   );
+
+  const renderChangedActions = () => (
+    <>
+      <GhostButton label={t(ButtonsI18nKey.Discard)} onClick={() => setIsDiscardOpen(true)} />
+      {savedQueryPage.isWritable ? (
+        <ButtonDropdown
+          className={saveAsClassName}
+          variant={ButtonVariant.Primary}
+          label={t(ButtonsI18nKey.Save)}
+          items={saveItems}
+          disabled={isSaveDisabled}
+        />
+      ) : (
+        <OutlinedButton
+          className={saveAsClassName}
+          label={t(QueriesI18nKey.SaveAsNewQuery)}
+          onClick={savedQueryPage.onOpenSaveAs}
+          disabled={isSaveDisabled}
+        />
+      )}
+    </>
+  );
+
+  const renderSavedActions = () => (
+    <>
+      {savedQueryPage.isWritable && (
+        <GhostButton
+          className="text-error"
+          label={t(ButtonsI18nKey.Delete)}
+          iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+          onClick={savedQueryPage.onOpenDelete}
+        />
+      )}
+      {savedQueryPage.isWritable && (
+        <GhostButton
+          label={t(ButtonsI18nKey.Edit)}
+          iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+          onClick={savedQueryPage.onOpenEdit}
+        />
+      )}
+      <OutlinedButton
+        className={saveAsClassName}
+        label={t(ButtonsI18nKey.Duplicate)}
+        iconBefore={<IconCopy {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+        onClick={savedQueryPage.onOpenSaveAs}
+        disabled={isSaveDisabled}
+      />
+    </>
+  );
+
+  const renderActions = () => {
+    if (savedQueryPage.isDraft) return renderDraftActions();
+    return savedQueryPage.isDirty ? renderChangedActions() : renderSavedActions();
+  };
+
+  const onConfirmDiscardChanges = () => {
+    setIsDiscardOpen(false);
+    savedQueryPage.onDiscard();
+  };
 
   const onConfirmReset = () => {
     setIsResetOpen(false);
@@ -587,218 +569,123 @@ const QueryBuilder: FC<Props> = ({
 
   useSourcePanelUnsavedWork(savedQueryPage.isDirty, savedQueryPage.isDraft ? onResetDraft : savedQueryPage.onDiscard);
 
-  return (
-    <QueryBuilderContext.Provider value={contextValue}>
-      <div className="relative flex min-h-0 w-full flex-1 flex-col">
-        <div className="flex flex-col gap-4 pb-3">
-          <h1 className="dial-h1-text">{name ?? t(QueriesI18nKey.Title)}</h1>
-          {entities.length > 0 && (
-            <QueryBuilderToolbar
-              timePeriod={timeFilter.timePeriod}
-              onTimePeriodChange={onChangeTimePeriod}
-              timeRange={timeFilter.timeRange}
-              onTimeRangeChange={onChangeTimeRange}
-              onRun={onRun}
-              runDisabled={runDisabled}
-              showRun={!isAiView}
-            >
-              {savedQueryPage.savedQuery && savedQueryPage.isWritable && !savedQueryPage.isDirty && (
-                <GhostButton
-                  label={t(ButtonsI18nKey.Edit)}
-                  iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-                  onClick={savedQueryPage.onOpenEdit}
-                />
-              )}
-              {featureFlags.analyticsCustomDashboardsEnabled &&
-                savedQueryPage.savedQuery &&
-                !savedQueryPage.isDirty && <AddToDashboardButton savedQuery={savedQueryPage.savedQuery} />}
-              {savedQueryPage.savedQuery && savedQueryPage.isWritable && (
-                <GhostButton
-                  label={t(ButtonsI18nKey.Delete)}
-                  iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-                  onClick={savedQueryPage.onOpenDelete}
-                />
-              )}
-              {savedQueryPage.isDraft && savedQueryPage.isDirty && (
-                <GhostButton label={t(ButtonsI18nKey.Reset)} onClick={() => setIsResetOpen(true)} />
-              )}
-              {savedQueryPage.savedQuery && savedQueryPage.isDirty ? (
-                <ChangedEntityButtons
-                  isSaveAllowed={savedQueryPage.isWritable}
-                  disableSave={runDisabled || savedQueryPage.isSaving}
-                  onDiscard={savedQueryPage.onDiscard}
-                  onSave={savedQueryPage.onSave}
-                >
-                  {saveAsButton}
-                </ChangedEntityButtons>
-              ) : (
-                saveAsButton
-              )}
-              {fieldsLoaded && !isAiView && (
-                <CopyButton
-                  value={isSqlView ? sqlText : isJsonView ? jsonText : json}
-                  valueLabel={isSqlView ? t(QueryBuilderI18nKey.SqlQuery) : t(QueryBuilderI18nKey.StructuredQueryJson)}
-                  buttonLabel={t(ButtonsI18nKey.Copy)}
-                />
-              )}
-            </QueryBuilderToolbar>
+  const period = useMemo<PeriodControl | null>(
+    () =>
+      timestampField
+        ? {
+            timePeriod: timeFilter.timePeriod,
+            isCustom: timeFilter.isCustom,
+            timeRange: timeFilter.timeRange,
+            onChangeTimePeriod: timeFilter.onTimePeriodChange,
+            onChangeTimeRange: timeFilter.onTimeRangeChange,
+          }
+        : null,
+    [
+      timestampField,
+      timeFilter.timePeriod,
+      timeFilter.isCustom,
+      timeFilter.timeRange,
+      timeFilter.onTimePeriodChange,
+      timeFilter.onTimeRangeChange,
+    ],
+  );
+
+  const renderBuilderArea = () => {
+    if (!fieldsLoaded) return <NoDataContent title={t(QueryBuilderI18nKey.SchemaLoadFailed)} />;
+    if (!isSqlView) return <ChipBar period={period} />;
+
+    return (
+      <div className="flex h-full min-h-0 flex-col gap-2">
+        {sqlError && <span className="text-error dial-tiny-text">{sqlError}</span>}
+        <div className="min-h-0 flex-1 overflow-hidden rounded border border-primary">
+          {sqlLoading ? (
+            <div className="flex h-full items-center justify-center">
+              <Spinner size={32} fullWidth />
+            </div>
+          ) : (
+            <SqlEditor value={sqlText} onChange={onChangeSql} />
           )}
         </div>
+      </div>
+    );
+  };
 
-        {!entities.length ? (
-          <NoDataContent title={t(QueryBuilderI18nKey.EntitiesLoadFailed)} />
-        ) : (
-          <div className="flex min-h-0 flex-1 border-t border-tertiary">
-            <ResultArea
-              result={result}
-              meta={resultMeta}
-              isRunning={isRunning}
-              view={resultView}
-              onChangeView={setResultView}
-              chartConfig={chartConfig}
-              onChangeChartConfig={setChartConfig}
-              isExporting={isExporting}
-              onExportCsv={onExportCsv}
-            />
-            {railCollapsed ? (
-              <CollapsedRail onExpand={() => onToggleRail(false)} />
-            ) : (
-              <BuilderRail
-                onCollapse={() => onToggleRail(true)}
-                switcher={
-                  fieldsLoaded ? (
-                    <SegmentedControl
-                      aria-label={t(QueryBuilderI18nKey.ViewSwitcher)}
-                      items={viewOptions}
-                      value={view}
-                      onChange={onChangeView}
-                      // Loading an AI message decides what lands in the SQL buffer; a switch made before
-                      // it returns would leave that SQL pending under a view that never showed it.
-                      disabled={aiLoading}
-                    />
-                  ) : undefined
-                }
-              >
-                {!fieldsLoaded ? (
-                  <NoDataContent title={t(QueryBuilderI18nKey.SchemaLoadFailed)} />
-                ) : isJsonView ? (
-                  <div className="flex h-full min-h-0 flex-col gap-2">
-                    {jsonInvalid && (
-                      <span className="text-error dial-tiny-text">{t(QueryBuilderI18nKey.InvalidJson)}</span>
-                    )}
-                    {!jsonInvalid && jsonDiverged && (
-                      <span className="text-secondary dial-tiny-text">{t(QueryBuilderI18nKey.NotShownInBuilder)}</span>
-                    )}
-                    <div className="min-h-0 flex-1 overflow-hidden rounded border border-primary">
-                      <JsonEditorBase value={jsonText} onChange={onChangeJson} />
-                    </div>
-                  </div>
-                ) : isSqlView ? (
-                  <div className="flex h-full min-h-0 flex-col gap-2">
-                    {sqlError && <span className="text-error dial-tiny-text">{sqlError}</span>}
-                    <div className="min-h-0 flex-1 overflow-hidden rounded border border-primary">
-                      {sqlLoading ? (
-                        <div className="flex h-full items-center justify-center">
-                          <Spinner size={32} fullWidth />
-                        </div>
-                      ) : (
-                        <SqlEditor value={sqlText} onChange={onChangeSql} />
-                      )}
-                    </div>
-                  </div>
-                ) : isAiView ? (
-                  <AiPanel
-                    conversation={aiConversation}
-                    onRunMessage={onRunAiMessage}
-                    loadedMessageIndex={aiLoadedMessageIndex}
-                    runInFlight={aiLoading || isRunning}
+  const isAddToDashboardShown =
+    featureFlags.analyticsCustomDashboardsEnabled && !!savedQueryPage.savedQuery && !savedQueryPage.isDirty;
+
+  return (
+    <QueryBuilderContext.Provider value={contextValue}>
+      <div className="relative flex min-h-0 w-full flex-1">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 pr-4">
+          <QueryHeader
+            title={name ?? t(QueriesI18nKey.Title)}
+            description={savedQueryPage.isDraft ? tableDescription : savedQueryPage.savedQuery?.description}
+          >
+            {renderActions()}
+          </QueryHeader>
+
+          {!entities.length ? (
+            <NoDataContent title={t(QueryBuilderI18nKey.EntitiesLoadFailed)} />
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center gap-3">
+                {fieldsLoaded && (
+                  <SegmentedControl
+                    aria-label={t(QueryBuilderI18nKey.ViewSwitcher)}
+                    items={viewOptions}
+                    value={view}
+                    onChange={onChangeView}
+                    // Loading an AI message decides what lands in the SQL buffer; a switch made before
+                    // it returns would leave that SQL pending under a view that never showed it.
+                    disabled={aiLoading}
                   />
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    <ModeSwitcher />
-
-                    {isAggregate ? (
-                      <>
-                        <GroupBySection />
-                        <Aggregates />
-                      </>
-                    ) : (
-                      <SelectProjection />
-                    )}
-
-                    <SectionBlock
-                      title={t(QueryBuilderI18nKey.Filter)}
-                      markerClassName={QUERY_BUILDER_PALETTE[QueryBuilderColor.Grouping].marker}
-                      warning={
-                        hasDroppedCondition(state.filter, state.functions)
-                          ? t(WARNING_I18N[QueryBuilderWarning.DroppedCondition])
-                          : undefined
-                      }
-                      action={
-                        <>
-                          <SectionAction
-                            label={t(QueryBuilderI18nKey.AddCondition)}
-                            onClick={() => {
-                              state.filter.children.push(createPredicate());
-                              refresh();
-                            }}
-                          />
-                          <SectionAction
-                            label={t(QueryBuilderI18nKey.AddGroup)}
-                            colorClassName={QUERY_BUILDER_PALETTE[QueryBuilderColor.Grouping].text}
-                            onClick={() => {
-                              state.filter.children.push(createGroup());
-                              refresh();
-                            }}
-                          />
-                        </>
-                      }
-                    >
-                      {!state.filter.children.length && (
-                        <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoConditions)}</span>
-                      )}
-                      <FilterGroup
-                        node={state.filter}
-                        parent={null}
-                        fieldOptions={fieldsToOptions(state.fields)}
-                        isFunctionOperandOffered
-                      />
-                    </SectionBlock>
-
-                    {isAggregate && (
-                      <SectionBlock
-                        title={t(QueryBuilderI18nKey.Having)}
-                        subtitle={t(QueryBuilderI18nKey.HavingSubtitle)}
-                        markerClassName={QUERY_BUILDER_PALETTE[QueryBuilderColor.Constraint].marker}
-                        action={
-                          <SectionAction
-                            label={t(QueryBuilderI18nKey.AddCondition)}
-                            onClick={() => {
-                              state.having.children.push(createPredicate());
-                              refresh();
-                            }}
-                          />
-                        }
-                      >
-                        {!state.having.children.length && (
-                          <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoHaving)}</span>
-                        )}
-                        <FilterGroup
-                          node={state.having}
-                          parent={null}
-                          fieldOptions={havingFieldOptions(state)}
-                          color={QueryBuilderColor.Constraint}
-                        />
-                      </SectionBlock>
-                    )}
-
-                    <SortKeys />
-                    <PageSection />
-                  </div>
                 )}
-              </BuilderRail>
-            )}
-          </div>
+                <div className="ml-auto flex items-center gap-3">
+                  {fieldsLoaded && isSqlView && (
+                    <CopyButton
+                      value={sqlText}
+                      valueLabel={t(QueryBuilderI18nKey.SqlQuery)}
+                      buttonLabel={t(ButtonsI18nKey.Copy)}
+                    />
+                  )}
+                  <PrimaryButton
+                    label={t(QueryBuilderI18nKey.Run)}
+                    iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+                    disabled={runDisabled}
+                    onClick={onRun}
+                  />
+                </div>
+              </div>
+
+              <BuilderArea ariaLabel={t(QueryChipsI18nKey.ResizeBuilder)}>{renderBuilderArea()}</BuilderArea>
+
+              <ResultArea
+                result={result}
+                meta={resultMeta}
+                isRunning={isRunning}
+                view={resultView}
+                onChangeView={setResultView}
+                chartConfig={chartConfig}
+                onChangeChartConfig={setChartConfig}
+                isExporting={isExporting}
+                onExportCsv={onExportCsv}
+                actions={
+                  isAddToDashboardShown &&
+                  savedQueryPage.savedQuery && <AddToDashboardButton savedQuery={savedQueryPage.savedQuery} />
+                }
+              />
+            </>
+          )}
+        </div>
+        {featureFlags.queryAssistantEnabled && fieldsLoaded && (
+          <AiSidePanel isOpen={isAiPanelOpen} isOverlay={isTablet || isMobile} onToggle={onToggleAiPanel}>
+            <AiPanel
+              conversation={aiConversation}
+              onRunMessage={onRunAiMessage}
+              loadedMessageIndex={aiLoadedMessageIndex}
+              runInFlight={aiLoading || isRunning}
+            />
+          </AiSidePanel>
         )}
       </div>
 
@@ -832,6 +719,14 @@ const QueryBuilder: FC<Props> = ({
           document.body,
         )}
 
+      {isDiscardOpen && (
+        <DiscardModal
+          onConfirm={onConfirmDiscardChanges}
+          onClose={() => setIsDiscardOpen(false)}
+          onCancel={() => setIsDiscardOpen(false)}
+        />
+      )}
+
       {isResetOpen && (
         <DiscardModal
           onConfirm={onConfirmReset}
@@ -840,13 +735,7 @@ const QueryBuilder: FC<Props> = ({
         />
       )}
 
-      {pendingView !== null && (
-        <DiscardQueryPopup
-          destination={pendingView}
-          onConfirm={onConfirmDiscard}
-          onCancel={() => setPendingView(null)}
-        />
-      )}
+      {pendingView !== null && <DiscardQueryPopup onConfirm={onConfirmDiscard} onCancel={() => setPendingView(null)} />}
     </QueryBuilderContext.Provider>
   );
 };

@@ -1,7 +1,13 @@
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
-import { RELATIVE_TIME_NOW_FN, RELATIVE_TIME_SUBTRACT_FN } from '@/src/constants/analytics/query-builder';
-import { FnArgValue, FnCallValue, FunctionOption, RelativeTimeFunctions } from '@/src/models/analytics/query-builder';
+import { RELATIVE_TIME_NOW_FN, RELATIVE_TIME_SUBTRACT_FN, TIME_BIN_FN } from '@/src/constants/analytics/query-builder';
+import {
+  FnArgValue,
+  FnCallValue,
+  FunctionOption,
+  RelativeTimeFunctions,
+  TimeBinFunction,
+} from '@/src/models/analytics/query-builder';
 import {
   QueryFunction,
   QueryFunctionArg,
@@ -113,6 +119,25 @@ export const relativeTimeFunctions = (
 const argsOfKind = (fn: QueryFunction, kind: QueryFunctionArgKind): QueryFunctionArg | undefined => {
   const matches = fn.args.filter((arg) => arg.kind === kind);
   return matches.length === 1 ? matches[0] : undefined;
+};
+
+export const timeBinFunction = (functions: QueryFunction[]): TimeBinFunction | null => {
+  const fn = functionByName(functions, TIME_BIN_FN);
+  if (!fn || fn.args.length !== 3) return null;
+
+  const amountArg = argsOfKind(fn, QueryFunctionArgKind.IntegerLiteral);
+  const unitArg = argsOfKind(fn, QueryFunctionArgKind.StringLiteral);
+  const timestampArg = argsOfKind(fn, QueryFunctionArgKind.Expression);
+  if (!amountArg || !unitArg || !timestampArg) return null;
+
+  return {
+    fn,
+    amountIndex: fn.args.indexOf(amountArg),
+    unitIndex: fn.args.indexOf(unitArg),
+    timestampIndex: fn.args.indexOf(timestampArg),
+    units: unitArg.constraints?.allowed_values ?? null,
+    minAmount: amountArg.constraints?.min ?? 1,
+  };
 };
 
 // The implicit aggregate measure added when the user defines no explicit aggregate: the first

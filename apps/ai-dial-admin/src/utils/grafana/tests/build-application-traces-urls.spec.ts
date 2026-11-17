@@ -40,7 +40,9 @@ describe('buildApplicationTracesUrls', () => {
             refId: 'A',
             datasource: { type: 'tempo', uid: 'tempo' },
             queryType: 'traceql',
-            query: '{ span.dial.deployment =~ ".*public/ahQuickApp__1\\\\.0\\\\.0" }',
+            query:
+              '{ span.dial.deployment =~ ".*public/ahQuickApp__1\\\\.0\\\\.0"' +
+              ' || span.http.url =~ ".*/deployments/(applications/)?public/ahQuickApp__1\\\\.0\\\\.0/.*" }',
             tableType: 'traces',
           },
         ],
@@ -58,7 +60,8 @@ describe('buildApplicationTracesUrls', () => {
 
   test('matches a platform application by its platform path', () => {
     expect(getQuery(buildApplicationTracesUrls(CONFIG, 'platform/chat-hub').allTracesUrl)).toBe(
-      '{ span.dial.deployment =~ ".*platform/chat-hub" }',
+      '{ span.dial.deployment =~ ".*platform/chat-hub"' +
+        ' || span.http.url =~ ".*/deployments/(applications/)?platform/chat-hub/.*" }',
     );
   });
 
@@ -82,21 +85,45 @@ describe('buildApplicationTracesUrls', () => {
     expect(() => JSON.parse(decodeURIComponent(encoded))).not.toThrow();
   });
 
-  test('escapes regular-expression metacharacters so the path matches literally', () => {
+  test('percent-encodes each path segment the way Core reports it (spaces in folder and name)', () => {
+    const query = getQuery(
+      buildApplicationTracesUrls(CONFIG, 'public/QA/Code Apps ALS/msh-oauth-resource-app__1.0.0').allTracesUrl,
+    );
+
+    expect(query).toBe(
+      '{ span.dial.deployment =~ ".*public/QA/Code%20Apps%20ALS/msh-oauth-resource-app__1\\\\.0\\\\.0"' +
+        ' || span.http.url =~ ".*/deployments/(applications/)?public/QA/Code%20Apps%20ALS/msh-oauth-resource-app__1\\\\.0\\\\.0/.*" }',
+    );
+  });
+
+  test('matches the application on its Core request URL, not only on dial.deployment', () => {
+    const query = getQuery(buildApplicationTracesUrls(CONFIG, 'public/ahQuickApp__1.0.0').allTracesUrl);
+
+    expect(query).toContain('span.http.url =~');
+  });
+
+  test('keeps the error clause outside the OR so it applies to both matchers', () => {
+    const query = getQuery(buildApplicationTracesUrls(CONFIG, 'public/ahQuickApp__1.0.0').errorTracesUrl);
+
+    expect(query.endsWith(' } >> { status = error }')).toBe(true);
+    expect(query.match(/\{ span\.dial\.deployment/g)).toHaveLength(1);
+  });
+
+  test('encodes then escapes regular-expression metacharacters so the path matches literally', () => {
     const query = getQuery(buildApplicationTracesUrls(CONFIG, 'public/a(b)+[c]__1.0').allTracesUrl);
 
-    expect(query).toBe('{ span.dial.deployment =~ ".*public/a\\\\(b\\\\)\\\\+\\\\[c\\\\]__1\\\\.0" }');
+    expect(query).toContain('".*public/a\\\\(b\\\\)%2B%5Bc%5D__1\\\\.0"');
   });
 
-  test('escapes a double quote for the TraceQL string and keeps the JSON valid', () => {
+  test('encodes a double quote so the TraceQL string and the JSON stay valid', () => {
     const { allTracesUrl } = buildApplicationTracesUrls(CONFIG, 'public/we"ird__1.0.0');
 
-    expect(getQuery(allTracesUrl)).toBe('{ span.dial.deployment =~ ".*public/we\\"ird__1\\\\.0\\\\.0" }');
+    expect(getQuery(allTracesUrl)).toContain('".*public/we%22ird__1\\\\.0\\\\.0"');
   });
 
-  test('escapes a backslash for both the regular expression and the string literal', () => {
+  test('encodes a backslash instead of letting it reach the regular expression', () => {
     const { allTracesUrl } = buildApplicationTracesUrls(CONFIG, 'public/a\\b');
 
-    expect(getQuery(allTracesUrl)).toBe('{ span.dial.deployment =~ ".*public/a\\\\\\\\b" }');
+    expect(getQuery(allTracesUrl)).toContain('".*public/a%5Cb"');
   });
 });

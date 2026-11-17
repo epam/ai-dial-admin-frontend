@@ -2,7 +2,7 @@
 
 ## Purpose
 
-What a run produces: execution of the current query, the result grid, the stat tiles, and the table and chart views over the returned rows. How the query was authored is `analytics/query-builder`.
+What a run produces: execution of the current query, the result count, the result grid, and the table and chart views over the returned rows. How the query was authored is `analytics/query-builder`.
 ## Requirements
 ### Requirement: Run query and result
 

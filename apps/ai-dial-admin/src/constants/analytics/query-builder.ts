@@ -15,7 +15,6 @@ import {
   ChartSlotDescriptor,
   ChartType,
   CompactSelectOptionDescriptor,
-  QueryBuilderWarning,
   ResultValueClass,
 } from '@/src/models/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
@@ -80,6 +79,7 @@ export const OPERATOR_OPTION_DESCRIPTORS: CompactSelectOptionDescriptor[] = [
 // toolbar offers no pick — it expresses one fixed meaning, so it has to name what carries it.
 export const RELATIVE_TIME_SUBTRACT_FN = 'date_sub';
 export const RELATIVE_TIME_NOW_FN = 'now';
+export const TIME_BIN_FN = 'date_bin';
 
 // The operators the service refuses over an enum field. ClickHouse defines comparison over an enum but not
 // the string functions, so `ico`/`inc` — and the case-sensitive `co`/`nc` a JSON-authored query may carry —
@@ -153,10 +153,6 @@ export const JSON_INDENT = 2;
 
 export const IMPLICIT_COUNT_ALIAS = 'Count';
 
-export const LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY = 'query-builder-rail-collapsed';
-
-export const QUERY_BUILDER_RAIL_WIDTH_CLASS = 'w-[480px]';
-
 export const CHART_TYPE_OPTIONS: SelectOption[] = toOptions(Object.values(ChartType));
 
 export const DEFAULT_CHART_CONFIG: ChartConfig = { type: ChartType.Bar, xField: null, yFields: null };
@@ -202,17 +198,6 @@ export const RESULT_TOOLTIP_MAX_CHARS = 240;
 // Wider than a column ever shows, so the preview is never the limit on screen, but bounded so a wide
 // result does not hold whole documents in the DOM.
 export const RESULT_PREVIEW_CHARS = 400;
-
-export const WARNING_I18N: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
-  [QueryBuilderWarning.MissingGroupByField]: QueryBuilderI18nKey.WarningMissingGroupByField,
-  [QueryBuilderWarning.EmptyAggregate]: QueryBuilderI18nKey.WarningEmptyAggregate,
-  [QueryBuilderWarning.DroppedProjectionColumn]: QueryBuilderI18nKey.WarningDroppedProjectionColumn,
-  [QueryBuilderWarning.DroppedCondition]: QueryBuilderI18nKey.WarningDroppedCondition,
-};
-
-// Which section header surfaces which aggregate-validation warning.
-export const GROUP_BY_SECTION_WARNINGS = [QueryBuilderWarning.EmptyAggregate, QueryBuilderWarning.MissingGroupByField];
-export const AGGREGATE_SECTION_WARNINGS = [QueryBuilderWarning.EmptyAggregate];
 
 // The schema's own statement about a column's value class. A type absent from this map is a type the
 // result grid does not format — Uuid, Enum, Boolean, String, Object, Array, Map.

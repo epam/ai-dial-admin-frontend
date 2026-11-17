@@ -5,11 +5,15 @@ import { FC, useId, useMemo } from 'react';
 import { Search } from '@epam/ai-dial-ui-kit';
 
 import QueryRow from '@/src/components/Analytics/QueryBuilder/SourcePanel/QueryRow';
+import QueryTagGroup from '@/src/components/Analytics/QueryBuilder/SourcePanel/QueryTagGroup';
 import ScopeFilter from '@/src/components/Analytics/QueryBuilder/SourcePanel/ScopeFilter';
 import { useSourcePanel } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
 import { SourcePanelTab } from '@/src/components/Analytics/QueryBuilder/SourcePanel/models';
 import { usePreservedScroll } from '@/src/components/Analytics/QueryBuilder/SourcePanel/use-preserved-scroll';
-import { filterSavedQueries } from '@/src/components/Analytics/QueryBuilder/SourcePanel/utils/source-panel';
+import {
+  filterSavedQueries,
+  groupQueriesByTag,
+} from '@/src/components/Analytics/QueryBuilder/SourcePanel/utils/source-panel';
 import { EntitiesI18nKey, QuerySourcePanelI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -26,6 +30,7 @@ const QueriesTab: FC<Props> = ({ currentQueryId }) => {
     () => filterSavedQueries(queries, querySearch, scopeFilter),
     [queries, querySearch, scopeFilter],
   );
+  const tree = useMemo(() => groupQueriesByTag(visibleQueries), [visibleQueries]);
   const searchLabel = t(QuerySourcePanelI18nKey.SearchQueries);
   const scroll = usePreservedScroll(SourcePanelTab.Queries);
 
@@ -53,7 +58,10 @@ const QueriesTab: FC<Props> = ({ currentQueryId }) => {
           className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto"
           onScroll={scroll.onScroll}
         >
-          {visibleQueries.map((query) => (
+          {tree.groups.map((group) => (
+            <QueryTagGroup key={group.tag} group={group} currentQueryId={currentQueryId} />
+          ))}
+          {tree.untagged.map((query) => (
             <QueryRow key={query.id} query={query} isCurrent={query.id === currentQueryId} />
           ))}
         </ul>

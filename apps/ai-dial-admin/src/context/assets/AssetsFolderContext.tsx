@@ -6,18 +6,21 @@ import {
   SetStateAction,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
   useRef,
   useState,
 } from 'react';
 
+import { OrgUnitMap, useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { createInitialFolderState, folderReducer, toggleFolderState } from '@/src/context/assets/folder-reducer';
 import { FolderActionType } from '@/src/context/assets/models';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { getFolderItems, mergeFolderRows } from '@/src/utils/files/folder';
 import { loadFolderHierarchy } from '@/src/utils/files/folder-hierarchy';
 import { isPublicPath } from '@/src/utils/files/root-folder';
+import { getChildUnitRows, getUnitSetSignature } from '@/src/utils/org-units/units';
 
 export interface AssetsFolderContext<T extends AssetListItem> {
   isFetchingFiles: boolean;
@@ -47,21 +50,26 @@ export type AssetsFolderContextReader<T extends AssetListItem = AssetListItem> =
 >;
 
 /**
- * `getFolderRows` lets a tree borrow another source's folders (Files, for the resource types that
- * share its public tree). Its rows join the listing of every `public/` folder load, folders only and
- * deduplicated by path with the listing's own rows winning; a failed read adds nothing and never
- * fails `getFilesFunc`.
+ * `includeUnits` adds the org units to the tree: a folder row for every unit directly below the loaded
+ * path joins the listing of every `public/` folder load, deduplicated by path with the listing's own rows
+ * winning. A unit with no content of the type has no folder in that type's tree, so without this it would
+ * be invisible. The units read never fails or rejects `getFilesFunc`'s outcome: no units, no extra rows.
+ *
+ * A tree built from one set of units is dropped when the set of unit folders changes, so the listing
+ * rebuilds it the next time it loads.
  */
 export function createFolderContext<T extends AssetListItem>(
   getFilesFunc: (path: string) => Promise<T[] | null | undefined>,
   contextName: string,
-  getFolderRows?: (path: string) => Promise<T[]>,
+  includeUnits?: boolean,
 ) {
   const Context = createContext<AssetsFolderContext<T> | undefined>(undefined);
 
   const Provider = ({ children }: { children: ReactNode }) => {
     const [state, dispatch] = useReducer(folderReducer<T>, undefined, createInitialFolderState<T>);
     const { files, filePath, expandedFolders, fetchedFoldersData, hasFetchError } = state;
+    const { units, loadUnits } = useOrgUnits();
+    const builtUnitSignatureRef = useRef<string | null>(null);
     const [inFlightCount, setInFlightCount] = useState(0);
     const latestRequestIdRef = useRef(0);
     // Handlers outlive the render that created them, so they read the committed state from here.
@@ -89,14 +97,33 @@ export function createFolderContext<T extends AssetListItem>(
       [],
     );
 
-    const fetchByPath = useCallback(async (path: string): Promise<T[] | null | undefined> => {
-      if (!getFolderRows || !isPublicPath(path)) {
-        return getFilesFunc(path);
-      }
+    const fetchByPath = useCallback(
+      async (path: string): Promise<T[] | null | undefined> => {
+        if (!includeUnits || !isPublicPath(path)) {
+          return getFilesFunc(path);
+        }
 
-      const [own, folderRows] = await Promise.all([getFilesFunc(path), getFolderRows(path).catch((): T[] => [])]);
-      return own === undefined ? undefined : mergeFolderRows(own ?? [], folderRows);
-    }, []);
+        const [own, unitMap] = await Promise.all([getFilesFunc(path), loadUnits().catch((): OrgUnitMap => ({}))]);
+        builtUnitSignatureRef.current = getUnitSetSignature(unitMap);
+        // Unit rows are shaped like a folder row of any type; the type only differs in optional fields.
+        return own === undefined
+          ? undefined
+          : mergeFolderRows(own ?? [], getChildUnitRows(unitMap, path) as unknown as T[]);
+      },
+      [loadUnits],
+    );
+
+    const unitSignature = useMemo(() => getUnitSetSignature(units), [units]);
+
+    useEffect(() => {
+      const builtSignature = builtUnitSignatureRef.current;
+      if (!includeUnits || builtSignature == null || builtSignature === unitSignature) {
+        return;
+      }
+      // Cleared so a tree that is not shown is invalidated once; the next build records its own signature.
+      builtUnitSignatureRef.current = null;
+      dispatch({ type: FolderActionType.TreeInvalidated });
+    }, [unitSignature]);
 
     const fetchFolderHierarchy = useCallback(
       (fullPath?: string, fullTree?: boolean) => {

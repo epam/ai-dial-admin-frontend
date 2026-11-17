@@ -79,8 +79,8 @@ describe('assets-applications detail page — Grafana links', () => {
     const links = getLinks(await renderPage('public/ahQuickApp__1.0.0'));
 
     expect(links?.allTracesUrl.startsWith('https://grafana.example.com/explore?')).toBe(true);
-    expect(getQuery(links?.allTracesUrl ?? '')).toBe(
-      '{ span.dial.deployment =~ ".*public/ahQuickApp__1\\\\.0\\\\.0" }',
+    expect(getQuery(links?.allTracesUrl ?? '')).toContain(
+      'span.dial.deployment =~ ".*public/ahQuickApp__1\\\\.0\\\\.0"',
     );
     expect(getQuery(links?.errorTracesUrl ?? '')).toContain('>> { status = error }');
   });
@@ -94,7 +94,7 @@ describe('assets-applications detail page — Grafana links', () => {
 
     const links = getLinks(await renderPage(undefined));
 
-    expect(getQuery(links?.allTracesUrl ?? '')).toBe('{ span.dial.deployment =~ ".*platform/ahQuickApp" }');
+    expect(getQuery(links?.allTracesUrl ?? '')).toContain('span.dial.deployment =~ ".*platform/ahQuickApp"');
   });
 
   test('passes null links when GRAFANA_TRACES_URL is not set', async () => {

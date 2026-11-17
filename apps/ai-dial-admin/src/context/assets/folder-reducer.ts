@@ -102,5 +102,10 @@ export const folderReducer = <T extends AssetListItem>(
 
     case FolderActionType.FolderToggled:
       return toggleFolderState(state, action.folderPath, action.options).state;
+
+    // Nothing is loaded, so nothing is open: the next load opens the first node, or a hierarchy restore the
+    // chain to the kept selection. A kept `expandedFolders` would make that first load collapse the root.
+    case FolderActionType.TreeInvalidated:
+      return { ...state, files: [], fetchedFoldersData: {}, expandedFolders: new Set() };
   }
 };

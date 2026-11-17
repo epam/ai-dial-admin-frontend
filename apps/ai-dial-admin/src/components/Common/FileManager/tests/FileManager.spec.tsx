@@ -45,9 +45,10 @@ const renderFileManager = (
   const files: never[] = [];
   const context = { files, fetchFiles } as unknown as AssetsFolderContextReader;
 
-  render(<FileManager view={view} label="label" columnDefs={[]} getContext={() => context} />);
+  const ui = () => <FileManager view={view} label="label" columnDefs={[]} getContext={() => context} />;
+  const { rerender } = render(ui());
 
-  return fetchFiles;
+  return Object.assign(fetchFiles, { rerender: () => rerender(ui()) });
 };
 
 describe('FileManager', () => {
@@ -459,6 +460,7 @@ describe('FileManager — org units', () => {
       unitsStatus: 'ready',
       ensureUnits: vi.fn(),
       refreshUnits: vi.fn(),
+      loadUnits: vi.fn(),
       getOwningUnit: vi.fn(),
     } as unknown as ReturnType<typeof useOrgUnits>);
 
@@ -467,10 +469,25 @@ describe('FileManager — org units', () => {
     withUnits({});
   });
 
-  test('asks for units on mount', () => {
-    renderFileManager();
+  test('reads the units again on mount for a view that can hold unit folders', () => {
+    renderFileManager(ApplicationRoute.AssetsToolsets);
 
-    expect(useOrgUnits().ensureUnits).toHaveBeenCalled();
+    expect(useOrgUnits().refreshUnits).toHaveBeenCalledOnce();
+    expect(useOrgUnits().ensureUnits).not.toHaveBeenCalled();
+  });
+
+  test('only makes sure the units are loaded for a view without a unit namespace', () => {
+    renderFileManager(ApplicationRoute.PlatformModels);
+
+    expect(useOrgUnits().ensureUnits).toHaveBeenCalledOnce();
+    expect(useOrgUnits().refreshUnits).not.toHaveBeenCalled();
+  });
+
+  test('does not read the units again when the same view re-renders', () => {
+    const fetchFiles = renderFileManager(ApplicationRoute.AssetsToolsets);
+    fetchFiles.rerender();
+
+    expect(useOrgUnits().refreshUnits).toHaveBeenCalledOnce();
   });
 
   test('gives only a unit folder a tree icon', () => {
