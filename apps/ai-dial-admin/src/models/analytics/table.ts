@@ -72,7 +72,9 @@ export interface TablePermissions {
   sensitive: boolean;
   write: boolean;
   modify: boolean;
+  grant?: boolean;
   rows_restricted: boolean;
+  columns_restricted?: boolean;
 }
 
 export interface AnalyticsTable {
@@ -102,15 +104,12 @@ export enum TableGrantKey {
   Modify = 'modify',
 }
 
-// Raw provider role names per privilege. The access endpoint's PUT merges by key: a key left out is unchanged,
-// an empty list revokes.
-export type TableAccess = Record<TableGrantKey, string[]>;
-
 export enum IneffectiveGrantReason {
   AlreadyGlobal = 'already_global',
-  EnrichmentReadInert = 'enrichment_read_inert',
   SensitiveWithoutVerb = 'sensitive_without_verb',
   LiftsRowPolicies = 'lifts_row_policies',
+  LiftsColumnPolicies = 'lifts_column_policies',
+  EveryoneReadsAllRows = 'everyone_reads_all_rows',
 }
 
 export interface IneffectiveGrant {
@@ -120,19 +119,30 @@ export interface IneffectiveGrant {
   message: string;
 }
 
-export interface TableAccessUpdateResult extends TableAccess {
-  permissions: TablePermissions;
-  ineffective_grants: IneffectiveGrant[];
-}
-
 export interface RowPolicy {
   filter: QueryFilterNode;
 }
 
-export type RowPolicies = Record<string, RowPolicy>;
+export interface TableAccessEntry {
+  privileges: TableGrantKey[];
+  rows: RowPolicy | null;
+  columns: string[] | null;
+}
 
-export interface RowPoliciesResponse {
-  policies: RowPolicies;
+export interface TableAccessConfig {
+  generation: number;
+  roles: Record<string, TableAccessEntry>;
+  ineffective_grants: IneffectiveGrant[];
+}
+
+export interface TableAccessEntryDto extends TableAccessEntry {
+  generation: number;
+}
+
+export interface TableAccessEntryResult extends TableAccessEntry {
+  generation: number;
+  role: string;
+  ineffective_grants: IneffectiveGrant[];
 }
 
 export interface AnalyticsRoleCatalog {

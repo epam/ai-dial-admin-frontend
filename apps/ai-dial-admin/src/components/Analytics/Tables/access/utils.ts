@@ -1,10 +1,13 @@
 import { ALL_GRANT_KEYS, EVERYONE_ROLE } from '@/src/components/Analytics/Tables/access/constants';
 import {
+  ColumnsMode,
+  EntryDraft,
   MarkedPrivilege,
   PrivilegeMark,
   RoleRow,
   RoleSelection,
   RowsCellKind,
+  RowsMode,
 } from '@/src/components/Analytics/Tables/access/models';
 import {
   QueryExpr,
@@ -15,20 +18,7 @@ import {
   QueryOperator,
   QueryPredicate,
 } from '@/src/models/analytics/query';
-import { RowPolicies, TableAccess, TableGrantKey } from '@/src/models/analytics/table';
-
-export const emptyAccess = (): TableAccess => ({
-  [TableGrantKey.Get]: [],
-  [TableGrantKey.Read]: [],
-  [TableGrantKey.Sensitive]: [],
-  [TableGrantKey.Write]: [],
-  [TableGrantKey.Modify]: [],
-});
-
-export const normalizeAccess = (access?: Partial<TableAccess> | null): TableAccess => ({
-  ...emptyAccess(),
-  ...Object.fromEntries(ALL_GRANT_KEYS.map((key) => [key, access?.[key] ?? []])),
-});
+import { IneffectiveGrant, RowPolicy, TableAccessEntry, TableGrantKey } from '@/src/models/analytics/table';
 
 export const roleLabel = (role: string, everyoneLabel: string): string =>
   role === EVERYONE_ROLE ? everyoneLabel : role;
@@ -37,88 +27,104 @@ const compareRoles = (a: string, b: string): number => a.localeCompare(b, undefi
 
 // Implication is derived when a check runs and never stored: `get` follows `read` and `modify`, nothing else
 // follows anything.
-const markOf = (key: MarkedPrivilege, role: string, access: TableAccess): PrivilegeMark => {
-  if (access[key].includes(role)) return PrivilegeMark.Stored;
+const markOf = (key: MarkedPrivilege, privileges: TableGrantKey[]): PrivilegeMark => {
+  if (privileges.includes(key)) return PrivilegeMark.Stored;
 
   const isImplied =
-    key === TableGrantKey.Get &&
-    (access[TableGrantKey.Read].includes(role) || access[TableGrantKey.Modify].includes(role));
+    key === TableGrantKey.Get && (privileges.includes(TableGrantKey.Read) || privileges.includes(TableGrantKey.Modify));
 
   return isImplied ? PrivilegeMark.Implied : PrivilegeMark.None;
 };
 
-const rowsKindOf = (role: string, access: TableAccess, policies: RowPolicies): RowsCellKind => {
-  if (!access[TableGrantKey.Read].includes(role)) return RowsCellKind.None;
+const rowsKindOf = (entry: TableAccessEntry): RowsCellKind => {
+  if (!entry.privileges.includes(TableGrantKey.Read)) return RowsCellKind.None;
 
-  return policies[role] ? RowsCellKind.Policy : RowsCellKind.All;
+  return entry.rows ? RowsCellKind.Policy : RowsCellKind.All;
 };
 
-export const buildRoleRows = (access: TableAccess, policies: RowPolicies): RoleRow[] => {
-  const roles = new Set<string>([...ALL_GRANT_KEYS.flatMap((key) => access[key]), ...Object.keys(policies)]);
-
-  return Array.from(roles)
+export const buildRoleRows = (
+  roles: Record<string, TableAccessEntry>,
+  ineffectiveGrants: IneffectiveGrant[],
+): RoleRow[] =>
+  Object.keys(roles)
     .sort(compareRoles)
-    .map((role) => ({
-      role,
-      marks: {
-        [TableGrantKey.Get]: markOf(TableGrantKey.Get, role, access),
-        [TableGrantKey.Read]: markOf(TableGrantKey.Read, role, access),
-        [TableGrantKey.Write]: markOf(TableGrantKey.Write, role, access),
-        [TableGrantKey.Modify]: markOf(TableGrantKey.Modify, role, access),
-      },
-      isSensitive: access[TableGrantKey.Sensitive].includes(role),
-      rowsKind: rowsKindOf(role, access, policies),
-      filter: policies[role]?.filter,
-    }));
-};
+    .map((role) => {
+      const entry = roles[role];
 
-export const selectionFromAccess = (access: TableAccess, role?: string): RoleSelection => ({
-  get: !!role && access[TableGrantKey.Get].includes(role),
-  read: !!role && access[TableGrantKey.Read].includes(role),
-  write: !!role && access[TableGrantKey.Write].includes(role),
-  modify: !!role && access[TableGrantKey.Modify].includes(role),
-  sensitive: !!role && access[TableGrantKey.Sensitive].includes(role),
+      return {
+        role,
+        marks: {
+          [TableGrantKey.Get]: markOf(TableGrantKey.Get, entry.privileges),
+          [TableGrantKey.Read]: markOf(TableGrantKey.Read, entry.privileges),
+          [TableGrantKey.Write]: markOf(TableGrantKey.Write, entry.privileges),
+          [TableGrantKey.Modify]: markOf(TableGrantKey.Modify, entry.privileges),
+        },
+        isSensitive: entry.privileges.includes(TableGrantKey.Sensitive),
+        rowsKind: rowsKindOf(entry),
+        filter: entry.rows?.filter,
+        columns: entry.columns,
+        warnings: ineffectiveGrants.filter((grant) => grant.role === role).map((grant) => grant.message),
+      };
+    });
+
+export const selectionFromEntry = (entry?: TableAccessEntry): RoleSelection => ({
+  get: !!entry?.privileges.includes(TableGrantKey.Get),
+  read: !!entry?.privileges.includes(TableGrantKey.Read),
+  write: !!entry?.privileges.includes(TableGrantKey.Write),
+  modify: !!entry?.privileges.includes(TableGrantKey.Modify),
+  sensitive: !!entry?.privileges.includes(TableGrantKey.Sensitive),
 });
 
 export const isGetHeld = (selection: RoleSelection): boolean => selection.get || selection.read || selection.modify;
 
 // The clearance authorizes nothing by itself, so it is offered only beside a verb that shows the table.
-export const isSensitiveStepOffered = (selection: RoleSelection): boolean => isGetHeld(selection);
+export const isSensitiveStepOffered = (selection: RoleSelection, isEnrichment: boolean): boolean =>
+  !isEnrichment && isGetHeld(selection);
 
-export const isRowsStepOffered = (selection: RoleSelection): boolean => selection.read;
+export const isRowsStepOffered = (selection: RoleSelection, isEnrichment: boolean): boolean =>
+  !isEnrichment && selection.read;
+
+export const isColumnsStepOffered = (selection: RoleSelection, isEnrichment: boolean): boolean =>
+  !isEnrichment && isGetHeld(selection);
 
 export const hasAnyPrivilege = (selection: RoleSelection): boolean =>
   isGetHeld(selection) || selection.write || selection.sensitive;
 
-// A key sent replaces that whole list, so each changed key carries every other grantee too.
-export const planAccessSave = (access: TableAccess, role: string, selection: RoleSelection): Partial<TableAccess> => {
-  const plan: Partial<TableAccess> = {};
+export const isOpenToEveryone = (entry?: TableAccessEntry): boolean =>
+  !!entry?.privileges.includes(TableGrantKey.Read) && !entry.rows;
 
-  ALL_GRANT_KEYS.forEach((key) => {
-    const isWanted = selection[key];
-    const isHeld = access[key].includes(role);
-    if (isWanted === isHeld) return;
+const ENRICHMENT_PRIVILEGES: TableGrantKey[] = [TableGrantKey.Write, TableGrantKey.Modify];
 
-    plan[key] = isWanted ? [...access[key], role] : access[key].filter((member) => member !== role);
-  });
+const draftRows = ({ rowsMode, filter }: EntryDraft): RowPolicy | null =>
+  rowsMode === RowsMode.Some && filter ? { filter } : null;
 
-  return plan;
+const draftColumns = ({ columnsMode, columns }: EntryDraft): string[] | null =>
+  columnsMode === ColumnsMode.Some ? columns : null;
+
+export const buildEntry = (
+  stored: TableAccessEntry | undefined,
+  draft: EntryDraft,
+  isEnrichment: boolean,
+): TableAccessEntry => {
+  const privileges = ALL_GRANT_KEYS.filter((key) => draft.selection[key]);
+
+  if (isEnrichment) {
+    return {
+      privileges: privileges.filter((key) => ENRICHMENT_PRIVILEGES.includes(key)),
+      rows: null,
+      columns: null,
+    };
+  }
+
+  return {
+    privileges,
+    rows: isRowsStepOffered(draft.selection, false) ? draftRows(draft) : (stored?.rows ?? null),
+    columns: isColumnsStepOffered(draft.selection, false) ? draftColumns(draft) : (stored?.columns ?? null),
+  };
 };
 
-export const planRoleRemoval = (access: TableAccess, role: string): Partial<TableAccess> => {
-  const plan: Partial<TableAccess> = {};
-
-  ALL_GRANT_KEYS.forEach((key) => {
-    if (access[key].includes(role)) plan[key] = access[key].filter((member) => member !== role);
-  });
-
-  return plan;
-};
-
-export const applyAccessResult = (access: TableAccess, result: Partial<TableAccess>): TableAccess => ({
-  ...access,
-  ...Object.fromEntries(ALL_GRANT_KEYS.filter((key) => result[key]).map((key) => [key, result[key]])),
-});
+export const isEntryEmpty = (entry: TableAccessEntry): boolean =>
+  !entry.privileges.length && !entry.rows && !entry.columns;
 
 const OPERATOR_SYMBOLS: Record<QueryOperator, string> = {
   [QueryOperator.Eq]: '=',
