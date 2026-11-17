@@ -223,6 +223,12 @@ export interface CompactSelectOptionDescriptor {
   descriptionKey: QueryBuilderI18nKey;
 }
 
+export enum QueryCopyMode {
+  SaveDraft = 'save-draft',
+  Duplicate = 'duplicate',
+  SaveCopy = 'save-copy',
+}
+
 export enum QueryBuilderView {
   Form = 'form',
   Sql = 'sql',

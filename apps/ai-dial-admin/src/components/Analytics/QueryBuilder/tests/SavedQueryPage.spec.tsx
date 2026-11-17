@@ -14,6 +14,7 @@ import QueryBuilderDraft from '@/src/components/Analytics/QueryBuilder/QueryBuil
 import { savedQueryPrimarySource } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
+import { DEFAULT_PAGE_LIMIT } from '@/src/constants/analytics/query-builder';
 import { useAppContext } from '@/src/context/AppContext';
 import { AnalyticsEntity, AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
@@ -184,19 +185,23 @@ const renderPage = (query: SavedQuery = savedQuery(), translation: TranslationPr
 const viewRadio = (name: string) => screen.getByRole('radio', { name });
 
 const saveButton = () => screen.queryByRole('button', { name: 'Buttons.Save' });
+const saveGroup = () => screen.queryByRole('group', { name: 'Buttons.Save' });
+const saveOptionsButton = () => screen.queryByRole('button', { name: 'Queries.SaveOptions' });
 const discardButton = () => screen.queryByRole('button', { name: 'Buttons.Discard' });
 const sentRequest = () => vi.mocked(updateSavedQuery).mock.calls[0][1] as SavedQueryRequest;
 const duplicateButton = () => screen.queryByRole('button', { name: 'Buttons.Duplicate' });
-const saveAsNewButton = () => screen.queryByRole('button', { name: 'Queries.SaveAsNewQuery' });
+const saveACopyButton = () => screen.queryByRole('button', { name: 'Queries.SaveACopy' });
 const createdRequest = () => vi.mocked(createSavedQuery).mock.calls[0][0] as SavedQueryRequest;
 
-const openSaveMenu = async (user: ReturnType<typeof userEvent.setup>, item: string) => {
-  await user.click(await screen.findByRole('button', { name: 'Buttons.Save' }));
-  return screen.findByRole('menuitem', { name: item });
+const findDialog = (header: string) => screen.findByRole('dialog', { name: header });
+
+const openSaveOptions = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(await screen.findByRole('button', { name: 'Queries.SaveOptions' }));
+  return screen.findByRole('menuitem', { name: 'Queries.SaveACopyMenuItem' });
 };
 
 const saveInPlace = async (user: ReturnType<typeof userEvent.setup>) =>
-  user.click(await openSaveMenu(user, 'Buttons.Save'));
+  user.click(await screen.findByRole('button', { name: 'Buttons.Save' }));
 
 const openLimitRows = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(await screen.findByRole('button', { name: /QueryBuilder.Limit/ }));
@@ -557,8 +562,38 @@ describe('QueryBuilder — a stored saved query', () => {
     expect(await screen.findByText('Queries.EditQuery')).toBeInTheDocument();
   });
 
+  describe('header', () => {
+    test('shows a personal scope badge next to the heading and the source table under it', () => {
+      renderPage();
+
+      expect(screen.getByRole('heading', { name: 'Top chats' })).toBeInTheDocument();
+      expect(screen.getByText('Queries.ScopePersonal')).toBeInTheDocument();
+      expect(screen.queryByText('Queries.ScopeCommon')).toBeNull();
+      expect(screen.getByText('dial_usage_log')).toBeInTheDocument();
+    });
+
+    test('shows a common scope badge and the primary source table of a common query', () => {
+      renderPage(
+        savedQuery({
+          scope: SavedQueryScope.Common,
+          source: ['other_table'],
+          query: { ...STRUCTURED_BODY, entity: 'other_table' },
+        }),
+      );
+
+      expect(screen.getByText('Queries.ScopeCommon')).toBeInTheDocument();
+      expect(screen.queryByText('Queries.ScopePersonal')).toBeNull();
+      expect(screen.getByText('other_table')).toBeInTheDocument();
+    });
+  });
+
   describe('Delete', () => {
     const deleteButton = () => screen.queryByRole('button', { name: 'Buttons.Delete' });
+
+    const openDelete = async (user: ReturnType<typeof userEvent.setup>) => {
+      await user.click(deleteButton()!);
+      return findDialog('Queries.DeleteQueryHeader');
+    };
 
     beforeEach(() => {
       vi.mocked(deleteSavedQuery).mockResolvedValue({ success: true });
@@ -577,56 +612,85 @@ describe('QueryBuilder — a stored saved query', () => {
       expect(deleteButton()).toBeNull();
     });
 
-    test('asks for confirmation naming the query before deleting', async () => {
+    test('asks for confirmation in a delete query popup before deleting', async () => {
       const user = userEvent.setup();
       renderPage();
 
-      await user.click(deleteButton()!);
+      const dialog = await openDelete(user);
 
-      const dialog = await screen.findByRole('dialog');
-      expect(within(dialog).getByText('Top chats')).toBeInTheDocument();
+      expect(within(dialog).getByText('Queries.DeleteQueryDescription')).toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: 'Queries.DeleteQuery' })).toBeEnabled();
+      expect(within(dialog).getByRole('button', { name: 'Buttons.Cancel' })).toBeEnabled();
       expect(deleteSavedQuery).not.toHaveBeenCalled();
     });
 
-    test('deletes on confirmation and leaves for the draft builder', async () => {
+    test('closes without deleting when the confirmation is cancelled', async () => {
       const user = userEvent.setup();
       renderPage();
 
-      await user.click(deleteButton()!);
-      const dialog = await screen.findByRole('dialog');
-      await user.click(within(dialog).getByRole('button', { name: 'Buttons.Delete' }));
+      const dialog = await openDelete(user);
+      await user.click(within(dialog).getByRole('button', { name: 'Buttons.Cancel' }));
 
       await waitFor(() => expect(dialog).not.toBeInTheDocument());
-      expect(mockPush).toHaveBeenCalledWith('/queries');
+      expect(deleteSavedQuery).not.toHaveBeenCalled();
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    test('deletes on confirmation, reports it and leaves for the queries list', async () => {
+      const user = userEvent.setup();
+      renderPage();
+
+      const dialog = await openDelete(user);
+      await user.click(within(dialog).getByRole('button', { name: 'Queries.DeleteQuery' }));
+
+      await waitFor(() => expect(dialog).not.toBeInTheDocument());
       expect(deleteSavedQuery).toHaveBeenCalledWith('sq_1');
+      expect(mockShowNotification).toHaveBeenCalledOnce();
+      expect(mockPush).toHaveBeenCalledWith('/queries');
       expect(mockRefresh).toHaveBeenCalled();
     });
 
-    test('keeps the page and reports the failure when the delete fails', async () => {
+    test('keeps the popup open and reports the failure when the delete fails', async () => {
       const user = userEvent.setup();
       vi.mocked(deleteSavedQuery).mockResolvedValue({ success: false, errorHeader: 'forbidden' });
       renderPage();
 
-      await user.click(deleteButton()!);
-      const dialog = await screen.findByRole('dialog');
-      await user.click(within(dialog).getByRole('button', { name: 'Buttons.Delete' }));
+      const dialog = await openDelete(user);
+      await user.click(within(dialog).getByRole('button', { name: 'Queries.DeleteQuery' }));
 
       await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
+      expect(mockShowNotification).toHaveBeenCalledWith(expect.objectContaining({ title: 'forbidden' }));
+      expect(dialog).toBeInTheDocument();
       expect(mockPush).not.toHaveBeenCalled();
-      expect(screen.getByRole('heading', { name: 'Top chats', hidden: true })).toBeInTheDocument();
+      expect(mockRefresh).not.toHaveBeenCalled();
     });
   });
 
-  describe('Save menu', () => {
-    test('opens a menu with both ways to save, without saving anything', async () => {
+  describe('Save controls', () => {
+    test('groups Save with a Save options menu holding only Save a copy, without saving anything', async () => {
       const user = userEvent.setup();
       renderPage();
       await editLimit(user);
 
-      expect(await openSaveMenu(user, 'Buttons.Save')).toBeInTheDocument();
-      expect(screen.getByRole('menuitem', { name: 'Queries.SaveAsNewQuery' })).toBeInTheDocument();
+      const group = saveGroup()!;
+      expect(within(group).getByRole('button', { name: 'Buttons.Save' })).toBeEnabled();
+      expect(within(group).getByRole('button', { name: 'Queries.SaveOptions' })).toBeEnabled();
+
+      expect(await openSaveOptions(user)).toBeInTheDocument();
+      expect(screen.getAllByRole('menuitem')).toHaveLength(1);
       expect(updateSavedQuery).not.toHaveBeenCalled();
-      expect(screen.queryByText('Queries.SaveQueryAs')).toBeNull();
+      expect(screen.queryByRole('dialog', { name: 'Queries.SaveACopy' })).toBeNull();
+    });
+
+    test('saves in place from the Save button without opening a menu', async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await editLimit(user);
+
+      await saveInPlace(user);
+
+      expect(screen.queryByRole('menuitem')).toBeNull();
+      await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
     });
 
     test('replaces Edit, Delete and Duplicate while there are unsaved changes', async () => {
@@ -640,7 +704,7 @@ describe('QueryBuilder — a stored saved query', () => {
       expect(screen.queryByRole('button', { name: 'Buttons.Edit' })).toBeNull();
       expect(screen.queryByRole('button', { name: 'Buttons.Delete' })).toBeNull();
       expect(duplicateButton()).toBeNull();
-      expect(saveAsNewButton()).toBeNull();
+      expect(saveACopyButton()).toBeNull();
     });
 
     test('is disabled while a save is in flight', async () => {
@@ -657,6 +721,7 @@ describe('QueryBuilder — a stored saved query', () => {
       await saveInPlace(user);
 
       await waitFor(() => expect(saveButton()).toBeDisabled());
+      expect(saveOptionsButton()).toBeDisabled();
       finishSave({ success: true, response: savedQuery({ generation: 2 }) });
       await vi.waitFor(() => expect(mockRefresh).toHaveBeenCalled());
     });
@@ -667,6 +732,7 @@ describe('QueryBuilder — a stored saved query', () => {
       fireEvent.change(await screen.findByLabelText('sql-editor'), { target: { value: '' } });
 
       await waitFor(() => expect(saveButton()).toBeDisabled());
+      expect(saveOptionsButton()).toBeDisabled();
     });
   });
 
@@ -682,9 +748,9 @@ describe('QueryBuilder — a stored saved query', () => {
 
       expect(duplicateButton()).toBeEnabled();
       expect(saveButton()).toBeNull();
+      expect(saveGroup()).toBeNull();
       expect(discardButton()).toBeNull();
-      expect(saveAsNewButton()).toBeNull();
-      expect(screen.queryByRole('button', { name: 'Buttons.SaveAs' })).toBeNull();
+      expect(saveACopyButton()).toBeNull();
     });
 
     test('is offered on a common query the caller cannot write, where Edit and Delete are not', () => {
@@ -696,14 +762,15 @@ describe('QueryBuilder — a stored saved query', () => {
       expect(screen.queryByRole('button', { name: 'Buttons.Delete' })).toBeNull();
     });
 
-    test('opens a modal seeded with the source name and a copy suffix', async () => {
+    test('opens a Duplicate query modal seeded with the source name and a copy suffix', async () => {
       const user = userEvent.setup();
       renderPage();
 
       await user.click(duplicateButton()!);
 
-      expect(await screen.findByText('Queries.SaveQueryAs')).toBeInTheDocument();
-      expect(screen.getByDisplayValue('Top chats (copy)')).toBeInTheDocument();
+      const dialog = await findDialog('Queries.DuplicateQuery');
+      expect(within(dialog).getByDisplayValue('Top chats (copy)')).toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: 'Buttons.Duplicate' })).toBeEnabled();
     });
 
     test('copies a clean query as stored', async () => {
@@ -712,8 +779,8 @@ describe('QueryBuilder — a stored saved query', () => {
       renderPage(stored);
 
       await user.click(duplicateButton()!);
-      const dialog = (await screen.findByText('Queries.SaveQueryAs')).closest('[role="dialog"]') as HTMLElement;
-      await user.click(within(dialog).getByRole('button', { name: 'Buttons.Save' }));
+      const dialog = await findDialog('Queries.DuplicateQuery');
+      await user.click(within(dialog).getByRole('button', { name: 'Buttons.Duplicate' }));
 
       await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
       expect(createdRequest().sql).toBe('SELECT 1 FROM dial_usage_log');
@@ -721,52 +788,66 @@ describe('QueryBuilder — a stored saved query', () => {
     });
   });
 
-  describe('Save as a new query', () => {
+  describe('Save a copy', () => {
     const CREATED = savedQuery({ id: 'sq_new', name: 'Top chats (copy)' });
 
     beforeEach(() => {
       vi.mocked(createSavedQuery).mockResolvedValue({ success: true, response: CREATED });
     });
 
-    const openSaveAs = async (user: ReturnType<typeof userEvent.setup>, isWritable = true) => {
+    const openSaveCopy = async (user: ReturnType<typeof userEvent.setup>, isWritable = true) => {
       await editLimit(user);
-      await user.click(isWritable ? await openSaveMenu(user, 'Queries.SaveAsNewQuery') : saveAsNewButton()!);
-      return screen.findByText('Queries.SaveQueryAs');
+      await user.click(isWritable ? await openSaveOptions(user) : saveACopyButton()!);
+      return findDialog('Queries.SaveACopy');
     };
 
-    const submitSaveAs = async (user: ReturnType<typeof userEvent.setup>, isWritable = true) => {
-      const dialog = (await openSaveAs(user, isWritable)).closest('[role="dialog"]') as HTMLElement;
-      await user.click(within(dialog).getByRole('button', { name: 'Buttons.Save' }));
+    const submitSaveCopy = async (user: ReturnType<typeof userEvent.setup>, isWritable = true) => {
+      const dialog = await openSaveCopy(user, isWritable);
+      await user.click(within(dialog).getByRole('button', { name: 'Queries.SaveACopy' }));
       await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+      return dialog;
     };
 
-    test('is a plain button next to Discard on a common query the caller cannot write, with no Save menu', async () => {
+    test('is a plain button next to Discard on a common query the caller cannot write, with no Save group', async () => {
       const user = userEvent.setup();
       setFullAdmin(false);
       renderPage(savedQuery({ scope: SavedQueryScope.Common }));
 
       await editLimit(user);
 
-      expect(saveAsNewButton()).toBeEnabled();
+      expect(saveACopyButton()).toBeEnabled();
       expect(discardButton()).toBeInTheDocument();
+      expect(saveGroup()).toBeNull();
       expect(saveButton()).toBeNull();
+      expect(saveOptionsButton()).toBeNull();
       expect(duplicateButton()).toBeNull();
     });
 
-    test('opens a modal seeded with the source name and a copy suffix', async () => {
+    test('opens a Save a copy modal seeded with the source name and a copy suffix', async () => {
       const user = userEvent.setup();
       renderPage();
 
-      await openSaveAs(user);
+      const dialog = await openSaveCopy(user);
 
-      expect(screen.getByDisplayValue('Top chats (copy)')).toBeInTheDocument();
+      expect(within(dialog).getByDisplayValue('Top chats (copy)')).toBeInTheDocument();
+      expect(within(dialog).getByRole('button', { name: 'Queries.SaveACopy' })).toBeEnabled();
+    });
+
+    test('opens the same Save a copy modal from the plain button for a caller who cannot write', async () => {
+      const user = userEvent.setup();
+      setFullAdmin(false);
+      renderPage(savedQuery({ scope: SavedQueryScope.Common }));
+
+      const dialog = await openSaveCopy(user, false);
+
+      expect(within(dialog).getByRole('button', { name: 'Queries.SaveACopy' })).toBeEnabled();
     });
 
     test('creates a new query from the unsaved edits and leaves the source alone', async () => {
       const user = userEvent.setup();
       renderPage();
 
-      await submitSaveAs(user);
+      await submitSaveCopy(user);
 
       const request = createdRequest();
       expect(request.name).toBe('Top chats (copy)');
@@ -780,7 +861,7 @@ describe('QueryBuilder — a stored saved query', () => {
       setFullAdmin(false);
       renderPage(savedQuery({ scope: SavedQueryScope.Common }));
 
-      await submitSaveAs(user, false);
+      await submitSaveCopy(user, false);
 
       expect(createdRequest().scope).toBe(SavedQueryScope.Personal);
     });
@@ -789,9 +870,9 @@ describe('QueryBuilder — a stored saved query', () => {
       const user = userEvent.setup();
       renderPage();
 
-      await submitSaveAs(user);
+      const dialog = await submitSaveCopy(user);
 
-      await waitFor(() => expect(screen.queryByText('Queries.SaveQueryAs')).toBeNull());
+      await waitFor(() => expect(dialog).not.toBeInTheDocument());
       expect(mockPush).not.toHaveBeenCalled();
       expect(saveButton()).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Top chats' })).toBeInTheDocument();
@@ -813,10 +894,10 @@ describe('QueryBuilder — a stored saved query', () => {
       });
       renderPage();
 
-      await submitSaveAs(user);
+      const dialog = await submitSaveCopy(user);
 
       await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
-      expect(screen.getByText('Queries.SaveQueryAs')).toBeInTheDocument();
+      expect(dialog).toBeInTheDocument();
       expect(mockShowNotification).toHaveBeenCalledWith(
         expect.objectContaining({ description: "unknown column 'project_id'" }),
       );
@@ -826,11 +907,10 @@ describe('QueryBuilder — a stored saved query', () => {
       const user = userEvent.setup();
       renderPage();
 
-      const header = await openSaveAs(user);
-      const dialog = header.closest('[role="dialog"]') as HTMLElement;
+      const dialog = await openSaveCopy(user);
       await user.click(within(dialog).getByRole('button', { name: 'Buttons.Cancel' }));
 
-      expect(screen.queryByText('Queries.SaveQueryAs')).toBeNull();
+      await waitFor(() => expect(dialog).not.toBeInTheDocument());
       expect(saveButton()).toBeInTheDocument();
       expect(createSavedQuery).not.toHaveBeenCalled();
     });
@@ -841,7 +921,7 @@ describe('QueryBuilder — a stored saved query', () => {
 
       fireEvent.change(await screen.findByLabelText('sql-editor'), { target: { value: '' } });
 
-      await waitFor(() => expect(saveAsNewButton()).toBeDisabled());
+      await waitFor(() => expect(saveACopyButton()).toBeDisabled());
     });
   });
 
@@ -1019,16 +1099,32 @@ describe('QueryBuilder — a draft', () => {
     expect(resetButton()).toBeEnabled();
   });
 
+  test('asks for confirmation in a reset query popup', async () => {
+    const user = userEvent.setup();
+    renderDraft();
+    await editLimit(user);
+
+    await user.click(resetButton()!);
+
+    const dialog = await findDialog('Queries.ResetQueryHeader');
+    expect(within(dialog).getByText('Queries.ResetQueryDescription')).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Buttons.Reset' })).toBeEnabled();
+    expect(within(dialog).getByRole('button', { name: 'Buttons.ContinueEditing' })).toBeEnabled();
+  });
+
   test('returns to the starting state when Reset is confirmed', async () => {
     const user = userEvent.setup();
     renderDraft();
     await editLimit(user);
 
     await user.click(resetButton()!);
-    await user.click(await screen.findByRole('button', { name: 'Buttons.Discard' }));
+    const dialog = await findDialog('Queries.ResetQueryHeader');
+    await user.click(within(dialog).getByRole('button', { name: 'Buttons.Reset' }));
 
     await waitFor(() => expect(resetButton()).toBeNull());
+    expect(dialog).not.toBeInTheDocument();
     expect(saveAsQueryButton()).toBeEnabled();
+    expect(await openLimitRows(user)).toHaveValue(DEFAULT_PAGE_LIMIT);
   });
 
   test('keeps the changes when Reset is cancelled', async () => {
@@ -1037,8 +1133,10 @@ describe('QueryBuilder — a draft', () => {
     await editLimit(user);
 
     await user.click(resetButton()!);
-    await user.click(await screen.findByRole('button', { name: 'Buttons.ContinueEditing' }));
+    const dialog = await findDialog('Queries.ResetQueryHeader');
+    await user.click(within(dialog).getByRole('button', { name: 'Buttons.ContinueEditing' }));
 
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
     expect(resetButton()).toBeEnabled();
   });
 
@@ -1048,7 +1146,7 @@ describe('QueryBuilder — a draft', () => {
     await editLimit(user);
 
     await user.click(saveAsQueryButton()!);
-    const dialog = (await screen.findByText('Queries.SaveQueryAs')).closest('[role="dialog"]') as HTMLElement;
+    const dialog = await findDialog('Queries.SaveAsQuery');
     const submitButton = within(dialog).getByRole('button', { name: 'Buttons.Save' });
     expect(submitButton).toBeDisabled();
 
@@ -1072,7 +1170,7 @@ describe('QueryBuilder — a draft', () => {
     renderDraft();
 
     await user.click(saveAsQueryButton()!);
-    const dialog = (await screen.findByText('Queries.SaveQueryAs')).closest('[role="dialog"]') as HTMLElement;
+    const dialog = await findDialog('Queries.SaveAsQuery');
     fireEvent.change(within(dialog).getByRole('textbox', { name: /EntityFields.displayName/ }), {
       target: { value: 'From a draft' },
     });
@@ -1080,12 +1178,12 @@ describe('QueryBuilder — a draft', () => {
 
     await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
     expect(mockPush).not.toHaveBeenCalled();
-    expect(screen.getByText('Queries.SaveQueryAs')).toBeInTheDocument();
+    expect(dialog).toBeInTheDocument();
   });
 });
 
 describe('QueryBuilder — Add to dashboard', () => {
-  const addToDashboardButton = () => screen.queryByRole('button', { name: 'CustomDashboards.AddToDashboard' });
+  const addToDashboardButton = () => screen.queryByRole('button', { name: 'CustomDashboards.AddToDashboards' });
 
   const setCustomDashboards = (isEnabled: boolean) =>
     vi.mocked(useAppContext).mockReturnValue({

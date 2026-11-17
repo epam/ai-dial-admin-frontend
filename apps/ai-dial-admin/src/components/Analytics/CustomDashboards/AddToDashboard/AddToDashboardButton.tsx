@@ -22,7 +22,7 @@ const AddToDashboardButton: FC<Props> = ({ savedQuery }) => {
   return (
     <>
       <GhostButton
-        label={t(CustomDashboardsI18nKey.AddToDashboard)}
+        label={t(CustomDashboardsI18nKey.AddToDashboards)}
         iconBefore={<IconLayoutDashboard {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
         onClick={() => setIsOpen(true)}
       />

@@ -27,7 +27,7 @@ The response's optional members SHALL be modelled as optional rather than nullab
 
 #### Scenario: A structured body is sent when the SQL buffer is not in play
 
-- **WHEN** the query being saved was authored in the Builder or JSON view
+- **WHEN** the query being saved was authored in the Builder view
 - **THEN** the payload carries `query` and omits `sql`
 
 #### Scenario: A multi-entity source is read as a list
@@ -126,78 +126,11 @@ SHALL stay as it was, unsaved changes included.
 - **WHEN** the user cancels the confirmation
 - **THEN** nothing is deleted and the page is unchanged
 
-### Requirement: A query page loads its stored query into the builder
-
-The Analytics group SHALL provide a `/queries/{id}` page rendering the Query Builder seeded from the stored saved query. The page SHALL be an `async` server component gated by the same Analytics access check as the other Analytics pages, and SHALL resolve to a not-found result when the query cannot be read — the service reports a query the caller may not see as absent rather than forbidden, so the two cases SHALL be indistinguishable to the user.
-
-The page SHALL fetch the schema of **the stored query's primary source**, not the first queryable entity's. The view the builder opens in SHALL be derived from the body: a SQL body opens the SQL view with the stored text laid out one clause per line, a structured body the visual builder can represent opens the Builder view hydrated from it, and any other structured body opens the JSON view showing it. The heading SHALL show the query's name.
-
-The page SHALL offer no control that switches the query's source. Picking another table SHALL open a
-draft on that table and SHALL leave the stored query untouched.
-
-A query reading from several entities SHALL open the same way — its stored SQL shown in the SQL view — with the schema of its primary source loaded. Switching such a query to the Builder or JSON view SHALL follow the existing translation behaviour for SQL the DSL cannot express: the service refuses the translation and the discard guard applies.
-
-The laid-out text SHALL be the query's unedited baseline, so opening a query stored on one line SHALL NOT mark it as having unsaved changes. Saving from the SQL view SHALL send the SQL view's text as shown, so the first save after opening stores the laid-out form. Editing a query's metadata or saving it as a new query without edits SHALL send the stored SQL unchanged, because neither re-authors the body.
-
-The stored time intent SHALL be applied to the toolbar time filter: a relative intent selects that period, an absolute intent selects that custom range, and an absent intent leaves the toolbar at its default. A relative period the frontend does not recognise SHALL leave the toolbar unchanged and SHALL NOT prevent the query from loading.
-
-#### Scenario: A structured body opens in the Builder view
-
-- **WHEN** the user opens a query whose structured body the visual builder can represent
-- **THEN** the Builder view is shown reflecting that query
-- **AND** the heading shows the query's name
-
-#### Scenario: An unrepresentable structured body opens in the JSON view
-
-- **WHEN** the user opens a query whose structured body the visual builder cannot represent
-- **THEN** the JSON view is shown containing that body
-
-#### Scenario: A SQL body opens in the SQL view
-
-- **WHEN** the user opens a query carrying a SQL body
-- **THEN** the SQL view is shown containing the stored statement, one clause per line
-- **AND** entering the SQL view does not overwrite it with a re-seeded translation
-
-#### Scenario: Saving an opened SQL query stores the laid-out text
-
-- **WHEN** the user opens a query whose SQL is stored on one line
-- **THEN** the page reports no unsaved changes
-- **WHEN** the user saves it from the SQL view
-- **THEN** the payload's `sql` is the text the SQL view shows
-
-#### Scenario: The schema loaded is the query's own source
-
-- **WHEN** the user opens a query whose source is not the first queryable entity
-- **THEN** the fields available to the builder are that source's fields
-
-#### Scenario: A composite query opens with its primary source's schema
-
-- **WHEN** the user opens a query whose SQL joins two entities
-- **THEN** the SQL view shows the stored statement
-- **AND** the schema requested is that of the query's primary source, so that entity's fields are available
-- **AND** the page does not report a failed schema load
-
-#### Scenario: Picking a table does not change the stored query
-
-- **WHEN** a saved query is open and the user picks another table
-- **THEN** a draft on that table opens
-- **AND** the saved query's stored source is unchanged
-
-#### Scenario: An unreadable query is not found
-
-- **WHEN** the user opens an id that does not exist, or one belonging to another caller's personal scope
-- **THEN** the page resolves to a not-found result, identically in both cases
-
-#### Scenario: An unrecognised relative period still loads
-
-- **WHEN** a stored query carries a relative period the frontend does not recognise
-- **THEN** the query loads and the toolbar time filter is left as it was
-
 ### Requirement: Saving persists authored intent, not a resolved range
 
 Saving SHALL persist the query as authored intent. The persisted structured body SHALL be serialized **without** the toolbar's time bound, and the authored range SHALL travel separately as time intent: a preset period SHALL be stored as its relative token and SHALL NOT be resolved to instants, and a custom range SHALL be stored as an absolute pair. An absolute pair whose start is after its end SHALL be ordered before it is sent.
 
-This is the load-bearing distinction: serializing the range into the body — as the Run and JSON-view paths correctly do — would freeze the query to the day it was authored, and the service cannot detect that because a frozen range is a valid query.
+This is the load-bearing distinction: serializing the range into the body — as the Run path correctly does — would freeze the query to the day it was authored, and the service cannot detect that because a frozen range is a valid query.
 
 Saving SHALL replace the stored query and SHALL then re-read it so the page reflects what was persisted. On success a success notification SHALL be shown; on failure an error notification SHALL be shown and the unsaved edits SHALL be preserved.
 
@@ -400,12 +333,20 @@ On success a success notification SHALL be shown and the affected view SHALL ref
 
 ### Requirement: Save a saved query as a new query
 
-A query page SHALL offer **Save as** in the builder toolbar's actions area whether or not it holds
-unsaved changes: with unsaved changes it stores them as a new query, without them it copies the query.
-Save as SHALL be offered whether or not the caller may write the source query, because it writes only a
-new query the caller owns; on a common query the caller may not write it SHALL be offered while Save is
-not. Save as SHALL be unavailable under the same conditions that make Save unavailable for an unrunnable
-query, and while a save is in flight.
+A query page SHALL offer saving a saved query as a new one — referred to below as Save as — under two
+names, by whether the page holds unsaved changes. Without unsaved changes the heading row SHALL offer
+**Duplicate**, which copies the query as stored. With unsaved changes the Save control SHALL be a split
+control: its main part, **Save**, writes the changes to the query at once, and its second part opens a
+menu with one entry, **Save a copy…**, which stores them as a new query; Duplicate SHALL NOT be offered
+then. Save as SHALL be offered whether or not the caller may write the source query, because it writes
+only a new query the caller owns: on a common query the caller may not write, the page with unsaved
+changes SHALL offer **Save a copy** as an action of its own, with no Save. Save as SHALL be unavailable
+under the same conditions that make Save unavailable for an unrunnable query, and while a save is in
+flight.
+
+The modal SHALL be titled and confirmed by the action that opened it: **Duplicate query** with a
+**Duplicate** button, **Save a copy** with a **Save a copy** button, and, for a draft, **Save as query**
+with a **Save** button.
 
 Activating Save as SHALL open a modal that shares its field set with the edit modal — a **required**
 name and an optional description and tag. A blank name SHALL block submission; a name already in use
@@ -434,18 +375,19 @@ SHALL leave the page and its unsaved edits as they were.
 #### Scenario: Save as appears with unsaved changes
 
 - **WHEN** the user edits a stored query on its page
-- **THEN** Save as is offered alongside Discard and Save
+- **THEN** the Save control saves on its main part and offers Save a copy… on its menu, beside Discard
+- **AND** Duplicate is not offered
 
 #### Scenario: Save as is offered without unsaved changes
 
 - **WHEN** the query page holds no unsaved changes
-- **THEN** Save as is offered
+- **THEN** Duplicate is offered
 - **AND** Save and Discard are not
 
 #### Scenario: Save as is offered on a common query the caller cannot write
 
 - **WHEN** a caller who is not a full administrator opens a common-scope query on its page
-- **THEN** Save as is offered
+- **THEN** Duplicate is offered, and once the page holds unsaved changes Save a copy is offered
 - **AND** Save is not
 
 #### Scenario: Save as is unavailable for an unrunnable query
@@ -519,4 +461,101 @@ SHALL leave the page and its unsaved edits as they were.
 
 - **WHEN** the user cancels the Save as modal
 - **THEN** the page still holds its unsaved edits
+
+### Requirement: A saved query's page loads its stored query
+
+The Analytics group SHALL provide a `/queries/{id}` page rendering the Query Builder seeded from the stored saved query. The page SHALL be an `async` server component gated by the same Analytics access check as the other Analytics pages, and SHALL resolve to a not-found result when the query cannot be read — the service reports a query the caller may not see as absent rather than forbidden, so the two cases SHALL be indistinguishable to the user.
+
+The page SHALL fetch the schema of **the stored query's primary source**, not the first queryable entity's. The view the builder opens in SHALL be derived from the body: a SQL body opens the SQL view with the stored text laid out one clause per line, a structured body the chips can show opens the Builder view hydrated from it, and any other structured body opens the SQL view showing the SQL the service translates that body to. The translation SHALL be requested on the server together with the page, and its text SHALL be the query's unedited baseline, so opening such a query SHALL NOT mark it as having unsaved changes; saving it from the SQL view SHALL store it as SQL. When the service cannot translate the body — it refuses, or the request fails in transit — the SQL view SHALL open empty with Run disabled and an error notification SHALL report it, carrying the service's message when there is one. The stored body SHALL be held aside for as long as the user authors nothing in its place: while the SQL editor is empty and the chips are as the page opened them, the page SHALL NOT report unsaved changes for the body, in either view, and a save of some other change SHALL store the body unchanged. Once the user types SQL or changes a chip, what they authored SHALL be the body that is saved. The heading SHALL show the query's name.
+
+The page SHALL offer no control that switches the query's source. Picking another table SHALL open a
+draft on that table and SHALL leave the stored query untouched.
+
+A query reading from several entities SHALL open the same way — its stored SQL shown in the SQL view — with the schema of its primary source loaded. Switching such a query to the Builder view SHALL follow the existing translation behaviour for SQL the DSL cannot express: the service refuses the translation and the discard guard applies.
+
+The laid-out text SHALL be the query's unedited baseline, so opening a query stored on one line SHALL NOT mark it as having unsaved changes. Saving from the SQL view SHALL send the SQL view's text as shown, so the first save after opening stores the laid-out form. Editing a query's metadata or saving it as a new query without edits SHALL send the stored SQL unchanged, because neither re-authors the body.
+
+A structured body that opens as SQL has no Period chip to carry its stored time intent, and the stored body never holds the period. Before such a body is translated, the stored time intent SHALL therefore be written into it as the same bound on the source's timestamp field that the Period chip serializes — relative for a recognised period, two instants for an absolute range — so the SQL shown is bounded as the query was saved. A body with no stored intent, an unrecognised period, or a source without a timestamp field SHALL be translated as stored.
+
+The stored time intent SHALL be applied to the toolbar time filter: a relative intent selects that period, an absolute intent selects that custom range, and an absent intent leaves the toolbar at its default. A relative period the frontend does not recognise SHALL leave the toolbar unchanged and SHALL NOT prevent the query from loading.
+
+#### Scenario: A structured body opens in the Builder view
+
+- **WHEN** the user opens a query whose structured body the chips can show
+- **THEN** the Builder view is shown reflecting that query
+- **AND** the heading shows the query's name
+
+#### Scenario: A structured body the chips cannot show opens as SQL
+
+- **WHEN** the user opens a query whose structured body the chips cannot show
+- **THEN** the SQL view is shown containing the SQL the service translated that body to
+- **AND** the page reports no unsaved changes
+
+#### Scenario: The translated SQL carries the stored period
+
+- **WHEN** the user opens a query whose structured body the chips cannot show and which stores a time intent
+- **THEN** the SQL shown bounds the source's timestamp field by that period, so running it returns the rows the stored query was saved to return
+
+#### Scenario: A body the service cannot translate opens an empty SQL view
+
+- **WHEN** the user opens a query whose structured body the chips cannot show and the service refuses to translate it
+- **THEN** the SQL view is shown empty with Run disabled
+- **AND** an error notification carries the service's message
+
+#### Scenario: A held body survives a visit to the Builder
+
+- **WHEN** the service could not translate the body and the user switches to the Builder view without changing a chip
+- **THEN** the page reports no unsaved changes
+- **AND** saving some other change stores the body as it was
+
+#### Scenario: Authoring replaces a held body
+
+- **WHEN** the service could not translate the body and the user changes a chip and saves
+- **THEN** the query the chips state is stored
+
+#### Scenario: A translation that fails in transit is reported
+
+- **WHEN** the request to translate the body fails in transit
+- **THEN** the SQL view is shown empty and an error notification reports the failure
+
+#### Scenario: A SQL body opens in the SQL view
+
+- **WHEN** the user opens a query carrying a SQL body
+- **THEN** the SQL view is shown containing the stored statement, one clause per line
+- **AND** entering the SQL view does not overwrite it with a re-seeded translation
+
+#### Scenario: Saving an opened SQL query stores the laid-out text
+
+- **WHEN** the user opens a query whose SQL is stored on one line
+- **THEN** the page reports no unsaved changes
+- **WHEN** the user saves it from the SQL view
+- **THEN** the payload's `sql` is the text the SQL view shows
+
+#### Scenario: The schema loaded is the query's own source
+
+- **WHEN** the user opens a query whose source is not the first queryable entity
+- **THEN** the fields available to the builder are that source's fields
+
+#### Scenario: A composite query opens with its primary source's schema
+
+- **WHEN** the user opens a query whose SQL joins two entities
+- **THEN** the SQL view shows the stored statement
+- **AND** the schema requested is that of the query's primary source, so that entity's fields are available
+- **AND** the page does not report a failed schema load
+
+#### Scenario: Picking a table does not change the stored query
+
+- **WHEN** a saved query is open and the user picks another table
+- **THEN** a draft on that table opens
+- **AND** the saved query's stored source is unchanged
+
+#### Scenario: An unreadable query is not found
+
+- **WHEN** the user opens an id that does not exist, or one belonging to another caller's personal scope
+- **THEN** the page resolves to a not-found result, identically in both cases
+
+#### Scenario: An unrecognised relative period still loads
+
+- **WHEN** a stored query carries a relative period the frontend does not recognise
+- **THEN** the query loads and the toolbar time filter is left as it was
 
