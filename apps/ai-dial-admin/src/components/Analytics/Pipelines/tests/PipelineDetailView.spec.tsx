@@ -452,6 +452,26 @@ describe('PipelineDetailView', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
   });
 
+  test('presents the input token budget only for a group trigger', async () => {
+    const { unmount } = await renderLoaded({ trigger: { kind: TriggerKind.Group } });
+    expect(screen.getByLabelText(AnalyticsPipelinesI18nKey.InputTokenBudget, { exact: false })).toBeTruthy();
+    unmount();
+
+    await renderLoaded();
+    expect(screen.queryByLabelText(AnalyticsPipelinesI18nKey.InputTokenBudget, { exact: false })).toBeNull();
+  });
+
+  test('a fractional input token budget is reported and holds the save back', async () => {
+    const user = userEvent.setup();
+    await renderLoaded({ trigger: { kind: TriggerKind.Group } });
+
+    const input = screen.getByLabelText(AnalyticsPipelinesI18nKey.InputTokenBudget, { exact: false });
+    await user.type(input, '1.5');
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.InputTokenBudgetInvalid)).toBeTruthy();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+
   test('carries a member no control presents through the save', async () => {
     const user = userEvent.setup();
     await renderLoaded({ filter: 'score > 0.5', advanced: { rows_per_scan: 100, rate_rpm: 60 } });

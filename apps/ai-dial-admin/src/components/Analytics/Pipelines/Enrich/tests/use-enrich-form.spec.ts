@@ -344,6 +344,31 @@ describe('useEnrichForm — what the console still judges', () => {
     expect(result.current.isMemberSelectValid).toBe(true);
   });
 
+  test.each([
+    [undefined, true],
+    [0, true],
+    [4000, true],
+    [-1, false],
+    [1.5, false],
+  ])('an input token budget of %s is valid: %s', (budget, isValid) => {
+    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+
+    act(() => result.current.onChange({ advanced: { input_token_budget: budget } }));
+
+    expect(result.current.isInputTokenBudgetValid).toBe(isValid);
+  });
+
+  test('an invalid input token budget withholds the save only under a group trigger', () => {
+    const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
+
+    act(() => result.current.onChange({ advanced: { input_token_budget: -1 } }));
+    act(() => result.current.onTriggerChange({ kind: TriggerKind.Group, ready_when: { idle: '30m' } }));
+    expect(result.current.hasFieldErrors).toBe(true);
+
+    act(() => result.current.onTriggerChange({ kind: TriggerKind.Schedule }));
+    expect(result.current.hasFieldErrors).toBe(false);
+  });
+
   test('a cost ceiling that is not a positive integer is reported', () => {
     const { result } = renderForm({ initialDraft: { kind: PipelineKind.Enrich } });
 
