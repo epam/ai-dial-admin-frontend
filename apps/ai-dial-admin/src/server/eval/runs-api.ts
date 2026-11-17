@@ -5,6 +5,8 @@ import {
   Run,
   RunTotalCosts,
   RunsTotalCostsRequest,
+  SuitePassRateRequest,
+  SuitePassRateResponse,
 } from '@/src/models/evaluation/run';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -21,6 +23,7 @@ export const DEPLOYMENT_COSTS_URL = (deploymentId: string, fromMs: number, toMs:
   `${API}/costs/deployment/${encodeCorePath(deploymentId)}?from=${fromMs}&to=${toMs}`;
 export const RUN_CANCEL_URL = (id: string) => `${RUN_URL(id)}/cancel`;
 export const RUN_RESULTS_URL = `${API}/analytics/test-case-results`;
+export const SUITE_PASS_RATE_URL = `${API}/analytics/test-suites/pass-rate`;
 export class RunsApi extends BaseApi {
   getRuns(
     page: number,
@@ -68,5 +71,9 @@ export class RunsApi extends BaseApi {
       `${RUN_RESULTS_URL}?size=1000&${getRequestFiltersStr(filters)}`,
       token,
     );
+  }
+
+  getSuitePassRate(request: SuitePassRateRequest, token: Token): Promise<SuitePassRateResponse | null> {
+    return this.post(SUITE_PASS_RATE_URL, request, token);
   }
 }
