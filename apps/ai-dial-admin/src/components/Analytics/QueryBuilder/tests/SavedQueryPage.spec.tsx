@@ -726,6 +726,24 @@ describe('QueryBuilder — a stored saved query', () => {
       expect(mockPush).not.toHaveBeenCalled();
       expect(mockRefresh).not.toHaveBeenCalled();
     });
+
+    test('deletes on a second confirmation after a failed one', async () => {
+      const user = userEvent.setup();
+      vi.mocked(deleteSavedQuery)
+        .mockResolvedValueOnce({ success: false, errorHeader: 'busy' })
+        .mockResolvedValueOnce({ success: true });
+      renderPage();
+
+      const dialog = await openDelete(user);
+      await user.click(within(dialog).getByRole('button', { name: 'Queries.DeleteQuery' }));
+      const retry = await within(dialog).findByRole('button', { name: 'Queries.DeleteQuery' });
+      await user.click(retry);
+
+      await waitFor(() => expect(dialog).not.toBeInTheDocument());
+      expect(deleteSavedQuery).toHaveBeenCalledTimes(2);
+      expect(mockPush).toHaveBeenCalledOnce();
+      expect(mockRefresh).toHaveBeenCalledOnce();
+    });
   });
 
   describe('Save controls', () => {
