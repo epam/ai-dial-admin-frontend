@@ -23,7 +23,7 @@ import {
 import { useModalFocus } from '@/src/components/Analytics/Tables/ConnectPanel/use-modal-focus';
 import { AnalyticsTablesI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableType, TableGrantKey } from '@/src/models/analytics/table';
 
 interface Props {
   table: AnalyticsTable;
@@ -70,7 +70,11 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
       try {
         const access = await getTableAccess(table.name);
         if (!isCurrent) return;
-        setWriteRoles(access.response?.write ?? []);
+        setWriteRoles(
+          Object.entries(access.response?.roles ?? {})
+            .filter(([, entry]) => entry.privileges.includes(TableGrantKey.Write))
+            .map(([role]) => role),
+        );
         setIsAccessReadable(Boolean(access.response));
       } catch {
         if (isCurrent) setIsAccessReadable(false);
