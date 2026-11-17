@@ -1,7 +1,5 @@
 'use client';
 
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */
-
 import { FC, KeyboardEvent } from 'react';
 
 interface Props {
@@ -29,8 +27,10 @@ const BuilderAreaHandle: FC<Props> = ({ ariaLabel, height, minHeight, maxHeight,
   };
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <div
       role="separator"
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
       tabIndex={0}
       aria-label={ariaLabel}
       aria-orientation="horizontal"
