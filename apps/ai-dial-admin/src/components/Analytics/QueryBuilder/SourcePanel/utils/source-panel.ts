@@ -1,5 +1,6 @@
 import {
   QueryScopeFilter,
+  QueryTree,
   SourceTable,
   TableColumnTree,
 } from '@/src/components/Analytics/QueryBuilder/SourcePanel/models';
@@ -71,7 +72,30 @@ export const groupColumnsByTag = (fields: AnalyticsEntityField[], tagOrder: stri
 export const resolveDraftTable = (entities: AnalyticsEntity[], requested?: string): string =>
   entities.find((entity) => entity.name === requested)?.name ?? entities[0]?.name ?? '';
 
-export const getDraftHref = (locale: string, table: string): string =>
-  `/${locale}${ApplicationRoute.AnalyticsQueries}?table=${encodeURIComponent(table)}`;
+export const getDraftHref = (locale: string): string => `/${locale}${ApplicationRoute.AnalyticsQueries}`;
 
 export const getGroupKey = (table: string, tag: string): string => `${table}:${tag}`;
+
+export const getQueryGroupKey = (tag: string): string => `query-tag:${tag}`;
+
+export const groupQueriesByTag = (queries: SavedQuery[]): QueryTree => {
+  const byTag = new Map<string, SavedQuery[]>();
+  const untagged: SavedQuery[] = [];
+
+  queries.forEach((query) => {
+    const tag = query.tag?.trim();
+    if (!tag) {
+      untagged.push(query);
+      return;
+    }
+    const bucket = byTag.get(tag);
+    if (bucket) bucket.push(query);
+    else byTag.set(tag, [query]);
+  });
+
+  const groups = [...byTag.entries()]
+    .map(([tag, grouped]) => ({ tag, queries: grouped }))
+    .sort((a, b) => a.tag.localeCompare(b.tag, undefined, { sensitivity: 'base' }));
+
+  return { groups, untagged };
+};

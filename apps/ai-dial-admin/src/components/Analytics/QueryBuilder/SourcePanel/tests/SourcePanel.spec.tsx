@@ -7,6 +7,7 @@ import { getEntitySchema } from '@/src/app/[lang]/queries/actions';
 import QueryPageShell from '@/src/components/Analytics/QueryBuilder/SourcePanel/QueryPageShell';
 import {
   SourcePanelProvider,
+  useSourcePanel,
   useSourcePanelUnsavedWork,
 } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
 import { SourceTable } from '@/src/components/Analytics/QueryBuilder/SourcePanel/models';
@@ -69,8 +70,9 @@ interface PanelProps {
 }
 
 const UnsavedWork: FC<Pick<PanelProps, 'hasUnsavedWork' | 'onDiscard'>> = ({ hasUnsavedWork = false, onDiscard }) => {
+  const { draftTable } = useSourcePanel();
   useSourcePanelUnsavedWork(hasUnsavedWork, onDiscard);
-  return <div>builder</div>;
+  return <div>builder on {draftTable ?? 'the default table'}</div>;
 };
 
 const renderPanel = ({
@@ -176,13 +178,20 @@ describe('SourcePanel', () => {
   });
 
   describe('Tables tab', () => {
-    test('links each table to a draft on it', () => {
+    test('links each table to the draft builder', () => {
       renderPanel();
 
-      expect(screen.getByRole('link', { name: 'conversation' })).toHaveAttribute(
-        'href',
-        '/en/queries?table=conversation',
-      );
+      expect(screen.getByRole('link', { name: 'conversation' })).toHaveAttribute('href', '/en/queries');
+    });
+
+    test('makes the picked table the table of the draft', async () => {
+      const user = userEvent.setup();
+      renderPanel();
+      expect(screen.getByText('builder on the default table')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('link', { name: 'dial_usage_log' }));
+
+      expect(await screen.findByText('builder on dial_usage_log')).toBeInTheDocument();
     });
 
     test('narrows the list by table name', () => {
@@ -316,7 +325,7 @@ describe('SourcePanel', () => {
 
       await user.click(toggles()[0]);
       expect(await screen.findByText('QuerySourcePanel.ColumnsLoadFailed')).toBeInTheDocument();
-      expect(screen.getByText('builder')).toBeInTheDocument();
+      expect(screen.getByText(/^builder/)).toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: 'QuerySourcePanel.Retry' }));
 
@@ -389,6 +398,105 @@ describe('SourcePanel', () => {
     });
   });
 
+  describe('Queries tab — tag groups', () => {
+    const TAGGED: SavedQuery[] = [
+      savedQuery({ id: 'q_1', name: 'aardvark' }),
+      savedQuery({ id: 'q_2', name: 'Revenue', tag: 'Beta', scope: SavedQueryScope.Personal }),
+      savedQuery({ id: 'q_3', name: 'weekly users', tag: 'alpha' }),
+      savedQuery({ id: 'q_4', name: 'Daily users', tag: 'alpha' }),
+      savedQuery({ id: 'q_5', name: 'blank tagged', tag: '  ' }),
+    ];
+
+    const groupHeaders = () => screen.getAllByRole('button', { name: 'QuerySourcePanel.QueryTag' });
+    const linkNames = () => screen.getAllByRole('link').map((link) => link.textContent);
+
+    test('lists a group per tag ordered by tag name ignoring case, each with its tag and query count', () => {
+      renderPanel({ queries: TAGGED, currentQueryId: 'q_1' });
+
+      expect(groupHeaders().map((header) => header.textContent)).toEqual(['alpha2', 'Beta1']);
+    });
+
+    test('keeps the name order inside a group and lists untagged queries after every group', () => {
+      renderPanel({ queries: TAGGED, currentQueryId: 'q_1' });
+
+      expect(linkNames()).toEqual(['Daily users', 'weekly users', 'Revenue', 'aardvark', 'blank tagged']);
+    });
+
+    test('marks the current query inside its group', () => {
+      renderPanel({ queries: TAGGED, currentQueryId: 'q_4' });
+
+      expect(screen.getByRole('link', { name: 'Daily users' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('link', { name: 'weekly users' })).not.toHaveAttribute('aria-current');
+    });
+
+    test('starts every group expanded', () => {
+      renderPanel({ queries: TAGGED, currentQueryId: 'q_1' });
+
+      groupHeaders().forEach((header) => expect(header).toHaveAttribute('aria-expanded', 'true'));
+    });
+
+    test('collapses one group on its own and expands it again', async () => {
+      const user = userEvent.setup();
+      renderPanel({ queries: TAGGED, currentQueryId: 'q_1' });
+
+      await user.click(groupHeaders()[0]);
+
+      expect(groupHeaders()[0]).toHaveAttribute('aria-expanded', 'false');
+      expect(groupHeaders()[1]).toHaveAttribute('aria-expanded', 'true');
+      expect(linkNames()).toEqual(['Revenue', 'aardvark', 'blank tagged']);
+
+      await user.click(groupHeaders()[0]);
+
+      expect(groupHeaders()[0]).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('link', { name: 'Daily users' })).toBeInTheDocument();
+    });
+
+    test('drops a group whose queries the search filters out', () => {
+      renderPanel({ queries: TAGGED, currentQueryId: 'q_1' });
+
+      fireEvent.change(screen.getByRole('textbox', { name: 'QuerySourcePanel.SearchQueries' }), {
+        target: { value: 'users' },
+      });
+
+      expect(groupHeaders().map((header) => header.textContent)).toEqual(['alpha2']);
+      expect(linkNames()).toEqual(['Daily users', 'weekly users']);
+    });
+
+    test('keeps a whole group when the search matches its tag', () => {
+      renderPanel({ queries: TAGGED, currentQueryId: 'q_1' });
+
+      fireEvent.change(screen.getByRole('textbox', { name: 'QuerySourcePanel.SearchQueries' }), {
+        target: { value: 'ALPHA' },
+      });
+
+      expect(groupHeaders().map((header) => header.textContent)).toEqual(['alpha2']);
+      expect(linkNames()).toEqual(['Daily users', 'weekly users']);
+    });
+
+    test('shows no group header when the search leaves only untagged queries', () => {
+      renderPanel({ queries: TAGGED, currentQueryId: 'q_1' });
+
+      fireEvent.change(screen.getByRole('textbox', { name: 'QuerySourcePanel.SearchQueries' }), {
+        target: { value: 'aardvark' },
+      });
+
+      expect(linkNames()).toEqual(['aardvark']);
+      expect(screen.queryByRole('button', { name: 'QuerySourcePanel.QueryTag' })).toBeNull();
+    });
+
+    test('drops the groups the scope filter empties', async () => {
+      const user = userEvent.setup();
+      renderPanel({ queries: TAGGED, currentQueryId: 'q_1' });
+
+      await user.click(screen.getByRole('button', { name: 'QuerySourcePanel.ScopeFilter' }));
+      await user.click(await screen.findByRole('menuitemradio', { name: 'Queries.ScopePersonal' }));
+
+      expect(await screen.findByRole('button', { name: 'QuerySourcePanel.ScopeFilterActive' })).toBeInTheDocument();
+      expect(groupHeaders().map((header) => header.textContent)).toEqual(['Beta1']);
+      expect(linkNames()).toEqual(['Revenue']);
+    });
+  });
+
   describe('narrow viewport', () => {
     const originalWidth = window.innerWidth;
 
@@ -407,7 +515,7 @@ describe('SourcePanel', () => {
       await user.click(await screen.findByRole('button', { name: 'QuerySourcePanel.Expand' }));
 
       expect(tab('QuerySourcePanel.Tables')).toBeInTheDocument();
-      expect(screen.getByText('builder')).toBeInTheDocument();
+      expect(screen.getByText(/^builder/)).toBeInTheDocument();
       expect(localStorage.getItem('query-builder-source-panel-collapsed')).toBeNull();
     });
 
@@ -460,14 +568,14 @@ describe('SourcePanel', () => {
         </SourcePanelProvider>
       );
       const { rerender } = render(renderShell('sq_1'));
-      const list = screen.getByRole('list');
+      const list = screen.getAllByRole('list')[0];
       list.scrollTop = 120;
       fireEvent.scroll(list);
 
       rerender(renderShell('sq_2'));
 
-      expect(screen.getByRole('list')).not.toBe(list);
-      expect(screen.getByRole('list').scrollTop).toBe(120);
+      expect(screen.getAllByRole('list')[0]).not.toBe(list);
+      expect(screen.getAllByRole('list')[0].scrollTop).toBe(120);
     });
   });
 
@@ -489,10 +597,12 @@ describe('SourcePanel', () => {
       await user.click(screen.getByRole('link', { name: 'dial_usage_log' }));
       const dialog = (await screen.findByText('Entities.DiscardChanges')).closest('[role="dialog"]') as HTMLElement;
       expect(mockPush).not.toHaveBeenCalled();
+      expect(screen.getByText('builder on the default table')).toBeInTheDocument();
 
       await user.click(within(dialog).getByRole('button', { name: 'Buttons.Discard' }));
 
-      expect(mockPush).toHaveBeenCalledExactlyOnceWith('/en/queries?table=dial_usage_log');
+      expect(await screen.findByText('builder on dial_usage_log')).toBeInTheDocument();
+      expect(mockPush).toHaveBeenCalledExactlyOnceWith('/en/queries');
       expect(onDiscard).toHaveBeenCalledOnce();
     });
 

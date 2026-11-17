@@ -1,10 +1,13 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { FC } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { createSavedQuery, updateSavedQuery } from '@/src/app/[lang]/queries/actions';
 import DuplicateQuery from '@/src/components/Analytics/Queries/Modals/DuplicateQuery';
 import { QueryMetadataForm } from '@/src/components/Analytics/Queries/models';
+import { SourcePanelProvider, useSourcePanel } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
+import { SourcePanelTab } from '@/src/components/Analytics/QueryBuilder/SourcePanel/models';
 import { useAppContext } from '@/src/context/AppContext';
 import { QueryMode } from '@/src/models/analytics/query';
 import { ChartType, QueryResultView } from '@/src/models/analytics/query-builder';
@@ -160,6 +163,42 @@ describe('DuplicateQuery', () => {
     expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('sq_new'));
     expect(onClose).toHaveBeenCalled();
     expect(mockShowNotification).toHaveBeenCalled();
+  });
+
+  test('turns the Source panel to its Queries tab when it navigates to the created query', async () => {
+    const user = userEvent.setup();
+    const SelectedTab: FC = () => <p>tab: {useSourcePanel().selectedTab ?? 'none'}</p>;
+    render(
+      <SourcePanelProvider tables={[]} queries={[]}>
+        <SelectedTab />
+        <DuplicateQuery query={void 0} onClose={onClose} buildRequest={buildRequest} />
+      </SourcePanelProvider>,
+    );
+    expect(screen.getByText('tab: none')).toBeInTheDocument();
+    setName('From a draft');
+
+    await submit(user);
+
+    expect(await screen.findByText(`tab: ${SourcePanelTab.Queries}`)).toBeInTheDocument();
+    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('sq_new'));
+  });
+
+  test('leaves the Source panel tab alone when the caller handles the created query', async () => {
+    const user = userEvent.setup();
+    const onCreated = vi.fn();
+    const SelectedTab: FC = () => <p>tab: {useSourcePanel().selectedTab ?? 'none'}</p>;
+    render(
+      <SourcePanelProvider tables={[]} queries={[]}>
+        <SelectedTab />
+        <DuplicateQuery query={STRUCTURED} onClose={onClose} buildRequest={buildRequest} onCreated={onCreated} />
+      </SourcePanelProvider>,
+    );
+
+    await submit(user);
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Buttons.Save' })).toBeEnabled());
+    expect(onCreated).toHaveBeenCalledOnce();
+    expect(screen.getByText('tab: none')).toBeInTheDocument();
   });
 
   test('keeps the modal open and reports the failure guidance when the create fails', async () => {

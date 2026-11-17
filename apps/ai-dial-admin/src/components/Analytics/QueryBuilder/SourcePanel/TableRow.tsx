@@ -26,7 +26,7 @@ const TableRow: FC<Props> = ({ table, isCurrent }) => {
   const { expandedTables, onToggleTable, onNavigate } = useSourcePanel();
 
   const isExpanded = expandedTables.includes(table.name);
-  const href = getDraftHref(locale, table.name);
+  const href = getDraftHref(locale);
   const ToggleIcon = isExpanded ? IconCaretDownFilled : IconCaretRightFilled;
 
   return (
@@ -56,7 +56,7 @@ const TableRow: FC<Props> = ({ table, isCurrent }) => {
             href={href}
             aria-current={isCurrent ? 'page' : undefined}
             className="min-w-0 flex-1 py-1 text-primary dial-tiny-text [overflow-wrap:anywhere]"
-            onClick={(event) => onNavigate(event, href)}
+            onClick={(event) => onNavigate(event, href, table.name)}
           >
             {table.name}
           </Link>

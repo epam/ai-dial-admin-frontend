@@ -3,9 +3,7 @@
 ## Purpose
 
 Saved queries as addressable objects: the storage contract, saving a draft as a new query, Save as, edit and delete on the query page, loading a stored query into the builder, unsaved-change handling, and scope-based permission gating. Listing and opening saved queries is `analytics/source-panel`.
-
 ## Requirements
-
 ### Requirement: Saved query storage contract
 
 A saved query SHALL be an addressable object holding authored **intent** only: a name, an optional description and tag, a sharing scope, exactly one of a structured query body or a SQL body, the author's time intent, how the result was last rendered, and a chart configuration. The frontend SHALL treat the analytics data-access service's `/v1/saved-queries` contract as authoritative and SHALL NOT extend it.
@@ -47,13 +45,12 @@ The response's optional members SHALL be modelled as optional rather than nullab
 ### Requirement: A saved query's primary source
 
 A saved query's `source` is a set of entities, so every surface that needs exactly one entity — the
-server-side schema prefetch, the toolbar's source selector, the SQL editor's autocomplete, and the
-assistant's schema message — SHALL use the query's **primary source**, derived in one place from the
-stored query alone: the structured body's `entity` when the query carries a structured body,
-otherwise the first element of `source`. Because the service sorts `source` alphabetically, the
-primary source of a composite SQL query is its alphabetically first entity: an arbitrary but stable
-pick, chosen so field autocomplete keeps working rather than being switched off for composite
-queries.
+server-side schema prefetch, the SQL editor's autocomplete, and the assistant's schema message — SHALL
+use the query's **primary source**, derived in one place from the stored query alone: the structured
+body's `entity` when the query carries a structured body, otherwise the first element of `source`.
+Because the service sorts `source` alphabetically, the primary source of a composite SQL query is its
+alphabetically first entity: an arbitrary but stable pick, chosen so field autocomplete keeps working
+rather than being switched off for composite queries.
 
 The frontend SHALL NOT infer a primary source from the SQL text, and SHALL NOT merge the schemas of
 several sources into one field list. A query with neither a structured body nor a non-empty `source`
@@ -96,183 +93,38 @@ The server API layer SHALL expose the saved-query endpoints of the analytics dat
 - **WHEN** a create, replace, or delete fails
 - **THEN** the action returns a `ServerActionResponse` carrying the service's machine error code and message
 
-### Requirement: Queries list page
-
-The Analytics group SHALL provide a `/queries` page listing the saved queries visible to the caller. The page SHALL be an `async` server component gated by the same Analytics access check the other Analytics pages use, resolving to a 403 page when access is denied. Because the service returns every visible row unpaged and offers no server-side sorting or filtering, the page SHALL fetch the full list on the server and the grid SHALL sort and filter client-side.
-
-The service lists one scope per call, so the page SHALL fetch both the caller's personal scope and the common scope and present them as one list. The grid SHALL show, at minimum, the query's name, description, sources, tag, scope, the editor its body opens in, the author's display email, and its created and updated timestamps. The Source column SHALL render **every** entity the query reads, comma-separated in the order the service returns them, and its sorting, text filtering, and tooltip SHALL all read that same rendered text so a multi-source row is filterable by any of its entity names. A row whose `source` is absent or empty SHALL render an empty Source cell rather than failing. The editor column SHALL be derived from the body — a SQL body is SQL, a structured body the visual builder can represent is Builder, and any other structured body is JSON — and SHALL NOT be read from a stored field. The author column SHALL tolerate an absent value, which the service reports whenever there is no email to record.
-
-Activating a row SHALL navigate to that query's page. Each row SHALL offer an actions menu with Open in new tab, Edit, and Delete. The page SHALL offer a Create action. When the caller has no visible saved queries the grid SHALL show an empty state.
-
-#### Scenario: Both scopes appear in one list
-
-- **WHEN** the caller has personal saved queries and common saved queries exist
-- **THEN** the grid lists both
-- **AND** each row shows its scope
-
-#### Scenario: A multi-source query lists every source
-
-- **WHEN** a listed saved query reads from two entities
-- **THEN** its Source cell shows both names, comma-separated
-- **AND** filtering the Source column by either name keeps the row
-
-#### Scenario: The editor column is derived from the body
-
-- **WHEN** a listed saved query carries a structured body whose filter nesting the visual builder cannot represent
-- **THEN** its editor column reads JSON
-
-#### Scenario: A row opens its query
-
-- **WHEN** the user activates a grid row
-- **THEN** the browser navigates to that saved query's page
-
-#### Scenario: Row actions are offered
-
-- **WHEN** the user opens a row's actions menu
-- **THEN** Open in new tab, Edit, and Delete are offered
-
-#### Scenario: Empty state when nothing is visible
-
-- **WHEN** the caller has no visible saved queries
-- **THEN** the grid shows an empty state rather than an empty table
-
-### Requirement: Create a query
-
-The Queries page SHALL offer a create modal collecting a **required** name and an optional description and tag. The modal SHALL NOT ask for a source or a scope. Submission SHALL be blocked while the name is blank.
-
-Because the service refuses a saved query that could not execute as stored, the create SHALL send a minimal executable structured body targeting a default source — the first queryable entity — in row mode, together with a table result view. Scope SHALL be omitted, which the service resolves to personal.
-
-On success the modal SHALL close, a success notification SHALL be shown, and the browser SHALL navigate to the new query's page so the user authors it there. On failure an error notification SHALL be shown carrying the service's message and the request identifier, and the modal SHALL stay open with the entered values intact.
-
-#### Scenario: Name is required
-
-- **WHEN** the create modal is open and the name field is blank
-- **THEN** the submit action is disabled
-
-#### Scenario: A created query is executable as stored
-
-- **WHEN** the user submits the create modal with a name only
-- **THEN** the request carries that name and a structured body naming the default source in row mode
-- **AND** no source or scope field was presented to the user
-
-#### Scenario: Success navigates to the new query
-
-- **WHEN** a create succeeds
-- **THEN** a success notification is shown
-- **AND** the browser navigates to the created query's page
-
-#### Scenario: Failure keeps the modal open
-
-- **WHEN** a create fails
-- **THEN** an error notification carries the service's message and the request identifier
-- **AND** the modal remains open with the entered values
-
-### Requirement: Edit query metadata
-
-A saved query's name, description, tag, and scope SHALL be editable through a single modal, reachable from the Edit action in the Queries grid's row menu and from an Edit control on the query's own page. The modal SHALL reuse the same field set as the create modal, so the two cannot diverge.
-
-Editing metadata SHALL replace the stored query with its body unchanged. A blank name SHALL block submission. The scope field SHALL be offered only when the caller is a full administrator, because the service permits common writes only to that role.
-
-On success a success notification SHALL be shown and the affected view SHALL reflect the new values. On failure an error notification SHALL be shown.
-
-#### Scenario: Metadata edits leave the body alone
-
-- **WHEN** the user changes only the name in the edit modal and submits
-- **THEN** the replace request carries the same body the query already had
-- **AND** the new name
-
-#### Scenario: Scope is administrator-only
-
-- **WHEN** a caller who is not a full administrator opens the edit modal
-- **THEN** no scope field is offered
-
-#### Scenario: Edit is reachable from both surfaces
-
-- **WHEN** the user activates Edit from a grid row, or the Edit control on a query's page
-- **THEN** the same modal opens, seeded with that query's current metadata
-
 ### Requirement: Delete a query
 
-A saved query SHALL be deletable from the Queries grid's row actions menu, behind the application's standard delete confirmation. On success the row SHALL disappear from the grid and a success notification SHALL be shown. On failure an error notification SHALL be shown. Delete SHALL be offered only when the caller may write the row's scope.
+A saved query SHALL be deletable from its own page, behind the application's standard delete
+confirmation. Delete SHALL be offered whether or not the page holds unsaved changes, and only when the
+caller may write the query's scope.
+
+On success a success notification SHALL be shown and the browser SHALL navigate to the draft builder,
+because the page's query no longer exists. On failure an error notification SHALL be shown and the page
+SHALL stay as it was, unsaved changes included.
 
 #### Scenario: Delete asks for confirmation
 
-- **WHEN** the user activates Delete on a grid row
+- **WHEN** the user activates Delete on a query's page
 - **THEN** a confirmation naming the query is shown before anything is deleted
 
 #### Scenario: A confirmed delete removes the row
 
 - **WHEN** the user confirms the deletion and it succeeds
 - **THEN** a success notification is shown
-- **AND** the query is no longer listed
+- **AND** the query's row is no longer listed among the saved queries
+- **AND** the browser navigates to the draft builder
 
-### Requirement: Duplicate a query
+#### Scenario: A failed delete keeps the page
 
-A saved query SHALL be duplicable from the Queries grid's row actions menu. Activating Duplicate SHALL
-open a modal that reuses the same field set as the create and edit modals — a **required** name and an
-optional description and tag — so the three cannot diverge. A blank name SHALL block submission. The
-service places no uniqueness constraint on a saved query's name, so a name already in use SHALL NOT
-block submission and SHALL NOT be pre-checked against the existing list.
-
-The modal SHALL be seeded from the source query: its description and tag SHALL be carried over, and the
-name SHALL be pre-filled with the source's name plus a copy suffix, so submitting without editing
-produces a distinguishable copy rather than an identical one.
-
-Submission SHALL create a **new** saved query. The copy SHALL carry the source's body, time intent,
-result view, and chart configuration across unchanged; only name, description, tag, and scope SHALL come
-from the modal. The source query SHALL NOT be modified.
-
-On success the modal SHALL close, a success notification SHALL be shown, and the browser SHALL navigate
-to the new query's page, matching the behaviour of create. On failure an error notification SHALL be
-shown following the machine-error-code rules, and the modal SHALL stay open with the entered values
-intact. Because the service revalidates a body on create, a stored query whose body it no longer accepts
-SHALL fail at this point and SHALL be reported as a body refusal carrying the service's own message.
-
-#### Scenario: Duplicate is offered on a row
-
-- **WHEN** the user opens a row's actions menu in the Queries grid
-- **THEN** Duplicate is offered
-
-#### Scenario: The modal is seeded from the source
-
-- **WHEN** the user activates Duplicate on a saved query
-- **THEN** the modal opens with the source's description and tag
-- **AND** the name field holds the source's name with a copy suffix
-
-#### Scenario: Name is required
-
-- **WHEN** the duplicate modal is open and the name field is blank
-- **THEN** the submit action is disabled
-
-#### Scenario: A name already in use is accepted
-
-- **WHEN** the user submits the duplicate modal with a name another visible query already uses
-- **THEN** the submission proceeds without a uniqueness error
-
-#### Scenario: The copy carries the source's body
-
-- **WHEN** the user submits the duplicate modal
-- **THEN** the create request carries the source's body, time intent, result view, and chart unchanged
-- **AND** the metadata entered in the modal
-- **AND** the source query is left unchanged
-
-#### Scenario: Success navigates to the copy
-
-- **WHEN** a duplicate succeeds
-- **THEN** a success notification is shown
-- **AND** the browser navigates to the new query's page, not the source's
-
-#### Scenario: Failure keeps the modal open
-
-- **WHEN** a duplicate fails
+- **WHEN** the deletion fails
 - **THEN** an error notification is shown
-- **AND** the modal remains open with the entered values
+- **AND** the query's page is still shown with its unsaved changes
 
-#### Scenario: A body the service no longer accepts fails at duplicate time
+#### Scenario: Cancelling keeps the query
 
-- **WHEN** the user duplicates a stored query whose body the service now refuses
-- **THEN** an error notification carries the service's message together with repair guidance
-- **AND** no copy is created
+- **WHEN** the user cancels the confirmation
+- **THEN** nothing is deleted and the page is unchanged
 
 ### Requirement: A query page loads its stored query into the builder
 
@@ -280,9 +132,12 @@ The Analytics group SHALL provide a `/queries/{id}` page rendering the Query Bui
 
 The page SHALL fetch the schema of **the stored query's primary source**, not the first queryable entity's. The view the builder opens in SHALL be derived from the body: a SQL body opens the SQL view with the stored text laid out one clause per line, a structured body the visual builder can represent opens the Builder view hydrated from it, and any other structured body opens the JSON view showing it. The heading SHALL show the query's name.
 
+The page SHALL offer no control that switches the query's source. Picking another table SHALL open a
+draft on that table and SHALL leave the stored query untouched.
+
 A query reading from several entities SHALL open the same way — its stored SQL shown in the SQL view — with the schema of its primary source loaded. Switching such a query to the Builder or JSON view SHALL follow the existing translation behaviour for SQL the DSL cannot express: the service refuses the translation and the discard guard applies.
 
-The laid-out text SHALL be the query's unedited baseline, so opening a query stored on one line SHALL NOT mark it as having unsaved changes. Saving from the SQL view SHALL send the SQL view's text as shown, so the first save after opening stores the laid-out form. Editing a query's metadata or duplicating it SHALL send the stored SQL unchanged, because neither re-authors the body.
+The laid-out text SHALL be the query's unedited baseline, so opening a query stored on one line SHALL NOT mark it as having unsaved changes. Saving from the SQL view SHALL send the SQL view's text as shown, so the first save after opening stores the laid-out form. Editing a query's metadata or saving it as a new query without edits SHALL send the stored SQL unchanged, because neither re-authors the body.
 
 The stored time intent SHALL be applied to the toolbar time filter: a relative intent selects that period, an absolute intent selects that custom range, and an absent intent leaves the toolbar at its default. A relative period the frontend does not recognise SHALL leave the toolbar unchanged and SHALL NOT prevent the query from loading.
 
@@ -319,8 +174,14 @@ The stored time intent SHALL be applied to the toolbar time filter: a relative i
 
 - **WHEN** the user opens a query whose SQL joins two entities
 - **THEN** the SQL view shows the stored statement
-- **AND** the schema requested is that of the query's primary source, so the toolbar shows that entity and its fields are available
+- **AND** the schema requested is that of the query's primary source, so that entity's fields are available
 - **AND** the page does not report a failed schema load
+
+#### Scenario: Picking a table does not change the stored query
+
+- **WHEN** a saved query is open and the user picks another table
+- **THEN** a draft on that table opens
+- **AND** the saved query's stored source is unchanged
 
 #### Scenario: An unreadable query is not found
 
@@ -392,105 +253,6 @@ Discard SHALL ask for confirmation and, on confirmation, SHALL restore the page 
 - **WHEN** the user discards and cancels the confirmation
 - **THEN** the unsaved edits are still present
 
-### Requirement: Save as a new query from a query page
-
-While a query page holds unsaved changes, the builder toolbar's actions area SHALL offer **Save as**
-alongside Discard and Save. Save as SHALL NOT be offered when the page holds no unsaved changes. Save as
-SHALL be offered whether or not the caller may write the source query, because it writes only a new
-query the caller owns; on a common query the caller may not write it SHALL be offered while Save is not.
-Save as SHALL be unavailable under the same conditions that make Save unavailable for an unrunnable
-query, and while a save is in flight.
-
-Activating Save as SHALL open a modal that reuses the field set of the create, duplicate, and edit
-modals — a **required** name and an optional description and tag. A blank name SHALL block submission;
-a name already in use SHALL NOT. The modal SHALL be seeded from the source query: its description and
-tag SHALL be carried over and its name SHALL be pre-filled with the source's name plus a copy suffix.
-The scope SHALL be the source's scope for a full administrator and the personal scope for anyone else.
-
-Submission SHALL create a **new** saved query whose body, time intent, result view, and chart
-configuration are the page's current, unsaved values — the payload Save would have written — and whose
-name, description, tag, and scope come from the modal. The source query SHALL NOT be modified.
-
-On success the modal SHALL close and the browser SHALL stay on the source query's page. The page SHALL
-keep its edits and SHALL still indicate unsaved changes against the source, so the user can go on
-editing, save again as another query, save over the source, or discard. A success notification SHALL be
-shown that carries a link to the new query's page; activating the link SHALL navigate there. The
-notification SHALL dismiss itself after the standard success duration, like any other success
-notification. On failure an error notification SHALL be shown following the
-machine-error-code rules, and the modal SHALL stay open with the entered values intact. Cancelling the
-modal SHALL leave the page and its unsaved edits as they were.
-
-#### Scenario: Save as appears with unsaved changes
-
-- **WHEN** the user edits a stored query on its page
-- **THEN** Save as is offered alongside Discard and Save
-
-#### Scenario: Save as is absent without unsaved changes
-
-- **WHEN** the query page holds no unsaved changes
-- **THEN** Save as is not offered
-
-#### Scenario: Save as is offered on a common query the caller cannot write
-
-- **WHEN** a caller who is not a full administrator edits a common-scope query on its page
-- **THEN** Save as is offered
-- **AND** Save is not
-
-#### Scenario: Save as is unavailable for an unrunnable query
-
-- **WHEN** the page's edits leave the query in a state that makes Save unavailable
-- **THEN** Save as is unavailable too
-
-#### Scenario: The modal is seeded from the source
-
-- **WHEN** the user activates Save as
-- **THEN** a modal opens with the source's description and tag
-- **AND** the name field holds the source's name with a copy suffix
-
-#### Scenario: A non-administrator's copy lands in the personal scope
-
-- **WHEN** a caller who is not a full administrator submits Save as on a common-scope query
-- **THEN** the create request carries the personal scope
-
-#### Scenario: Name is required
-
-- **WHEN** the Save as modal is open and the name field is blank
-- **THEN** the submit action is disabled
-
-#### Scenario: The new query carries the unsaved edits
-
-- **WHEN** the user submits the Save as modal
-- **THEN** the create request carries the page's current body, time intent, result view, and chart configuration
-- **AND** the metadata entered in the modal
-- **AND** the source query is left unchanged
-
-#### Scenario: Success stays on the source page
-
-- **WHEN** a Save as succeeds
-- **THEN** the modal closes and the browser stays on the source query's page
-- **AND** the page still holds the edits and indicates unsaved changes
-
-#### Scenario: The success notification links to the new query
-
-- **WHEN** a Save as succeeds
-- **THEN** a success notification is shown with a link to the new query
-
-#### Scenario: The link opens the new query
-
-- **WHEN** the user activates the link in the success notification
-- **THEN** the browser navigates to the new query's page
-
-#### Scenario: Failure keeps the modal open
-
-- **WHEN** a Save as fails
-- **THEN** an error notification is shown following the machine-error-code rules
-- **AND** the modal remains open with the entered values
-
-#### Scenario: Cancel keeps the edits
-
-- **WHEN** the user cancels the Save as modal
-- **THEN** the page still holds its unsaved edits
-
 ### Requirement: Result view and chart configuration round-trip
 
 The result view a query was last rendered in, and its chart configuration, SHALL be part of what a saved query stores and restores. Reopening a saved query SHALL show it in its stored result view, and a stored chart configuration SHALL survive the page's first run rather than being reset by it. A stored chart configuration whose axis columns are not set SHALL be re-derived from the result. The chart configuration SHALL be stored without interpretation — it names result columns, not schema fields.
@@ -517,8 +279,7 @@ Writing a common-scope saved query SHALL require a full administrator, matching 
 #### Scenario: A non-administrator cannot write a common query
 
 - **WHEN** a caller who is not a full administrator opens a common-scope saved query
-- **THEN** Save and Edit are unavailable
-- **AND** Delete is not offered for that row in the grid
+- **THEN** Save, Edit, and Delete are unavailable
 
 #### Scenario: An administrator can write a common query
 
@@ -529,7 +290,8 @@ Writing a common-scope saved query SHALL require a full administrator, matching 
 
 A failed saved-query request SHALL be reported by branching on the machine error code the service puts on its failure envelope, not on the HTTP status alone. Each recognised code SHALL map to its own guidance. A refusal caused by the body — a validation failure, a rejected literal, or a bad request — SHALL surface the service's own message alongside that guidance, because it names the offending part of the query; a refusal about identity or visibility SHALL NOT.
 
-A query reported as absent SHALL be treated as gone: the user SHALL be told and returned to the Queries list, and the list SHALL be re-read.
+A query reported as absent SHALL be treated as gone: the user SHALL be told and returned to the draft
+builder, and the saved queries shown beside it SHALL be re-read.
 
 No message SHALL disclose whether a query exists but is invisible, or whether a column exists but is restricted.
 
@@ -546,4 +308,215 @@ No message SHALL disclose whether a query exists but is invisible, or whether a 
 #### Scenario: A vanished query returns the user to the list
 
 - **WHEN** the query the page is showing is reported as absent by a save
-- **THEN** the user is notified and returned to the Queries list
+- **THEN** the user is notified and returned to the draft builder, beside the re-read list of saved queries
+- **AND** the vanished query is no longer in that list
+
+### Requirement: Save a draft as a new query
+
+The draft builder SHALL offer **Save as query**, which is the only way a saved query is created from
+scratch. It SHALL be unavailable while the draft is in a state that would make Save unavailable on a
+saved query — a query that cannot run — and while a save is in flight.
+
+Activating it SHALL open the same modal Save as uses on a saved query: a **required** name and an
+optional description and tag. A blank name SHALL block submission; a name already in use SHALL NOT. The
+name, description and tag SHALL start empty, because a draft has no source query to seed them from. The
+modal SHALL NOT ask for a source. The scope SHALL default to personal, and the scope field SHALL be
+offered only to a full administrator, as in the edit modal.
+
+Submission SHALL create a saved query whose body, time intent, result view, and chart configuration are
+the draft's current values, serialized by the same rules as a save.
+
+On success the modal SHALL close, a success notification SHALL be shown, and the browser SHALL navigate
+to the new query's page, which SHALL open without unsaved changes. On failure an error notification
+SHALL be shown following the machine-error-code rules, and the modal SHALL stay open with the entered
+values intact. Cancelling the modal SHALL leave the draft as it was.
+
+#### Scenario: Name is required
+
+- **WHEN** the Save as query modal is open and the name field is blank
+- **THEN** the submit action is disabled
+
+#### Scenario: The modal starts empty and asks for no source
+
+- **WHEN** the user activates Save as query on a draft
+- **THEN** the modal opens with empty name, description and tag
+- **AND** no source field is presented
+
+#### Scenario: The new query carries the draft
+
+- **WHEN** the user submits the modal
+- **THEN** the create request carries the draft's body, time intent, result view, and chart configuration
+- **AND** the metadata entered in the modal
+- **AND** the personal scope unless an administrator chose otherwise
+
+#### Scenario: Success opens the new query
+
+- **WHEN** saving a draft succeeds
+- **THEN** a success notification is shown
+- **AND** the browser navigates to the new query's page
+- **AND** that page reports no unsaved changes
+
+#### Scenario: Failure keeps the modal open
+
+- **WHEN** saving a draft fails
+- **THEN** an error notification is shown following the machine-error-code rules
+- **AND** the modal remains open with the entered values
+
+#### Scenario: An unrunnable draft cannot be saved
+
+- **WHEN** the draft is in a state that makes Save unavailable on a saved query
+- **THEN** Save as query is unavailable
+
+#### Scenario: Cancel keeps the draft
+
+- **WHEN** the user cancels the modal
+- **THEN** the draft still holds its changes
+
+### Requirement: Edit query metadata on the query page
+
+A saved query's name, description, tag, and scope SHALL be editable through a single modal, reachable
+from an Edit control on the query's own page. The modal SHALL reuse the same field set as the Save as
+modal, so the two cannot diverge.
+
+Editing metadata SHALL replace the stored query with its body unchanged. A blank name SHALL block submission. The scope field SHALL be offered only when the caller is a full administrator, because the service permits common writes only to that role.
+
+On success a success notification SHALL be shown and the affected view SHALL reflect the new values. On failure an error notification SHALL be shown.
+
+#### Scenario: Metadata edits leave the body alone
+
+- **WHEN** the user changes only the name in the edit modal and submits
+- **THEN** the replace request carries the same body the query already had
+- **AND** the new name
+
+#### Scenario: Scope is administrator-only
+
+- **WHEN** a caller who is not a full administrator opens the edit modal
+- **THEN** no scope field is offered
+
+#### Scenario: Edit is reachable from the query page
+
+- **WHEN** the user activates the Edit control on a query's page
+- **THEN** the modal opens, seeded with that query's current metadata
+
+### Requirement: Save a saved query as a new query
+
+A query page SHALL offer **Save as** in the builder toolbar's actions area whether or not it holds
+unsaved changes: with unsaved changes it stores them as a new query, without them it copies the query.
+Save as SHALL be offered whether or not the caller may write the source query, because it writes only a
+new query the caller owns; on a common query the caller may not write it SHALL be offered while Save is
+not. Save as SHALL be unavailable under the same conditions that make Save unavailable for an unrunnable
+query, and while a save is in flight.
+
+Activating Save as SHALL open a modal that shares its field set with the edit modal — a **required**
+name and an optional description and tag. A blank name SHALL block submission; a name already in use
+SHALL NOT, and SHALL NOT be pre-checked against the existing queries, because the service places no
+uniqueness constraint on a saved query's name. The modal SHALL be seeded from the source query: its
+description and tag SHALL be carried over and its name SHALL be pre-filled with the source's name plus
+a copy suffix. The scope SHALL be the source's scope for a full administrator and the personal scope
+for anyone else.
+
+Submission SHALL create a **new** saved query whose body, time intent, result view, and chart
+configuration are the page's current values — the payload Save would have written, which for a page
+without unsaved changes is the stored query's own — and whose name, description, tag, and scope come
+from the modal. The source query SHALL NOT be modified.
+
+On success the modal SHALL close and the browser SHALL stay on the source query's page. The page SHALL
+keep whatever edits it held and SHALL indicate unsaved changes against the source exactly as it did
+before, so the user can go on editing, save again as another query, save over the source, or discard. A
+success notification SHALL be shown that carries a link to the new query's page; activating the link
+SHALL navigate there. The notification SHALL dismiss itself after the standard success duration, like
+any other success notification. On failure an error notification SHALL be shown following the
+machine-error-code rules, and the modal SHALL stay open with the entered values intact. Because the
+service revalidates a body on create, a stored query whose body it no longer accepts SHALL fail at this
+point and SHALL be reported as a body refusal carrying the service's own message. Cancelling the modal
+SHALL leave the page and its unsaved edits as they were.
+
+#### Scenario: Save as appears with unsaved changes
+
+- **WHEN** the user edits a stored query on its page
+- **THEN** Save as is offered alongside Discard and Save
+
+#### Scenario: Save as is offered without unsaved changes
+
+- **WHEN** the query page holds no unsaved changes
+- **THEN** Save as is offered
+- **AND** Save and Discard are not
+
+#### Scenario: Save as is offered on a common query the caller cannot write
+
+- **WHEN** a caller who is not a full administrator opens a common-scope query on its page
+- **THEN** Save as is offered
+- **AND** Save is not
+
+#### Scenario: Save as is unavailable for an unrunnable query
+
+- **WHEN** the page's edits leave the query in a state that makes Save unavailable
+- **THEN** Save as is unavailable too
+
+#### Scenario: The modal is seeded from the source
+
+- **WHEN** the user activates Save as
+- **THEN** a modal opens with the source's description and tag
+- **AND** the name field holds the source's name with a copy suffix
+
+#### Scenario: A non-administrator's copy lands in the personal scope
+
+- **WHEN** a caller who is not a full administrator submits Save as on a common-scope query
+- **THEN** the create request carries the personal scope
+
+#### Scenario: Name is required
+
+- **WHEN** the Save as modal is open and the name field is blank
+- **THEN** the submit action is disabled
+
+#### Scenario: A name already in use is accepted
+
+- **WHEN** the user submits the Save as modal with a name another visible query already uses
+- **THEN** the submission proceeds without a uniqueness error
+
+#### Scenario: The new query carries the unsaved edits
+
+- **WHEN** the user submits the Save as modal on a page with unsaved changes
+- **THEN** the create request carries the page's current body, time intent, result view, and chart configuration
+- **AND** the metadata entered in the modal
+- **AND** the source query is left unchanged
+
+#### Scenario: A clean query is copied as stored
+
+- **WHEN** the user submits the Save as modal on a page without unsaved changes
+- **THEN** the create request carries the source's body, time intent, result view, and chart unchanged
+- **AND** the metadata entered in the modal
+
+#### Scenario: Success stays on the source page
+
+- **WHEN** a Save as succeeds
+- **THEN** the modal closes and the browser stays on the source query's page
+- **AND** the page holds the same edits, and the same unsaved-changes indication, as before
+
+#### Scenario: The success notification links to the new query
+
+- **WHEN** a Save as succeeds
+- **THEN** a success notification is shown with a link to the new query
+
+#### Scenario: The link opens the new query
+
+- **WHEN** the user activates the link in the success notification
+- **THEN** the browser navigates to the new query's page
+
+#### Scenario: Failure keeps the modal open
+
+- **WHEN** a Save as fails
+- **THEN** an error notification is shown following the machine-error-code rules
+- **AND** the modal remains open with the entered values
+
+#### Scenario: A body the service no longer accepts fails at Save as time
+
+- **WHEN** the user saves as a new query a stored query whose body the service now refuses
+- **THEN** an error notification carries the service's message together with repair guidance
+- **AND** no copy is created
+
+#### Scenario: Cancel keeps the edits
+
+- **WHEN** the user cancels the Save as modal
+- **THEN** the page still holds its unsaved edits
+

@@ -22,6 +22,17 @@ describe('RangePicker', () => {
     expect(badge).toBeInTheDocument();
   });
 
+  test('heads the week days in the format it is given', () => {
+    const { container } = render(
+      <RangePicker value={null} onChange={vi.fn()} formatWeekDay={(dayName) => dayName.slice(0, 3)} />,
+    );
+
+    const names = [...container.querySelectorAll('.react-datepicker__day-name [aria-hidden="true"]')].map(
+      (node) => node.textContent,
+    );
+    expect(names).toEqual(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
+  });
+
   test('renders an inline calendar (no text input)', () => {
     render(<RangePicker value={null} onChange={vi.fn()} maxDays={3} />);
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();

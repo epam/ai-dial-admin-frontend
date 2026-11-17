@@ -10,14 +10,12 @@ import {
   valueTypeForArgKind,
 } from '@/src/components/Analytics/QueryBuilder/utils/functions';
 import {
-  FilterGroupNode,
   FilterNode,
   FilterNodeKind,
   FilterOperandKind,
   FilterPredicateNode,
   FnArgValue,
   QueryBuilderState,
-  QueryBuilderWarning,
   QueryTimeBound,
 } from '@/src/models/analytics/query-builder';
 import { QueryFunction } from '@/src/models/analytics/query-function';
@@ -243,37 +241,4 @@ export const isDroppedFunction = (fn: string | null, args: FnArgValue[], functio
   if (!fn) return false;
   const resolved = functionByName(functions, fn);
   return !resolved || !requiredArgsFilled(resolved, args, functions);
-};
-
-// A condition is dropped for a call on either side — the right-hand one only while that is the kind
-// in play, so a function left behind by a switch back to a literal does not warn about nothing. A
-// right operand switched to a function with none picked yet counts too: unlike a left operand left
-// unnamed, it is a condition the user started writing and the query silently runs wider without it.
-const isDroppedPredicate = (node: FilterPredicateNode, functions: QueryFunction[]): boolean => {
-  if (isDroppedFunction(node.fn, node.args, functions)) return true;
-  if (node.rightKind !== FilterOperandKind.Function) return false;
-  return !node.rightFn || isDroppedFunction(node.rightFn, node.rightArgs, functions);
-};
-
-// A dropped projection column returns a narrower result than was asked for; a dropped condition
-// returns a wider one, which is the more dangerous of the two — the query simply runs unfiltered.
-export const hasDroppedProjectionColumn = (state: QueryBuilderState): boolean =>
-  state.mode === QueryMode.Row && state.select.some((row) => isDroppedFunction(row.fn, row.args, state.functions));
-
-export const hasDroppedCondition = (node: FilterGroupNode, functions: QueryFunction[]): boolean =>
-  node.children.some((child) =>
-    child.kind === FilterNodeKind.Group ? hasDroppedCondition(child, functions) : isDroppedPredicate(child, functions),
-  );
-
-export const getAggregateWarnings = (state: QueryBuilderState): QueryBuilderWarning[] => {
-  if (state.mode !== QueryMode.Aggregate) return [];
-  const warnings: QueryBuilderWarning[] = [];
-  const fnRows = state.groupBy.filter((g) => g.fn);
-  if (fnRows.some((g) => isDroppedFunction(g.fn, g.args, state.functions))) {
-    warnings.push(QueryBuilderWarning.MissingGroupByField);
-  }
-  if (!state.groupBy.length && !state.aggregates.length) {
-    warnings.push(QueryBuilderWarning.EmptyAggregate);
-  }
-  return warnings;
 };

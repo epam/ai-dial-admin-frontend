@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
@@ -20,10 +21,13 @@ import {
   QueryLogicalOperator,
   QueryMode,
   QueryOperator,
+  QueryPageType,
+  QuerySortDirection,
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
 import { ChartConfig, ChartType, QueryResultView } from '@/src/models/analytics/query-builder';
+import { ReadFailure } from '@/src/models/server-action';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope, SavedQueryTimeMode } from '@/src/models/analytics/saved-query';
 import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
 
@@ -65,12 +69,8 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 }));
 
 vi.mock('@/src/components/Analytics/QueryBuilder/Sql/SqlEditor', () => ({
-  default: ({ value }: { value: string }) => <textarea aria-label="sql-editor" value={value} readOnly />,
-}));
-
-vi.mock('@/src/components/Common/JsonEditorBase/JsonEditorBase', () => ({
-  default: ({ value, onChange }: { value: string; onChange: (value?: string) => void }) => (
-    <textarea aria-label="json-editor" value={value} onChange={(e) => onChange(e.target.value)} />
+  default: ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
+    <textarea aria-label="sql-editor" value={value} onChange={(e) => onChange(e.target.value)} />
   ),
 }));
 
@@ -81,14 +81,17 @@ vi.mock('@/src/components/Analytics/QueryBuilder/Result/ResultArea', () => ({
     onChangeView,
     chartConfig,
     onChangeChartConfig,
+    actions,
   }: {
     result: unknown;
     view: QueryResultView;
     onChangeView: (view: QueryResultView) => void;
     chartConfig: ChartConfig;
     onChangeChartConfig: (config: ChartConfig) => void;
+    actions?: ReactNode;
   }) => (
     <div>
+      {actions}
       <span>view: {view}</span>
       <span>result: {result ? 'present' : 'none'}</span>
       <span>
@@ -109,7 +112,15 @@ const FIELDS: AnalyticsEntityField[] = [
   { name: 'request_time', type: AnalyticsFieldType.Timestamp, source: 'request_time', tag: 'identity' },
 ];
 
-const STRUCTURED_BODY: StructuredQuery = { entity: 'dial_usage_log', mode: QueryMode.Row };
+const STRUCTURED_BODY: StructuredQuery = {
+  entity: 'dial_usage_log',
+  mode: QueryMode.Row,
+  page: { type: QueryPageType.Offset, limit: 100, offset: 0, include_total: false },
+};
+
+const STORED_SQL = 'SELECT count(*) FROM dial_usage_log';
+const TRANSLATED_SQL = "SELECT * FROM dial_usage_log WHERE project_id = 'a'";
+const EDITED_SQL = 'SELECT project_id FROM dial_usage_log';
 
 const UNREPRESENTABLE_BODY: StructuredQuery = {
   entity: 'dial_usage_log',
@@ -152,28 +163,53 @@ const savedQuery = (overrides?: Partial<SavedQuery>): SavedQuery => ({
   ...overrides,
 });
 
-const renderPage = (query: SavedQuery = savedQuery(), fields: AnalyticsEntityField[] = FIELDS) =>
+interface TranslationProps {
+  translatedSql?: string | null;
+  translationFailure?: ReadFailure | null;
+}
+
+const renderPage = (query: SavedQuery = savedQuery(), translation: TranslationProps = {}) =>
   render(
     <QueryBuilder
       initialEntities={ENTITIES}
       initialEntityName={savedQueryPrimarySource(query)}
-      initialFields={fields}
+      initialFields={FIELDS}
       initialFunctions={TEST_FUNCTIONS}
       name={query.name}
       savedQuery={query}
+      {...translation}
     />,
   );
+
+const viewRadio = (name: string) => screen.getByRole('radio', { name });
 
 const saveButton = () => screen.queryByRole('button', { name: 'Buttons.Save' });
 const discardButton = () => screen.queryByRole('button', { name: 'Buttons.Discard' });
 const sentRequest = () => vi.mocked(updateSavedQuery).mock.calls[0][1] as SavedQueryRequest;
-const saveAsButton = () => screen.queryByRole('button', { name: 'Buttons.SaveAs' });
+const duplicateButton = () => screen.queryByRole('button', { name: 'Buttons.Duplicate' });
+const saveAsNewButton = () => screen.queryByRole('button', { name: 'Queries.SaveAsNewQuery' });
 const createdRequest = () => vi.mocked(createSavedQuery).mock.calls[0][0] as SavedQueryRequest;
 
-const addProjectionField = async (user: ReturnType<typeof userEvent.setup>) => {
-  await user.click(screen.getByRole('button', { name: 'QueryBuilder.Select: QueryBuilder.AddField' }));
-  await user.click(screen.getByRole('button', { name: /lineage/ }));
-  await user.click(screen.getByRole('option', { name: /project_id/ }));
+const openSaveMenu = async (user: ReturnType<typeof userEvent.setup>, item: string) => {
+  await user.click(await screen.findByRole('button', { name: 'Buttons.Save' }));
+  return screen.findByRole('menuitem', { name: item });
+};
+
+const saveInPlace = async (user: ReturnType<typeof userEvent.setup>) =>
+  user.click(await openSaveMenu(user, 'Buttons.Save'));
+
+const openLimitRows = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(await screen.findByRole('button', { name: /QueryBuilder.Limit/ }));
+  return within(await screen.findByRole('dialog')).getByRole('spinbutton', { name: /QueryChips.Rows/ });
+};
+
+const editLimit = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(screen.getByRole('button', { name: /QueryBuilder.Limit/ }));
+  const dialog = await screen.findByRole('dialog');
+  const rows = within(dialog).getByRole('spinbutton', { name: /QueryChips.Rows/ });
+  await user.clear(rows);
+  await user.type(rows, '50');
+  await user.click(within(dialog).getByRole('button', { name: 'Buttons.Apply' }));
 };
 
 describe('QueryBuilder — a stored saved query', () => {
@@ -202,21 +238,120 @@ describe('QueryBuilder — a stored saved query', () => {
 
     renderPage(composite);
 
-    expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' })).toHaveAttribute('aria-checked', 'true');
+    expect(viewRadio('QueryBuilder.ViewSql')).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByLabelText('sql-editor')).toHaveValue(formatSql(composite.sql ?? ''));
     expect(screen.queryByText('QueryBuilder.SchemaLoadFailed')).not.toBeInTheDocument();
   });
 
-  test('opens a representable structured body in the builder', () => {
-    renderPage();
+  test('opens a representable structured body in the builder with chips reflecting it', async () => {
+    const user = userEvent.setup();
+    renderPage(
+      savedQuery({
+        query: {
+          ...STRUCTURED_BODY,
+          sort: [{ field: 'project_id', dir: QuerySortDirection.Desc }],
+          page: { type: QueryPageType.Offset, limit: 40, offset: 0, include_total: false },
+        },
+      }),
+    );
 
-    expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' })).toHaveAttribute('aria-checked', 'true');
+    expect(viewRadio('QueryBuilder.ViewForm')).toHaveAttribute('aria-checked', 'true');
+    const bar = screen.getByRole('group', { name: 'QueryChips.Bar' });
+    expect(within(bar).getByRole('button', { name: /project_id/ })).toBeInTheDocument();
+    expect(within(bar).getByRole('button', { name: /QueryChips.Period/ })).toBeInTheDocument();
+    expect(saveButton()).toBeNull();
+    expect(await openLimitRows(user)).toHaveValue(40);
   });
 
-  test('opens a structured body the builder cannot represent in the JSON view', async () => {
-    renderPage(savedQuery({ query: UNREPRESENTABLE_BODY }));
+  test('opens a structured body the builder cannot represent as its translated SQL, with no unsaved changes', async () => {
+    renderPage(savedQuery({ query: UNREPRESENTABLE_BODY }), { translatedSql: TRANSLATED_SQL });
 
-    expect(await screen.findByLabelText('json-editor')).toHaveValue(JSON.stringify(UNREPRESENTABLE_BODY, null, 2));
+    expect(await screen.findByLabelText('sql-editor')).toHaveValue(formatSql(TRANSLATED_SQL));
+    expect(viewRadio('QueryBuilder.ViewSql')).toHaveAttribute('aria-checked', 'true');
+    expect(saveButton()).toBeNull();
+    expect(discardButton()).toBeNull();
+    expect(mockShowNotification).not.toHaveBeenCalled();
+  });
+
+  test('opens a stored body with no page as its translated SQL', async () => {
+    renderPage(savedQuery({ query: { entity: 'dial_usage_log', mode: QueryMode.Row } }), {
+      translatedSql: TRANSLATED_SQL,
+    });
+
+    expect(await screen.findByLabelText('sql-editor')).toHaveValue(formatSql(TRANSLATED_SQL));
+  });
+
+  test('saves an edit to the translated SQL as a SQL body', async () => {
+    const user = userEvent.setup();
+    renderPage(savedQuery({ query: UNREPRESENTABLE_BODY }), { translatedSql: TRANSLATED_SQL });
+
+    fireEvent.change(await screen.findByLabelText('sql-editor'), { target: { value: EDITED_SQL } });
+    await saveInPlace(user);
+
+    await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+    const request = sentRequest();
+    expect(request.sql).toBe(EDITED_SQL);
+    expect('query' in request).toBeFalsy();
+  });
+
+  test('opens an empty SQL view and reports the failure when the translation was refused', async () => {
+    renderPage(savedQuery({ query: UNREPRESENTABLE_BODY }), {
+      translatedSql: null,
+      translationFailure: { errorMessage: 'not expressible', requestId: 'trace-9' },
+    });
+
+    expect(await screen.findByLabelText('sql-editor')).toHaveValue('');
+    expect(viewRadio('QueryBuilder.ViewSql')).toHaveAttribute('aria-checked', 'true');
+    expect(saveButton()).toBeNull();
+    expect(mockShowNotification).toHaveBeenCalledOnce();
+    expect(mockShowNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'QueryBuilder.SqlTranslateFailed', description: 'not expressible' }),
+    );
+  });
+
+  test('keeps the stored body on a save made while the refused translation leaves the SQL view empty', async () => {
+    const user = userEvent.setup();
+    renderPage(savedQuery({ query: UNREPRESENTABLE_BODY }), { translatedSql: null });
+
+    await user.click(await screen.findByRole('button', { name: 'use chart view' }));
+    await saveInPlace(user);
+
+    await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+    const request = sentRequest();
+    expect(request.query).toEqual(UNREPRESENTABLE_BODY);
+    expect('sql' in request).toBeFalsy();
+  });
+
+  test('keeps the stored body through a visit to the Builder that changes nothing', async () => {
+    const user = userEvent.setup();
+    renderPage(savedQuery({ query: UNREPRESENTABLE_BODY }), { translatedSql: null });
+    await screen.findByLabelText('sql-editor');
+
+    await user.click(viewRadio('QueryBuilder.ViewForm'));
+    expect(await screen.findByRole('button', { name: /QueryBuilder.Limit/ })).toBeInTheDocument();
+    expect(saveButton()).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'use chart view' }));
+    await saveInPlace(user);
+
+    await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+    expect(sentRequest().query).toEqual(UNREPRESENTABLE_BODY);
+  });
+
+  test('saves the chips once the user edits them in place of a body that was held aside', async () => {
+    const user = userEvent.setup();
+    renderPage(savedQuery({ query: UNREPRESENTABLE_BODY }), { translatedSql: null });
+    await screen.findByLabelText('sql-editor');
+
+    await user.click(viewRadio('QueryBuilder.ViewForm'));
+    await screen.findByRole('button', { name: /QueryBuilder.Limit/ });
+    await editLimit(user);
+    await saveInPlace(user);
+
+    await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
+    const request = sentRequest();
+    expect(request.query).not.toEqual(UNREPRESENTABLE_BODY);
+    expect(request.query?.page).toEqual(expect.objectContaining({ limit: 50 }));
   });
 
   test('opens a SQL body in the SQL view with the stored statement laid out for reading', async () => {
@@ -249,7 +384,7 @@ describe('QueryBuilder — a stored saved query', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await addProjectionField(user);
+    await editLimit(user);
 
     expect(saveButton()).toBeInTheDocument();
     expect(discardButton()).toBeInTheDocument();
@@ -277,8 +412,8 @@ describe('QueryBuilder — a stored saved query', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await addProjectionField(user);
-    await user.click(saveButton()!);
+    await editLimit(user);
+    await saveInPlace(user);
 
     await vi.waitFor(() => expect(mockRefresh).toHaveBeenCalled());
     expect(updateSavedQuery).toHaveBeenCalledOnce();
@@ -290,8 +425,8 @@ describe('QueryBuilder — a stored saved query', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await addProjectionField(user);
-    await user.click(saveButton()!);
+    await editLimit(user);
+    await saveInPlace(user);
 
     await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
     const request = sentRequest();
@@ -309,8 +444,8 @@ describe('QueryBuilder — a stored saved query', () => {
     });
     renderPage();
 
-    await addProjectionField(user);
-    await user.click(saveButton()!);
+    await editLimit(user);
+    await saveInPlace(user);
 
     await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
     expect(saveButton()).toBeInTheDocument();
@@ -322,8 +457,8 @@ describe('QueryBuilder — a stored saved query', () => {
     vi.mocked(updateSavedQuery).mockRejectedValue(new Error('network down'));
     renderPage();
 
-    await addProjectionField(user);
-    await user.click(saveButton()!);
+    await editLimit(user);
+    await saveInPlace(user);
 
     await vi.waitFor(() =>
       expect(mockShowNotification).toHaveBeenCalledWith(
@@ -339,8 +474,8 @@ describe('QueryBuilder — a stored saved query', () => {
     vi.mocked(updateSavedQuery).mockResolvedValue({ success: false, errorHeader: 'not_found', status: 404 });
     renderPage();
 
-    await addProjectionField(user);
-    await user.click(saveButton()!);
+    await editLimit(user);
+    await saveInPlace(user);
 
     await vi.waitFor(() => expect(mockPush).toHaveBeenCalledWith('/queries'));
   });
@@ -353,7 +488,8 @@ describe('QueryBuilder — a stored saved query', () => {
     expect(screen.getByText(`view: ${QueryResultView.Chart}`)).toBeInTheDocument();
 
     await user.click(discardButton()!);
-    await user.click(screen.getByRole('button', { name: 'Buttons.Discard' }));
+    const dialog = (await screen.findByText('Entities.DiscardChanges')).closest('[role="dialog"]') as HTMLElement;
+    await user.click(within(dialog).getByRole('button', { name: 'Buttons.Discard' }));
 
     expect(await screen.findByText(`view: ${QueryResultView.Table}`)).toBeInTheDocument();
     expect(saveButton()).toBeNull();
@@ -394,7 +530,7 @@ describe('QueryBuilder — a stored saved query', () => {
 
     expect(screen.queryByRole('button', { name: 'Buttons.Edit' })).toBeNull();
 
-    await addProjectionField(user);
+    await editLimit(user);
 
     expect(discardButton()).toBeInTheDocument();
     expect(saveButton()).toBeNull();
@@ -407,7 +543,7 @@ describe('QueryBuilder — a stored saved query', () => {
 
     expect(screen.getByRole('button', { name: 'Buttons.Edit' })).toBeInTheDocument();
 
-    await addProjectionField(user);
+    await editLimit(user);
 
     expect(saveButton()).toBeInTheDocument();
   });
@@ -481,31 +617,93 @@ describe('QueryBuilder — a stored saved query', () => {
     });
   });
 
-  describe('Save as', () => {
+  describe('Save menu', () => {
+    test('opens a menu with both ways to save, without saving anything', async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await editLimit(user);
+
+      expect(await openSaveMenu(user, 'Buttons.Save')).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Queries.SaveAsNewQuery' })).toBeInTheDocument();
+      expect(updateSavedQuery).not.toHaveBeenCalled();
+      expect(screen.queryByText('Queries.SaveQueryAs')).toBeNull();
+    });
+
+    test('replaces Edit, Delete and Duplicate while there are unsaved changes', async () => {
+      const user = userEvent.setup();
+      renderPage();
+
+      await editLimit(user);
+
+      expect(saveButton()).toBeEnabled();
+      expect(discardButton()).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Buttons.Edit' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Buttons.Delete' })).toBeNull();
+      expect(duplicateButton()).toBeNull();
+      expect(saveAsNewButton()).toBeNull();
+    });
+
+    test('is disabled while a save is in flight', async () => {
+      const user = userEvent.setup();
+      let finishSave: (value: Awaited<ReturnType<typeof updateSavedQuery>>) => void = () => {};
+      vi.mocked(updateSavedQuery).mockReturnValue(
+        new Promise((resolve) => {
+          finishSave = resolve;
+        }),
+      );
+      renderPage();
+      await editLimit(user);
+
+      await saveInPlace(user);
+
+      await waitFor(() => expect(saveButton()).toBeDisabled());
+      finishSave({ success: true, response: savedQuery({ generation: 2 }) });
+      await vi.waitFor(() => expect(mockRefresh).toHaveBeenCalled());
+    });
+
+    test('is disabled while the SQL view holds no statement', async () => {
+      renderPage(savedQuery({ query: void 0, sql: STORED_SQL }));
+
+      fireEvent.change(await screen.findByLabelText('sql-editor'), { target: { value: '' } });
+
+      await waitFor(() => expect(saveButton()).toBeDisabled());
+    });
+  });
+
+  describe('Duplicate', () => {
     const CREATED = savedQuery({ id: 'sq_new', name: 'Top chats (copy)' });
 
     beforeEach(() => {
       vi.mocked(createSavedQuery).mockResolvedValue({ success: true, response: CREATED });
     });
 
-    const openSaveAs = async (user: ReturnType<typeof userEvent.setup>) => {
-      await addProjectionField(user);
-      await user.click(saveAsButton()!);
-      return screen.findByText('Queries.SaveQueryAs');
-    };
-
-    const submitSaveAs = async (user: ReturnType<typeof userEvent.setup>) => {
-      const dialog = (await openSaveAs(user)).closest('[role="dialog"]') as HTMLElement;
-      await user.click(within(dialog).getByRole('button', { name: 'Buttons.Save' }));
-      await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
-    };
-
     test('is offered without unsaved changes, while Save and Discard are not', () => {
       renderPage();
 
-      expect(saveAsButton()).toBeEnabled();
+      expect(duplicateButton()).toBeEnabled();
       expect(saveButton()).toBeNull();
       expect(discardButton()).toBeNull();
+      expect(saveAsNewButton()).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Buttons.SaveAs' })).toBeNull();
+    });
+
+    test('is offered on a common query the caller cannot write, where Edit and Delete are not', () => {
+      setFullAdmin(false);
+      renderPage(savedQuery({ scope: SavedQueryScope.Common }));
+
+      expect(duplicateButton()).toBeEnabled();
+      expect(screen.queryByRole('button', { name: 'Buttons.Edit' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Buttons.Delete' })).toBeNull();
+    });
+
+    test('opens a modal seeded with the source name and a copy suffix', async () => {
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(duplicateButton()!);
+
+      expect(await screen.findByText('Queries.SaveQueryAs')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Top chats (copy)')).toBeInTheDocument();
     });
 
     test('copies a clean query as stored', async () => {
@@ -513,34 +711,46 @@ describe('QueryBuilder — a stored saved query', () => {
       const stored = savedQuery({ query: void 0, sql: 'SELECT 1 FROM dial_usage_log' });
       renderPage(stored);
 
-      await user.click(saveAsButton()!);
+      await user.click(duplicateButton()!);
       const dialog = (await screen.findByText('Queries.SaveQueryAs')).closest('[role="dialog"]') as HTMLElement;
       await user.click(within(dialog).getByRole('button', { name: 'Buttons.Save' }));
 
       await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
       expect(createdRequest().sql).toBe('SELECT 1 FROM dial_usage_log');
+      expect(updateSavedQuery).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Save as a new query', () => {
+    const CREATED = savedQuery({ id: 'sq_new', name: 'Top chats (copy)' });
+
+    beforeEach(() => {
+      vi.mocked(createSavedQuery).mockResolvedValue({ success: true, response: CREATED });
     });
 
-    test('is offered alongside Discard and Save once the query is edited', async () => {
-      const user = userEvent.setup();
-      renderPage();
+    const openSaveAs = async (user: ReturnType<typeof userEvent.setup>, isWritable = true) => {
+      await editLimit(user);
+      await user.click(isWritable ? await openSaveMenu(user, 'Queries.SaveAsNewQuery') : saveAsNewButton()!);
+      return screen.findByText('Queries.SaveQueryAs');
+    };
 
-      await addProjectionField(user);
+    const submitSaveAs = async (user: ReturnType<typeof userEvent.setup>, isWritable = true) => {
+      const dialog = (await openSaveAs(user, isWritable)).closest('[role="dialog"]') as HTMLElement;
+      await user.click(within(dialog).getByRole('button', { name: 'Buttons.Save' }));
+      await vi.waitFor(() => expect(createSavedQuery).toHaveBeenCalledOnce());
+    };
 
-      expect(saveAsButton()).toBeEnabled();
-      expect(saveButton()).toBeInTheDocument();
-      expect(discardButton()).toBeInTheDocument();
-    });
-
-    test('is offered on a common query the caller cannot write, where Save is not', async () => {
+    test('is a plain button next to Discard on a common query the caller cannot write, with no Save menu', async () => {
       const user = userEvent.setup();
       setFullAdmin(false);
       renderPage(savedQuery({ scope: SavedQueryScope.Common }));
 
-      await addProjectionField(user);
+      await editLimit(user);
 
-      expect(saveAsButton()).toBeEnabled();
+      expect(saveAsNewButton()).toBeEnabled();
+      expect(discardButton()).toBeInTheDocument();
       expect(saveButton()).toBeNull();
+      expect(duplicateButton()).toBeNull();
     });
 
     test('opens a modal seeded with the source name and a copy suffix', async () => {
@@ -560,7 +770,7 @@ describe('QueryBuilder — a stored saved query', () => {
 
       const request = createdRequest();
       expect(request.name).toBe('Top chats (copy)');
-      expect(JSON.stringify(request.query)).toContain('project_id');
+      expect(request.query?.page).toEqual({ type: QueryPageType.Offset, limit: 50, offset: 0, include_total: false });
       expect(request.time).toEqual({ mode: SavedQueryTimeMode.Relative, period: '7d' });
       expect(updateSavedQuery).not.toHaveBeenCalled();
     });
@@ -570,7 +780,7 @@ describe('QueryBuilder — a stored saved query', () => {
       setFullAdmin(false);
       renderPage(savedQuery({ scope: SavedQueryScope.Common }));
 
-      await submitSaveAs(user);
+      await submitSaveAs(user, false);
 
       expect(createdRequest().scope).toBe(SavedQueryScope.Personal);
     });
@@ -625,13 +835,13 @@ describe('QueryBuilder — a stored saved query', () => {
       expect(createSavedQuery).not.toHaveBeenCalled();
     });
 
-    test('is unavailable while the query cannot be run', async () => {
-      renderPage(savedQuery({ query: UNREPRESENTABLE_BODY }));
+    test('is unavailable to a caller who cannot write the query while the SQL view holds no statement', async () => {
+      setFullAdmin(false);
+      renderPage(savedQuery({ scope: SavedQueryScope.Common, query: void 0, sql: STORED_SQL }));
 
-      const editor = await screen.findByLabelText('json-editor');
-      fireEvent.change(editor, { target: { value: '{' } });
+      fireEvent.change(await screen.findByLabelText('sql-editor'), { target: { value: '' } });
 
-      await waitFor(() => expect(saveAsButton()).toBeDisabled());
+      await waitFor(() => expect(saveAsNewButton()).toBeDisabled());
     });
   });
 
@@ -658,52 +868,67 @@ describe('QueryBuilder — a stored saved query', () => {
       expect(screen.getByRole('button', { name: 'Buttons.Edit' })).toBeInTheDocument();
     });
 
-    test('an untranslatable stored SQL body survives an attempted JSON switch', async () => {
+    test('an untranslatable stored SQL body survives an attempted switch to the builder', async () => {
       const user = userEvent.setup();
       vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
-      renderPage(savedQuery({ query: void 0, sql: 'SELECT count(*) FROM dial_usage_log' }));
+      renderPage(savedQuery({ query: void 0, sql: STORED_SQL }));
 
       await screen.findByLabelText('sql-editor');
-      await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
-      // The switch is guarded rather than taken, so the stored SQL is still what a save sends.
+      await user.click(viewRadio('QueryBuilder.ViewForm'));
       expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
 
       await user.click(screen.getByRole('button', { name: 'use chart view' }));
-      await user.click(saveButton()!);
+      await saveInPlace(user);
 
       await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
       const request = sentRequest();
-      expect(request.sql).toBe(formatSql('SELECT count(*) FROM dial_usage_log'));
+      expect(request.sql).toBe(formatSql(STORED_SQL));
       expect('query' in request).toBeFalsy();
     });
 
-    test('a translated stored SQL body is saved as the structured query the JSON view shows', async () => {
+    test('a stored SQL body the builder can take is saved as the structured query its chips show', async () => {
       const user = userEvent.setup();
       vi.mocked(translateSqlToQuery).mockResolvedValue({
         success: true,
-        response: { query: { entity: 'dial_usage_log', mode: QueryMode.Row } },
+        response: { query: { ...STRUCTURED_BODY, page: { ...STRUCTURED_BODY.page, limit: 40 } } },
       } as never);
-      renderPage(savedQuery({ query: void 0, sql: 'SELECT count(*) FROM dial_usage_log' }));
+      renderPage(savedQuery({ query: void 0, sql: STORED_SQL }));
 
       await screen.findByLabelText('sql-editor');
-      await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
-      await screen.findByLabelText('json-editor');
-      await user.click(saveButton()!);
+      await user.click(viewRadio('QueryBuilder.ViewForm'));
+      expect(await openLimitRows(user)).toHaveValue(40);
+      await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+      await saveInPlace(user);
 
       await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
       const request = sentRequest();
-      expect(request.query?.entity).toBe('dial_usage_log');
+      expect(request.query?.page).toEqual({ type: QueryPageType.Offset, limit: 40, offset: 0, include_total: false });
       expect('sql' in request).toBeFalsy();
+    });
+
+    test('a translation the chips cannot represent is guarded rather than loaded', async () => {
+      const user = userEvent.setup();
+      vi.mocked(translateSqlToQuery).mockResolvedValue({
+        success: true,
+        response: { query: UNREPRESENTABLE_BODY },
+      } as never);
+      renderPage(savedQuery({ query: void 0, sql: STORED_SQL }));
+
+      await screen.findByLabelText('sql-editor');
+      await user.click(viewRadio('QueryBuilder.ViewForm'));
+
+      expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+      expect(screen.getByLabelText('sql-editor')).toHaveValue(formatSql(STORED_SQL));
     });
 
     test('a failed translation round trip is guarded rather than thrown', async () => {
       const user = userEvent.setup();
       vi.mocked(translateSqlToQuery).mockRejectedValue(new Error('network down'));
-      renderPage(savedQuery({ query: void 0, sql: 'SELECT count(*) FROM dial_usage_log' }));
+      renderPage(savedQuery({ query: void 0, sql: STORED_SQL }));
 
       await screen.findByLabelText('sql-editor');
-      await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewJson' }));
+      await user.click(viewRadio('QueryBuilder.ViewForm'));
 
       expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
     });
@@ -716,7 +941,7 @@ describe('QueryBuilder — a stored saved query', () => {
       expect(await screen.findByText('result: present')).toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: 'use chart view' }));
-      await user.click(saveButton()!);
+      await saveInPlace(user);
 
       await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
       // Re-seeding the builder from the response used to clear the result the user had just run.
@@ -728,7 +953,7 @@ describe('QueryBuilder — a stored saved query', () => {
       renderPage();
 
       await user.click(screen.getByRole('button', { name: 'use chart view' }));
-      await user.click(saveButton()!);
+      await saveInPlace(user);
 
       await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
       await waitFor(() => expect(saveButton()).toBeNull());
@@ -738,42 +963,6 @@ describe('QueryBuilder — a stored saved query', () => {
 
     test('a chart result view with no stored chart configuration is not dirty on open', () => {
       renderPage(savedQuery({ result_view: QueryResultView.Chart, chart: void 0 }));
-
-      expect(saveButton()).toBeNull();
-    });
-    test('an edit to a body the builder cannot display counts as an unsaved change', async () => {
-      renderPage(savedQuery({ query: UNREPRESENTABLE_BODY }));
-
-      const editor = await screen.findByLabelText('json-editor');
-      expect(saveButton()).toBeNull();
-
-      const edited = { ...UNREPRESENTABLE_BODY, distinct: true };
-      fireEvent.change(editor, { target: { value: JSON.stringify(edited, null, 2) } });
-
-      // The builder state is never hydrated from a diverged body, so the buffer itself has to reach the
-      // payload — otherwise the edit is untracked and lost on navigation.
-      expect(await screen.findByRole('button', { name: 'Buttons.Save' })).toBeInTheDocument();
-    });
-
-    test('saves the edited body the builder cannot display', async () => {
-      const user = userEvent.setup();
-      renderPage(savedQuery({ query: UNREPRESENTABLE_BODY }));
-
-      const editor = await screen.findByLabelText('json-editor');
-      const edited = { ...UNREPRESENTABLE_BODY, distinct: true };
-      fireEvent.change(editor, { target: { value: JSON.stringify(edited, null, 2) } });
-
-      expect(await screen.findByRole('button', { name: 'Buttons.Save' })).toBeInTheDocument();
-      await user.click(saveButton()!);
-
-      await vi.waitFor(() => expect(updateSavedQuery).toHaveBeenCalledOnce());
-      expect(sentRequest().query).toEqual(edited);
-    });
-
-    test('a query the builder cannot display is not dirty on open', async () => {
-      renderPage(savedQuery({ query: UNREPRESENTABLE_BODY }));
-
-      await screen.findByLabelText('json-editor');
 
       expect(saveButton()).toBeNull();
     });
@@ -825,7 +1014,7 @@ describe('QueryBuilder — a draft', () => {
     const user = userEvent.setup();
     renderDraft();
 
-    await addProjectionField(user);
+    await editLimit(user);
 
     expect(resetButton()).toBeEnabled();
   });
@@ -833,7 +1022,7 @@ describe('QueryBuilder — a draft', () => {
   test('returns to the starting state when Reset is confirmed', async () => {
     const user = userEvent.setup();
     renderDraft();
-    await addProjectionField(user);
+    await editLimit(user);
 
     await user.click(resetButton()!);
     await user.click(await screen.findByRole('button', { name: 'Buttons.Discard' }));
@@ -845,7 +1034,7 @@ describe('QueryBuilder — a draft', () => {
   test('keeps the changes when Reset is cancelled', async () => {
     const user = userEvent.setup();
     renderDraft();
-    await addProjectionField(user);
+    await editLimit(user);
 
     await user.click(resetButton()!);
     await user.click(await screen.findByRole('button', { name: 'Buttons.ContinueEditing' }));
@@ -856,7 +1045,7 @@ describe('QueryBuilder — a draft', () => {
   test('saves the draft as a new query and opens it', async () => {
     const user = userEvent.setup();
     renderDraft();
-    await addProjectionField(user);
+    await editLimit(user);
 
     await user.click(saveAsQueryButton()!);
     const dialog = (await screen.findByText('Queries.SaveQueryAs')).closest('[role="dialog"]') as HTMLElement;
@@ -928,7 +1117,7 @@ describe('QueryBuilder — Add to dashboard', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await addProjectionField(user);
+    await editLimit(user);
 
     expect(saveButton()).toBeInTheDocument();
     expect(discardButton()).toBeInTheDocument();

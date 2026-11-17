@@ -12,7 +12,6 @@ import {
   fieldsToOptions,
   filterFieldsByTags,
   groupFieldOptions,
-  havingFieldOptions,
   prefilledAlias,
   sortByName,
   sortFieldOptions,
@@ -141,7 +140,7 @@ describe('sortByName', () => {
   });
 });
 
-describe('functionResultType (via havingFieldOptions)', () => {
+describe('functionResultType (via sortFieldOptions)', () => {
   test('same_as_argument resolves to the operand field type; fixed returns map directly', () => {
     const s = createInitialState(TEST_FUNCTIONS);
     s.mode = QueryMode.Aggregate;
@@ -149,7 +148,7 @@ describe('functionResultType (via havingFieldOptions)', () => {
     // max → same_as_argument (Long from latency); date_bin → timestamp; length → integer
     const maxRow = { ...createFnRow(fnFixture('length'), [{ field: 'deployment' }]), alias: 'len' };
     s.groupBy = [maxRow];
-    const lenOption = havingFieldOptions(s).find((o) => o.name === 'len');
+    const lenOption = sortFieldOptions(s).find((o) => o.name === 'len');
     expect(lenOption?.type).toBe(AnalyticsFieldType.Integer);
   });
 });
@@ -169,37 +168,38 @@ describe('having/sort field options', () => {
     const agg = createAggregate(fnFixture('count'));
     agg.alias = 'cnt';
     s.aggregates = [agg];
-    expect(havingFieldOptions(s).map((o) => o.name)).toEqual(['bucket', 'cnt', 'project_id']);
+    expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['bucket', 'cnt', 'project_id']);
   });
 
   // A computed column with a blank alias is still an output column — the serializer names it by the
   // derived alias, so Having and Sort must offer that same name or it stays unaddressable.
-  test('havingFieldOptions offers an aliasless function entry by its derived name', () => {
+  test('sortFieldOptions offers an aliasless function entry by its derived name', () => {
     const s = createInitialState(TEST_FUNCTIONS);
     s.mode = QueryMode.Aggregate;
     s.fields = FIELDS;
     const fnRow = createFnRow(fnFixture('lower'), [{ field: 'project_id' }]);
     fnRow.alias = '';
     s.groupBy = [fnRow];
-    expect(havingFieldOptions(s).map((o) => o.name)).toContain('project_id (Lowercase)');
+    expect(sortFieldOptions(s).map((o) => o.name)).toContain('project_id (Lowercase)');
   });
 
-  test('havingFieldOptions offers an aliasless aggregate by its derived name', () => {
+  test('sortFieldOptions offers an aliasless aggregate by its derived name', () => {
     const s = createInitialState(TEST_FUNCTIONS);
     s.mode = QueryMode.Aggregate;
     s.fields = [{ ...field('total_tokens', AnalyticsFieldType.Long), display_name: 'Total tokens' }];
     const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
     agg.alias = '';
     s.aggregates = [agg];
-    expect(havingFieldOptions(s).map((o) => o.name)).toEqual(['Total tokens (Sum)']);
+    expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['Total tokens (Sum)']);
   });
 
   // Aggregate mode with no aggregates still returns the implicit count column.
-  test('havingFieldOptions offers the implicit count column when there are no aggregates', () => {
+  test('sortFieldOptions offers the implicit count column when there are no aggregates', () => {
     const s = createInitialState(TEST_FUNCTIONS);
     s.fields = FIELDS;
+    s.mode = QueryMode.Aggregate;
     s.groupBy = [createColumnRow('project_id')];
-    expect(havingFieldOptions(s).map((o) => o.name)).toEqual(['Count', 'project_id']);
+    expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['Count', 'project_id']);
   });
 
   test('sortFieldOptions uses schema fields in row mode, aggregate outputs in aggregate mode', () => {
@@ -333,7 +333,7 @@ describe('fieldDisplayName', () => {
   });
 });
 
-describe('havingFieldOptions label projection', () => {
+describe('sortFieldOptions label projection', () => {
   test('plain group-by columns keep their schema label and description; aliases carry neither', () => {
     const s = createInitialState(TEST_FUNCTIONS);
     s.mode = QueryMode.Aggregate;
@@ -348,7 +348,7 @@ describe('havingFieldOptions label projection', () => {
       createColumnRow('project_id'),
       { ...createFnRow(fnFixture('lower'), [{ field: 'project_id' }]), alias: 'p' },
     ];
-    const options = havingFieldOptions(s);
+    const options = sortFieldOptions(s);
     expect(options.find((o) => o.name === 'project_id')).toMatchObject({
       display_name: 'Project',
       description: 'Owning project',
