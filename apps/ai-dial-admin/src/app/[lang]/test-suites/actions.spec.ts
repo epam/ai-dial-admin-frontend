@@ -24,6 +24,7 @@ import {
   getTestSuites,
   removeTestSuite,
   runTestSuite,
+  getTestSuiteRunConfig,
   tryOutTestSuite,
   updateTestSuite,
   getTestCaseTemplateVariables,
@@ -139,10 +140,19 @@ describe('TestSuites :: server actions', () => {
 
   test('Should call runTestSuite action', async () => {
     (testSuitesApi.runTestSuite as any).mockResolvedValue([RESPONSE_MOCK]);
-    const result = await runTestSuite('test', 1);
+    const params = { numberOfRuns: 1, concurrencyLevel: 2 };
+    const result = await runTestSuite('test', params);
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.runTestSuite).toHaveBeenCalledWith(TOKEN_MOCK, 'test', 1);
+    expect(testSuitesApi.runTestSuite).toHaveBeenCalledWith(TOKEN_MOCK, 'test', params);
     expect(result).toEqual([RESPONSE_MOCK]);
+  });
+
+  test('Should call getTestSuiteRunConfig action', async () => {
+    (testSuitesApi.getTestSuiteRunConfig as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await getTestSuiteRunConfig();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(testSuitesApi.getTestSuiteRunConfig).toHaveBeenCalledWith(TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
   test('Should call getTestCase action', async () => {

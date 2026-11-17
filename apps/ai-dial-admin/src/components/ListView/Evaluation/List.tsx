@@ -34,7 +34,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset } from '@/src/models/evaluation/dataset';
-import { Run, RunStatus } from '@/src/models/evaluation/run';
+import { Run, RunStatus, RunTestSuiteParams } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -220,8 +220,8 @@ const EvaluationListView = <T extends object>({
   }, [cancelRunEntity, gridApi]);
 
   const onRun = useCallback(
-    (num?: string | number) => {
-      return runTestSuite((currentEntity as TestSuite)?.id as string, num).then((res) => {
+    (params: RunTestSuiteParams) => {
+      return runTestSuite((currentEntity as TestSuite)?.id as string, params).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.RunSuccess), t(TestSuitesI18nKey.RunSuccessDescription)),
