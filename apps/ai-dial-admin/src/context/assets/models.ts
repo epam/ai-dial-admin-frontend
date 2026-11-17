@@ -32,6 +32,7 @@ export enum FolderActionType {
   HierarchyLoaded = 'hierarchyLoaded',
   FolderLoaded = 'folderLoaded',
   FolderToggled = 'folderToggled',
+  TreeInvalidated = 'treeInvalidated',
 }
 
 /**
@@ -58,4 +59,5 @@ export type FolderAction<T extends AssetListItem> =
   | { type: FolderActionType.FetchFailed }
   | { type: FolderActionType.HierarchyLoaded; hierarchy: FolderHierarchy<T> }
   | ({ type: FolderActionType.FolderLoaded } & FolderLoadedPayload<T>)
-  | { type: FolderActionType.FolderToggled; folderPath: string; options: ToggleFolderOptions };
+  | { type: FolderActionType.FolderToggled; folderPath: string; options: ToggleFolderOptions }
+  | { type: FolderActionType.TreeInvalidated };
