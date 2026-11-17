@@ -21,6 +21,7 @@ import PrivilegeCard from '@/src/components/Analytics/Tables/access/PrivilegeCar
 import RowLimitEditor, { RowLimitValue } from '@/src/components/Analytics/Tables/access/RowLimitEditor';
 import {
   EVERYONE_ROLE,
+  LIMIT_STEP_HEADING,
   MARKED_PRIVILEGES,
   SYSTEM_LOCKED_PRIVILEGES,
 } from '@/src/components/Analytics/Tables/access/constants';
@@ -81,7 +82,6 @@ const HEADING = 'dial-tiny-lead-semi-text';
 const roleHeading = `${HEADING} text-accent`;
 const accessHeading = `${HEADING} text-brown-1`;
 const sensitiveHeading = `${HEADING} text-accent-tertiary`;
-const rowsHeading = `${HEADING} text-accent-secondary`;
 
 const ENRICHMENT_LOCKED_PRIVILEGES: MarkedPrivilege[] = [TableGrantKey.Get, TableGrantKey.Read];
 
@@ -405,7 +405,7 @@ const RoleDrawer: FC<Props> = ({
 
           {isRowsOffered && (
             <section className="flex flex-col gap-2">
-              <h3 className={rowsHeading}>{t(AnalyticsTableAccessI18nKey.StepRows)}</h3>
+              <h3 className={LIMIT_STEP_HEADING}>{t(AnalyticsTableAccessI18nKey.StepRows)}</h3>
               <RadioGroup
                 ariaLabel={t(AnalyticsTableAccessI18nKey.StepRows)}
                 value={rowsMode}

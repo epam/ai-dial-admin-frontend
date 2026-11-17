@@ -3,6 +3,7 @@
 import { Notification, NotificationType, NotificationVariant, RadioGroup, Select } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo } from 'react';
 
+import { LIMIT_STEP_HEADING } from '@/src/components/Analytics/Tables/access/constants';
 import { ColumnsMode } from '@/src/components/Analytics/Tables/access/models';
 import { AnalyticsTableAccessI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -57,7 +58,7 @@ const ColumnLimitStep: FC<Props> = ({
 
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="dial-tiny-lead-semi-text text-accent-secondary">{heading}</h3>
+      <h3 className={LIMIT_STEP_HEADING}>{heading}</h3>
       <RadioGroup
         ariaLabel={heading}
         value={mode}
