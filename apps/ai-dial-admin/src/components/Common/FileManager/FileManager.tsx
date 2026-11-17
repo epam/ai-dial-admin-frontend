@@ -133,7 +133,7 @@ const FileManager: FC<Props> = ({
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { isUnitMode, canWriteAt } = useAppContext();
   const { showNotification } = useNotification();
-  const { units, ensureUnits } = useOrgUnits();
+  const { units, ensureUnits, refreshUnits } = useOrgUnits();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const folderContext = getContext();
   const {
@@ -169,9 +169,18 @@ const FileManager: FC<Props> = ({
     onColumnResized,
   } = useGridStatePersistence({ storageKey: view, columnDefs, gridApi, ...FILE_MANAGER_GRID_PERSISTENCE });
 
+  // Opening a listing that can hold unit folders reads the units again, so its first tree is built from
+  // fresh data; folder navigation inside it never re-runs this. Other listings only need them for icons.
+  const hasUnitNamespace = namespace != null;
   useEffect(() => {
-    ensureUnits();
-  }, [ensureUnits]);
+    if (hasUnitNamespace) {
+      void refreshUnits();
+    } else {
+      ensureUnits();
+    }
+    // Mount only: a later change of the callbacks or the view must not repeat the read.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!folderToRefetch) {

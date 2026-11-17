@@ -381,3 +381,53 @@ describe('Folder Reducer :: FolderToggled', () => {
     expect(next).toEqual(toggleFolderState(state, 'a/', options).state);
   });
 });
+
+describe('Folder Reducer :: TreeInvalidated', () => {
+  test('Should empty the tree, the cache and the open folders and keep the selection', () => {
+    const state = createState({
+      files: [createFolder('public/')],
+      filePath: 'public/Acme/',
+      expandedFolders: new Set(['public/', 'public/Acme/']),
+      fetchedFoldersData: { 'public/': [createItem('public/x')] },
+    });
+
+    const next = folderReducer(state, { type: FolderActionType.TreeInvalidated });
+
+    expect(next.files).toEqual([]);
+    expect(next.fetchedFoldersData).toEqual({});
+    expect([...next.expandedFolders]).toEqual([]);
+    expect(next.filePath).toBe('public/Acme/');
+  });
+
+  test('Should keep a fetch error flag as it was', () => {
+    const next = folderReducer(createState({ hasFetchError: true }), { type: FolderActionType.TreeInvalidated });
+
+    expect(next.hasFetchError).toBe(true);
+  });
+
+  test('Should not mutate the state it receives', () => {
+    const state = createState({ files: [createFolder('public/')], expandedFolders: new Set(['public/']) });
+
+    folderReducer(state, { type: FolderActionType.TreeInvalidated });
+
+    expect(state.files).toHaveLength(1);
+    expect([...state.expandedFolders]).toEqual(['public/']);
+  });
+
+  test('Should let the next load open the first node again', () => {
+    const invalidated = folderReducer(
+      createState({ files: [createFolder('public/')], expandedFolders: new Set(['public/']) }),
+      { type: FolderActionType.TreeInvalidated },
+    );
+
+    const loaded = folderReducer(invalidated, {
+      type: FolderActionType.FolderLoaded,
+      path: 'public/',
+      fetched: [],
+      folderItems: [],
+      isLatestRequest: true,
+    });
+
+    expect(loaded.expandedFolders.has('public/')).toBe(true);
+  });
+});
