@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { analyticsDataApi, rolesApi } from '@/src/app/api/api';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { AnalyticsTableType, CreateTableDto, TableWriteMode } from '@/src/models/analytics/table';
+import { AnalyticsTableType, CreateTableDto, TableGrantKey, TableWriteMode } from '@/src/models/analytics/table';
 import { TableBackfillState } from '@/src/models/analytics/table-backfill';
 import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
 import { ConfigEntityOrigin, ConfigFileEntityType } from '@/src/types/config-file-entity';
@@ -20,10 +20,8 @@ import {
   getTables,
   listTableBackfillRuns,
   startTableBackfill,
-  updateTableAccess,
-  getRowPolicies,
-  putRowPolicy,
-  deleteRowPolicy,
+  putTableAccessEntry,
+  deleteTableAccessEntry,
   updateTable,
   updateTableSchema,
 } from '../actions';
@@ -111,58 +109,35 @@ describe('Tables server actions', () => {
   });
 
   test('getTableAccess passes name + token', async () => {
-    (analyticsDataApi.getTableAccess as any).mockResolvedValue({ write: [], modify: [] });
+    (analyticsDataApi.getTableAccess as any).mockResolvedValue({ success: true });
 
     await getTableAccess('events');
 
     expect(analyticsDataApi.getTableAccess).toHaveBeenCalledWith('events', TOKEN_MOCK);
   });
 
-  test('updateTableAccess passes name, the partial access + token', async () => {
-    const access = { write: ['w'] };
-    (analyticsDataApi.updateTableAccess as any).mockResolvedValue({ success: true });
+  test('putTableAccessEntry passes name, role, the entry + token', async () => {
+    const entry = { privileges: [TableGrantKey.Read], rows: null, columns: ['region'], generation: 4 };
+    (analyticsDataApi.putTableAccessEntry as any).mockResolvedValue({ success: true });
 
-    await updateTableAccess('events', access);
+    await putTableAccessEntry('events', 'team-x', entry);
 
-    expect(analyticsDataApi.updateTableAccess).toHaveBeenCalledWith('events', access, TOKEN_MOCK);
+    expect(analyticsDataApi.putTableAccessEntry).toHaveBeenCalledWith('events', 'team-x', entry, TOKEN_MOCK);
   });
 
-  test('getRowPolicies passes name + token', async () => {
-    (analyticsDataApi.getRowPolicies as any).mockResolvedValue({ success: true, response: { policies: {} } });
+  test('deleteTableAccessEntry passes name, role, the generation + token', async () => {
+    (analyticsDataApi.deleteTableAccessEntry as any).mockResolvedValue({ success: true });
 
-    await getRowPolicies('events');
+    await deleteTableAccessEntry('events', 'team-x', 4);
 
-    expect(analyticsDataApi.getRowPolicies).toHaveBeenCalledWith('events', TOKEN_MOCK);
+    expect(analyticsDataApi.deleteTableAccessEntry).toHaveBeenCalledWith('events', 'team-x', 4, TOKEN_MOCK);
   });
 
-  test('putRowPolicy passes name, role, policy + token', async () => {
-    const policy = { filter: { op: 'eq', args: [] } } as any;
-    (analyticsDataApi.putRowPolicy as any).mockResolvedValue({ success: true });
+  test('deleteTableAccessEntry reports a failure to the caller', async () => {
+    const failure = { success: false, status: 409, errorHeader: 'access_conflict' };
+    (analyticsDataApi.deleteTableAccessEntry as any).mockResolvedValue(failure);
 
-    await putRowPolicy('events', 'team-x', policy);
-
-    expect(analyticsDataApi.putRowPolicy).toHaveBeenCalledWith('events', 'team-x', policy, TOKEN_MOCK);
-  });
-
-  test('deleteRowPolicy passes name, role + token', async () => {
-    (analyticsDataApi.deleteRowPolicy as any).mockResolvedValue({ success: true });
-
-    await deleteRowPolicy('events', 'team-x');
-
-    expect(analyticsDataApi.deleteRowPolicy).toHaveBeenCalledWith('events', 'team-x', TOKEN_MOCK);
-  });
-
-  test('deleteRowPolicy treats a 404 as success, because the policy is already gone', async () => {
-    (analyticsDataApi.deleteRowPolicy as any).mockResolvedValue({ success: false, status: 404 });
-
-    expect(await deleteRowPolicy('events', 'team-x')).toEqual({ success: true });
-  });
-
-  test('deleteRowPolicy reports any other failure', async () => {
-    const failure = { success: false, status: 500, errorMessage: 'boom' };
-    (analyticsDataApi.deleteRowPolicy as any).mockResolvedValue(failure);
-
-    expect(await deleteRowPolicy('events', 'team-x')).toEqual(failure);
+    expect(await deleteTableAccessEntry('events', 'team-x', 4)).toEqual(failure);
   });
 
   test('getRoles reads the role catalog from Core, not from the admin backend', async () => {

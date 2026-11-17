@@ -6,7 +6,7 @@ export interface AnalyticsTablePermissions {
   canCreate: boolean;
   /** Delete the table (FULL_ADMIN, never a system table). */
   canDelete: boolean;
-  /** View and edit the table's grants and row policies (FULL_ADMIN, system tables included). */
+  /** View and edit the table's access — the backend-reported `grant` capability, system tables included. */
   canManageRoles: boolean;
   /** Insert rows — the backend-reported per-table write capability. */
   canWrite: boolean;
@@ -14,6 +14,7 @@ export interface AnalyticsTablePermissions {
   canModify: boolean;
   canChangeSensitive: boolean;
   isRowsRestricted: boolean;
+  isColumnsRestricted: boolean;
 }
 
 // Derives the Tables UI decisions from the caller's application role (AppContext) and the table's
@@ -28,10 +29,11 @@ export const useAnalyticsTablePermissions = (table?: AnalyticsTable): AnalyticsT
   return {
     canCreate: isFullAdmin,
     canDelete: isFullAdmin && !table?.system,
-    canManageRoles: isFullAdmin,
+    canManageRoles: table?.permissions?.grant ?? !isEnableAuth,
     canWrite: table?.permissions?.write ?? !isEnableAuth,
     canModify,
     canChangeSensitive: canModify && (table?.permissions?.sensitive ?? !isEnableAuth),
     isRowsRestricted: table?.permissions?.rows_restricted ?? false,
+    isColumnsRestricted: table?.permissions?.columns_restricted ?? false,
   };
 };

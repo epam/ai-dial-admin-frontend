@@ -4,7 +4,7 @@ import { ConfirmationPopup, ConfirmationPopupVariant } from '@epam/ai-dial-ui-ki
 import { FC, useState } from 'react';
 
 import { MARKED_PRIVILEGES } from '@/src/components/Analytics/Tables/access/constants';
-import { PrivilegeMark, RoleRow } from '@/src/components/Analytics/Tables/access/models';
+import { AccessChangeOutcome, PrivilegeMark, RoleRow } from '@/src/components/Analytics/Tables/access/models';
 import { roleLabel, summarizeFilter } from '@/src/components/Analytics/Tables/access/utils';
 import { AnalyticsTableAccessI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -15,8 +15,8 @@ import { getSuccessNotification } from '@/src/utils/notification';
 interface Props {
   tableName: string;
   row: RoleRow;
-  // Resolves true when the role is gone; the failure notification has been shown by the caller.
-  onRemove: (role: string) => Promise<boolean>;
+  // The failure notification has been shown by the caller.
+  onRemove: (role: string) => Promise<AccessChangeOutcome>;
   onClose: () => void;
 }
 
@@ -42,11 +42,13 @@ const RemoveRoleDialog: FC<Props> = ({ tableName, row, onRemove, onClose }) => {
 
   const onConfirm = async () => {
     setIsRemoving(true);
-    const isRemoved = await onRemove(row.role);
+    const outcome = await onRemove(row.role);
     setIsRemoving(false);
-    if (!isRemoved) return;
+    if (outcome === AccessChangeOutcome.Failed) return;
 
-    showNotification(getSuccessNotification(t(AnalyticsTableAccessI18nKey.RoleRemoved)));
+    if (outcome === AccessChangeOutcome.Done) {
+      showNotification(getSuccessNotification(t(AnalyticsTableAccessI18nKey.RoleRemoved)));
+    }
     onClose();
   };
 
@@ -56,6 +58,7 @@ const RemoveRoleDialog: FC<Props> = ({ tableName, row, onRemove, onClose }) => {
   if (row.filter != null) {
     details.push([AnalyticsTableAccessI18nKey.RemoveRowLimit, summarizeFilter(row.filter)]);
   }
+  if (row.columns) details.push([AnalyticsTableAccessI18nKey.RemoveColumnLimit, row.columns.join(', ')]);
 
   return (
     <ConfirmationPopup
