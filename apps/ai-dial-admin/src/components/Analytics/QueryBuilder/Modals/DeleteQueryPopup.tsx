@@ -56,6 +56,7 @@ const DeleteQueryPopup: FC<Props> = ({ query, onRemove, onClose }) => {
     <ConfirmationPopup
       variant={ConfirmationPopupVariant.Danger}
       open={true}
+      isLoading={isRemoving}
       header={t(QueriesI18nKey.DeleteQueryHeader)}
       description={t(QueriesI18nKey.DeleteQueryDescription, { name: query.name })}
       confirmLabel={t(QueriesI18nKey.DeleteQuery)}
