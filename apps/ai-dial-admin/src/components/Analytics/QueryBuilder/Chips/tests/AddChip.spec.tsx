@@ -35,6 +35,19 @@ describe('AddChip', () => {
     expect(addButton()).toHaveAttribute('aria-expanded', 'true');
   });
 
+  test('exposes a dialog popup once a part is chosen, and a menu again after Back', async () => {
+    const user = userEvent.setup();
+    renderChipBar();
+
+    const dialog = await openAdd(user, FILTER);
+    expect(addButton()).toHaveAttribute('aria-haspopup', 'dialog');
+
+    await user.click(within(dialog).getByRole('button', { name: 'Buttons.Back' }));
+
+    expect(await screen.findByRole('menu')).toBeInTheDocument();
+    expect(addButton()).toHaveAttribute('aria-haspopup', 'menu');
+  });
+
   test('offers every part for an empty row query', async () => {
     const user = userEvent.setup();
     renderChipBar();

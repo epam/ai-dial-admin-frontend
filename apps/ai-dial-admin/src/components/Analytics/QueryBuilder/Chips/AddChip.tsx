@@ -79,7 +79,7 @@ const AddChip: FC = () => {
       <button
         type="button"
         aria-label={t(QueryChipsI18nKey.AddPart)}
-        aria-haspopup="menu"
+        aria-haspopup={kind ? 'dialog' : 'menu'}
         aria-expanded={isOpen}
         className="flex h-6 items-center gap-1 rounded-full border border-accent-primary bg-accent-primary-alpha px-2 text-accent-primary dial-tiny-semi-text focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary"
       >
