@@ -316,11 +316,25 @@ const isFailedRequest = (res: Response) => {
   return !(res.status >= 200 && res.status < 300);
 };
 
-const getResponse = <T>(type: string, res: Response) => {
+const getResponse = async <T>(type: string, res: Response): Promise<T> => {
   const contentType = res.headers.get('content-type');
   if (contentType && contentType.includes('text/plain')) {
-    return res.text() as Promise<T>;
+    return (await res.text()) as T;
   }
 
-  return (type === 'DELETE' ? res.text() : res.json().catch(() => res.text().catch(() => ''))) as Promise<T>;
+  if (type === 'DELETE') {
+    return (await res.text()) as T;
+  }
+
+  // The body is read once: after a failed `res.json()` it is consumed and `res.text()` would throw.
+  const raw = await res.text().catch(() => '');
+  if (!raw.trim()) {
+    return '' as T;
+  }
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return raw as T;
+  }
 };
