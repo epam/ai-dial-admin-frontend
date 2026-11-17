@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { EntitySelectType, PickedEntity } from '@/src/components/Common/EntitySelectInput/models';
-import { AliasI18nKey } from '@/src/constants/i18n';
+import { AliasI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { AliasPresentAs, AliasTargetType } from '@/src/models/dial/alias';
 import { AssetSource } from '@/src/models/dial/asset-source';
 import TargetField from '../TargetField';
@@ -62,7 +62,7 @@ describe('TargetField', () => {
     renderField();
 
     expect(typeSelect()).toHaveAccessibleName(new RegExp(AliasI18nKey.TargetTypeApplication));
-    expect(screen.getByRole('button', { name: AliasI18nKey.SelectTarget })).toBeTruthy();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Open })).toBeTruthy();
   });
 
   test('reads the target type from an existing target and offers to change the target', () => {
@@ -73,13 +73,22 @@ describe('TargetField', () => {
       'value',
       'toolsets/public/search',
     );
-    expect(screen.getByRole('button', { name: AliasI18nKey.ChangeTarget })).toBeTruthy();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Open })).toBeTruthy();
+  });
+
+  test('shows an encoded target readably', () => {
+    renderField({ target: { path: 'applications/public/QA/Code%20Apps%20ALS/app__1.0.0' } });
+
+    expect(screen.getByRole('textbox', { name: new RegExp(AliasI18nKey.Target) })).toHaveProperty(
+      'value',
+      'applications/public/QA/Code Apps ALS/app__1.0.0',
+    );
   });
 
   test('opens the single-selection picker for the chosen target type', async () => {
     renderField({ target: { path: 'models/gpt' } });
 
-    await user.click(screen.getByRole('button', { name: AliasI18nKey.ChangeTarget }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Open }));
 
     expect(screen.getByText(`picker:${EntitySelectType.Model}:single`)).toBeTruthy();
     expect(screen.getByRole('dialog', { name: AliasI18nKey.SelectModelTarget })).toBeTruthy();
@@ -88,7 +97,7 @@ describe('TargetField', () => {
   test('writes the picked entity as the target path of the chosen type', async () => {
     renderField();
 
-    await user.click(screen.getByRole('button', { name: AliasI18nKey.SelectTarget }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Open }));
     await user.click(screen.getByRole('button', { name: 'apply-pick' }));
 
     expect(onChange).toHaveBeenCalledWith({
@@ -101,7 +110,7 @@ describe('TargetField', () => {
   test('keeps the target when the picker is applied with nothing', async () => {
     renderField({ target: { path: 'models/gpt' } });
 
-    await user.click(screen.getByRole('button', { name: AliasI18nKey.ChangeTarget }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Open }));
     await user.click(screen.getByRole('button', { name: 'apply-nothing' }));
 
     expect(onChange).not.toHaveBeenCalled();
@@ -110,7 +119,7 @@ describe('TargetField', () => {
   test('closes the picker without writing anything', async () => {
     renderField();
 
-    await user.click(screen.getByRole('button', { name: AliasI18nKey.SelectTarget }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Open }));
     await user.click(screen.getByRole('button', { name: 'close-picker' }));
 
     expect(onChange).not.toHaveBeenCalled();
@@ -192,7 +201,7 @@ describe('TargetField', () => {
   test('offers no way to change a read-only target', () => {
     renderField({ target: { path: 'models/gpt' }, isReadOnly: true });
 
-    expect(screen.queryByRole('button', { name: AliasI18nKey.ChangeTarget })).toBeNull();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Open })).toBeNull();
     expect(typeSelect().hasAttribute('disabled') || typeSelect().getAttribute('aria-disabled') === 'true').toBe(true);
   });
 

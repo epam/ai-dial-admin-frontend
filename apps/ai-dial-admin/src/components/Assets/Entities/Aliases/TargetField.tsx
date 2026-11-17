@@ -1,8 +1,9 @@
 'use client';
 
-import { Input, OutlinedButton, Select } from '@epam/ai-dial-ui-kit';
+import { Label, Select } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import SelectEntitiesPopup from '@/src/components/Common/EntitySelectInput/SelectEntitiesPopup';
 import { EntitySelectType, PickedEntity } from '@/src/components/Common/EntitySelectInput/models';
 import { AliasI18nKey } from '@/src/constants/i18n';
@@ -65,6 +66,7 @@ const TargetField: FC<Props> = ({ target, presentAs, isModal, isReadOnly, onChan
   const [targetType, setTargetType] = useState<AliasTargetType>(parsed?.type ?? AliasTargetType.Application);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const hasUnparsableTarget = !!target?.path && !parsed;
+  const displayPath = parsed ? `${parsed.type}/${parsed.reference}` : (target?.path ?? '');
 
   const typeOptions = useMemo(
     () => Object.values(AliasTargetType).map((type) => ({ value: type, label: t(TARGET_TYPE_LABEL[type]) })),
@@ -126,23 +128,24 @@ const TargetField: FC<Props> = ({ target, presentAs, isModal, isReadOnly, onChan
         onChange={onChangeType}
       />
       <div className={`flex flex-col gap-y-2 ${controlClassName}`}>
-        <div className="flex items-end gap-x-3">
-          <Input
-            id="alias-target"
-            labelProps={{ label: t(AliasI18nKey.Target), required: true }}
-            placeholder={t(AliasI18nKey.TargetPlaceholder)}
-            value={target?.path ?? ''}
-            containerClassName="grow"
-            readOnly
-            disabled={isReadOnly}
+        <Label label={t(AliasI18nKey.Target)} required htmlFor="alias-target" />
+        <InputPopup
+          elementId="alias-target"
+          placeholder={t(AliasI18nKey.TargetPlaceholder)}
+          selectedValue={displayPath}
+          disabled={isReadOnly}
+          open={isPickerOpen}
+          onOpen={() => setIsPickerOpen(true)}
+        >
+          <SelectEntitiesPopup
+            isSingle
+            isOpen={isPickerOpen}
+            entityType={ENTITY_SELECT_TYPE[targetType]}
+            header={t(PICKER_HEADER[targetType])}
+            onClose={() => setIsPickerOpen(false)}
+            onApply={onApplyTarget}
           />
-          {!isReadOnly && (
-            <OutlinedButton
-              label={t(target?.path ? AliasI18nKey.ChangeTarget : AliasI18nKey.SelectTarget)}
-              onClick={() => setIsPickerOpen(true)}
-            />
-          )}
-        </div>
+        </InputPopup>
         {hasUnparsableTarget && (
           <p className="dial-tiny-text text-secondary">
             {t(AliasI18nKey.UnparsableTarget, { path: target?.path ?? '' })}
@@ -159,16 +162,6 @@ const TargetField: FC<Props> = ({ target, presentAs, isModal, isReadOnly, onChan
         onChange={onChangePresentAs}
       />
       <p className="dial-tiny-text text-secondary -mt-6">{t(AliasI18nKey.PresentAsDescription)}</p>
-      {!isReadOnly && isPickerOpen && (
-        <SelectEntitiesPopup
-          isSingle
-          isOpen={isPickerOpen}
-          entityType={ENTITY_SELECT_TYPE[targetType]}
-          header={t(PICKER_HEADER[targetType])}
-          onClose={() => setIsPickerOpen(false)}
-          onApply={onApplyTarget}
-        />
-      )}
     </div>
   );
 };

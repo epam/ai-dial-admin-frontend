@@ -60,6 +60,7 @@ const AliasCreateProperties: FC<Props> = ({
         onChangeEntity={onChangeEntity}
       />
       <DisplayNameControl
+        required
         displayName={entity.displayName}
         onChange={(displayName) => onChangeEntity({ ...entity, displayName })}
       />

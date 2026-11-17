@@ -4938,8 +4938,6 @@ export default {
     TargetPlaceholder: 'Select a target',
     TargetRequired: 'Select a target',
     UnparsableTarget: 'The current target "{path}" cannot be edited here. Select a new target to replace it.',
-    SelectTarget: 'Select target',
-    ChangeTarget: 'Change target',
     SelectModelTarget: 'Select model',
     SelectApplicationTarget: 'Select application',
     SelectToolsetTarget: 'Select toolset',
