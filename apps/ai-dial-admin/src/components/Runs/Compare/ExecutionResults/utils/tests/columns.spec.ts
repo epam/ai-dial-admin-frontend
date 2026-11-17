@@ -343,6 +343,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
 
     exec.children.forEach((field) => {
       expect(field.headerGroupComponent).toBe(EllipsisHeaderGroup);
+      expect(field.headerGroupComponentParams).toEqual({ isRightAligned: true });
       expect((field.children as ColDef[]).map((leaf) => leaf.headerName)).toEqual([
         formatCompareRunIndexHeader(RUN_COMPARE_PRIMARY_INDEX),
         formatCompareRunIndexHeader(RUN_COMPARE_SECONDARY_INDEX),
@@ -418,9 +419,11 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     const metricGroup = cols[3] as {
       headerName: string;
       headerGroupComponent?: unknown;
+      headerGroupComponentParams?: unknown;
       children: {
         headerName: string;
         headerGroupComponent?: unknown;
+        headerGroupComponentParams?: unknown;
         children: {
           headerName: string;
           colId?: string;
@@ -439,7 +442,11 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
 
     expect(metricGroup.headerName).toBe('Overall Accuracy');
     expect(metricGroup.headerGroupComponent).toBe(EllipsisHeaderGroup);
+    expect(metricGroup.headerGroupComponentParams).toBeUndefined();
     expect(metricGroup.children.map((metric) => metric.headerName)).toEqual(['Precision', 'Recall']);
+    metricGroup.children.forEach((metric) => {
+      expect(metric.headerGroupComponentParams).toEqual({ isRightAligned: true });
+    });
 
     const [primary, secondary, delta] = metricGroup.children[0].children;
     expect(metricGroup.children[0].children).toHaveLength(3);
