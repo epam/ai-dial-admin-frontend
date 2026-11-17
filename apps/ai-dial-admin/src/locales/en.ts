@@ -3069,6 +3069,8 @@ export default {
     DeleteQueryHeader: 'Delete this query?',
     DeleteQueryDescription: '“{name}” will be removed from Queries. This can’t be undone.',
     DeleteQuery: 'Delete query',
+    SourceUnavailable: 'This table is unavailable: it was deleted, or you have no access to it.',
+    SourceSchemaFailed: 'The columns of this table could not be loaded.',
     Tag: 'Tag',
     Scope: 'Visibility',
     ScopePersonal: 'Personal',

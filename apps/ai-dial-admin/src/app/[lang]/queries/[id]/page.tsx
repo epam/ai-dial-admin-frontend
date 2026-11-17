@@ -12,6 +12,7 @@ import Page403 from '@/src/components/Page403/Page403';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryFunction } from '@/src/models/analytics/query-function';
+import { QuerySourceProblem } from '@/src/models/analytics/query-builder';
 import { SavedQuery } from '@/src/models/analytics/saved-query';
 import { ReadFailure } from '@/src/models/server-action';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
@@ -36,6 +37,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let fields: AnalyticsEntityField[] = [];
   let translatedSql: string | null = null;
   let translationFailure: ReadFailure | null = null;
+  let sourceProblem: QuerySourceProblem | null = null;
 
   try {
     const [query, entitiesRes, functionsRes] = await Promise.all([
@@ -48,9 +50,12 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     functions = functionsRes ?? [];
 
     const primarySource = savedQuery ? savedQueryPrimarySource(savedQuery) : '';
-    if (primarySource) {
+    const isSourceUnavailable = !!primarySource && !entities.some((entity) => entity.name === primarySource);
+    if (isSourceUnavailable) sourceProblem = QuerySourceProblem.Unavailable;
+    if (primarySource && !isSourceUnavailable) {
       const schemaRead = await getEntitySchema(primarySource);
       fields = schemaRead.response?.fields ?? [];
+      if (!schemaRead.response) sourceProblem = QuerySourceProblem.SchemaFailed;
     }
 
     if (savedQuery?.query && !savedQuery.sql && !isChipRepresentable(savedQuery.query, functions, fields)) {
@@ -90,7 +95,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
           name={savedQuery.name}
           savedQuery={savedQuery}
           translatedSql={translatedSql}
-          translationFailure={translationFailure}
+          translationFailure={sourceProblem ? null : translationFailure}
+          sourceProblem={sourceProblem}
         />
       </QueryPageShell>
     </SaveValidationContextProvider>

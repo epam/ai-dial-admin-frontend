@@ -2978,6 +2978,8 @@ export enum QueriesI18nKey {
   DeleteQueryHeader = 'Queries.DeleteQueryHeader',
   DeleteQueryDescription = 'Queries.DeleteQueryDescription',
   DeleteQuery = 'Queries.DeleteQuery',
+  SourceUnavailable = 'Queries.SourceUnavailable',
+  SourceSchemaFailed = 'Queries.SourceSchemaFailed',
   Tag = 'Queries.Tag',
   Scope = 'Queries.Scope',
   ScopePersonal = 'Queries.ScopePersonal',

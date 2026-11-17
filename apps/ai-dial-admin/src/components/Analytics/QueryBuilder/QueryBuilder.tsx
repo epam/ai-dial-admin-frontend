@@ -14,7 +14,6 @@ import {
   BadgeColor,
   BadgeVariant,
   Button,
-  ButtonAppearance,
 } from '@epam/ai-dial-ui-kit';
 import type { DropdownItem, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { IconCopy, IconPencilMinus, IconPlayerPlay, IconTable, IconTrashX } from '@tabler/icons-react';
@@ -31,6 +30,7 @@ import ChipBar from '@/src/components/Analytics/QueryBuilder/Chips/ChipBar';
 import { PeriodControl } from '@/src/components/Analytics/QueryBuilder/Chips/models';
 import BuilderArea from '@/src/components/Analytics/QueryBuilder/Layout/BuilderArea';
 import QueryHeader from '@/src/components/Analytics/QueryBuilder/Layout/QueryHeader';
+import SourceProblemIcon from '@/src/components/Analytics/QueryBuilder/Layout/SourceProblemIcon';
 import DeleteQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DeleteQueryPopup';
 import DiscardQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DiscardQueryPopup';
 import ResetQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/ResetQueryPopup';
@@ -78,6 +78,7 @@ import {
   QueryBuilderState,
   QueryBuilderView,
   QueryCopyMode,
+  QuerySourceProblem,
   QueryRequestKind,
   QueryResultView,
   QueryRunRequest,
@@ -99,6 +100,7 @@ interface Props {
   savedQuery?: SavedQuery;
   translatedSql?: string | null;
   translationFailure?: ReadFailure | null;
+  sourceProblem?: QuerySourceProblem | null;
   onResetDraft?: () => void;
 }
 
@@ -130,6 +132,7 @@ const QueryBuilder: FC<Props> = ({
   savedQuery,
   translatedSql,
   translationFailure,
+  sourceProblem,
   onResetDraft,
 }) => {
   const t = useI18n();
@@ -209,6 +212,8 @@ const QueryBuilder: FC<Props> = ({
   const patch = useCallback((partial: Partial<QueryBuilderState>) => setState((prev) => ({ ...prev, ...partial })), []);
 
   const fieldsLoaded = state.fields.length > 0;
+  const isReadOnly = !!savedQuery && !fieldsLoaded;
+  const shownSourceProblem = fieldsLoaded ? null : sourceProblem;
   const timestampField = useMemo(() => findTimestampField(state.fields), [state.fields]);
   const { getCurrentTimeRange } = timeFilter;
   const boundPeriod = timeFilter.isCustom ? undefined : timeFilter.timePeriod;
@@ -505,7 +510,7 @@ const QueryBuilder: FC<Props> = ({
     }
   };
 
-  const runDisabled = !fieldsLoaded || (isSqlView && !sqlText.trim());
+  const runDisabled = (!fieldsLoaded && !isReadOnly) || (isSqlView && !sqlText.trim());
   const isSaveBlocked = runDisabled && !(fieldsLoaded && savedQueryPage.hasUnloadedBody);
 
   const isSaveDisabled = isSaveBlocked || savedQueryPage.isSaving;
@@ -524,8 +529,7 @@ const QueryBuilder: FC<Props> = ({
       {savedQueryPage.isDirty && <GhostButton label={t(ButtonsI18nKey.Reset)} onClick={() => setIsResetOpen(true)} />}
       <Button
         className={saveAsClassName}
-        variant={ButtonVariant.Primary}
-        appearance={ButtonAppearance.Outlined}
+        variant={ButtonVariant.Neutral}
         label={t(QueriesI18nKey.SaveAsQuery)}
         onClick={() => onOpenCopy(QueryCopyMode.SaveDraft)}
         disabled={isSaveDisabled}
@@ -540,16 +544,14 @@ const QueryBuilder: FC<Props> = ({
         <div role="group" aria-label={t(ButtonsI18nKey.Save)} className={classNames('flex', saveAsClassName)}>
           <Button
             className="rounded-r-none"
-            variant={ButtonVariant.Primary}
-            appearance={ButtonAppearance.Outlined}
+            variant={ButtonVariant.Neutral}
             label={t(ButtonsI18nKey.Save)}
             onClick={() => void savedQueryPage.onSave()}
             disabled={isSaveDisabled}
           />
           <ButtonDropdown
             className="-ml-px rounded-l-none px-3"
-            variant={ButtonVariant.Primary}
-            appearance={ButtonAppearance.Outlined}
+            variant={ButtonVariant.Neutral}
             aria-label={t(QueriesI18nKey.SaveOptions)}
             items={saveItems}
             disabled={isSaveDisabled}
@@ -559,8 +561,7 @@ const QueryBuilder: FC<Props> = ({
       ) : (
         <Button
           className={saveAsClassName}
-          variant={ButtonVariant.Primary}
-          appearance={ButtonAppearance.Outlined}
+          variant={ButtonVariant.Neutral}
           label={t(QueriesI18nKey.SaveACopy)}
           onClick={() => onOpenCopy(QueryCopyMode.SaveCopy)}
           disabled={isSaveDisabled}
@@ -588,8 +589,7 @@ const QueryBuilder: FC<Props> = ({
       )}
       <Button
         className={saveAsClassName}
-        variant={ButtonVariant.Primary}
-        appearance={ButtonAppearance.Outlined}
+        variant={ButtonVariant.Neutral}
         label={t(ButtonsI18nKey.Duplicate)}
         iconBefore={<IconCopy {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
         onClick={() => onOpenCopy(QueryCopyMode.Duplicate)}
@@ -617,7 +617,7 @@ const QueryBuilder: FC<Props> = ({
 
   const period = useMemo<PeriodControl | null>(
     () =>
-      timestampField
+      timestampField || (isReadOnly && savedQuery?.time)
         ? {
             timePeriod: timeFilter.timePeriod,
             isCustom: timeFilter.isCustom,
@@ -628,6 +628,8 @@ const QueryBuilder: FC<Props> = ({
         : null,
     [
       timestampField,
+      isReadOnly,
+      savedQuery?.time,
       timeFilter.timePeriod,
       timeFilter.isCustom,
       timeFilter.timeRange,
@@ -637,8 +639,8 @@ const QueryBuilder: FC<Props> = ({
   );
 
   const renderBuilderArea = () => {
-    if (!fieldsLoaded) return <NoDataContent title={t(QueryBuilderI18nKey.SchemaLoadFailed)} />;
-    if (!isSqlView) return <ChipBar period={period} />;
+    if (!fieldsLoaded && !isReadOnly) return <NoDataContent title={t(QueryBuilderI18nKey.SchemaLoadFailed)} />;
+    if (!isSqlView) return <ChipBar period={period} isReadOnly={isReadOnly} />;
 
     return (
       <div className="flex h-full min-h-0 flex-col gap-2">
@@ -678,7 +680,8 @@ const QueryBuilder: FC<Props> = ({
               savedQueryPage.savedQuery && (
                 <span className="flex items-center gap-2 text-secondary dial-small-text">
                   <IconTable size={16} className="shrink-0 text-success" aria-hidden />
-                  {savedQueryPrimarySource(savedQueryPage.savedQuery)}
+                  {state.entityName || savedQueryPrimarySource(savedQueryPage.savedQuery)}
+                  {shownSourceProblem && <SourceProblemIcon problem={shownSourceProblem} />}
                 </span>
               )
             }
@@ -692,7 +695,7 @@ const QueryBuilder: FC<Props> = ({
           ) : (
             <>
               <div className="flex flex-wrap items-center gap-3">
-                {fieldsLoaded && (
+                {(fieldsLoaded || isReadOnly) && (
                   <SegmentedControl
                     aria-label={t(QueryBuilderI18nKey.ViewSwitcher)}
                     items={viewOptions}
@@ -704,7 +707,7 @@ const QueryBuilder: FC<Props> = ({
                   />
                 )}
                 <div className="ml-auto flex items-center gap-3">
-                  {fieldsLoaded && isSqlView && (
+                  {(fieldsLoaded || isReadOnly) && isSqlView && (
                     <CopyButton
                       value={sqlText}
                       valueLabel={t(QueryBuilderI18nKey.SqlQuery)}

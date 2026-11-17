@@ -163,12 +163,20 @@ A query page SHALL indicate whether it holds unsaved changes and SHALL offer Sav
 
 Every member of the write payload SHALL count toward unsaved changes — the body, the time intent, the result view, and the chart configuration alike. Save SHALL be unavailable when nothing has changed, because the service refreshes the modification timestamp on every write and that timestamp is the order the list is shown in.
 
+SQL the page generates by translating the builder query, on entering the SQL view, SHALL NOT count as an
+unsaved change while it stays unedited: it states the same query the chips do.
+
 Discard SHALL ask for confirmation and, on confirmation, SHALL restore the page to the stored query. This discard SHALL be distinct from the existing guard on switching out of a written view: that guard resets the builder to its starting defaults, whereas this one reverts to the last saved query.
 
 #### Scenario: An edit enables Save and Discard
 
 - **WHEN** the user changes anything the payload carries — a filter, the time period, the result view, or the chart configuration
 - **THEN** the page indicates unsaved changes and Save and Discard become available
+
+#### Scenario: Entering the SQL view is not a change
+
+- **WHEN** the user opens a saved query and switches to the SQL view without editing the SQL
+- **THEN** the page reports no unsaved changes
 
 #### Scenario: Save is unavailable when nothing changed
 
@@ -471,6 +479,15 @@ The page SHALL fetch the schema of **the stored query's primary source**, not th
 The page SHALL offer no control that switches the query's source. Picking another table SHALL open a
 draft on that table and SHALL leave the stored query untouched.
 
+When the primary source cannot be read the page SHALL still show the query, the way it is stored, and
+SHALL mark the source table in the heading with a warning icon whose tooltip names the problem: the table
+is unavailable — not among the caller's queryable tables, because it was deleted or the caller lost
+access — or its columns could not be loaded. Without a schema the chips SHALL be shown read-only, with no
+Add control and no popups, the Period chip stating the stored time intent; the SQL view SHALL stay
+editable, so the user can point the query at another table. Run SHALL stay available in both views: a
+failure is reported by the service as any run failure is. Once a schema loads — after the user edits the
+SQL and returns to the Builder view — the warning SHALL go and the chips SHALL be editable again.
+
 A query reading from several entities SHALL open the same way — its stored SQL shown in the SQL view — with the schema of its primary source loaded. Switching such a query to the Builder view SHALL follow the existing translation behaviour for SQL the DSL cannot express: the service refuses the translation and the discard guard applies.
 
 The laid-out text SHALL be the query's unedited baseline, so opening a query stored on one line SHALL NOT mark it as having unsaved changes. Saving from the SQL view SHALL send the SQL view's text as shown, so the first save after opening stores the laid-out form. Editing a query's metadata or saving it as a new query without edits SHALL send the stored SQL unchanged, because neither re-authors the body.
@@ -542,6 +559,19 @@ The stored time intent SHALL be applied to the toolbar time filter: a relative i
 - **THEN** the SQL view shows the stored statement
 - **AND** the schema requested is that of the query's primary source, so that entity's fields are available
 - **AND** the page does not report a failed schema load
+
+#### Scenario: A query whose table is unavailable is still shown
+
+- **WHEN** the user opens a saved query whose primary source is not among the queryable tables
+- **THEN** the source table in the heading carries a warning icon explaining it is unavailable
+- **AND** a body saved from the builder is shown as read-only chips with no Add control
+- **AND** a body saved as SQL is shown in an editable SQL view
+- **AND** Run stays available
+
+#### Scenario: A table whose columns fail to load is marked
+
+- **WHEN** the primary source is a queryable table but its schema cannot be read
+- **THEN** the warning icon's tooltip says the table's columns could not be loaded
 
 #### Scenario: Picking a table does not change the stored query
 

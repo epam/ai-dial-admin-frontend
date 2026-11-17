@@ -223,6 +223,11 @@ export interface CompactSelectOptionDescriptor {
   descriptionKey: QueryBuilderI18nKey;
 }
 
+export enum QuerySourceProblem {
+  Unavailable = 'unavailable',
+  SchemaFailed = 'schema-failed',
+}
+
 export enum QueryCopyMode {
   SaveDraft = 'save-draft',
   Duplicate = 'duplicate',

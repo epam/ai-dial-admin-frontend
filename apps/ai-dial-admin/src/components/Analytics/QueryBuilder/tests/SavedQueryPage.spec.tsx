@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   createSavedQuery,
   deleteSavedQuery,
+  translateQuery,
   translateSqlToQuery,
   updateSavedQuery,
 } from '@/src/app/[lang]/queries/actions';
@@ -27,7 +28,7 @@ import {
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
-import { ChartConfig, ChartType, QueryResultView } from '@/src/models/analytics/query-builder';
+import { ChartConfig, ChartType, QueryResultView, QuerySourceProblem } from '@/src/models/analytics/query-builder';
 import { ReadFailure } from '@/src/models/server-action';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope, SavedQueryTimeMode } from '@/src/models/analytics/saved-query';
 import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
@@ -560,6 +561,67 @@ describe('QueryBuilder — a stored saved query', () => {
     await user.click(screen.getByRole('button', { name: 'Buttons.Edit' }));
 
     expect(await screen.findByText('Queries.EditQuery')).toBeInTheDocument();
+  });
+
+  test('does not count the SQL generated on entering the SQL view as a change', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT 1' } });
+    renderPage();
+
+    await user.click(viewRadio('QueryBuilder.ViewSql'));
+
+    expect(await screen.findByLabelText('sql-editor')).toHaveValue(formatSql('SELECT 1'));
+    expect(saveGroup()).toBeNull();
+    expect(discardButton()).toBeNull();
+  });
+
+  describe('a query whose table cannot be read', () => {
+    const renderWithoutSchema = (query: SavedQuery, sourceProblem: QuerySourceProblem) =>
+      render(
+        <QueryBuilder
+          initialEntities={ENTITIES}
+          initialEntityName={savedQueryPrimarySource(query)}
+          initialFields={[]}
+          initialFunctions={TEST_FUNCTIONS}
+          name={query.name}
+          savedQuery={query}
+          sourceProblem={sourceProblem}
+        />,
+      );
+
+    test('marks an unavailable table with a warning that names the problem', () => {
+      renderWithoutSchema(savedQuery(), QuerySourceProblem.Unavailable);
+
+      expect(screen.getByRole('img', { name: 'Queries.SourceUnavailable' })).toBeInTheDocument();
+    });
+
+    test('marks a table whose columns failed to load with its own warning', () => {
+      renderWithoutSchema(savedQuery(), QuerySourceProblem.SchemaFailed);
+
+      expect(screen.getByRole('img', { name: 'Queries.SourceSchemaFailed' })).toBeInTheDocument();
+    });
+
+    test('shows the stored chips read-only, without the Add control, and keeps Run available', () => {
+      renderWithoutSchema(savedQuery(), QuerySourceProblem.Unavailable);
+
+      const bar = screen.getByRole('group', { name: 'QueryChips.Bar' });
+      expect(within(bar).getByText(/QueryBuilder.Limit/)).toBeInTheDocument();
+      expect(within(bar).queryByRole('button')).toBeNull();
+      expect(screen.queryByRole('button', { name: 'QueryChips.AddPart' })).toBeNull();
+      expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeEnabled();
+    });
+
+    test('opens a query stored as SQL in an editable SQL view with Run available', async () => {
+      renderWithoutSchema(
+        savedQuery({ query: void 0, sql: 'SELECT 1 FROM gone', source: ['gone'] }),
+        QuerySourceProblem.Unavailable,
+      );
+
+      const editor = await screen.findByLabelText('sql-editor');
+      expect(editor).toHaveValue(formatSql('SELECT 1 FROM gone'));
+      expect(editor).not.toHaveAttribute('readonly');
+      expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeEnabled();
+    });
   });
 
   describe('header', () => {
