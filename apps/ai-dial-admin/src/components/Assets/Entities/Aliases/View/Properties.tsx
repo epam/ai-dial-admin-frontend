@@ -44,6 +44,7 @@ const AliasProperties: FC<Props> = ({ asset, healthIssue, onChange }) => {
           disabled
         />
         <DisplayNameControl
+          required
           isFullWidth={false}
           displayName={asset.displayName}
           onChange={(displayName) => onChange({ ...asset, displayName })}

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { AliasI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
+import { AliasI18nKey, EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { DialAliasResource } from '@/src/models/dial/alias';
 import { AliasCreateStep } from '../constants';
 import AliasCreateProperties from '../CreateProperties';
@@ -60,6 +60,12 @@ describe('AliasCreateProperties', () => {
     expect(nameInput()).toBeTruthy();
     expect(screen.getByRole('textbox', { name: AliasI18nKey.DisplayVersion })).toBeTruthy();
     expect(screen.queryByText(/^target:/)).toBeNull();
+  });
+
+  test('marks the display name as required, since the step cannot be completed without it', () => {
+    renderProperties();
+
+    expect(screen.getByRole('textbox', { name: /EntityFields.displayName.*\(required\)/ })).toBeTruthy();
   });
 
   test('passes the display version up, and none at all when it is cleared', () => {
