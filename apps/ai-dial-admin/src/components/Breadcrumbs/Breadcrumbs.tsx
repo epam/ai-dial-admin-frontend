@@ -26,15 +26,14 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
   const { featureFlags } = useAppContext();
-  const isAdminApiEnabled = featureFlags.adminApiEnabled;
   const folderContext = pathname ? getFolderContext?.(pathname, currentLocale)?.() : undefined;
 
   const basicBreadcrumbs = useMemo(() => {
     if (!pathname) {
       return [];
     }
-    return getBreadcrumbs(pathname, currentLocale, isAdminApiEnabled);
-  }, [pathname, currentLocale, isAdminApiEnabled]);
+    return getBreadcrumbs(pathname, currentLocale, featureFlags.adminApiEnabled);
+  }, [pathname, currentLocale, featureFlags.adminApiEnabled]);
 
   const [enrichedBreadcrumbs, setEnrichedBreadcrumbs] = useState<Breadcrumb[] | null>(null);
 
