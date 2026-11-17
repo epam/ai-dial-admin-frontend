@@ -160,7 +160,8 @@ vi.mock('@/src/context/OrgUnitsContext', () => {
     units: {},
     unitsStatus: 'idle',
     ensureUnits: vi.fn(),
-    refreshUnits: vi.fn(async () => undefined),
+    refreshUnits: vi.fn(async () => ({})),
+    loadUnits: vi.fn(async () => ({})),
     getOwningUnit: vi.fn(() => undefined),
   };
   return {

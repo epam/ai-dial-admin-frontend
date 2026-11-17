@@ -16,11 +16,12 @@ interface Props {
   value: TimeRange | null;
   onChange: (range: TimeRange | null) => void;
   maxDays?: number;
+  formatWeekDay?: (dayName: string) => string;
 }
 
 const monthLabel = (date: Date) => date.toLocaleString(undefined, { month: 'long', year: 'numeric' });
 
-const RangePicker: FC<Props> = ({ value, onChange, maxDays }) => {
+const RangePicker: FC<Props> = ({ value, onChange, maxDays, formatWeekDay }) => {
   const t = useI18n();
   const [state, setState] = useState<RangeFsmState>(() => hydrate(value));
 
@@ -68,6 +69,7 @@ const RangePicker: FC<Props> = ({ value, onChange, maxDays }) => {
         shouldCloseOnSelect={false}
         disabledKeyboardNavigation
         dayClassName={dayClassName}
+        formatWeekDay={formatWeekDay}
         renderCustomHeader={({ monthDate, decreaseMonth, increaseMonth }) => {
           const now = new Date();
           const isCurrentMonth =

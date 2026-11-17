@@ -16,6 +16,7 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 interface Props {
   query: SavedQuery;
   isCurrent: boolean;
+  isNested?: boolean;
 }
 
 const SCOPE_I18N: Record<SavedQueryScope, QueriesI18nKey> = {
@@ -23,7 +24,7 @@ const SCOPE_I18N: Record<SavedQueryScope, QueriesI18nKey> = {
   [SavedQueryScope.Common]: QueriesI18nKey.ScopeCommon,
 };
 
-const QueryRow: FC<Props> = ({ query, isCurrent }) => {
+const QueryRow: FC<Props> = ({ query, isCurrent, isNested = false }) => {
   const t = useI18n();
   const locale = useCurrentLocale();
   const { onNavigate } = useSourcePanel();
@@ -47,7 +48,8 @@ const QueryRow: FC<Props> = ({ query, isCurrent }) => {
           href={href}
           aria-current={isCurrent ? 'page' : undefined}
           className={classNames(
-            'flex min-h-8 items-center rounded px-3 py-1 text-primary dial-tiny-text [overflow-wrap:anywhere] hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha',
+            'flex min-h-8 items-center rounded py-1 pr-3 text-primary dial-tiny-text [overflow-wrap:anywhere] hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha',
+            isNested ? 'pl-8' : 'pl-3',
             isCurrent && 'bg-accent-primary-alpha',
           )}
           onClick={(event) => onNavigate(event, href)}

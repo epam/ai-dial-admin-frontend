@@ -1,22 +1,21 @@
 'use client';
 
-import { FC, useId, useMemo } from 'react';
+import { FC, ReactNode, useId, useMemo } from 'react';
 
 import { ColDef, GetRowIdParams } from 'ag-grid-community';
 import { Spinner, NoDataContent, SegmentedControl, GhostButton } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
-import { IconDownload } from '@tabler/icons-react';
+import { IconChartBar, IconDownload, IconTable } from '@tabler/icons-react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ResultGridRow } from '@/src/components/Analytics/QueryBuilder/Result/models';
 import ResultChart from '@/src/components/Analytics/QueryBuilder/Result/ResultChart';
 import { getValueClassColumn } from '@/src/components/Analytics/QueryBuilder/Result/result-column-format';
 import ResultValueCell from '@/src/components/Analytics/QueryBuilder/Result/ResultValueCell';
-import StatChip from '@/src/components/Analytics/QueryBuilder/Result/StatChip';
 import { useRowsRestricted } from '@/src/components/Analytics/QueryBuilder/Result/use-rows-restricted';
 import { getResultColumns, getResultTotal } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { EXPORT_ROW_LIMIT } from '@/src/constants/analytics/query-builder';
-import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { QueryBuilderI18nKey, QueryChipsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
@@ -39,6 +38,7 @@ interface Props {
   onChangeChartConfig: (config: ChartConfig) => void;
   isExporting?: boolean;
   onExportCsv?: () => void;
+  actions?: ReactNode;
 }
 
 const getRowId = ({ data }: GetRowIdParams<ResultGridRow>): string => String(data.index);
@@ -53,6 +53,7 @@ const ResultArea: FC<Props> = ({
   onChangeChartConfig,
   isExporting = false,
   onExportCsv,
+  actions,
 }) => {
   const t = useI18n();
   const exportHintId = useId();
@@ -82,8 +83,16 @@ const ResultArea: FC<Props> = ({
   };
 
   const viewOptions: SegmentedControlItem<QueryResultView>[] = [
-    { value: QueryResultView.Table, label: t(QueryBuilderI18nKey.ViewTable) },
-    { value: QueryResultView.Chart, label: t(QueryBuilderI18nKey.ViewChart) },
+    {
+      value: QueryResultView.Table,
+      label: t(QueryBuilderI18nKey.ViewTable),
+      icon: <IconTable size={16} stroke={2} aria-hidden />,
+    },
+    {
+      value: QueryResultView.Chart,
+      label: t(QueryBuilderI18nKey.ViewChart),
+      icon: <IconChartBar size={16} stroke={2} aria-hidden />,
+    },
   ];
 
   const hasResult = !!result;
@@ -91,10 +100,17 @@ const ResultArea: FC<Props> = ({
     meta?.kind === QueryRequestKind.Sql ? QueryBuilderI18nKey.ExportCsvSqlHint : QueryBuilderI18nKey.ExportCsvHint,
     { limit: EXPORT_ROW_LIMIT.toLocaleString() },
   );
+  const resultCount =
+    total == null
+      ? t(QueryChipsI18nKey.ResultsCount, { count: rows.length.toLocaleString() })
+      : t(QueryChipsI18nKey.ResultsCountOfTotal, {
+          count: rows.length.toLocaleString(),
+          total: total.toLocaleString(),
+        });
   const isChartView = view === QueryResultView.Chart;
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 py-4 pr-4">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 pb-4">
       <div className="flex flex-wrap items-center gap-3">
         <SegmentedControl
           aria-label={t(QueryBuilderI18nKey.ResultViewSwitcher)}
@@ -103,38 +119,38 @@ const ResultArea: FC<Props> = ({
           onChange={onChangeView}
         />
         {hasResult && (
-          <div className="flex items-center gap-2">
-            <StatChip value={rows.length} label={t(QueryBuilderI18nKey.RowsReturned)} />
-            <StatChip value={columns.length} label={t(QueryBuilderI18nKey.Fields)} />
-            {total != null && <StatChip value={total.toLocaleString()} label={t(QueryBuilderI18nKey.Total)} />}
-          </div>
+          <span role="status" className="text-secondary dial-small-text">
+            {resultCount}
+          </span>
         )}
-        {hasResult && onExportCsv && (
-          <>
-            <GhostButton
-              className="ml-auto"
-              label={t(QueryBuilderI18nKey.ExportCsv)}
-              iconBefore={
-                isExporting ? (
-                  <span aria-hidden>
-                    <Spinner fullWidth={false} size={BASE_BUTTON_ICON_PROPS.size} />
-                  </span>
-                ) : (
-                  <IconDownload {...BASE_BUTTON_ICON_PROPS} aria-hidden />
-                )
-              }
-              aria-busy={isExporting}
-              tooltipProps={{ tooltip: exportHint }}
-              aria-describedby={exportHintId}
-              disabled={isRunning || isExporting}
-              onClick={onExportCsv}
-            />
-            {/* The kit's tooltip names the button only while it is open; this keeps the ceiling announced. */}
-            <span id={exportHintId} className="sr-only">
-              {exportHint}
-            </span>
-          </>
-        )}
+        <div className="ml-auto flex items-center gap-3">
+          {actions}
+          {hasResult && onExportCsv && (
+            <>
+              <GhostButton
+                label={t(QueryBuilderI18nKey.ExportCsv)}
+                iconBefore={
+                  isExporting ? (
+                    <span aria-hidden>
+                      <Spinner fullWidth={false} size={BASE_BUTTON_ICON_PROPS.size} />
+                    </span>
+                  ) : (
+                    <IconDownload {...BASE_BUTTON_ICON_PROPS} aria-hidden />
+                  )
+                }
+                aria-busy={isExporting}
+                tooltipProps={{ tooltip: exportHint }}
+                aria-describedby={exportHintId}
+                disabled={isRunning || isExporting}
+                onClick={onExportCsv}
+              />
+              {/* The kit's tooltip names the button only while it is open; this keeps the ceiling announced. */}
+              <span id={exportHintId} className="sr-only">
+                {exportHint}
+              </span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">

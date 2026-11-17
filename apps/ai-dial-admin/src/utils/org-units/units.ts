@@ -1,3 +1,5 @@
+import { BucketType, MovableAssetListItem } from '@/src/models/dial/asset-list-item';
+import { DialFileNodeType } from '@/src/models/dial/file';
 import { OrgUnit } from '@/src/models/dial/org-unit';
 import { addTrailingSlash } from '@/src/utils/url';
 
@@ -80,3 +82,29 @@ export const getUnitFolderRole = (units: Record<string, OrgUnit>, path: string):
   }
   return containsUnit(units, path) ? UnitFolderRole.CONTAINS_UNIT : undefined;
 };
+
+/** `public/Acme/Risk/` → `public/Acme/`; the folder itself is returned for a root-level `public/`. */
+const getParentFolder = (folder: string): string => folder.slice(0, folder.lastIndexOf('/', folder.length - 2) + 1);
+
+/**
+ * Folder rows for the units directly below `path`, shaped like the rows a type's own listing returns for
+ * a folder: decoded `name` and `path` (trailing slash) and the parent as `folderId`. Every ancestor of a
+ * unit is a unit too (Core), so a unit's parent folder is always in `units` or is `public/`.
+ */
+export const getChildUnitRows = (units: Record<string, OrgUnit>, path: string): MovableAssetListItem[] => {
+  const parent = normalizeFolder(path);
+  return Object.entries(units)
+    .filter(([folder]) => getParentFolder(folder) === parent)
+    .map(([folder, unit]) => ({
+      name: unit.name,
+      path: folder,
+      folderId: parent,
+      nodeType: DialFileNodeType.FOLDER,
+      bucket: BucketType.Public,
+      author: unit.author,
+      createdAt: unit.createdAt == null ? undefined : String(unit.createdAt),
+    }));
+};
+
+/** Identifies the set of unit folders; a display-name change leaves it equal. */
+export const getUnitSetSignature = (units: Record<string, OrgUnit>): string => Object.keys(units).sort().join('|');

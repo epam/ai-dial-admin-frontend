@@ -14,10 +14,10 @@ describe('getAppName', () => {
 
   test('falls back to the built-in name when APP_NAME is empty', () => {
     process.env.APP_NAME = '';
-    expect(getAppName()).toBe('AI Dial Admin');
+    expect(getAppName()).toBe('AI DIAL Admin');
   });
 
   test('falls back to the built-in name when APP_NAME is undefined', () => {
-    expect(getAppName()).toBe('AI Dial Admin');
+    expect(getAppName()).toBe('AI DIAL Admin');
   });
 });

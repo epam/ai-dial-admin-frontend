@@ -5,7 +5,6 @@ import { describe, expect, test, vi } from 'vitest';
 import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
 import { FieldDropdownMode } from '@/src/models/analytics/query-builder';
 import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
-import FieldChip from '@/src/components/Analytics/QueryBuilder/Common/FieldChip';
 
 describe('QueryBuilder :: ChipRow', () => {
   test('renders expanded editor by default and collapses to a summary chip', async () => {
@@ -95,17 +94,5 @@ describe('QueryBuilder :: ChipRow outside-click', () => {
 
     expect(screen.getByRole('button', { name: 'Pick field' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /cond/ })).toHaveAttribute('aria-expanded', 'true');
-  });
-});
-
-describe('QueryBuilder :: FieldChip', () => {
-  test('renders label and fires onRemove', async () => {
-    const user = userEvent.setup();
-    const onRemove = vi.fn();
-    render(<FieldChip label="deployment" onRemove={onRemove} />);
-
-    expect(screen.getByText('deployment')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /deployment/ }));
-    expect(onRemove).toHaveBeenCalled();
   });
 });

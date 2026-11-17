@@ -19,6 +19,7 @@ import { getEntitySchema } from '@/src/app/[lang]/queries/actions';
 import {
   ColumnLoad,
   ColumnLoadStatus,
+  PendingNavigation,
   QueryScopeFilter,
   SourcePanelContextValue,
   SourcePanelTab,
@@ -68,7 +69,8 @@ export const SourcePanelProvider: FC<Props> = ({ tables, queries, tablesFailure,
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([]);
   const [columns, setColumns] = useState<Record<string, ColumnLoad>>({});
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const [draftTable, setDraftTable] = useState<string | null>(null);
+  const [pendingNavigation, setPendingNavigation] = useState<PendingNavigation | null>(null);
 
   const unsavedWork = useRef<UnsavedWork>({ hasUnsavedWork: false });
   const scrollPositions = useRef<Partial<Record<SourcePanelTab, number>>>({});
@@ -110,20 +112,25 @@ export const SourcePanelProvider: FC<Props> = ({ tables, queries, tablesFailure,
     unsavedWork.current = { hasUnsavedWork, onDiscard };
   }, []);
 
-  const onNavigate = useCallback((event: MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (!isPlainClick(event) || !unsavedWork.current.hasUnsavedWork) return;
-    event.preventDefault();
-    setPendingHref(href);
+  const onNavigate = useCallback((event: MouseEvent<HTMLAnchorElement>, href: string, nextDraftTable?: string) => {
+    if (!isPlainClick(event)) return;
+    if (unsavedWork.current.hasUnsavedWork) {
+      event.preventDefault();
+      setPendingNavigation({ href, draftTable: nextDraftTable });
+      return;
+    }
+    if (nextDraftTable) setDraftTable(nextDraftTable);
   }, []);
 
   const onConfirmLeave = useCallback(() => {
-    if (!pendingHref) return;
+    if (!pendingNavigation) return;
     unsavedWork.current.onDiscard?.();
-    router.push(pendingHref);
-    setPendingHref(null);
-  }, [pendingHref, router]);
+    if (pendingNavigation.draftTable) setDraftTable(pendingNavigation.draftTable);
+    router.push(pendingNavigation.href);
+    setPendingNavigation(null);
+  }, [pendingNavigation, router]);
 
-  const onCancelLeave = useCallback(() => setPendingHref(null), []);
+  const onCancelLeave = useCallback(() => setPendingNavigation(null), []);
 
   const value = useMemo<SourcePanelContextValue>(
     () => ({
@@ -146,6 +153,7 @@ export const SourcePanelProvider: FC<Props> = ({ tables, queries, tablesFailure,
       scrollPositions,
       isCollapsed,
       onToggleCollapsed,
+      draftTable,
       onNavigate,
       onRegisterUnsavedWork,
     }),
@@ -164,6 +172,7 @@ export const SourcePanelProvider: FC<Props> = ({ tables, queries, tablesFailure,
       onLoadColumns,
       isCollapsed,
       onToggleCollapsed,
+      draftTable,
       onNavigate,
       onRegisterUnsavedWork,
     ],
@@ -172,7 +181,9 @@ export const SourcePanelProvider: FC<Props> = ({ tables, queries, tablesFailure,
   return (
     <SourcePanelContext.Provider value={value}>
       {children}
-      {pendingHref && <DiscardModal onConfirm={onConfirmLeave} onClose={onCancelLeave} onCancel={onCancelLeave} />}
+      {pendingNavigation && (
+        <DiscardModal onConfirm={onConfirmLeave} onClose={onCancelLeave} onCancel={onCancelLeave} />
+      )}
     </SourcePanelContext.Provider>
   );
 };
@@ -182,6 +193,12 @@ export const useSourcePanel = (): SourcePanelContextValue => {
   if (!ctx) throw new Error('useSourcePanel must be used within SourcePanelProvider');
   return ctx;
 };
+
+export const useSourcePanelTabSelect = (): ((tab: SourcePanelTab) => void) | undefined =>
+  useContext(SourcePanelContext)?.onSelectTab;
+
+export const useSourceTableDescription = (name: string): string | undefined =>
+  useContext(SourcePanelContext)?.tables.find((table) => table.name === name)?.description;
 
 export const useSourcePanelUnsavedWork = (hasUnsavedWork: boolean, onDiscard?: () => void): void => {
   const register = useContext(SourcePanelContext)?.onRegisterUnsavedWork;

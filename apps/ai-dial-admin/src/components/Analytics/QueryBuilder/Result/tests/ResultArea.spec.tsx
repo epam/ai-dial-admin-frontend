@@ -138,13 +138,52 @@ describe('QueryBuilder :: ResultArea', () => {
     expect(screen.getByText('QueryBuilder.ResultsEmptyDescription')).toBeInTheDocument();
   });
 
-  test('renders stat tiles and the grid for a result', () => {
+  test('reports the returned rows out of the total and renders the grid for a result', () => {
     renderArea({ result: AGG_RESULT, meta: AGG_META });
 
-    expect(screen.getByText('QueryBuilder.RowsReturned')).toBeInTheDocument();
-    expect(screen.getByText('QueryBuilder.Fields')).toBeInTheDocument();
-    expect(screen.getByText('QueryBuilder.Total')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(/^QueryChips.ResultsCountOfTotal$/);
     expect(screen.getByText('grid rows: 2')).toBeInTheDocument();
+  });
+
+  test('reports the returned rows alone when the response has no total', () => {
+    renderArea({ result: { ...AGG_RESULT, totalCount: undefined }, meta: AGG_META });
+
+    expect(screen.getByRole('status')).toHaveTextContent(/^QueryChips.ResultsCount$/);
+  });
+
+  test('reports the row count for a result with no rows', () => {
+    renderArea({ result: { columns: [], rows: [] }, meta: ROW_META });
+
+    expect(screen.getByRole('status')).toHaveTextContent(/^QueryChips.ResultsCount$/);
+  });
+
+  test.each([
+    ['before a run', {}],
+    ['while a first run is in flight', { isRunning: true }],
+  ])('reports no row count %s', (_case, flags) => {
+    renderArea(flags);
+
+    expect(screen.getByRole('radiogroup', { name: 'QueryBuilder.ResultViewSwitcher' })).toBeInTheDocument();
+    expect(screen.queryByText(/QueryChips.ResultsCount/)).toBeNull();
+  });
+
+  test('renders the actions slot beside the export', () => {
+    renderArea({
+      result: AGG_RESULT,
+      meta: AGG_META,
+      onExportCsv: vi.fn(),
+      actions: <button type="button">Save query</button>,
+    });
+
+    expect(screen.getByRole('button', { name: 'Save query' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'QueryBuilder.ExportCsv' })).toBeInTheDocument();
+  });
+
+  test('renders the actions slot before a run, when there is nothing to export', () => {
+    renderArea({ onExportCsv: vi.fn(), actions: <button type="button">Save query</button> });
+
+    expect(screen.getByRole('button', { name: 'Save query' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'QueryBuilder.ExportCsv' })).toBeNull();
   });
 
   test('gives identical rows distinct ids, so the grid shows every row the run returned', () => {
@@ -164,11 +203,6 @@ describe('QueryBuilder :: ResultArea', () => {
     } as ValueGetterParams);
 
     expect(value).toBe('claude');
-  });
-
-  test('omits the Total tile when the response has no total', () => {
-    renderArea({ result: { ...AGG_RESULT, totalCount: undefined }, meta: AGG_META });
-    expect(screen.queryByText('QueryBuilder.Total')).not.toBeInTheDocument();
   });
 
   test('empty result shows the no-rows state', () => {

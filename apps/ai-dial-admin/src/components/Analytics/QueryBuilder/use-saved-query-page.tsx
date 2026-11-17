@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { deleteSavedQuery, updateSavedQuery } from '@/src/app/[lang]/queries/actions';
 import { QueryMetadataForm } from '@/src/components/Analytics/Queries/models';
+import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import {
   toBuilderRestore,
   toMetadataReplaceRequest,
@@ -19,6 +20,7 @@ import {
 } from '@/src/components/Analytics/QueryBuilder/utils/saved-query-error';
 import { DEFAULT_SAVED_QUERY_SCOPE, KNOWN_TIME_PERIODS } from '@/src/constants/analytics/queries';
 import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
+import { StructuredQuery } from '@/src/models/analytics/query';
 import { ErrorI18nKey, QueriesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -53,12 +55,7 @@ export interface SavedQueryPageInput {
   setState: (state: QueryBuilderState) => void;
   sqlText: string;
   setSqlText: (value: string) => void;
-  jsonText: string;
-  setJsonText: (value: string) => void;
-  // True when the JSON buffer holds a valid body the visual builder cannot display. The builder state is
-  // not hydrated from it, so the buffer itself has to reach the payload.
-  isJsonDiverged: boolean;
-  setJsonDiverged: (value: boolean) => void;
+  translatedSql?: string | null;
   setView: (view: QueryBuilderView) => void;
   lastGeneratedSql: MutableRefObject<string>;
   isSqlView: boolean;
@@ -96,12 +93,22 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
   // ref rather than closing over them — a plain closure would freeze on the first render's values.
   const inputRef = useRef(input);
   inputRef.current = input;
+  const unloadedQuery = useRef<StructuredQuery | undefined>(void 0);
+  const unloadedStateBody = useRef<string | null>(null);
+
+  const heldQueryOf = useCallback(
+    (state: QueryBuilderState): StructuredQuery | undefined =>
+      unloadedQuery.current && JSON.stringify(buildQuery(state, null)) === unloadedStateBody.current
+        ? unloadedQuery.current
+        : void 0,
+    [],
+  );
 
   const isWritable = savedQuery?.scope !== SavedQueryScope.Common || isFullAdmin;
 
   // Recomputed every render rather than memoized: it derives from nine pieces of live state, so the
   // dependency list would be the state itself, and building the payload is a cheap object walk.
-  const liveRequest = toSavedQueryRequest(captureFrom(savedQuery ?? DRAFT_METADATA, input));
+  const liveRequest = toSavedQueryRequest(captureFrom(savedQuery ?? DRAFT_METADATA, input, heldQueryOf(input.state)));
 
   const isDirty = !!baseline && JSON.stringify(liveRequest) !== baseline;
   const isDirtyRef = useRef(isDirty);
@@ -115,14 +122,15 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
         fields: current.state.fields,
         functions: current.state.functions,
         knownPeriods: KNOWN_TIME_PERIODS,
+        translatedSql: current.translatedSql,
       });
+      unloadedQuery.current = restore.unloadedQuery;
+      unloadedStateBody.current = restore.unloadedQuery ? JSON.stringify(buildQuery(restore.state, null)) : null;
 
       current.setState(restore.state);
       current.clearResult();
       current.setSqlText(restore.sqlText);
       current.lastGeneratedSql.current = '';
-      current.setJsonText(restore.jsonText);
-      current.setJsonDiverged(restore.editor === SavedQueryEditor.Json);
       current.setView(RESTORE_VIEWS[restore.editor]);
       current.setResultView(restore.resultView);
       if (restore.chartConfig) {
@@ -140,7 +148,7 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
             scope: saved.scope,
             state: restore.state,
             sqlText: restore.sqlText,
-            divergedJsonText: restore.editor === SavedQueryEditor.Json ? restore.jsonText : null,
+            fallbackQuery: restore.unloadedQuery,
             time,
             resultView: restore.resultView,
             chartConfig: restore.chartConfig ?? DEFAULT_CHART_CONFIG,
@@ -164,7 +172,7 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
 
   useEffect(() => {
     if (inputRef.current.savedQuery) return;
-    setBaseline(JSON.stringify(toSavedQueryRequest(captureFrom(DRAFT_METADATA, inputRef.current))));
+    setBaseline(JSON.stringify(toSavedQueryRequest(captureFrom(DRAFT_METADATA, inputRef.current, void 0))));
   }, []);
 
   const onSave = useCallback(async () => {
@@ -215,18 +223,23 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
 
   // Metadata is part of the payload, so a rename shifts the baseline too — without this the page would
   // report unsaved changes the moment the edit modal closed.
-  const onEdited = useCallback((next: SavedQuery) => {
-    setSavedQuery(next);
-    setBaseline(JSON.stringify(toSavedQueryRequest(captureFrom(next, inputRef.current))));
-  }, []);
+  const onEdited = useCallback(
+    (next: SavedQuery) => {
+      setSavedQuery(next);
+      setBaseline(
+        JSON.stringify(toSavedQueryRequest(captureFrom(next, inputRef.current, heldQueryOf(inputRef.current.state)))),
+      );
+    },
+    [heldQueryOf],
+  );
 
   // Reads through `inputRef`, so the callback stays stable and takes the live values at submit time.
   const buildSaveAsRequest = useCallback(
     (meta: QueryMetadataForm) =>
       savedQuery && !isDirtyRef.current
         ? toMetadataReplaceRequest(savedQuery, meta)
-        : toSavedQueryRequest(captureFrom(meta, inputRef.current)),
-    [savedQuery],
+        : toSavedQueryRequest(captureFrom(meta, inputRef.current, heldQueryOf(inputRef.current.state))),
+    [savedQuery, heldQueryOf],
   );
 
   // Leaves `savedQuery` and the baseline alone: the edits now also live in the new query, but against
@@ -259,6 +272,7 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
   return {
     savedQuery,
     isDraft: !savedQuery,
+    hasUnloadedBody: !!heldQueryOf(input.state),
     isDirty,
     isWritable,
     isSaving,
@@ -288,6 +302,7 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
 const captureFrom = (
   meta: Pick<SavedQuery, 'name' | 'description' | 'tag' | 'scope'>,
   current: SavedQueryPageInput,
+  unloaded: StructuredQuery | undefined,
 ): SavedQueryCaptureInput => ({
   name: meta.name,
   description: meta.description,
@@ -297,7 +312,7 @@ const captureFrom = (
   // The SQL buffer is the authored body whenever it holds one, whatever view is open: keying this on
   // the active view let a SQL query be replaced by never-hydrated builder state on a view switch.
   sqlText: current.sqlText,
-  divergedJsonText: current.isJsonDiverged ? current.jsonText : null,
+  fallbackQuery: unloaded,
   time: { period: current.timePeriod, isCustom: current.isCustom, range: current.timeRange },
   resultView: current.resultView,
   chartConfig: current.chartConfig,
@@ -305,7 +320,6 @@ const captureFrom = (
 
 const RESTORE_VIEWS: Record<SavedQueryEditor, QueryBuilderView> = {
   [SavedQueryEditor.Builder]: QueryBuilderView.Form,
-  [SavedQueryEditor.Json]: QueryBuilderView.Json,
   [SavedQueryEditor.Sql]: QueryBuilderView.Sql,
 };
 

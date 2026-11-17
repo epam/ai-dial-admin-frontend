@@ -7,10 +7,17 @@ import {
   humanizeFunctionName,
   operandFunctionOptions,
   scalarFunctionOptions,
+  timeBinFunction,
 } from '@/src/components/Analytics/QueryBuilder/utils/functions';
 import { fnFixture, TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { QueryFunction, QueryFunctionGroup, QueryFunctionReturnType } from '@/src/models/analytics/query-function';
+import {
+  QueryFunction,
+  QueryFunctionArg,
+  QueryFunctionArgKind,
+  QueryFunctionGroup,
+  QueryFunctionReturnType,
+} from '@/src/models/analytics/query-function';
 
 const withDescription = (description: string): QueryFunction => ({
   name: 'percentile_cont',
@@ -145,5 +152,68 @@ describe('functionResultType — boolean returns', () => {
     expect(functionResultType(fnFixture('starts_with'), [{ field: 'deployment' }], [])).toBe(
       AnalyticsFieldType.Boolean,
     );
+  });
+});
+
+describe('timeBinFunction', () => {
+  const withArgs = (args: QueryFunctionArg[]): QueryFunction[] => [{ ...fnFixture('date_bin'), args }];
+  const amount: QueryFunctionArg = { name: 'amount', kind: QueryFunctionArgKind.IntegerLiteral };
+  const unit: QueryFunctionArg = { name: 'unit', kind: QueryFunctionArgKind.StringLiteral };
+  const timestamp: QueryFunctionArg = { name: 'timestamp', kind: QueryFunctionArgKind.Expression };
+
+  test('resolves the served time-bin function with its argument positions and constraints', () => {
+    expect(timeBinFunction(TEST_FUNCTIONS)).toEqual({
+      fn: fnFixture('date_bin'),
+      amountIndex: 0,
+      unitIndex: 1,
+      timestampIndex: 2,
+      units: ['day', 'hour', 'minute', 'second', 'week'],
+      minAmount: 1,
+    });
+  });
+
+  test('resolves argument positions by kind when the catalog reorders them', () => {
+    const [fn] = withArgs([timestamp, unit, amount]);
+
+    expect(timeBinFunction([fn])).toEqual({
+      fn,
+      amountIndex: 2,
+      unitIndex: 1,
+      timestampIndex: 0,
+      units: null,
+      minAmount: 1,
+    });
+  });
+
+  test('falls back to any unit and a minimum of one when the catalog serves no constraints', () => {
+    const result = timeBinFunction(withArgs([amount, unit, timestamp]));
+
+    expect(result?.units).toBeNull();
+    expect(result?.minAmount).toBe(1);
+  });
+
+  test('carries the served minimum amount', () => {
+    const result = timeBinFunction(withArgs([{ ...amount, constraints: { min: 5 } }, unit, timestamp]));
+
+    expect(result?.minAmount).toBe(5);
+  });
+
+  test('returns null for an empty catalog', () => {
+    expect(timeBinFunction([])).toBeNull();
+  });
+
+  test('returns null when the catalog serves no time-bin function', () => {
+    expect(timeBinFunction(TEST_FUNCTIONS.filter((fn) => fn.name !== 'date_bin'))).toBeNull();
+  });
+
+  test('returns null when the function does not take exactly three arguments', () => {
+    expect(timeBinFunction(withArgs([amount, unit]))).toBeNull();
+    expect(timeBinFunction(withArgs([amount, unit, timestamp, timestamp]))).toBeNull();
+  });
+
+  test('returns null when an argument role is ambiguous or missing', () => {
+    expect(timeBinFunction(withArgs([amount, amount, timestamp]))).toBeNull();
+    expect(timeBinFunction(withArgs([amount, unit, unit]))).toBeNull();
+    expect(timeBinFunction(withArgs([amount, timestamp, timestamp]))).toBeNull();
   });
 });
