@@ -4708,8 +4708,6 @@ export enum AliasI18nKey {
   TargetPlaceholder = 'Alias.TargetPlaceholder',
   TargetRequired = 'Alias.TargetRequired',
   UnparsableTarget = 'Alias.UnparsableTarget',
-  SelectTarget = 'Alias.SelectTarget',
-  ChangeTarget = 'Alias.ChangeTarget',
   SelectModelTarget = 'Alias.SelectModelTarget',
   SelectApplicationTarget = 'Alias.SelectApplicationTarget',
   SelectToolsetTarget = 'Alias.SelectToolsetTarget',

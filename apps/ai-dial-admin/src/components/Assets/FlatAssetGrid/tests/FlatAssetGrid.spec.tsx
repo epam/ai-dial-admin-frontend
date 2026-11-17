@@ -38,13 +38,15 @@ vi.mock('@/src/components/Common/FileManager/utils', () => ({ isItemOpenable: ()
 // The real grid is covered by its own specs; this stand-in exposes what the component hands it: a link per row, the
 // action-menu items of every row and the selection hooks.
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ rowData, columnDefs, additionalGridOptions, onGridReady }: any) => {
+  default: ({ rowData, columnDefs, additionalGridOptions, emptyDataProps, onGridReady }: any) => {
     const actions = columnDefs.find((column: any) => column.cellRendererParams?.items)?.cellRendererParams.items ?? [];
     const costObject = columnDefs.find((column: any) => column.colId === 'costObject');
     return (
       <div>
         <span>columns:{columnDefs.map((column: any) => column.colId ?? column.field).join(',')}</span>
         <span>selection:{additionalGridOptions.rowSelection ? 'on' : 'off'}</span>
+        <span>empty-description:{emptyDataProps.description}</span>
+        <span>name-radio-group:{columnDefs[0].cellRendererParams?.groupName ?? 'none'}</span>
         <button onClick={() => onGridReady({ api: (globalThis as any).gridApi })}>grid-ready</button>
         <button
           onClick={() =>
@@ -64,7 +66,7 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
           select-from-api
         </button>
         {rowData.map((row: AssetListItem) => {
-          const href = columnDefs[0].cellRendererParams.getHref(row);
+          const href = columnDefs[0].cellRendererParams?.getHref?.(row);
           return (
             <div key={row.path} role="group" aria-label={row.name}>
               {href ? <a href={href}>{row.name}</a> : row.name}
@@ -238,6 +240,26 @@ describe('FlatAssetGrid :: Platform source', () => {
   });
 });
 
+describe('FlatAssetGrid :: empty state', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    armActions();
+  });
+
+  test('keeps the description on the Platform listing tab, where Create exists', () => {
+    renderGrid();
+
+    expect(screen.getByText('empty-description:empty-description')).toBeInTheDocument();
+  });
+
+  test('drops the description on the read-only config.json tab', () => {
+    renderGrid({ source: AssetSource.ConfigFile });
+
+    expect(screen.getByText('empty-description:')).toBeInTheDocument();
+  });
+});
+
 describe('FlatAssetGrid :: config.json source', () => {
   const user = userEvent.setup();
 
@@ -293,6 +315,34 @@ describe('FlatAssetGrid :: select mode', () => {
     vi.clearAllMocks();
     vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
     armActions();
+  });
+
+  test.each([AssetSource.Platform, AssetSource.ConfigFile] as const)(
+    'shows names as plain text, not links, for %s',
+    (source) => {
+      renderGrid({ isSelectMode: true, source });
+
+      expect(screen.queryByRole('link')).not.toBeInTheDocument();
+      expect(screen.getByText('gpt')).toBeInTheDocument();
+    },
+  );
+
+  test.each([AssetSource.Platform, AssetSource.ConfigFile] as const)(
+    'drops the empty-state description for %s',
+    (source) => {
+      renderGrid({ isSelectMode: true, source });
+
+      expect(screen.getByText('empty-description:')).toBeInTheDocument();
+    },
+  );
+
+  test('puts the radio in the name cell for a single pick, and keeps the checkbox column for several', () => {
+    const { unmount } = renderGrid({ isSelectMode: true, isSingleSelect: true });
+    expect(screen.getByText('name-radio-group:flat-asset-selection')).toBeInTheDocument();
+    unmount();
+
+    renderGrid({ isSelectMode: true });
+    expect(screen.getByText('name-radio-group:none')).toBeInTheDocument();
   });
 
   test('has no row actions or bulk toolbar and turns multi-select on', async () => {
