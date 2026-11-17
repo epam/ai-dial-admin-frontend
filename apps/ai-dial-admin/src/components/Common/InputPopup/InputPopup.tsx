@@ -65,6 +65,7 @@ const InputPopup: FC<InputPopupProps> = ({
             error={errorText}
             collapseTagOverflow={collapseTagOverflow}
             fieldClassName={inputClassName}
+            tagClassName="h-6 rounded-md border border-secondary bg-layer-sunken"
           />
           {!disabled && (
             <div className="absolute right-2 top-1/2 -translate-y-1/2">
