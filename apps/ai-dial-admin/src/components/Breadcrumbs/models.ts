@@ -6,6 +6,7 @@ export interface BreadcrumbConfig {
     i18nKey?: MenuI18nKey;
     href?: boolean;
     isHidden?: boolean;
+    isAdminApiOnly?: boolean;
     shouldEnrichWithFolderBreadcrumbs?: boolean;
   }[];
 }

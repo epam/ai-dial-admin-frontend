@@ -13,11 +13,11 @@ issuing calls to a host that no longer exists. Menu-group visibility itself is c
 
 ### Requirement: `adminApiEnabled` feature flag reflects `DIAL_ADMIN_API_URL` presence
 
-The system SHALL expose an `adminApiEnabled: boolean` field on the `FeatureFlags` object, computed at request time in the root layout as `process.env.DIAL_ADMIN_API_URL != null`.
+The system SHALL expose an `adminApiEnabled: boolean` field on the `FeatureFlags` object, computed at request time in the root layout by `getIsAdminApiEnabled()` as `Boolean(process.env.DIAL_ADMIN_API_URL)`. Server code that gates on the admin backend SHALL read the same helper or the same truthiness, so an empty value means no admin backend everywhere — there is no host to call with it.
 
 #### Scenario: Flag is true when the env var is set
 
-- **WHEN** `process.env.DIAL_ADMIN_API_URL` is set to any non-null value and the root layout
+- **WHEN** `process.env.DIAL_ADMIN_API_URL` is set to a non-empty value and the root layout
   initializes `FeatureFlags`
 - **THEN** `featureFlags.adminApiEnabled` is `true`
 
@@ -25,6 +25,11 @@ The system SHALL expose an `adminApiEnabled: boolean` field on the `FeatureFlags
 
 - **WHEN** `process.env.DIAL_ADMIN_API_URL` is unset
 - **THEN** `featureFlags.adminApiEnabled` is `false`
+
+#### Scenario: Flag is false when the env var is empty
+
+- **WHEN** `process.env.DIAL_ADMIN_API_URL` is set to an empty string
+- **THEN** `featureFlags.adminApiEnabled` is `false`, and no admin-backend request is issued
 
 ### Requirement: Import/Export config menu actions stay while any source is available
 
@@ -125,7 +130,7 @@ The system SHALL redirect to `ApplicationRoute.Home`, before issuing any admin-b
 
 ### Requirement: The per-entity Audit tab is hidden without the admin API
 
-The system SHALL omit the per-entity Audit tab whenever `featureFlags.adminApiEnabled` is `false`, wherever that tab is added (`auditTab()` in `getRouteTabs`, `getApplicationTabs`, `getModelsTabs`, `getAdapterTabs`, `getAppRunnerTabs`, `getRoleTabs`, `getInterceptorTabs`, `getToolsetTabs`, `getInterceptorTemplateTabs`, `getKeyTabs`, `getDeploymentsViewTabs`, and the `AssetsToolsets`/`PlatformModels` branches of `getTabsForAsset`), regardless of the state of any other feature flag that governs the surface it appears on (`dashboardEnabled`, `deploymentsEnabled`, or an evaluation/analytics flag) and independent of whether the surface's own route is already redirect-guarded by the existing admin-API route guard.
+The system SHALL omit the per-entity Audit tab whenever `featureFlags.adminApiEnabled` is `false`, wherever that tab is added (`auditTab()` in `getRouteTabs`, `getApplicationTabs`, `getModelsTabs`, `getAdapterTabs`, `getAppRunnerTabs`, `getRoleTabs`, `getInterceptorTabs`, `getToolsetTabs`, `getInterceptorTemplateTabs`, `getKeyTabs`, `getDeploymentsViewTabs`, and the `AssetsToolsets`/`PlatformModels` branches of `getTabsForAsset`), regardless of the state of any other feature flag that governs the surface it appears on (`dashboardEnabled`, `deploymentsEnabled`, or an evaluation flag) and independent of whether the surface's own route is already redirect-guarded by the existing admin-API route guard — **except** the `AssetsApplications`, `AssetsToolsets` and `PlatformModels` branches of `getTabsForAsset`, which SHALL add the Audit tab whenever `featureFlags.analyticsUsageEnabled` is `true`, because every sub-tab they then offer (`Dashboard`, and `Traces` for toolsets and models) reads the analytics service and none reads the admin backend.
 
 #### Scenario: Admin API disabled hides the Audit tab on a redirect-guarded entity
 
@@ -145,14 +150,38 @@ The system SHALL omit the per-entity Audit tab whenever `featureFlags.adminApiEn
 
 - **WHEN** `featureFlags.adminApiEnabled` is `false`
 - **AND** `featureFlags.dashboardEnabled` is `true`
+- **AND** `featureFlags.analyticsUsageEnabled` is `false`
 - **AND** an Assets ▸ Platform Models or Assets ▸ Toolsets entity view renders its tab list
 - **THEN** the Audit tab is absent from that tab list
+
+#### Scenario: Analytics usage keeps the Audit tab on AI Gateway assets without the admin API
+
+- **WHEN** `featureFlags.adminApiEnabled` is `false`
+- **AND** `featureFlags.analyticsUsageEnabled` is `true`
+- **AND** an Assets ▸ Applications, Assets ▸ Toolsets or Assets ▸ Platform Models entity view renders its tab list
+- **THEN** the Audit tab is present, and opening it on a toolset or a model offers `Dashboard` and `Traces`, both served by the analytics service
 
 #### Scenario: Admin API enabled leaves the Audit tab unaffected
 
 - **WHEN** `featureFlags.adminApiEnabled` is `true`
 - **THEN** each entity view's Audit tab renders exactly as it does today, governed only by that
   view's own other feature-flag checks (if any)
+
+### Requirement: The Activity Audit breadcrumb is not a link without the admin API
+
+The system SHALL render the `Activity Audit` crumb of an `/activity-audit/[id]` page as plain text, with no link, when `featureFlags.adminApiEnabled` is `false`, because its target `/activity-audit` redirects home without the admin API. Every other crumb keeps its link.
+
+#### Scenario: Detail page crumb without the admin API
+
+- **WHEN** `featureFlags.adminApiEnabled` is `false`
+- **AND** a user opens `/<lang>/activity-audit/<activityId>`
+- **THEN** the `Activity Audit` crumb renders without a link
+
+#### Scenario: Detail page crumb with the admin API
+
+- **WHEN** `featureFlags.adminApiEnabled` is `true`
+- **AND** a user opens `/<lang>/activity-audit/<activityId>`
+- **THEN** the `Activity Audit` crumb links to `/<lang>/activity-audit`
 
 ### Requirement: Assets ▸ Applications list and detail pages skip admin-backend calls without the admin API
 
