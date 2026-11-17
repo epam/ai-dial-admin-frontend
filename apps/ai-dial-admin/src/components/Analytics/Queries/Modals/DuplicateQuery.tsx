@@ -10,6 +10,8 @@ import { useRouter } from 'next/navigation';
 import { createSavedQuery } from '@/src/app/[lang]/queries/actions';
 import QueryProperties from '@/src/components/Analytics/Queries/Properties/QueryProperties';
 import { QueryMetadataForm } from '@/src/components/Analytics/Queries/models';
+import { useSourcePanelTabSelect } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
+import { SourcePanelTab } from '@/src/components/Analytics/QueryBuilder/SourcePanel/models';
 import { describeSavedQueryError } from '@/src/components/Analytics/QueryBuilder/utils/saved-query-error';
 import { ButtonsI18nKey, ErrorI18nKey, QueriesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
@@ -51,6 +53,7 @@ const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated }) 
   const { isFullAdmin } = useAppContext();
   const { showNotification } = useNotification();
   const { isValid } = useSaveValidationContext();
+  const onSelectSourceTab = useSourcePanelTabSelect();
 
   const [form, setForm] = useState<QueryMetadataForm>(() => formFromQuery(query, isFullAdmin));
   const [isSaving, setIsSaving] = useState(false);
@@ -96,9 +99,10 @@ const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated }) 
       ),
     );
     onClose();
+    onSelectSourceTab?.(SourcePanelTab.Queries);
     router.push(getUrnForEntity(ApplicationRoute.AnalyticsQueries, created));
     router.refresh();
-  }, [form, buildRequest, onCreated, showNotification, t, onClose, router]);
+  }, [form, buildRequest, onCreated, showNotification, t, onClose, onSelectSourceTab, router]);
 
   return (
     <Popup

@@ -7,6 +7,7 @@ import {
   savedQueryPrimarySource,
   toBuilderRestore,
   toSavedQueryRequest,
+  withStoredTimeBound,
 } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
@@ -93,6 +94,10 @@ const DEEPLY_NESTED_BODY: StructuredQuery = {
       },
     ],
   },
+};
+
+const PAGED: Pick<StructuredQuery, 'page'> = {
+  page: { type: QueryPageType.Offset, limit: 25, offset: 0, include_total: false },
 };
 
 const RANGE = {
@@ -233,31 +238,18 @@ describe('toSavedQueryRequest', () => {
     expect(request.chart).toEqual({ type: ChartType.Pie, x_field: null, y_field: null });
   });
 
-  test('persists a diverged JSON buffer as the body, since the builder state does not carry its edits', () => {
-    const request = toSavedQueryRequest(baseCapture({ divergedJsonText: JSON.stringify(DEEPLY_NESTED_BODY) }));
+  test('sends the fallback body in place of the builder state', () => {
+    const request = toSavedQueryRequest(baseCapture({ fallbackQuery: DEEPLY_NESTED_BODY }));
 
     expect(request.query).toEqual(DEEPLY_NESTED_BODY);
+    expect(request.sql).toBeUndefined();
   });
 
-  test('prefers a SQL buffer over a diverged JSON buffer', () => {
-    const request = toSavedQueryRequest(
-      baseCapture({ sqlText: 'SELECT 1', divergedJsonText: JSON.stringify(DEEPLY_NESTED_BODY) }),
-    );
+  test('prefers a SQL buffer over the fallback body', () => {
+    const request = toSavedQueryRequest(baseCapture({ sqlText: 'SELECT 1', fallbackQuery: DEEPLY_NESTED_BODY }));
 
     expect(request.sql).toBe('SELECT 1');
-    expect('query' in request).toBeFalsy();
-  });
-
-  test('falls back to the builder state when a diverged buffer does not parse', () => {
-    const request = toSavedQueryRequest(baseCapture({ divergedJsonText: '{ not json' }));
-
-    expect(request.query?.entity).toBe('dial_usage_log');
-  });
-
-  test('ignores a blank diverged buffer', () => {
-    const request = toSavedQueryRequest(baseCapture({ divergedJsonText: '   ' }));
-
-    expect(request.query?.entity).toBe('dial_usage_log');
+    expect(request.query).toBeUndefined();
   });
 
   test('serializes the same content to the same JSON string, so a dirty check can compare them', () => {
@@ -316,22 +308,28 @@ describe('toSavedQueryRequest — the persisted body carries no time bound', () 
 });
 
 describe('deriveSavedQueryEditor', () => {
-  const representable: StructuredQuery = { entity: 'dial_usage_log', mode: QueryMode.Row };
+  const representable: StructuredQuery = { entity: 'dial_usage_log', mode: QueryMode.Row, ...PAGED };
 
   test('reports SQL for a query carrying a SQL body', () => {
-    expect(deriveSavedQueryEditor({ sql: 'SELECT 1' }, null)).toBe(SavedQueryEditor.Sql);
+    expect(deriveSavedQueryEditor({ sql: 'SELECT 1' }, TEST_FUNCTIONS, FIELDS)).toBe(SavedQueryEditor.Sql);
   });
 
-  test('reports Builder for a representable structured body', () => {
-    expect(deriveSavedQueryEditor({ query: representable }, null)).toBe(SavedQueryEditor.Builder);
+  test('reports Builder for a structured body the chips can state', () => {
+    expect(deriveSavedQueryEditor({ query: representable }, TEST_FUNCTIONS, FIELDS)).toBe(SavedQueryEditor.Builder);
   });
 
-  test('reports JSON for a structured body the builder cannot represent', () => {
-    expect(deriveSavedQueryEditor({ query: DEEPLY_NESTED_BODY }, null)).toBe(SavedQueryEditor.Json);
+  test('reports SQL for a structured body the chips cannot state', () => {
+    expect(deriveSavedQueryEditor({ query: DEEPLY_NESTED_BODY }, TEST_FUNCTIONS, FIELDS)).toBe(SavedQueryEditor.Sql);
   });
 
   test('ignores a blank SQL body', () => {
-    expect(deriveSavedQueryEditor({ sql: '   ', query: representable }, null)).toBe(SavedQueryEditor.Builder);
+    expect(deriveSavedQueryEditor({ sql: '   ', query: representable }, TEST_FUNCTIONS, FIELDS)).toBe(
+      SavedQueryEditor.Builder,
+    );
+  });
+
+  test('reports Builder for a query with no body', () => {
+    expect(deriveSavedQueryEditor({}, TEST_FUNCTIONS, FIELDS)).toBe(SavedQueryEditor.Builder);
   });
 });
 
@@ -371,29 +369,48 @@ describe('toBuilderRestore', () => {
     ...overrides,
   });
 
-  const restore = (overrides?: Partial<SavedQuery>) =>
+  const restore = (overrides?: Partial<SavedQuery>, translatedSql?: string | null) =>
     toBuilderRestore({
       saved: saved(overrides),
       fields: FIELDS,
       functions: TEST_FUNCTIONS,
       knownPeriods: KNOWN_PERIODS,
+      translatedSql,
     });
 
-  test('opens a representable structured body in the builder, reflecting the query', () => {
-    const result = restore({ query: { entity: 'dial_usage_log', mode: QueryMode.Aggregate } });
+  test('opens a structured body the chips can state in the builder, reflecting the query', () => {
+    const result = restore({
+      query: {
+        entity: 'dial_usage_log',
+        mode: QueryMode.Row,
+        select: [{ expr: { type: QueryExprType.Field, name: 'project' } }],
+        ...PAGED,
+      },
+    });
 
     expect(result.editor).toBe(SavedQueryEditor.Builder);
     expect(result.state.entityName).toBe('dial_usage_log');
-    expect(result.state.mode).toBe(QueryMode.Aggregate);
+    expect(result.state.select.map((row) => row.field)).toEqual(['project']);
     expect(result.state.fields).toEqual(FIELDS);
+    expect(result.sqlText).toBe('');
+    expect(result.unloadedQuery).toBeUndefined();
   });
 
-  test('leaves builder state untouched for a body the builder cannot represent', () => {
-    const result = restore({ query: DEEPLY_NESTED_BODY });
+  test('opens a body the chips cannot state as its translated SQL, leaving the builder state empty', () => {
+    const result = restore({ query: DEEPLY_NESTED_BODY }, 'SELECT * FROM dial_usage_log');
 
-    expect(result.editor).toBe(SavedQueryEditor.Json);
+    expect(result.editor).toBe(SavedQueryEditor.Sql);
+    expect(result.sqlText).toBe('SELECT\n  *\nFROM\n  dial_usage_log');
     expect(result.state.filter.children).toEqual([]);
-    expect(result.jsonText).toContain('dial_usage_log');
+    expect(result.unloadedQuery).toBeUndefined();
+  });
+
+  test('keeps the stored body aside when its translation was refused', () => {
+    const result = restore({ query: DEEPLY_NESTED_BODY }, null);
+
+    expect(result.editor).toBe(SavedQueryEditor.Sql);
+    expect(result.sqlText).toBe('');
+    expect(result.unloadedQuery).toEqual(DEEPLY_NESTED_BODY);
   });
 
   test('opens a SQL body in the SQL view with the stored statement laid out one clause per line', () => {
@@ -402,13 +419,6 @@ describe('toBuilderRestore', () => {
     expect(result.editor).toBe(SavedQueryEditor.Sql);
     expect(result.sqlText).toBe('SELECT\n  count(*)\nFROM\n  dial_usage_log');
     expect(result.state.entityName).toBe('dial_usage_log');
-  });
-
-  test('pretty-prints the JSON buffer from a structured body', () => {
-    const query: StructuredQuery = { entity: 'dial_usage_log', mode: QueryMode.Row };
-    const result = restore({ query });
-
-    expect(result.jsonText).toBe(JSON.stringify(query, null, 2));
   });
 
   test('defaults the result view to table when the stored query has none', () => {
@@ -610,5 +620,62 @@ describe('toMetadataReplaceRequest', () => {
     );
 
     expect(Object.keys(viaMetadata)).toEqual(Object.keys(viaCapture));
+  });
+});
+
+describe('withStoredTimeBound', () => {
+  const stored = (overrides?: Partial<SavedQuery>): SavedQuery => ({
+    id: 'sq_1',
+    name: 'Top chats',
+    scope: SavedQueryScope.Personal,
+    generation: 1,
+    created_at: '2026-08-01T00:00:00Z',
+    updated_at: '2026-08-02T00:00:00Z',
+    query: { entity: 'dial_usage_log', mode: QueryMode.Row },
+    ...overrides,
+  });
+  const periodRange = () => RANGE;
+  const bounded = (saved: SavedQuery, fields: AnalyticsEntityField[] = FIELDS) =>
+    withStoredTimeBound({ saved, fields, functions: [], knownPeriods: KNOWN_PERIODS, periodRange });
+
+  test('bounds the body by the stored relative period on the timestamp field', () => {
+    const query = bounded(stored({ time: { mode: SavedQueryTimeMode.Relative, period: '7d' } }));
+
+    expect(operatorsOnField(query?.filter, TIMESTAMP_FIELD)).toEqual([QueryOperator.Ge, QueryOperator.Le]);
+  });
+
+  test('bounds the body by a stored absolute range, keeping the authored filter', () => {
+    const filter: QueryFilterNode = {
+      op: QueryOperator.Eq,
+      args: [
+        { type: QueryExprType.Field, name: 'project' },
+        { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'a' },
+      ],
+    };
+    const query = bounded(
+      stored({
+        query: { entity: 'dial_usage_log', mode: QueryMode.Row, filter },
+        time: { mode: SavedQueryTimeMode.Absolute, from: '2026-08-01T00:00:00.000Z', to: '2026-08-08T00:00:00.000Z' },
+      }),
+    );
+
+    expect(operatorsOnField(query?.filter, 'project')).toEqual([QueryOperator.Eq]);
+    expect(operatorsOnField(query?.filter, TIMESTAMP_FIELD)).toEqual([QueryOperator.Ge, QueryOperator.Le]);
+  });
+
+  test('leaves the body as stored without a time intent, for an unknown period, or without a timestamp field', () => {
+    const body = stored().query;
+
+    expect(bounded(stored())).toEqual(body);
+    expect(bounded(stored({ time: { mode: SavedQueryTimeMode.Relative, period: '90d' } }))).toEqual(body);
+    expect(
+      bounded(stored({ time: { mode: SavedQueryTimeMode.Relative, period: '7d' } }), [
+        { name: 'project', type: AnalyticsFieldType.String, source: 'project' },
+      ]),
+    ).toEqual(body);
+  });
+
+  test('gives nothing for a query stored without a structured body', () => {
+    expect(bounded(stored({ query: void 0, sql: 'SELECT 1' }))).toBeUndefined();
   });
 });
