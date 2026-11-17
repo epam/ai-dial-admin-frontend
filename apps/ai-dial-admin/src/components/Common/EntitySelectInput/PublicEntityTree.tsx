@@ -155,15 +155,14 @@ const PublicEntityTree: FC<Props> = ({
   return (
     <div className="size-full min-h-0">
       <DialFileManager
-        className="p-0 gap-0 bg-layer-3 !grid-rows-1"
+        className="bg-transparent [&_div:has(>[role=tree])]:py-4!"
         gridClassName="p-3"
-        // Library always mounts a h-[64px] content-header row; hide it when breadcrumb/toolbar are unused.
-        contentHeaderClassName="hidden"
-        contentClassName="!px-3 !gap-0 !pb-0"
+        showNavigationPanel
+        contentHeaderClassName="h-10"
+        contentClassName="p-0"
         path={filePath}
         items={files as []}
         filesLoading={isFetchingFiles}
-        showNavigationPanel={false}
         navigationPanelOptions={{ searchable: false }}
         sortOptions={{ sortable: false }}
         treeOptions={getTreeOptions(

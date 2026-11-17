@@ -22,6 +22,19 @@ describe('toAliasTargetPath', () => {
     ).toBe('toolsets/public/search');
   });
 
+  test('percent-encodes each segment of a Public path, keeping the separators', () => {
+    expect(
+      toAliasTargetPath(AliasTargetType.Application, {
+        source: AssetSource.Public,
+        name: 'app__1.0.0',
+        path: 'public/QA/Code Apps ALS/app__1.0.0',
+      }),
+    ).toBe('applications/public/QA/Code%20Apps%20ALS/app__1.0.0');
+    expect(
+      toAliasTargetPath(AliasTargetType.Toolset, { source: AssetSource.Public, name: 'x', path: 'public/a&b/c#d%e' }),
+    ).toBe('toolsets/public/a%26b/c%23d%25e');
+  });
+
   test.each([AssetSource.Platform, AssetSource.ConfigFile])('stores a %s pick by its bare name', (source) => {
     expect(toAliasTargetPath(AliasTargetType.Model, { source, name: 'gpt-4-internal' })).toBe('models/gpt-4-internal');
   });
@@ -55,6 +68,30 @@ describe('parseAliasTargetPath', () => {
       expect(parseAliasTargetPath(path)).toBeNull();
     },
   );
+
+  test('decodes an encoded reference', () => {
+    expect(parseAliasTargetPath('applications/public/QA/Code%20Apps%20ALS/app__1.0.0')).toEqual({
+      type: AliasTargetType.Application,
+      reference: 'public/QA/Code Apps ALS/app__1.0.0',
+    });
+  });
+
+  test('cannot represent a malformed escape', () => {
+    expect(parseAliasTargetPath('applications/public/100%/app')).toBeNull();
+  });
+
+  test('round-trips a Public path with spaces', () => {
+    const path = toAliasTargetPath(AliasTargetType.Application, {
+      source: AssetSource.Public,
+      name: 'app',
+      path: 'public/QA/Code Apps ALS/app',
+    });
+
+    expect(parseAliasTargetPath(path)).toEqual({
+      type: AliasTargetType.Application,
+      reference: 'public/QA/Code Apps ALS/app',
+    });
+  });
 
   test('round-trips what it writes', () => {
     const path = toAliasTargetPath(AliasTargetType.Model, { source: AssetSource.Platform, name: 'gpt' });

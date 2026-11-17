@@ -8,11 +8,19 @@ export interface RadioNameCellRendererParams extends ICellRendererParams {
   /** Radio group name shared by every row, so the browser treats the column as one radio group. */
   groupName: string;
   idField?: string;
+  iconSize?: number;
 }
 
 const iconClassName = 'pointer-events-none absolute inset-0 [.ag-row-hover_&]:hidden group-focus-within/radio:hidden';
 
-const RadioNameCellRenderer = ({ value, data, node, groupName, idField = 'id' }: RadioNameCellRendererParams) => {
+const RadioNameCellRenderer = ({
+  value,
+  data,
+  node,
+  groupName,
+  idField = 'id',
+  iconSize = 40,
+}: RadioNameCellRendererParams) => {
   const name = (value as string) ?? '';
   const rowId = (data?.[idField] as string) || node.id || name;
   const inputId = `${groupName}-${rowId}`;
@@ -22,15 +30,18 @@ const RadioNameCellRenderer = ({ value, data, node, groupName, idField = 'id' }:
 
   return (
     <div className="flex h-full items-center gap-2 overflow-hidden">
-      <span className="group/radio relative flex size-10 shrink-0 items-center justify-center">
+      <span
+        className="group/radio relative flex shrink-0 items-center justify-center"
+        style={{ width: iconSize, height: iconSize }}
+      >
         <Radio name={groupName} value={rowId} id={inputId} isSelected={isSelected} onChange={onSelect} />
         {!isSelected && (
           <Avatar
             name={name}
             initials={getAvatarInitials(name)}
-            size={40}
+            size={iconSize}
             className={iconClassName}
-            textClassName="dial-h3-text"
+            textClassName={iconSize < 40 ? 'dial-small-text-semi' : 'dial-h3-text'}
           />
         )}
       </span>
