@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { DialRouterResource } from '@/src/models/dial/resource';
 import { RouterMode } from '@/src/models/dial/router';
 import RouterAssetProperties from '../Properties';
@@ -89,5 +90,46 @@ describe('Router asset Properties', () => {
     renderProperties({ baseUrl: 'http://localhost:4848' });
 
     expect(screen.getByDisplayValue('http://localhost:4848')).toBeInTheDocument();
+  });
+
+  describe('Editor URL', () => {
+    test('writes the typed editor URL', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      renderProperties({}, onChange);
+
+      await user.type(screen.getByRole('textbox', { name: EntityFieldsI18nKey.editorUrl }), 'h');
+
+      expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ editorUrl: 'h' }));
+    });
+
+    test('writes an absent editor URL when the field is emptied', async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      renderProperties({ editorUrl: 'h' }, onChange);
+
+      await user.clear(screen.getByRole('textbox', { name: EntityFieldsI18nKey.editorUrl }));
+
+      expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ editorUrl: undefined }));
+    });
+
+    test('reports an invalid editor URL to save validation', async () => {
+      const user = userEvent.setup();
+      renderProperties();
+
+      await user.type(screen.getByRole('textbox', { name: EntityFieldsI18nKey.editorUrl }), 'not a url');
+
+      expect(useSaveValidationContext().dispatch).toHaveBeenLastCalledWith({
+        type: ValidationActionType.SetField,
+        field: 'editorUrl',
+        isValid: false,
+      });
+    });
+
+    test('shows the stored editor URL', () => {
+      renderProperties({ editorUrl: 'http://router-ui.test' });
+
+      expect(screen.getByRole('textbox', { name: EntityFieldsI18nKey.editorUrl })).toHaveValue('http://router-ui.test');
+    });
   });
 });

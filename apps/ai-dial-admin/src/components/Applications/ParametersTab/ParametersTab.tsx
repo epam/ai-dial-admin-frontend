@@ -38,6 +38,7 @@ interface Props {
   application?: DialApplication | DialApplicationResource;
   applicationSchemes?: DialApplicationScheme[] | null;
   isEditorEnabled?: boolean;
+  isUiViewOnly?: boolean;
   view?: ApplicationRoute;
   isChanged?: boolean;
   discardKey?: number;
@@ -54,6 +55,7 @@ const ParametersTab: FC<Props> = ({
   onChange,
   applicationSchemes,
   isEditorEnabled,
+  isUiViewOnly,
   view,
   isChanged,
   discardKey,
@@ -90,9 +92,13 @@ const ParametersTab: FC<Props> = ({
       setScheme(scheme);
       const config = getCorrectConfig(scheme, application, currentTheme, session as UserSession);
       const targetUrl = getTargetUrl(view, application, config);
-      // A router's schema contributes no editor of its own (Core: "the schema contributes nothing else"), so
-      // its Parameters tab never offers the iframe UI view.
-      const hasUi = !!targetUrl && !isReadOnlyAdmin && view !== ApplicationRoute.PlatformRouters;
+      const hasUi = !!targetUrl && !isReadOnlyAdmin;
+
+      if (isUiViewOnly) {
+        setViewItems(generateViewItems(t, view, hasUi, false).filter((item) => item.value === ParamsView.UI));
+        setParamsView(ParamsView.UI);
+        return;
+      }
 
       setViewItems(generateViewItems(t, view, hasUi, !!scheme));
       setParamsView(getInitialParamsView(view, hasUi));

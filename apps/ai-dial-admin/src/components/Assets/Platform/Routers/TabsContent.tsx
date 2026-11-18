@@ -1,6 +1,6 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, Ref } from 'react';
 
 import RouterAssetProperties from '@/src/components/Assets/Platform/Routers/Properties';
 import ModelResourceFeatures from '@/src/components/Assets/Platform/Models/Features';
@@ -8,6 +8,7 @@ import ParametersTab from '@/src/components/Applications/ParametersTab/Parameter
 import CatalogPropertiesEditor from '@/src/components/CatalogProperties/CatalogPropertiesEditor';
 import { useCatalogProperties } from '@/src/components/CatalogProperties/use-catalog-properties';
 import AssetRoles from '@/src/components/EntityView/Roles/AssetRoles';
+import { FrameCallbacks, FrameRendererHandle } from '@/src/components/FrameRenderer/models';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialModelResource, DialRouterResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
@@ -24,6 +25,11 @@ interface Props {
   catalogSchemas?: CatalogSchemaOptions;
   schemes?: DialApplicationScheme[];
   isEditorEnabled?: boolean;
+  isChanged?: boolean;
+  discardKey?: number;
+  frameRef?: Ref<FrameRendererHandle>;
+  frameCallbacks?: FrameCallbacks;
+  onSave?: () => void;
   onChange: (router: DialRouterResource) => void;
 }
 
@@ -35,6 +41,11 @@ const TabsContent: FC<Props> = ({
   catalogSchemas,
   schemes,
   isEditorEnabled,
+  isChanged,
+  discardKey,
+  frameRef,
+  frameCallbacks,
+  onSave,
   onChange,
 }) => {
   const catalogProperties = useCatalogProperties(selectedRouter.catalogSchemaId, selectedRouter.catalogProperties);
@@ -64,7 +75,13 @@ const TabsContent: FC<Props> = ({
           application={selectedRouter as unknown as DialApplication}
           applicationSchemes={schemes}
           isEditorEnabled={isEditorEnabled}
+          isUiViewOnly={!selectedRouter.applicationTypeSchemaId}
           view={ApplicationRoute.PlatformRouters}
+          isChanged={isChanged}
+          discardKey={discardKey}
+          frameRef={frameRef}
+          frameCallbacks={frameCallbacks}
+          onSave={onSave}
           onChange={(router) => onChange(router as unknown as DialRouterResource)}
         />
       )}

@@ -566,7 +566,7 @@ export const getTabsForAsset = (
     return tabs;
   }
   if (view === ApplicationRoute.PlatformRouters) {
-    // `Parameters` edits `applicationProperties`, which exists only against a picked app-type schema.
+    // `Parameters` edits `applicationProperties` against a picked app-type schema, or embeds the router's editor UI.
     return [
       propertiesTab(t),
       featuresTab(t),
