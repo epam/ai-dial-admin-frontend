@@ -107,10 +107,13 @@ describe('images utils', () => {
       expect(validateImageChanged(img1, img2)).toBe(false);
     });
 
-    test('returns false when allowed domains differ only by empty entries or absence', () => {
+    test('returns false when missing allowed domains become a list with an empty entry', () => {
       expect(validateImageChanged({ name: 'img' } as Image, { name: 'img', allowedDomains: [''] } as Image)).toBe(
         false,
       );
+    });
+
+    test('returns false when allowed domains gain only an empty entry', () => {
       expect(
         validateImageChanged(
           { name: 'img', allowedDomains: ['a.com'] } as Image,

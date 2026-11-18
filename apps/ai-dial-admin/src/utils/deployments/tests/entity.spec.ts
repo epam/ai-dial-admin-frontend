@@ -397,8 +397,11 @@ describe('entity utils', () => {
       expect(normalizeAllowedDomains(['a.com', '', 'b.com'])).toEqual(['a.com', 'b.com']);
     });
 
-    test('returns empty list for missing value', () => {
+    test('returns empty list for undefined value', () => {
       expect(normalizeAllowedDomains(undefined)).toEqual([]);
+    });
+
+    test('returns empty list for null value', () => {
       expect(normalizeAllowedDomains(null)).toEqual([]);
     });
   });
