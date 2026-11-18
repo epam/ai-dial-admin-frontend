@@ -8,13 +8,18 @@ export const ALIAS_PRESENT_AS_BY_TARGET_TYPE: Readonly<Record<AliasTargetType, r
   [AliasTargetType.Model]: [AliasPresentAs.Model, AliasPresentAs.Application],
   [AliasTargetType.Application]: [AliasPresentAs.Application, AliasPresentAs.Model, AliasPresentAs.Toolset],
   [AliasTargetType.Toolset]: [AliasPresentAs.Toolset],
+  [AliasTargetType.Router]: [AliasPresentAs.Router, AliasPresentAs.Model, AliasPresentAs.Application],
 };
+
+/** Target types Core refuses on a Public alias: a router is a config deployment a stored public alias cannot reach. */
+export const ALIAS_PLATFORM_ONLY_TARGET_TYPES: readonly AliasTargetType[] = [AliasTargetType.Router];
 
 /** What an alias is listed as when `presentAs` is not set: the type its target is. */
 export const ALIAS_DEFAULT_PRESENT_AS_BY_TARGET_TYPE: Readonly<Record<AliasTargetType, AliasPresentAs>> = {
   [AliasTargetType.Model]: AliasPresentAs.Model,
   [AliasTargetType.Application]: AliasPresentAs.Application,
   [AliasTargetType.Toolset]: AliasPresentAs.Toolset,
+  [AliasTargetType.Router]: AliasPresentAs.Router,
 };
 
 /** The fields Core keeps for a stored alias; a write carrying any other is answered 400. */

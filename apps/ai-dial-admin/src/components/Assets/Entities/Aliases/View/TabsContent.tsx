@@ -17,10 +17,11 @@ interface Props {
   selectedAlias: DialAliasResource;
   roles: DialRole[];
   healthIssue?: ConfigHealthSkippedEntity;
+  isPublicSource?: boolean;
   onChange: (alias: DialAliasResource) => void;
 }
 
-const TabsContent: FC<Props> = ({ activeTab, selectedAlias, roles, healthIssue, onChange }) => (
+const TabsContent: FC<Props> = ({ activeTab, selectedAlias, roles, healthIssue, isPublicSource, onChange }) => (
   <>
     {activeTab === EntityViewTab.Properties && (
       <AliasProperties asset={selectedAlias} healthIssue={healthIssue} onChange={onChange} />
@@ -29,7 +30,7 @@ const TabsContent: FC<Props> = ({ activeTab, selectedAlias, roles, healthIssue, 
     {activeTab === EntityViewTab.Target && (
       <div className="flex flex-col gap-y-8">
         <InvalidAliasBanner entity={selectedAlias} issue={healthIssue} />
-        <AliasTargetTab asset={selectedAlias} onChange={onChange} />
+        <AliasTargetTab asset={selectedAlias} isPublic={isPublicSource} onChange={onChange} />
       </div>
     )}
 
