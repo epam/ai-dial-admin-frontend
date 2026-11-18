@@ -38,7 +38,7 @@ interface Props {
   application?: DialApplication | DialApplicationResource;
   applicationSchemes?: DialApplicationScheme[] | null;
   isEditorEnabled?: boolean;
-  isUiViewOnly?: boolean;
+  isUiViewForced?: boolean;
   view?: ApplicationRoute;
   isChanged?: boolean;
   discardKey?: number;
@@ -55,7 +55,7 @@ const ParametersTab: FC<Props> = ({
   onChange,
   applicationSchemes,
   isEditorEnabled,
-  isUiViewOnly,
+  isUiViewForced,
   view,
   isChanged,
   discardKey,
@@ -94,7 +94,7 @@ const ParametersTab: FC<Props> = ({
       const targetUrl = getTargetUrl(view, application, config);
       const hasUi = !!targetUrl && !isReadOnlyAdmin;
 
-      if (isUiViewOnly) {
+      if (isUiViewForced) {
         setViewItems(generateViewItems(t, view, hasUi, false).filter((item) => item.value === ParamsView.UI));
         setParamsView(ParamsView.UI);
         return;

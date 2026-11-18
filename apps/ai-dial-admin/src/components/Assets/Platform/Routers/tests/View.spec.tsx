@@ -35,6 +35,7 @@ vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
     featureFlags: { dashboardEnabled: true, adminApiEnabled: true },
     isReadOnlyAdmin,
+    visualizerConnector: undefined,
     setEntityReadOnly,
   }),
 }));

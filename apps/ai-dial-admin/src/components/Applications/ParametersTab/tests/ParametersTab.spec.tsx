@@ -130,19 +130,19 @@ describe('ParametersTab — router', () => {
 
   const renderRouterTab = (
     router: Record<string, unknown>,
-    props: { isUiViewOnly?: boolean; schemes?: never[] } = {},
+    props: { isUiViewForced?: boolean; schemes?: never[] } = {},
   ) =>
     render(
       <ParametersTab
         application={{ name: 'cost-aware', ...router } as DialApplication}
         applicationSchemes={props.schemes ?? []}
-        isUiViewOnly={props.isUiViewOnly}
+        isUiViewForced={props.isUiViewForced}
         view={ApplicationRoute.PlatformRouters}
       />,
     );
 
   test('opens the UI view with the router editor URL for a router without a schema', async () => {
-    renderRouterTab({ editorUrl: routerUi }, { isUiViewOnly: true });
+    renderRouterTab({ editorUrl: routerUi }, { isUiViewForced: true });
 
     expect(await screen.findByText(new RegExp(`^${routerUi}\\?.*id=cost-aware`))).toBeTruthy();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).toBeNull();
