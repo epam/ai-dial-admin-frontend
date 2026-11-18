@@ -465,13 +465,13 @@ describe('SessionsTraceView :: schema availability', () => {
 
     await vi.waitFor(() =>
       expect(showNotificationSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Upstream unavailable', description: 'schema read timed out' }),
+        expect.objectContaining({ title: SessionsTraceI18nKey.SchemaLoadFailed, description: 'schema read timed out' }),
       ),
     );
     expect(screen.queryByText(SessionsTraceI18nKey.SchemaLoadFailed)).not.toBeInTheDocument();
   });
 
-  test('falls back to its own title when the service supplied no header', async () => {
+  test('reports a failure without a header under its own title', async () => {
     render(<SessionsTraceView source={RATED_SOURCE} schemaFields={null} schemaFailure={{}} />);
 
     await vi.waitFor(() =>

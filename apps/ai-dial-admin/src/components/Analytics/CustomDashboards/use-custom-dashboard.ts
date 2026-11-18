@@ -117,7 +117,7 @@ export const useCustomDashboard = (resolved: ResolvedDashboard, isInitiallyEditi
       setDraft(null);
       showNotification(getSuccessNotification(t(CustomDashboardsI18nKey.Saved), res.response.name));
     } catch {
-      showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(ErrorI18nKey.TryAgainLater)));
+      showNotification(getErrorNotification(t(CustomDashboardsI18nKey.SaveFailed), t(ErrorI18nKey.TryAgainLater)));
     } finally {
       setIsSaving(false);
     }

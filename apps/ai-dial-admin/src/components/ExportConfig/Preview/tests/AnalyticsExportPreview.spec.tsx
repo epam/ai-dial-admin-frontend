@@ -44,7 +44,7 @@ describe('AnalyticsExportPreview', () => {
     vi.mocked(previewAnalyticsExportConfig).mockResolvedValue({
       success: false,
       status: 422,
-      errorHeader: 'catalog_export_invalid',
+      errorHeader: ExportI18nKey.PreviewUnavailable,
       errorMessage: 'otel_logs is an OTLP landing table',
       requestId: 'r-2',
     });
@@ -53,7 +53,7 @@ describe('AnalyticsExportPreview', () => {
 
     await vi.waitFor(() => expect(onPreviewResult).toHaveBeenCalledWith(false));
     expect(getErrorNotification).toHaveBeenCalledWith(
-      'catalog_export_invalid',
+      ExportI18nKey.PreviewUnavailable,
       'otel_logs is an OTLP landing table',
       'r-2',
     );

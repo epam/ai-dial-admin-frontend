@@ -285,10 +285,14 @@ reports the same class of event in a different place from the rest of the consol
 failed table read and a failed sessions page all raise a notification — and it shifts the content it sits
 above as it arrives and leaves.
 
-**The notification SHALL carry what the service said.** Its title SHALL be the service's `errorHeader` and its
-body the service's `errorMessage`, and it SHALL carry the failed request's `requestId`. A fixed string this app
-wrote SHALL be used only as the title where the response supplied no header — never in place of a message the
-service did supply. An operator who cannot quote a request id cannot ask the team running the service about the
+**The notification SHALL name the failed action and carry what the service said.** Its title SHALL be this
+app's own translated string for the action that failed — "Query not saved", "Could not load pipelines" — and its
+body the service's `errorMessage`, and it SHALL carry the failed request's `requestId`. The service's
+`errorHeader` SHALL NOT be the title: the analytics service puts a machine code there (`bad_request`,
+`rule_validation_failed`), which names no action and reads as noise to an operator. The app's own string SHALL
+NOT replace a message the service did supply; where the service's message is withheld on purpose — an identity
+or visibility refusal that could disclose whether an object exists — the body MAY be this app's guidance for
+that code instead. An operator who cannot quote a request id cannot ask the team running the service about the
 failure.
 
 **The report SHALL persist until dismissed.** An error notification SHALL NOT auto-dismiss, because a failure
@@ -319,12 +323,13 @@ This requirement does NOT apply where:
 - **THEN** an error notification reports the failure
 - **AND** no sentence reporting that failure is inserted into the page's content flow
 
-#### Scenario: The notification states the service's header, message and request id
+#### Scenario: The notification names the failure and states the service's message and request id
 
 - **WHEN** a read fails and the response carries an error header, an error message and a request id
-- **THEN** the notification's title is that header, its body that message, and it carries that request id
+- **THEN** the notification's title is this app's own string for that failure, not the header
+- **AND** its body is the service's message, and it carries that request id
 
-#### Scenario: A response with no header falls back to a fixed title only
+#### Scenario: A response with no header is titled the same way
 
 - **WHEN** a read fails and the response carries a message but no error header
 - **THEN** the notification's title is this app's own string for that failure

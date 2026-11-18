@@ -2,7 +2,6 @@
 
 import { MutableRefObject, useCallback, useEffect, useRef, useState } from 'react';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { deleteSavedQuery, updateSavedQuery } from '@/src/app/[lang]/queries/actions';
@@ -21,10 +20,10 @@ import {
 import { DEFAULT_SAVED_QUERY_SCOPE, KNOWN_TIME_PERIODS } from '@/src/constants/analytics/queries';
 import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
 import { StructuredQuery } from '@/src/models/analytics/query';
-import { ErrorI18nKey, QueriesI18nKey } from '@/src/constants/i18n';
+import { QueriesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useCurrentLocale, useI18n } from '@/src/locales/client';
+import { useI18n } from '@/src/locales/client';
 import {
   ChartConfig,
   QueryBuilderState,
@@ -41,12 +40,10 @@ import {
   SavedQueryTimeAction,
   SavedQueryTimeIntentInput,
 } from '@/src/models/analytics/saved-query';
-import { NotificationType } from '@/src/models/notification';
 import { TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
-import { getErrorNotification, getNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
 export interface SavedQueryPageInput {
@@ -76,7 +73,6 @@ const DRAFT_METADATA: SavedQueryMetadata = { name: '', scope: DEFAULT_SAVED_QUER
 
 export const useSavedQueryPage = (input: SavedQueryPageInput) => {
   const t = useI18n();
-  const currentLocale = useCurrentLocale();
   const router = useRouter();
   const { showNotification } = useNotification();
   const { isFullAdmin } = useAppContext();
@@ -184,7 +180,7 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
     } catch {
       // A transport failure carries no envelope to branch on; without this Save stayed disabled with
       // nothing reported. Same handling as the create modal.
-      showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(QueriesI18nKey.ErrorGeneric)));
+      showNotification(getErrorNotification(t(QueriesI18nKey.SaveFailed), t(QueriesI18nKey.ErrorGeneric)));
       return;
     } finally {
       setIsSaving(false);
@@ -194,7 +190,7 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
       const descriptor = describeSavedQueryError(res);
       showNotification(
         getErrorNotification(
-          res.errorHeader,
+          t(QueriesI18nKey.SaveFailed),
           descriptor.isServerMessageShown ? res.errorMessage : t(descriptor.hintKey),
           res.requestId,
         ),
@@ -247,24 +243,19 @@ export const useSavedQueryPage = (input: SavedQueryPageInput) => {
   const onSaveAsCreated = useCallback(
     (created: SavedQuery) => {
       setIsSaveAsOpen(false);
-      showNotification(
-        getNotification(
-          NotificationType.success,
-          getCreateNotificationTitle(ApplicationRoute.AnalyticsQueries, t),
-          <>
-            {t(QueriesI18nKey.SavedAsNewQuery)}{' '}
-            <Link
-              href={`/${currentLocale}${getUrnForEntity(ApplicationRoute.AnalyticsQueries, created)}`}
-              className="text-accent-primary underline"
-            >
-              {created.name}
-            </Link>
-          </>,
+      showNotification({
+        ...getSuccessNotification(
+          t(QueriesI18nKey.SavedAsNewQueryTitle),
+          t(QueriesI18nKey.SavedAsNewQuery, { name: created.name }),
         ),
-      );
+        action: {
+          label: t(QueriesI18nKey.OpenQuery),
+          onClick: () => router.push(getUrnForEntity(ApplicationRoute.AnalyticsQueries, created)),
+        },
+      });
       router.refresh();
     },
-    [showNotification, t, currentLocale, router],
+    [showNotification, t, router],
   );
 
   const onRemove = useCallback((id: string) => deleteSavedQuery(decodeURIComponent(id)), []);

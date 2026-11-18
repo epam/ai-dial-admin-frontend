@@ -106,7 +106,7 @@ In Custom, the page's Export button SHALL be disabled while neither tab holds a 
 #### Scenario: Candidate read fails
 
 - **WHEN** listing tables fails
-- **THEN** an error notification shows the service's header, message and request id
+- **THEN** an error notification titled with this app's own string shows the service's message and request id
 - **AND** the Tables modal offers no tables
 
 ### Requirement: Analytics export preview
@@ -131,7 +131,7 @@ neither.
 
 A failed preview — including the service refusing the selection (for example `422 catalog_export_invalid` when
 the selection reaches an OTLP landing table, or `403 sensitive_column_not_entitled`) — SHALL be reported by an
-error notification carrying the service's header, message and request id, and the modal's submit button SHALL
+error notification titled with this app's own string and carrying the service's message and request id, and the modal's submit button SHALL
 be disabled, so a selection the service refuses cannot be exported.
 
 #### Scenario: Preview lists objects pulled in by dependency
@@ -230,7 +230,7 @@ A tab with at least one invalid row SHALL be marked invalid. Above the tabs the 
 - the bundle's **environment-specific values** (`env_specific`: object, field, value) as a list headed by a note
   that these were copied from the source environment and should be reviewed, when there are any.
 
-A failed preview request SHALL be reported by an error notification carrying the service's header, message and
+A failed preview request SHALL be reported by an error notification titled with this app's own string and carrying the service's message and
 request id; a request the service cannot be reached for SHALL be reported by a notification saying the preview
 could not be loaded. Either SHALL leave the Import button disabled.
 
@@ -296,7 +296,7 @@ confirmation the preview used. The page SHALL stay on the Configuration step and
 
 The Import button SHALL stay disabled after a result is shown; choosing another file or scope starts over. A request
 the service refuses (for example `409 catalog_import_conflict`, `422 catalog_import_invalid`, `413` for an oversized
-file) SHALL be reported by an error notification carrying the service's header, message and request id, and SHALL
+file) SHALL be reported by an error notification titled with this app's own string and carrying the service's message and request id, and SHALL
 NOT show a result.
 
 #### Scenario: Completed import

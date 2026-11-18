@@ -1104,7 +1104,7 @@ describe('QueryBuilder — Export CSV', () => {
 
     await vi.waitFor(() =>
       expect(showNotificationMock).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'bad_request', description: 'limit' }),
+        expect.objectContaining({ title: 'QueryBuilder.ExportCsvFailed', description: 'limit' }),
       ),
     );
     expect(downloadFile).not.toHaveBeenCalled();

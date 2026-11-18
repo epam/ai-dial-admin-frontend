@@ -215,9 +215,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
 
   const saveFailureHeader = useCallback(
     (res: ServerActionResponse) =>
-      res.status === FORBIDDEN
-        ? t(AnalyticsPipelinesI18nKey.SaveForbidden)
-        : (res.errorHeader ?? t(AnalyticsPipelinesI18nKey.SaveFailed)),
+      res.status === FORBIDDEN ? t(AnalyticsPipelinesI18nKey.SaveForbidden) : t(AnalyticsPipelinesI18nKey.SaveFailed),
     [t],
   );
 
@@ -304,13 +302,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
 
     setIsSaving(false);
     setIsDeletePromptOpen(false);
-    showNotification(
-      getErrorNotification(
-        res.errorHeader ?? t(AnalyticsPipelinesI18nKey.ActionFailed),
-        res.errorMessage,
-        res.requestId,
-      ),
-    );
+    showNotification(getErrorNotification(t(AnalyticsPipelinesI18nKey.ActionFailed), res.errorMessage, res.requestId));
   }, [isSaving, pipeline.name, showNotification, t, router]);
 
   const toggleLabel = t(

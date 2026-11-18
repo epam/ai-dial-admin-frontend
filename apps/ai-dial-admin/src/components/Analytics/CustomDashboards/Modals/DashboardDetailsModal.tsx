@@ -63,7 +63,7 @@ const DashboardDetailsModal: FC<Props> = ({
     try {
       isDone = await onSubmit({ ...details, name: details.name.trim(), description: details.description.trim() });
     } catch {
-      showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(ErrorI18nKey.TryAgainLater)));
+      showNotification(getErrorNotification(t(CustomDashboardsI18nKey.SaveFailed), t(ErrorI18nKey.TryAgainLater)));
     } finally {
       setIsSaving(false);
     }
