@@ -12,16 +12,19 @@ vi.mock('../../TargetField', () => ({
   default: ({
     target,
     presentAs,
+    isPublic,
     isReadOnly,
     onChange,
   }: {
     target?: { path: string };
     presentAs?: string;
+    isPublic?: boolean;
     isReadOnly?: boolean;
     onChange: (change: { target?: { path: string }; presentAs?: string }) => void;
   }) => (
     <div>
       <span>{`target:${target?.path ?? ''}:${presentAs ?? ''}:${String(!!isReadOnly)}`}</span>
+      <span>{`public:${String(!!isPublic)}`}</span>
       <button onClick={() => onChange({ target: { path: 'toolsets/public/search' }, presentAs: 'toolset' })}>
         change-target
       </button>
@@ -61,6 +64,16 @@ describe('AliasTargetTab', () => {
       target: { path: 'toolsets/public/search' },
       presentAs: 'toolset',
     });
+  });
+
+  test('tells the target field whether the alias is a Public one', () => {
+    const { rerender } = render(<AliasTargetTab asset={alias} onChange={onChange} />);
+
+    expect(screen.getByText('public:false')).toBeTruthy();
+
+    rerender(<AliasTargetTab isPublic asset={alias} onChange={onChange} />);
+
+    expect(screen.getByText('public:true')).toBeTruthy();
   });
 
   test('tells the target field it is read-only for a read-only admin', () => {

@@ -58,6 +58,7 @@ describe('parseAliasTargetPath', () => {
     ['applications/public/team/assistant', AliasTargetType.Application, 'public/team/assistant'],
     ['toolsets/public/search', AliasTargetType.Toolset, 'public/search'],
     ['applications/platform/assistant', AliasTargetType.Application, 'platform/assistant'],
+    ['routers/smart-router', AliasTargetType.Router, 'smart-router'],
   ])('reads %s', (path, type, reference) => {
     expect(parseAliasTargetPath(path)).toEqual({ type, reference });
   });

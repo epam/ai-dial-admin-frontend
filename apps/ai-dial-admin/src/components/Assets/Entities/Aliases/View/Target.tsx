@@ -8,11 +8,12 @@ import TargetField, { AliasTargetChange } from '../TargetField';
 
 interface Props {
   asset: DialAliasResource;
+  isPublic?: boolean;
   onChange: (asset: DialAliasResource) => void;
 }
 
 /** Target tab of an alias: what it forwards to and the type it is presented as. */
-const AliasTargetTab: FC<Props> = ({ asset, onChange }) => {
+const AliasTargetTab: FC<Props> = ({ asset, isPublic, onChange }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const onChangeTarget = useCallback(
@@ -24,6 +25,7 @@ const AliasTargetTab: FC<Props> = ({ asset, onChange }) => {
     <TargetField
       target={asset.target}
       presentAs={asset.presentAs}
+      isPublic={isPublic}
       isReadOnly={isReadOnlyAdmin}
       onChange={onChangeTarget}
     />
