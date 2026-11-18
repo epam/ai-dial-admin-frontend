@@ -45,13 +45,12 @@ const ColumnLimitStep: FC<Props> = ({
       (enrichment.columns ?? []).map((column) => ({
         value: `${enrichment.name}.${column.name}`,
         label: `${enrichment.name}.${column.name}`,
-        description: undefined,
       })),
     );
     const known = new Set([...own, ...enriched].map((option) => option.value));
     const kept = value
       .filter((name) => !known.has(name))
-      .map((name) => ({ value: name, label: name, description: undefined }));
+      .map((name) => ({ value: name, label: name }));
 
     return [...own, ...enriched, ...kept];
   }, [columns, enrichments, value, t]);
