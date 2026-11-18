@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { updateRouter } from '@/src/app/[lang]/platform-routers/actions';
 import { DialRouterResource } from '@/src/models/dial/resource';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import RouterView from '../View';
@@ -10,7 +11,13 @@ vi.mock('@/src/app/[lang]/platform-routers/actions', () => ({
   removeRouter: vi.fn(),
 }));
 
-vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
+let capturedTabs: any;
+vi.mock('../TabsContent', () => ({
+  default: (props: any) => {
+    capturedTabs = props;
+    return <div>tabs-content</div>;
+  },
+}));
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
@@ -23,9 +30,12 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
 }));
 
 const setEntityReadOnly = vi.fn();
+let isReadOnlyAdmin = false;
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
     featureFlags: { dashboardEnabled: true, adminApiEnabled: true },
+    isReadOnlyAdmin,
+    visualizerConnector: undefined,
     setEntityReadOnly,
   }),
 }));
@@ -36,6 +46,7 @@ const tabIds = () => capturedHeader.tabs.map((tab: { id: string }) => tab.id);
 describe('RouterView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    isReadOnlyAdmin = false;
   });
 
   test('renders the header and the tab content', () => {
@@ -91,5 +102,64 @@ describe('RouterView', () => {
       EntityViewTab.Catalog,
       EntityViewTab.Roles,
     ]);
+  });
+
+  const parametersTabs = [
+    EntityViewTab.Properties,
+    EntityViewTab.Features,
+    EntityViewTab.Parameters,
+    EntityViewTab.Catalog,
+    EntityViewTab.Roles,
+  ];
+  const editorRouter = { ...router, editorUrl: 'http://router-ui.test' };
+
+  test('offers the Parameters tab when the router has an editor URL and no schema', () => {
+    render(<RouterView etag="etag" originalRouter={editorRouter} roles={[]} />);
+
+    expect(tabIds()).toEqual(parametersTabs);
+  });
+
+  test('offers the Parameters tab once for a router with both a schema and an editor URL', () => {
+    render(
+      <RouterView
+        etag="etag"
+        originalRouter={{ ...editorRouter, applicationTypeSchemaId: 'https://dial.test/router-type' }}
+        roles={[]}
+      />,
+    );
+
+    expect(tabIds()).toEqual(parametersTabs);
+  });
+
+  test('offers no Parameters tab to a read-only admin for a router with only an editor URL', () => {
+    isReadOnlyAdmin = true;
+    render(<RouterView etag="etag" originalRouter={editorRouter} roles={[]} />);
+
+    expect(tabIds()).not.toContain(EntityViewTab.Parameters);
+  });
+
+  test('clearing the editor URL removes the Parameters tab and returns to Properties', () => {
+    render(<RouterView etag="etag" originalRouter={editorRouter} roles={[]} />);
+    act(() => capturedHeader.onChangeActiveTab(EntityViewTab.Parameters));
+    expect(capturedHeader.activeTab).toBe(EntityViewTab.Parameters);
+
+    act(() => capturedTabs.onChange({ ...editorRouter, editorUrl: undefined }));
+
+    expect(tabIds()).not.toContain(EntityViewTab.Parameters);
+    expect(capturedHeader.activeTab).toBe(EntityViewTab.Properties);
+  });
+
+  test('routes the header save to the iframe while it reports unsaved changes', () => {
+    const triggerSave = vi.fn();
+    render(<RouterView etag="etag" originalRouter={editorRouter} roles={[]} />);
+    capturedTabs.frameRef.current = { triggerSave, reset: vi.fn() };
+
+    act(() => capturedTabs.frameCallbacks.onDirtyChange(true));
+    expect(capturedHeader.isChanged).toBe(true);
+
+    act(() => capturedHeader.onSave());
+
+    expect(triggerSave).toHaveBeenCalledOnce();
+    expect(updateRouter).not.toHaveBeenCalled();
   });
 });
