@@ -45,7 +45,7 @@ describe('Notification', () => {
       />,
     );
 
-    expect(screen.getByText('Request ID: trace-1')).toBeInTheDocument();
+    expect(screen.getByText('Basic.RequestId')).toBeInTheDocument();
   });
 
   test('shows the request id when there is no description', () => {
@@ -53,7 +53,7 @@ describe('Notification', () => {
 
     const toast = screen.getByRole('alert');
     expect(toast).toHaveTextContent('Failed');
-    expect(toast).toHaveTextContent('Request ID: trace-1');
+    expect(toast).toHaveTextContent('Basic.RequestId');
   });
 
   test('runs the action and closes the notification when its button is clicked', async () => {

@@ -8,7 +8,7 @@ import {
   NotificationVariant,
 } from '@epam/ai-dial-ui-kit';
 
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { NotificationConfig, NotificationType } from '@/src/models/notification';
 
@@ -43,7 +43,7 @@ const Notification: FC<NotificationConfig> = ({ type, title, description, reques
       {description || requestId ? (
         <div className="flex flex-col gap-1 max-h-40 overflow-y-auto whitespace-pre-wrap">
           {description ? <span>{description}</span> : null}
-          {requestId ? <span className="text-secondary">Request ID: {requestId}</span> : null}
+          {requestId ? <span className="text-secondary">{t(BasicI18nKey.RequestId, { id: requestId })}</span> : null}
         </div>
       ) : null}
       {actionButton}

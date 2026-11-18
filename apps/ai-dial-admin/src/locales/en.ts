@@ -68,6 +68,7 @@ export default {
     None: '- None -',
     Loading: 'Loading…',
     Preview: 'Preview',
+    RequestId: 'Request ID: {id}',
     Deprecated: 'Deprecated',
     PreviewPrompt: 'Preview prompt',
     Optional: 'Optional',
