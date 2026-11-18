@@ -146,15 +146,15 @@ without one SHALL show no tooltip.
 ### Requirement: A failed list read is reported by notification
 
 When the queryable tables or the saved queries cannot be read, the panel SHALL report it by an error
-notification, following the Analytics read-failure rule: the service's own header, message and request
-identifier where the response carried them, and a fixed title only where it carried none. The affected
+notification, following the Analytics read-failure rule: this app's own title for the failed read, and the service's message and request
+identifier where the response carried them. The affected
 tab MAY still show its empty state, which states the absence and not its cause. A failed read of the
 tables catalog, which only supplies descriptions and the tag order, SHALL NOT be reported.
 
 #### Scenario: A failed table read is reported
 
 - **WHEN** the queryable tables cannot be read
-- **THEN** an error notification carries the service's header, message and request identifier
+- **THEN** an error notification titled with this app's own string carries the service's message and request identifier
 - **AND** the Tables tab shows its empty state
 
 #### Scenario: A failed query read is reported

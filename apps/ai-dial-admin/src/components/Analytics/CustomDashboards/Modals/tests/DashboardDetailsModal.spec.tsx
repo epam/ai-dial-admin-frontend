@@ -54,7 +54,7 @@ describe('DashboardDetailsModal', () => {
     await act(async () => {});
 
     expect(useNotification().showNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ title: ErrorI18nKey.Error }),
+      expect.objectContaining({ title: CustomDashboardsI18nKey.SaveFailed }),
     );
     expect(screen.getByRole('button', { name: SUBMIT })).toBeEnabled();
     expect(onClose).not.toHaveBeenCalled();

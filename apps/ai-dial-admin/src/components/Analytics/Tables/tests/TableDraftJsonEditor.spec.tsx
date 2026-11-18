@@ -353,7 +353,7 @@ describe('TableDetailView — saving the draft document', () => {
     expect(defineTableSchema).not.toHaveBeenCalled();
     expect(mocks.showNotification).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: 'Conflict',
+        title: 'AnalyticsTables.ActionFailed',
         description: 'tag_order references an unknown tag',
         requestId: 'req-1',
       }),
@@ -373,7 +373,9 @@ describe('TableDetailView — saving the draft document', () => {
     await write(user, { ...documentOf(), description: 'Second attempt.' });
     await save(user);
 
-    expect(mocks.showNotification).toHaveBeenCalledWith(expect.objectContaining({ title: 'Unprocessable entity' }));
+    expect(mocks.showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'AnalyticsTables.ActionFailed' }),
+    );
     expect(documentOf()).toMatchObject({ description: 'Second attempt.' });
 
     await save(user);

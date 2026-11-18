@@ -544,7 +544,7 @@ describe('SourcePanel', () => {
       );
 
       expect(showNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Service unavailable', description: 'upstream timeout' }),
+        expect.objectContaining({ title: 'QueryBuilder.EntitiesLoadFailed', description: 'upstream timeout' }),
       );
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({ title: 'QuerySourcePanel.QueriesLoadFailed' }),

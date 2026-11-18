@@ -51,13 +51,7 @@ const CreatePipelineShell: FC<Props> = ({ name, onChangeName, isValid, buildDto,
       return;
     }
 
-    showNotification(
-      getErrorNotification(
-        res.errorHeader || t(AnalyticsPipelinesI18nKey.ActionFailed),
-        res.errorMessage,
-        res.requestId,
-      ),
-    );
+    showNotification(getErrorNotification(t(AnalyticsPipelinesI18nKey.ActionFailed), res.errorMessage, res.requestId));
   };
 
   return (

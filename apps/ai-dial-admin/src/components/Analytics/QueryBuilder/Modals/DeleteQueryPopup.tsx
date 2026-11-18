@@ -33,7 +33,7 @@ const DeleteQueryPopup: FC<Props> = ({ query, onRemove, onClose }) => {
     try {
       const res = await onRemove(query.id);
       if (!res.success) {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        showNotification(getErrorNotification(t(QueriesI18nKey.DeleteFailed), res.errorMessage, res.requestId));
         setIsRemoving(false);
         return;
       }
@@ -47,7 +47,7 @@ const DeleteQueryPopup: FC<Props> = ({ query, onRemove, onClose }) => {
       router.push(ApplicationRoute.AnalyticsQueries);
       router.refresh();
     } catch (error) {
-      showNotification(getErrorNotification((error as Error).message));
+      showNotification(getErrorNotification(t(QueriesI18nKey.DeleteFailed), (error as Error).message));
       setIsRemoving(false);
     }
   };

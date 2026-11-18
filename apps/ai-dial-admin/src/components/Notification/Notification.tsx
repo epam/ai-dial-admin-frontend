@@ -1,45 +1,67 @@
-import { IconChevronDown, IconCircleCheck, IconExclamationCircle, IconX } from '@tabler/icons-react';
-import classNames from 'classnames';
-import { FC, ReactNode } from 'react';
-import { IconButton, Spinner } from '@epam/ai-dial-ui-kit';
+import { FC } from 'react';
+import {
+  Button,
+  ButtonAppearance,
+  ButtonVariant,
+  ElementSize,
+  Notification as KitNotification,
+  NotificationVariant,
+} from '@epam/ai-dial-ui-kit';
 
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { NotificationConfig, NotificationIconColor, NotificationType } from '@/src/models/notification';
+import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { NotificationConfig, NotificationType } from '@/src/models/notification';
 
-export const NotificationIcons: Record<NotificationType, ReactNode> = {
-  success: <IconCircleCheck {...BASE_BUTTON_ICON_PROPS} />,
-  error: <IconExclamationCircle {...BASE_BUTTON_ICON_PROPS} />,
-  prepare: <Spinner size={18} fullWidth />,
-  dynamic: <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />,
+const VARIANTS: Record<NotificationType, NotificationVariant> = {
+  [NotificationType.success]: NotificationVariant.Success,
+  [NotificationType.error]: NotificationVariant.Error,
+  [NotificationType.prepare]: NotificationVariant.Loading,
 };
 
-const Notification: FC<NotificationConfig> = ({ type, title, description, requestId, onClose, customTitle }) => {
-  const Icon = NotificationIcons[type];
-  const iconClassName = classNames('inline mr-2', NotificationIconColor[type]);
+const Notification: FC<NotificationConfig> = ({ type, title, description, requestId, action, onClose }) => {
+  const t = useI18n();
+  const hasBody = !!description || !!requestId || !!action;
+
+  const onAction = () => {
+    action?.onClick();
+    onClose?.();
+  };
+
+  const actionButton = action ? (
+    <Button
+      variant={ButtonVariant.Neutral}
+      appearance={ButtonAppearance.Outlined}
+      size={ElementSize.Small}
+      textClassName="text-primary"
+      label={action.label}
+      onClick={onAction}
+    />
+  ) : null;
+
+  const body = hasBody ? (
+    <div className="flex flex-col items-start gap-4">
+      {description || requestId ? (
+        <div className="flex flex-col gap-1 max-h-40 overflow-y-auto whitespace-pre-wrap">
+          {description ? <span>{description}</span> : null}
+          {requestId ? <span className="text-secondary">{t(BasicI18nKey.RequestId, { id: requestId })}</span> : null}
+        </div>
+      ) : null}
+      {actionButton}
+    </div>
+  ) : (
+    title
+  );
 
   return (
-    <div className="flex flex-col layer-3 px-4 py-2 w-[400px] bg-layer-3 [&:not(:last-child)]:mb-4 rounded shadow">
-      <div className="flex flex-row w-full relative pr-5 items-center">
-        <div className="flex items-center w-full">
-          <i className={iconClassName}>{Icon}</i>
-          {customTitle ?? <p className="dial-small-semi-text truncate">{title}</p>}
-        </div>
-        <IconButton
-          aria-label="close"
-          className="absolute right-0 size-auto top-0"
-          onClick={onClose}
-          icon={<IconX size={18} />}
-        />
-      </div>
-      {description ? (
-        <p className="dial-tiny-text text-secondary break-words whitespace-pre-wrap mt-2 max-h-40 overflow-y-auto">
-          {description}
-        </p>
-      ) : null}
-      {requestId ? (
-        <p className="dial-tiny-text text-secondary break-words whitespace-pre-wrap mt-2">Request ID: {requestId}</p>
-      ) : null}
-    </div>
+    <KitNotification
+      className="w-[440px] max-w-full"
+      variant={VARIANTS[type]}
+      title={hasBody && title ? title : void 0}
+      message={body}
+      closable
+      closeAriaLabel={t(ButtonsI18nKey.Close)}
+      onClose={onClose}
+    />
   );
 };
 

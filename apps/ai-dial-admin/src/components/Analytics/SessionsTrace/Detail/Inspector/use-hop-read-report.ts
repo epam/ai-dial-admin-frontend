@@ -27,9 +27,7 @@ export const useHopReadReport = () => {
       }
 
       reportedKey.current = key;
-      showNotification(
-        getErrorNotification(errorHeader ?? t(SessionsTraceI18nKey.InspectorLoadFailed), errorMessage, requestId),
-      );
+      showNotification(getErrorNotification(t(SessionsTraceI18nKey.InspectorLoadFailed), errorMessage, requestId));
     },
     [showNotification, t],
   );

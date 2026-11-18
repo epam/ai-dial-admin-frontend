@@ -21,7 +21,8 @@ A registry holding no pipelines is an ordinary state and SHALL render as the con
 **failed** listing fetch SHALL also render the console and SHALL NOT resolve to a not-found result. A
 not-found page conflates three conditions an operator needs to tell apart — nothing registered, the service
 unreachable, and the route absent — which is the confusion this page exists to remove. That failure SHALL be
-reported by an error notification carrying the service's own header, message and request id, under *An
+reported by an error notification titled with this app's own string and carrying the service's message and
+request id, under *An
 Analytics read failure is reported by notification, in the service's own words*, and SHALL NOT be stated as
 text above the grid. Exactly one report SHALL be raised per failure: the console already notified on a failed
 client-side re-read, and a page that both notified and wrote the sentence reported the same failure twice.

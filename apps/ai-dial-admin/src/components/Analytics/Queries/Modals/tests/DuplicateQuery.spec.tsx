@@ -254,7 +254,7 @@ describe('DuplicateQuery', () => {
 
     await vi.waitFor(() =>
       expect(mockShowNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Error.Error', description: 'Queries.ErrorGeneric' }),
+        expect.objectContaining({ title: 'Queries.SaveFailed', description: 'Queries.ErrorGeneric' }),
       ),
     );
     expect(onClose).not.toHaveBeenCalled();
