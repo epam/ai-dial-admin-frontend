@@ -7,7 +7,8 @@ import { ButtonsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { AssetSource } from '@/src/models/dial/asset-source';
 import AddApplicationsPopup from '../AddApplicationsPopup';
 
-vi.mock('@/src/context/assets/AppsFolderContext', () => ({
+vi.mock('@/src/context/assets/AppsFolderContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/context/assets/AppsFolderContext')>()),
   AppsFolderProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 

@@ -1,7 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import ParametersTab from '../ParametersTab';
-import { BasicI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { DialApplication } from '@/src/models/dial/application';
 import { AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import { ApplicationSourceType } from '@/src/models/dial/application';
 import { DialApplicationResource } from '@/src/models/dial/resource';
@@ -24,10 +26,20 @@ vi.mock('@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer', () => ({
   default: ({ data }: { data: Record<string, string> }) => <div>{data.model}</div>,
 }));
 
+vi.mock('@/src/components/FrameRenderer/FrameRenderer', () => ({
+  __esModule: true,
+  default: ({ iframeUrl }: { iframeUrl: string }) => <p>{iframeUrl}</p>,
+}));
+
+vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
+  useIsReadOnlyAdmin: vi.fn(() => false),
+}));
+
 import { getResolvedRunnerSchema, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
 });
 
 describe('Applications - ApplicationParametersTab', () => {
@@ -108,5 +120,53 @@ describe('Applications - ApplicationParametersTab', () => {
 
     await vi.waitFor(() => expect(getRunner).toHaveBeenCalledWith('http%3A%2F%2Fasdqwe', '*'));
     await vi.waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://asdqwe/edited'));
+  });
+});
+
+describe('ParametersTab — router', () => {
+  const routerUi = 'http://router-ui.test/';
+  const schemaUi = 'http://schema-ui.test/';
+  const typedRouterSchemes = [{ $id: 'router-type', 'dial:applicationTypeEditorUrl': schemaUi, properties: {} }];
+
+  const renderRouterTab = (
+    router: Record<string, unknown>,
+    props: { isUiViewForced?: boolean; schemes?: never[] } = {},
+  ) =>
+    render(
+      <ParametersTab
+        application={{ name: 'cost-aware', ...router } as DialApplication}
+        applicationSchemes={props.schemes ?? []}
+        isUiViewForced={props.isUiViewForced}
+        view={ApplicationRoute.PlatformRouters}
+      />,
+    );
+
+  test('opens the UI view with the router editor URL for a router without a schema', async () => {
+    renderRouterTab({ editorUrl: routerUi }, { isUiViewForced: true });
+
+    expect(await screen.findByText(new RegExp(`^${routerUi}\\?.*id=cost-aware`))).toBeTruthy();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).toBeNull();
+    expect(screen.queryByText(BasicI18nKey.NoParameters)).toBeNull();
+  });
+
+  test('loads the schema editor URL over the router editor URL', async () => {
+    renderRouterTab(
+      { applicationTypeSchemaId: 'router-type', editorUrl: routerUi },
+      { schemes: typedRouterSchemes as never[] },
+    );
+
+    expect(await screen.findByText(new RegExp(`^${schemaUi}`))).toBeTruthy();
+    expect(screen.queryByText(new RegExp(`^${routerUi}`))).toBeNull();
+  });
+
+  test('offers no UI view to a read-only admin', async () => {
+    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    renderRouterTab(
+      { applicationTypeSchemaId: 'router-type', editorUrl: routerUi },
+      { schemes: typedRouterSchemes as never[] },
+    );
+
+    expect(await screen.findByText(BasicI18nKey.NoParameters)).toBeTruthy();
+    expect(screen.queryByText(new RegExp(`^${schemaUi}`))).toBeNull();
   });
 });

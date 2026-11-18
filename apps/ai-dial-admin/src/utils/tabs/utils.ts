@@ -13,6 +13,7 @@ export enum EntityViewTab {
   Features = 'Features',
   Parameters = 'Parameters',
   Roles = 'Roles',
+  Target = 'Target',
   Interceptors = 'Interceptors',
   GlobalInterceptors = 'GlobalInterceptors',
   RateLimitSchedule = 'RateLimitSchedule',
@@ -108,6 +109,11 @@ export const rolesTab = (t: (key: string) => string, warning?: boolean) => ({
   id: EntityViewTab.Roles,
   label: t(TabsI18nKey.Roles),
   ...getTabStatusProps(t, warning ? TabStatus.Warning : undefined),
+});
+
+export const targetTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Target,
+  label: t(TabsI18nKey.Target),
 });
 
 export const interceptorsTab = (t: (key: string) => string) => ({
@@ -511,6 +517,9 @@ export const getUsageLogTabs = (t: (key: string) => string): TabItem[] => {
   return [tracesTab(t), conversationsTab(t), mcpTab(t), routesTab(t)];
 };
 
+const hasCoreAssetAudit = (featureFlags?: Partial<FeatureFlags>): boolean =>
+  Boolean((featureFlags?.dashboardEnabled && featureFlags?.adminApiEnabled) || featureFlags?.analyticsUsageEnabled);
+
 export const getTabsForAsset = (
   t: (key: string) => string,
   view: ApplicationRoute,
@@ -533,17 +542,22 @@ export const getTabsForAsset = (
   }
   if (view === ApplicationRoute.AssetsToolsets) {
     const tabs = [propertiesTab(t), toolsTab(t), catalogTab(t)];
-    if (featureFlags?.dashboardEnabled && featureFlags?.adminApiEnabled) {
+    if (hasCoreAssetAudit(featureFlags)) {
       tabs.push(auditTab(t));
     }
     return tabs;
+  }
+  // An alias has no features, parameters or catalog of its own — they are its target's — so only what it
+  // is listed as, what it forwards to and who may use it.
+  if (view === ApplicationRoute.AssetsAliases) {
+    return [propertiesTab(t), targetTab(t), rolesTab(t, rolesWarning)];
   }
   if (view === ApplicationRoute.Conversations) {
     return [propertiesTab(t), conversationTab(t)];
   }
   if (view === ApplicationRoute.PlatformModels) {
     const tabs = [propertiesTab(t), featuresTab(t), catalogTab(t), rolesTab(t, rolesWarning), interceptorsTab(t)];
-    if (featureFlags?.dashboardEnabled && featureFlags?.adminApiEnabled) {
+    if (hasCoreAssetAudit(featureFlags)) {
       tabs.push(auditTab(t));
     }
     if (featureFlags?.evaluationEnabled) {
@@ -552,7 +566,7 @@ export const getTabsForAsset = (
     return tabs;
   }
   if (view === ApplicationRoute.PlatformRouters) {
-    // `Parameters` edits `applicationProperties`, which exists only against a picked app-type schema.
+    // `Parameters` edits `applicationProperties` against a picked app-type schema, or embeds the router's editor UI.
     return [
       propertiesTab(t),
       featuresTab(t),
@@ -602,11 +616,14 @@ export const getAuditTabs = (
     return [dashboardTab(t)];
   }
 
-  if (featureFlags.dashboardEnabled) {
-    if (view === ApplicationRoute.AssetsToolsets || view === ApplicationRoute.PlatformModels) {
-      return [dashboardTab(t), tracesTab(t)];
-    }
+  if (
+    (view === ApplicationRoute.AssetsToolsets || view === ApplicationRoute.PlatformModels) &&
+    (featureFlags.dashboardEnabled || featureFlags.analyticsUsageEnabled)
+  ) {
+    return [dashboardTab(t), tracesTab(t)];
+  }
 
+  if (featureFlags.dashboardEnabled) {
     if (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) {
       tabs.push(dashboardTab(t), tracesTab(t), conversationsTab(t));
     } else if (view === ApplicationRoute.Toolsets) {

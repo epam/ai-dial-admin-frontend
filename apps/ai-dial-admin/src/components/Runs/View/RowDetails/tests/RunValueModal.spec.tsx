@@ -27,7 +27,7 @@ const makeMetricField = (overrides: Partial<RowDetailField> = {}): RowDetailFiel
     isNumeric: true,
     isScoreIndicator: true,
     isMetric: true,
-    primaryInfo: { reason: 'The answers differ', logs: 'verbose output', error: null },
+    primaryInfo: { reason: 'The answers differ', logs: 'verbose output', error: null, details: null },
     ...overrides,
   });
 
@@ -93,7 +93,7 @@ describe('RunValueModal', () => {
         makeMetricField({
           primaryRaw: null,
           primaryFailed: true,
-          primaryInfo: { reason: null, logs: null, error: '422 Unprocessable Content' },
+          primaryInfo: { reason: null, logs: null, error: '422 Unprocessable Content', details: null },
         }),
       );
 

@@ -42,12 +42,15 @@ export const SCHEMAS_PREFIX = 'schemas/platform/';
 export const CATALOG_SCHEMAS_PREFIX = 'catalog_schemas/platform/';
 export const INTERCEPTORS_PREFIX = 'interceptors/platform/';
 export const TRANSLATORS_PREFIX = 'translators/platform/';
+export const PLUGINS_PREFIX = 'plugins/platform/';
 export const ROUTERS_PREFIX = 'routers/platform/';
 export const ROLES_PREFIX = 'roles/platform/';
 export const ROUTES_PREFIX = 'routes/platform/';
 export const KEYS_PREFIX = 'keys/platform/';
 export const POLICIES_PREFIX = 'policies/platform/';
 export const POLICY_ASSIGNMENTS_PREFIX = 'policy_assignments/platform/';
+/** Aliases are dual-bucket like applications: the bucket is part of the path (`public/<name>`, `platform/<name>`). */
+export const ALIASES_PREFIX = 'aliases/';
 
 export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.APPLICATION]: APPLICATIONS_PREFIX,
@@ -62,12 +65,14 @@ export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.CATALOG_SCHEMA]: CATALOG_SCHEMAS_PREFIX,
   [ResourceType.INTERCEPTOR]: INTERCEPTORS_PREFIX,
   [ResourceType.TRANSLATOR]: TRANSLATORS_PREFIX,
+  [ResourceType.PLUGIN]: PLUGINS_PREFIX,
   [ResourceType.ROUTER]: ROUTERS_PREFIX,
   [ResourceType.ROLE]: ROLES_PREFIX,
   [ResourceType.ROUTE]: ROUTES_PREFIX,
   [ResourceType.PROJECT_KEY]: KEYS_PREFIX,
   [ResourceType.POLICY]: POLICIES_PREFIX,
   [ResourceType.POLICY_ASSIGNMENT]: POLICY_ASSIGNMENTS_PREFIX,
+  [ResourceType.ALIAS]: ALIASES_PREFIX,
 };
 
 /** Hardcoded list path — the backend always lists `publications/public/`. */

@@ -23,8 +23,6 @@ import OptionalValueCellRenderer, {
   MISSING_VALUE_DISPLAY,
 } from '@/src/components/Grid/CellRenderers/OptionalValueCellRenderer';
 import TitleSubtitleCellRenderer from '@/src/components/Grid/CellRenderers/TitleSubtitleCellRenderer';
-import LinkCellRenderer from '@/src/components/Grid/CellRenderers/LinkCellRenderer';
-import { EntityHrefGetter } from '@/src/components/Grid/CellRenderers/models';
 import FormattedValueCellRenderer from '@/src/components/Grid/CellRenderers/FormattedValueCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import ModelsCellRenderer from '@/src/components/Grid/CellRenderers/ModelsCellRenderer';
@@ -49,17 +47,10 @@ import {
   EntitiesI18nKey,
   EntityFieldsI18nKey,
   ImportI18nKey,
-  QueriesI18nKey,
   SourceI18nKey,
   TelemetryI18nKey,
   TestSuitesI18nKey,
 } from '@/src/constants/i18n';
-import {
-  deriveSavedQueryEditor,
-  savedQuerySourcesLabel,
-} from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
-import { SAVED_QUERY_EDITOR_I18N_KEYS } from '@/src/constants/analytics/queries';
-import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { RowImportMeta } from '@/src/models/deployments/import';
 import { ValidationState } from '@/src/types/deployments/import';
 import {
@@ -291,9 +282,18 @@ const targetRadioNameColumn = (column: ColDef, idField: string): ColDef => ({
   tooltipValueGetter: () => undefined,
 });
 
+const evaluationDescriptionColumn: ColDef = {
+  ...DESCRIPTION_COLUMN,
+  // The deployments API stores a missing description as the string "null".
+  valueGetter: ({ data }: ValueGetterParams) => {
+    const description = data?.description;
+    return description == null || description === 'null' ? '' : description;
+  },
+};
+
 const EVALUATION_DEPLOYMENT_DETAIL_COLUMNS: ColDef[] = [
   { field: 'deploymentId', headerName: 'ID', hide: false },
-  DESCRIPTION_COLUMN,
+  evaluationDescriptionColumn,
 ];
 
 export const EVALUATION_DEPLOYMENTS_COLUMNS: ColDef[] = [
@@ -2075,83 +2075,3 @@ export const IMPORT_VALIDATION_COLUMN = (t: (str: string) => string): ColDef => 
   sortable: false,
   filterValueGetter: ({ data }) => getImportValidationStateLabel(data, t),
 });
-
-// Saved queries. The service returns every visible row unpaged with no server-side sort or filter, so
-// these are client-side filters. Field names are the wire ones (snake_case), which is why the shared
-// created/updated columns cannot be reused as-is — only their formatting is.
-export const QUERIES_COLUMN = (t: (str: string) => string, getHref?: EntityHrefGetter<SavedQuery>): ColDef[] => [
-  {
-    field: 'name',
-    colId: 'name',
-    headerName: t(QueriesI18nKey.Name),
-    hide: false,
-    sort: 'asc',
-    cellRenderer: LinkCellRenderer,
-    cellRendererParams: { getHref },
-    ...baseStringFilter,
-  },
-  {
-    field: 'description',
-    colId: 'description',
-    headerName: t(QueriesI18nKey.Description),
-    hide: false,
-    ...baseStringFilter,
-  },
-  {
-    colId: 'source',
-    headerName: t(QueriesI18nKey.Source),
-    hide: false,
-    valueGetter: ({ data }) => savedQuerySourcesLabel((data as SavedQuery)?.source),
-    tooltipValueGetter: ({ data }) => savedQuerySourcesLabel((data as SavedQuery)?.source),
-    filterValueGetter: (params) => savedQuerySourcesLabel((params.data as SavedQuery)?.source),
-    ...baseStringFilter,
-  },
-  { field: 'tag', colId: 'tag', headerName: t(QueriesI18nKey.Tag), hide: false, ...baseStringFilter },
-  {
-    field: 'scope',
-    colId: 'scope',
-    headerName: t(QueriesI18nKey.Scope),
-    hide: false,
-    valueGetter: ({ data }) =>
-      t(
-        (data as SavedQuery)?.scope === SavedQueryScope.Common
-          ? QueriesI18nKey.ScopeCommon
-          : QueriesI18nKey.ScopePersonal,
-      ),
-    ...baseStringFilter,
-  },
-  {
-    // Derived from the body, never read from a stored field: an `editor` member would be a second
-    // source of truth able to contradict the body it describes.
-    colId: 'editor',
-    headerName: t(QueriesI18nKey.Editor),
-    hide: false,
-    valueGetter: ({ data }) => t(SAVED_QUERY_EDITOR_I18N_KEYS[deriveSavedQueryEditor(data as SavedQuery, null)]),
-    ...baseStringFilter,
-  },
-  {
-    // The service reports no author email whenever there is none to record, so this must not assume one.
-    field: 'owner_email',
-    colId: 'owner_email',
-    headerName: t(QueriesI18nKey.SavedBy),
-    hide: false,
-    valueGetter: ({ data }) => (data as SavedQuery)?.owner_email || t(QueriesI18nKey.SavedByUnknown),
-    ...baseStringFilter,
-  },
-  {
-    field: 'updated_at',
-    colId: 'updated_at',
-    headerName: 'Updated time',
-    hide: false,
-    ...dateTimeColumn,
-    ...dateFilter,
-  },
-  {
-    field: 'created_at',
-    colId: 'created_at',
-    headerName: 'Creation time',
-    hide: true,
-    ...dateTimeColumn,
-    ...dateFilter,
-  },
-];

@@ -7,7 +7,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { updateApp, moveApps } from '@/src/app/[lang]/assets-applications/actions';
-import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, GrafanaLinksI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { GrafanaTraceLinks } from '@/src/utils/grafana/models';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import AppView from '@/src/components/Assets/Entities/Apps/View';
 
@@ -78,7 +79,12 @@ describe('AppView', () => {
     });
   });
 
-  const renderView = () =>
+  const grafanaLinks: GrafanaTraceLinks = {
+    allTracesUrl: 'https://grafana.example.com/explore?all',
+    errorTracesUrl: 'https://grafana.example.com/explore?errors',
+  };
+
+  const renderView = (links?: GrafanaTraceLinks | null) =>
     render(
       <AppView
         etag={mockEtag}
@@ -87,6 +93,7 @@ describe('AppView', () => {
         applications={mockApplications}
         schemes={mockSchemes}
         interceptors={mockInterceptors}
+        grafanaLinks={links}
       />,
     );
 
@@ -146,5 +153,31 @@ describe('AppView', () => {
     await vi.waitFor(() =>
       expect(moveApps).toHaveBeenCalledExactlyOnceWith(['public/team/assistant__stable'], 'public/new'),
     );
+  });
+
+  test('shows one Grafana traces control beside Delete when links are provided', () => {
+    renderView(grafanaLinks);
+
+    const trigger = screen.getByRole('button', { name: GrafanaLinksI18nKey.Traces });
+    const deleteButtons = screen.getAllByRole('button', { name: ButtonsI18nKey.Delete });
+
+    expect(deleteButtons.some((button) => button.parentElement?.contains(trigger))).toBe(true);
+    expect(screen.queryByRole('link')).toBeNull();
+  });
+
+  test('shows no Grafana trace links when none are provided', () => {
+    renderView(null);
+
+    expect(screen.queryByRole('button', { name: GrafanaLinksI18nKey.Traces })).toBeNull();
+  });
+
+  test('hides the Grafana trace links while the JSON editor is open', async () => {
+    const user = userEvent.setup();
+    renderView(grafanaLinks);
+
+    await user.click(screen.getByRole('switch', { name: EntitiesI18nKey.JSONEditor }));
+
+    expect(await screen.findByRole('textbox', { name: 'JSON editor' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: GrafanaLinksI18nKey.Traces })).toBeNull();
   });
 });

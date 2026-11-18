@@ -267,6 +267,7 @@ export interface DialRouterResource extends CoreDeploymentResource {
   decision?: RouterDecision;
   applicationTypeSchemaId?: string;
   applicationProperties?: Record<string, unknown>;
+  editorUrl?: string;
 }
 
 /**
@@ -387,6 +388,18 @@ export interface DialTranslatorResource extends CoreResource {
 }
 
 /**
+ * A plugin resource (`plugins/platform/{name}`) as returned by Core. Flat, unversioned and a plain POJO
+ * like `DialTranslatorResource`: only `type` (the plugin code serving the instance) and `settings`
+ * (free-form, read by that code alone) are accepted, and any other field fails the write.
+ */
+export interface DialPluginResource extends CoreResource {
+  /** Client-only create-flow identity — Core's `Plugin` declares no `name` field; a merged read keeps it in `_metadata`. */
+  name?: string;
+  type?: string;
+  settings?: Record<string, unknown>;
+}
+
+/**
  * A catalog schema resource (`catalog_schemas/platform/{encodeURIComponent($id)}`) as returned by
  * Core. The body is stored verbatim and only the `$id` is validated — unique at create, immutable
  * afterwards — so `validateCatalogSchema` enforces every other meta-schema constraint.
@@ -464,6 +477,7 @@ export type PlatformAsset =
   | DialCatalogSchemaResource
   | DialInterceptorResource
   | DialTranslatorResource
+  | DialPluginResource
   | DialRouterResource
   | DialRouteResource
   | DialRoleResource

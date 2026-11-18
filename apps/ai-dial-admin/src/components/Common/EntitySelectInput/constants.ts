@@ -2,11 +2,20 @@ import { NAME_COLUMN } from '@epam/ai-dial-react-file-manager';
 import { ColDef } from 'ag-grid-community';
 
 import { FILES_GRID_COLUMNS } from '@/src/components/Assets/Artifacts/Files/constants';
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { APPLICATIONS_PREFIX, SKILLS_PREFIX } from '@/src/constants/publications-core';
+import { AliasI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import {
+  APPLICATIONS_PREFIX,
+  MODELS_PREFIX,
+  ROUTERS_PREFIX,
+  SKILLS_PREFIX,
+  TOOLSETS_PREFIX,
+} from '@/src/constants/publications-core';
 import { AppsFolderProvider, useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { FileFolderProvider, useFileFolder } from '@/src/context/assets/FileFolderContext';
+import { ModelsFolderProvider, useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
+import { RoutersFolderProvider, useRoutersFolder } from '@/src/context/assets/RoutersFolderContext';
 import { SkillFolderProvider, useSkillFolder } from '@/src/context/assets/SkillFolderContext';
+import { ToolsetFolderProvider, useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntitySelectConfig, EntitySelectType } from './models';
 
@@ -46,5 +55,39 @@ export const ENTITY_SELECT_CONFIGS: Record<EntitySelectType, EntitySelectConfig>
     gridColumns: ENTITY_SELECT_GRID_COLUMNS,
     FolderProvider: AppsFolderProvider,
     useFolder: useAppsFolder,
+  },
+  // Like `Application`, only used through the manager: an alias picks one toolset from every source it has.
+  [EntitySelectType.Toolset]: {
+    prefix: TOOLSETS_PREFIX,
+    route: ApplicationRoute.AssetsToolsets,
+    headerI18nKey: AliasI18nKey.SelectToolsetTarget,
+    portalId: 'toolsetSelect',
+    isEditable: false,
+    gridColumns: ENTITY_SELECT_GRID_COLUMNS,
+    FolderProvider: ToolsetFolderProvider,
+    useFolder: useToolsetFolder,
+  },
+  // Models have no Public tree (a model is a config or platform deployment), so this picker is the Platform and
+  // config.json grids only; its `FolderProvider` is never browsed as a tree.
+  [EntitySelectType.Model]: {
+    prefix: MODELS_PREFIX,
+    route: ApplicationRoute.PlatformModels,
+    headerI18nKey: AliasI18nKey.SelectModelTarget,
+    portalId: 'modelSelect',
+    isEditable: false,
+    gridColumns: ENTITY_SELECT_GRID_COLUMNS,
+    FolderProvider: ModelsFolderProvider,
+    useFolder: useModelsFolder,
+  },
+  // Like `Model`: a router is a config or platform deployment, so the picker is its Platform and config.json grids.
+  [EntitySelectType.Router]: {
+    prefix: ROUTERS_PREFIX,
+    route: ApplicationRoute.PlatformRouters,
+    headerI18nKey: AliasI18nKey.SelectRouterTarget,
+    portalId: 'routerSelect',
+    isEditable: false,
+    gridColumns: ENTITY_SELECT_GRID_COLUMNS,
+    FolderProvider: RoutersFolderProvider,
+    useFolder: useRoutersFolder,
   },
 };

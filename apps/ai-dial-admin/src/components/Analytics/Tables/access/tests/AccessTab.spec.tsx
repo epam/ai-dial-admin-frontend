@@ -7,8 +7,16 @@ import { AccessStatus, PrivilegeMark, RoleRow, RowsCellKind } from '@/src/compon
 import { TableAccessState } from '@/src/components/Analytics/Tables/access/use-table-access';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { AnalyticsTableAccessI18nKey, AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryExprType, QueryOperator, QueryValueType } from '@/src/models/analytics/query';
+import {
+  AnalyticsTable,
+  AnalyticsTableType,
+  IneffectiveGrant,
+  IneffectiveGrantReason,
+  TableGrantKey,
+} from '@/src/models/analytics/table';
 
 interface MockColDef {
   field?: string;
@@ -75,12 +83,33 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 }));
 
 vi.mock('@/src/components/Analytics/Tables/access/RoleDrawer', () => ({
-  default: ({ role, isSystem }: { role: string | null; isSystem: boolean }) => (
-    <div>{`drawer: ${role === null ? 'new' : role} system: ${isSystem}`}</div>
+  default: ({
+    role,
+    isSystem,
+    isEnrichment,
+    enrichments,
+    hasEnrichmentsFailed,
+  }: {
+    role: string | null;
+    isSystem: boolean;
+    isEnrichment: boolean;
+    enrichments: AnalyticsTable[];
+    hasEnrichmentsFailed: boolean;
+  }) => (
+    <div>
+      <span>{`drawer: ${role === null ? 'new' : role} system: ${isSystem}`}</span>
+      <span>{`drawer-enrichment: ${isEnrichment}`}</span>
+      <span>{`drawer-enrichments: ${enrichments.map((table) => table.name).join(',')} failed: ${hasEnrichmentsFailed}`}</span>
+    </div>
   ),
 }));
 vi.mock('@/src/components/Analytics/Tables/access/RemoveRoleDialog', () => ({
-  default: ({ row }: { row: RoleRow }) => <div>{`remove-dialog: ${row.role}`}</div>,
+  default: ({ row, onRemove }: { row: RoleRow; onRemove: (role: string) => void }) => (
+    <div>
+      <span>{`remove-dialog: ${row.role}`}</span>
+      <button onClick={() => onRemove(row.role)}>confirm-remove</button>
+    </div>
+  ),
 }));
 
 const filter = {
@@ -105,18 +134,24 @@ const ROWS: RoleRow[] = [
     isSensitive: false,
     rowsKind: RowsCellKind.Policy,
     filter,
+    columns: ['project_id', 'region'],
+    warnings: [],
   },
   {
     role: 'pii-analysts',
     marks: { ...none, get: PrivilegeMark.Implied, read: PrivilegeMark.Stored },
     isSensitive: true,
     rowsKind: RowsCellKind.All,
+    columns: null,
+    warnings: [],
   },
   {
     role: 'ingest-bot',
     marks: { ...none, write: PrivilegeMark.Stored },
     isSensitive: false,
     rowsKind: RowsCellKind.None,
+    columns: null,
+    warnings: [],
   },
 ];
 
@@ -126,15 +161,29 @@ const makeState = (over: Partial<TableAccessState> = {}): TableAccessState =>
   ({
     status: AccessStatus.Ready,
     rows: ROWS,
-    access: {},
-    policies: {},
+    roles: {},
+    warnings: [],
     isTabOffered: true,
     removeRole: vi.fn(),
     ...over,
   }) as unknown as TableAccessState;
 
-const renderTab = (access = makeState(), isSystem = false) =>
-  render(<AccessTab tableName="project_costs_daily" columns={COLUMNS} isSystem={isSystem} access={access} />);
+const renderTab = (
+  access = makeState(),
+  isSystem = false,
+  props: Partial<React.ComponentProps<typeof AccessTab>> = {},
+) =>
+  render(
+    <AccessTab
+      tableName="project_costs_daily"
+      columns={COLUMNS}
+      isSystem={isSystem}
+      enrichments={[]}
+      hasEnrichmentsFailed={false}
+      access={access}
+      {...props}
+    />,
+  );
 
 const rowOf = (role: string) => within(screen.getByRole('group', { name: `row-${role}` }));
 
@@ -144,7 +193,9 @@ describe('AccessTab — roles table', () => {
   test('lists a row for each role with the column headers and the caption', () => {
     renderTab();
 
-    expect(screen.getByText(/headers: .*ColRole.*ColGet.*ColRead.*ColWrite.*ColModify.*ColRows/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/headers: .*ColRole.*ColGet.*ColRead.*ColWrite.*ColModify.*ColRows.*ColColumns/),
+    ).toBeInTheDocument();
     ROWS.forEach(({ role }) => expect(screen.getByRole('group', { name: `row-${role}` })).toBeInTheDocument());
   });
 
@@ -169,6 +220,15 @@ describe('AccessTab — roles table', () => {
     expect(rowOf('team-x').getByText('project_id = X-PRJ-1')).toBeInTheDocument();
     expect(rowOf('pii-analysts').getByText(AnalyticsTableAccessI18nKey.AllRows)).toBeInTheDocument();
     expect(rowOf('ingest-bot').getByText(AnalyticsTableAccessI18nKey.CannotReadRows)).toBeInTheDocument();
+  });
+
+  test('states the columns each role reads: all of them, or how many', () => {
+    renderTab();
+
+    expect(rowOf('team-x').getByText(AnalyticsTableAccessI18nKey.ColumnsCount)).toBeInTheDocument();
+    expect(rowOf('team-x').queryByText(AnalyticsTableAccessI18nKey.AllColumns)).toBeNull();
+    expect(rowOf('pii-analysts').getByText(AnalyticsTableAccessI18nKey.AllColumns)).toBeInTheDocument();
+    expect(rowOf('ingest-bot').getByText(AnalyticsTableAccessI18nKey.AllColumns)).toBeInTheDocument();
   });
 
   test('shows the empty state for a table with no roles, without search or filters', () => {
@@ -225,6 +285,8 @@ describe('AccessTab — search and filters', () => {
       isSensitive: false,
       rowsKind: RowsCellKind.None,
       filter,
+      columns: null,
+      warnings: [],
     };
     renderTab(makeState({ rows: [...ROWS, kept] }));
 
@@ -321,6 +383,28 @@ describe('AccessTab — opening and removing', () => {
 
     expect(screen.getByText('remove-dialog: ingest-bot')).toBeInTheDocument();
   });
+
+  test('removes the role through the single removal of the access state', async () => {
+    const user = userEvent.setup();
+    const access = makeState();
+    renderTab(access);
+
+    await user.click(screen.getByRole('button', { name: /Remove:ingest-bot/ }));
+    await user.click(screen.getByRole('button', { name: 'confirm-remove' }));
+
+    expect(access.removeRole).toHaveBeenCalledExactlyOnceWith('ingest-bot');
+  });
+
+  test('hands the drawer the enrichments whose columns a limit may name', async () => {
+    const user = userEvent.setup();
+    const enrichments: AnalyticsTable[] = [{ name: 'project_owners', type: AnalyticsTableType.Enrichment }];
+    renderTab(makeState(), false, { enrichments, hasEnrichmentsFailed: true });
+
+    await user.click(screen.getByRole('button', { name: 'open-team-x' }));
+
+    expect(screen.getByText('drawer-enrichment: false')).toBeInTheDocument();
+    expect(screen.getByText('drawer-enrichments: project_owners failed: true')).toBeInTheDocument();
+  });
 });
 
 describe('AccessTab — before the data has loaded', () => {
@@ -349,6 +433,8 @@ describe('AccessTab — the everyone grantee', () => {
         { type: QueryExprType.Param as const, name: 'caller.project' },
       ],
     },
+    columns: null,
+    warnings: [],
   };
 
   test('labels the grantee and summarizes its caller-value limit', () => {
@@ -366,5 +452,107 @@ describe('AccessTab — the everyone grantee', () => {
 
     expect(screen.getByRole('group', { name: 'row-*' })).toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'row-team-x' })).toBeNull();
+  });
+});
+
+describe('AccessTab — warnings', () => {
+  const warning = (role: string, message: string, over: Partial<IneffectiveGrant> = {}): IneffectiveGrant => ({
+    role,
+    key: TableGrantKey.Read,
+    reason: IneffectiveGrantReason.AlreadyGlobal,
+    message,
+    ...over,
+  });
+  const everyoneRow: RoleRow = {
+    role: '*',
+    marks: { ...none, get: PrivilegeMark.Implied, read: PrivilegeMark.Stored },
+    isSensitive: false,
+    rowsKind: RowsCellKind.All,
+    columns: null,
+    warnings: ['everyone reads every row'],
+  };
+  const warnedRow: RoleRow = { ...ROWS[1], warnings: ['already global', 'lifts column policies'] };
+
+  test('shows a warning banner above the roles for each warning of the everyone grantee', () => {
+    renderTab(
+      makeState({
+        rows: [everyoneRow, warnedRow],
+        warnings: [
+          warning('*', 'everyone reads every row', { reason: IneffectiveGrantReason.EveryoneReadsAllRows }),
+          warning('*', 'lifts row policies', { reason: IneffectiveGrantReason.LiftsRowPolicies }),
+          warning('pii-analysts', 'already global'),
+        ],
+      }),
+    );
+
+    expect(screen.getByText('everyone reads every row')).toBeInTheDocument();
+    expect(screen.getByText('lifts row policies')).toBeInTheDocument();
+    expect(screen.queryByText('already global')).toBeNull();
+  });
+
+  test('shows no banner while the everyone grantee has no warning', () => {
+    renderTab(makeState({ rows: [warnedRow], warnings: [warning('pii-analysts', 'already global')] }));
+
+    expect(screen.getByRole('group', { name: 'row-pii-analysts' })).toBeInTheDocument();
+    expect(screen.queryByText('already global')).toBeNull();
+  });
+
+  test('marks a provider role that has warnings with an indicator naming them', () => {
+    renderTab(makeState({ rows: [warnedRow, ROWS[0]] }));
+
+    expect(
+      rowOf('pii-analysts').getByRole('img', {
+        name: `${AnalyticsTableAccessI18nKey.RoleWarnings}: already global lifts column policies`,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      rowOf('team-x').queryByRole('img', { name: new RegExp(AnalyticsTableAccessI18nKey.RoleWarnings) }),
+    ).toBeNull();
+  });
+
+  test('shows no row indicator for the everyone grantee, whose warnings are the banner', () => {
+    renderTab(makeState({ rows: [everyoneRow] }));
+
+    expect(rowOf('*').queryByRole('img', { name: new RegExp(AnalyticsTableAccessI18nKey.RoleWarnings) })).toBeNull();
+  });
+});
+
+describe('AccessTab — an enrichment table', () => {
+  const renderEnrichment = () => renderTab(makeState(), false, { sourceTable: 'project_costs' });
+
+  test('says that reading follows the source table and links to it', () => {
+    renderEnrichment();
+
+    expect(screen.getByText(new RegExp(AnalyticsTableAccessI18nKey.EnrichmentNote))).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'project_costs' })).toHaveAttribute(
+      'href',
+      tableDetailHref('project_costs'),
+    );
+  });
+
+  test('shows Set on source in the Rows and Columns cells of every role', () => {
+    renderEnrichment();
+
+    ROWS.forEach(({ role }) =>
+      expect(rowOf(role).getAllByText(AnalyticsTableAccessI18nKey.SetOnSource)).toHaveLength(2),
+    );
+    expect(screen.queryByText('project_id = X-PRJ-1')).toBeNull();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.AllColumns)).toBeNull();
+  });
+
+  test('opens the drawer as an enrichment', async () => {
+    const user = userEvent.setup();
+    renderEnrichment();
+
+    await user.click(screen.getByRole('button', { name: 'open-team-x' }));
+
+    expect(screen.getByText('drawer-enrichment: true')).toBeInTheDocument();
+  });
+
+  test('shows no enrichment note on a source table', () => {
+    renderTab();
+
+    expect(screen.queryByText(new RegExp(AnalyticsTableAccessI18nKey.EnrichmentNote))).toBeNull();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.SetOnSource)).toBeNull();
   });
 });

@@ -17,9 +17,10 @@ sub-capability; open the one row that answers the question rather than reading t
 
 | Sub-capability | Answers |
 | --- | --- |
-| `analytics/query-builder` | How a query is authored — the rail's four views (Form, JSON, SQL, AI) and the guarded transitions between them |
-| `analytics/query-viewer` | What a run produces — execution, the result grid, stat tiles, table and chart views |
-| `analytics/saved-queries` | Saved queries as addressable objects — storage contract, list page, CRUD, permission gating |
+| `analytics/query-builder` | How a query is authored — the draft and saved-query pages, the resizable builder area above the results with its two views (Builder chips, SQL), the assistant panel beside it, the chip popups, and the guarded transitions between views |
+| `analytics/query-viewer` | What a run produces — execution, the result count, the result grid, table and chart views, CSV export |
+| `analytics/saved-queries` | Saved queries as addressable objects — storage contract, saving a draft, Save as, edit and delete on the query page, permission gating |
+| `analytics/source-panel` | The Source panel beside the Query Builder — the tables tree with columns grouped by tag, the saved-queries list, how picking a row navigates, the unsaved-work guard |
 | `analytics/tables` | The tables catalog, column schema and enum columns, row writes, per-table roles, the Connect panel, backfill and ingest failures |
 | `analytics/sessions-source` | The instance-wide Sessions source — base table and role binding, where it is edited and stored, the default binding, how an unbound role degrades |
 | `analytics/sessions-listing` | The sessions log page — filters, provenance line, grid columns, ordering and filtering |

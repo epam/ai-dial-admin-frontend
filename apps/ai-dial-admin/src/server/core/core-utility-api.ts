@@ -1,4 +1,5 @@
 import { Token } from '@/src/models/auth';
+import { ConfigHealthResponse } from '@/src/models/dial/config-health';
 import { CoreCallerDeploymentsResponse } from '@/src/models/dial/core-caller-options';
 import { CoreUserInfoResponse } from '@/src/models/dial/core-user-info';
 import { CoreUserOrgUnitsResponse } from '@/src/models/dial/core-user-org-units';
@@ -12,6 +13,7 @@ export const DEPLOYMENT_URL = (name: string) => `${DEPLOYMENTS_URL}/${name}`;
 export const USER_ROLE_ASSIGNMENTS_URL = 'v1/user/role-assignments';
 export const VERSION_URL = 'version';
 export const APPLICATION_TYPE_SCHEMAS_URL = 'v1/application_type_schemas/schemas';
+export const CONFIG_HEALTH_URL = 'v1/admin/health/config';
 
 export enum CallerDeploymentKind {
   Models = 'models',
@@ -68,6 +70,11 @@ export class CoreUtilityApi extends CoreApi {
   /** Every runner schema, config-file and platform folder alike. Readable by any caller, unlike the config-file read. */
   getRunnerSchemas(token: Token): Promise<ServerActionResponse> {
     return this.getAction(APPLICATION_TYPE_SCHEMAS_URL, token);
+  }
+
+  /** The entities Core keeps but cannot serve, with why. Admins only: Core answers 403 to anyone else. */
+  getConfigHealth(token: Token): Promise<ServerActionResponse<ConfigHealthResponse>> {
+    return this.getAction(CONFIG_HEALTH_URL, token);
   }
 
   /** The deployments the caller may use — exactly what Core accepts as a dependency from them. */

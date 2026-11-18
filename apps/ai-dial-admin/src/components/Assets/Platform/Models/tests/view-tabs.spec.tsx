@@ -27,11 +27,13 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
   },
 }));
 
-vi.mock('@/src/context/assets/ModelsFolderContext', () => ({
+vi.mock('@/src/context/assets/ModelsFolderContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/context/assets/ModelsFolderContext')>()),
   useModelsFolder: () => ({ fetchFiles: vi.fn() }),
 }));
 
-vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
+vi.mock('@/src/app/[lang]/platform-models/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/platform-models/actions')>()),
   updateModel: vi.fn(),
   removeModel: vi.fn(),
 }));

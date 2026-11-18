@@ -46,6 +46,7 @@ const mockUnits = (units: Record<string, OrgUnit>, unitsStatus: OrgUnitsStatus) 
     unitsStatus,
     ensureUnits: vi.fn(),
     refreshUnits: vi.fn(),
+    loadUnits: vi.fn(),
     getOwningUnit: (path: string) => getOwningUnit(units, path),
   };
   vi.mocked(useOrgUnits).mockReturnValue(orgUnits);

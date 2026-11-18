@@ -37,12 +37,14 @@ export type PublishableResourceType = Exclude<
   | ResourceType.CATALOG_SCHEMA
   | ResourceType.INTERCEPTOR
   | ResourceType.TRANSLATOR
+  | ResourceType.PLUGIN
   | ResourceType.ROUTER
   | ResourceType.ROLE
   | ResourceType.ROUTE
   | ResourceType.PROJECT_KEY
   | ResourceType.POLICY
   | ResourceType.POLICY_ASSIGNMENT
+  | ResourceType.ALIAS
 >;
 
 export interface PublicationTypeConfig {

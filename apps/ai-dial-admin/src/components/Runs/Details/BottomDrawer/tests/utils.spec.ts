@@ -65,11 +65,16 @@ describe('buildComparisonSections', () => {
     const sections = buildComparisonSections(active, pinned, defaultVisibility, defaultOrder, defaultHidden);
 
     const f1 = sections.find((s) => s.key === 'metric:eval.accuracy')!.rows.find((r) => r.fieldKey === 'f1')!;
-    expect(f1.values[0].info).toEqual({ reason: 'Low overlap', logs: 'details', error: null });
+    expect(f1.values[0].info).toEqual({ reason: 'Low overlap', logs: 'details', error: null, details: null });
     expect(f1.values[1].info).toBeUndefined();
 
     const error = sections.find((s) => s.key === 'metric:eval.judge')!.rows.find((r) => r.fieldKey === 'error')!;
-    expect(error.values[0].info).toEqual({ reason: null, logs: null, error: '422 Unprocessable Content' });
+    expect(error.values[0].info).toEqual({
+      reason: null,
+      logs: null,
+      error: '422 Unprocessable Content',
+      details: null,
+    });
   });
 
   it('builds two-column sections with values ordered [active, pinned]', () => {

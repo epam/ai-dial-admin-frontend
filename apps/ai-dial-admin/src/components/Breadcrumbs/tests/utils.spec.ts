@@ -44,6 +44,20 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     ]);
   });
 
+  test('An alias detail route is the aliases list followed by the alias name without a link', () => {
+    expect(getBreadcrumbs('/en/assets-aliases/assistant-v1', 'en')).toEqual([
+      { key: MenuI18nKey.PlatformAliases, name: 'assets-aliases', href: '/en/assets-aliases' },
+      { key: undefined, name: 'assistant-v1', href: '' },
+    ]);
+  });
+
+  test('The aliases list is a single breadcrumb', () => {
+    const config = getBreadcrumbs('/assets-aliases', 'en');
+
+    expect(config).toHaveLength(1);
+    expect(config[0].key).toEqual(MenuI18nKey.PlatformAliases);
+  });
+
   test('Should return empty array for home page', () => {
     const config = getBreadcrumbs('/home', 'en');
     expect(config.length).toEqual(0);
@@ -93,6 +107,30 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(config[1].href).toBeFalsy();
     expect(config[1].key).toEqual(RunsI18nKey.RunComparison);
     expect(config[1].name).toEqual('compare');
+  });
+
+  test('Should link the activity audit crumb to its list when the admin API is enabled', () => {
+    const config = getBreadcrumbs('/en/activity-audit/activity-1', 'en');
+    expect(config[0].href).toEqual('/en/activity-audit');
+    expect(config[0].key).toEqual(MenuI18nKey.ActivityAudit);
+  });
+
+  test('Should render the activity audit crumb without a link when the admin API is disabled', () => {
+    const config = getBreadcrumbs('/en/activity-audit/activity-1', 'en', false);
+    expect(config.length).toEqual(2);
+    expect(config[0].href).toEqual('');
+    expect(config[0].key).toEqual(MenuI18nKey.ActivityAudit);
+  });
+
+  test('Should keep links of other sections when the admin API is disabled', () => {
+    expect(getBreadcrumbs('/en/platform-models/modelId', 'en', false)[0].href).toEqual('/en/platform-models');
+  });
+
+  test('Should leave a saved query id out of the breadcrumbs', () => {
+    const config = getBreadcrumbs('/en/queries/sq_1', 'en');
+    expect(config.length).toEqual(1);
+    expect(config[0].href).toEqual('/en/queries');
+    expect(config[0].key).toEqual(MenuI18nKey.Queries);
   });
 });
 

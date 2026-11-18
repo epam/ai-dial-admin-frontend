@@ -90,7 +90,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
           id="tokenEndpointAuthMethod"
           disabled={isAuthDisabled}
           labelProps={{ label: t(ToolsetI18nKey.TokenEndpointAuthMethod) }}
-          value={authSettings?.tokenEndpointAuthMethod ?? TokenEndpointAuthMethod.CLIENT_SECRET_BASIC}
+          value={authSettings?.tokenEndpointAuthMethod?.toLowerCase() ?? TokenEndpointAuthMethod.CLIENT_SECRET_BASIC}
           options={tokenEndpointAuthMethods}
           onChange={(tokenEndpointAuthMethod) => {
             onChange?.({

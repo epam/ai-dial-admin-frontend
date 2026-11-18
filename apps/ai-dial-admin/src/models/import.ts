@@ -5,6 +5,7 @@ export interface ImportResult {
   sourcePath: string;
   targetPath: string;
   status: ImportStatus;
+  error?: string;
 }
 
 export type FileConfiguration = Record<string, FileComponentItem[]>;

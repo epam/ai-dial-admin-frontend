@@ -10,10 +10,9 @@ import {
   AnalyticsTable,
   CreateTableDto,
   DraftSchemaDto,
-  RowPoliciesResponse,
-  RowPolicy,
-  TableAccess,
-  TableAccessUpdateResult,
+  TableAccessConfig,
+  TableAccessEntryDto,
+  TableAccessEntryResult,
   UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
@@ -65,34 +64,24 @@ export async function addRows(name: string, dto: WriteRowsDto): Promise<ServerAc
   return analyticsDataApi.addRows(name, dto, await token());
 }
 
-export async function getTableAccess(name: string): Promise<ServerActionResponse<TableAccess>> {
+export async function getTableAccess(name: string): Promise<ServerActionResponse<TableAccessConfig>> {
   return analyticsDataApi.getTableAccess(name, await token());
 }
 
-export async function updateTableAccess(
-  name: string,
-  access: Partial<TableAccess>,
-): Promise<ServerActionResponse<TableAccessUpdateResult>> {
-  return analyticsDataApi.updateTableAccess(name, access, await token());
-}
-
-export async function getRowPolicies(name: string): Promise<ServerActionResponse<RowPoliciesResponse>> {
-  return analyticsDataApi.getRowPolicies(name, await token());
-}
-
-export async function putRowPolicy(
+export async function putTableAccessEntry(
   name: string,
   role: string,
-  policy: RowPolicy,
-): Promise<ServerActionResponse<RowPolicy>> {
-  return analyticsDataApi.putRowPolicy(name, role, policy, await token());
+  entry: TableAccessEntryDto,
+): Promise<ServerActionResponse<TableAccessEntryResult>> {
+  return analyticsDataApi.putTableAccessEntry(name, role, entry, await token());
 }
 
-// A 404 means the role has no policy on the table, which is the state a delete is after — not a failure.
-export async function deleteRowPolicy(name: string, role: string): Promise<ServerActionResponse> {
-  const res = await analyticsDataApi.deleteRowPolicy(name, role, await token());
-
-  return res.status === 404 ? { success: true } : res;
+export async function deleteTableAccessEntry(
+  name: string,
+  role: string,
+  generation: number,
+): Promise<ServerActionResponse> {
+  return analyticsDataApi.deleteTableAccessEntry(name, role, generation, await token());
 }
 
 export async function startTableBackfill(

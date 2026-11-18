@@ -32,9 +32,25 @@ vi.mock('@/src/hooks/use-flat-assets', () => ({
 
 // Stand-ins for the tree and the grid: expose the callbacks the picker hands them and the names it marks selected.
 vi.mock('../PublicEntityTree', () => ({
-  default: ({ onChangeSelectedPaths }: { onChangeSelectedPaths?: (paths: string[]) => void }) => (
+  default: ({
+    onChangeSelectedPaths,
+    onChangeSelectedPath,
+  }: {
+    onChangeSelectedPaths?: (paths: string[]) => void;
+    onChangeSelectedPath?: (path: string | null) => void;
+  }) => (
     <div>
-      <button onClick={() => onChangeSelectedPaths?.(['public/team/app/1.0'])}>pick-public</button>
+      <button
+        onClick={() =>
+          (onChangeSelectedPaths ?? ((paths: string[]) => onChangeSelectedPath?.(paths[0] ?? null)))([
+            'public/team/app/1.0',
+          ])
+        }
+      >
+        pick-public
+      </button>
+      <button onClick={() => onChangeSelectedPath?.(null)}>clear-public</button>
+      <span>{onChangeSelectedPaths ? 'tree:multi' : 'tree:single'}</span>
     </div>
   ),
 }));
@@ -43,15 +59,18 @@ vi.mock('@/src/components/Assets/FlatAssetGrid/FlatAssetGrid', () => ({
     source,
     assets,
     selectedNames,
+    isSingleSelect,
     onSelectionChange,
   }: {
     source: string;
+    isSingleSelect?: boolean;
     assets: FlatAssets;
     selectedNames: ReadonlySet<string>;
     onSelectionChange: (rows: AssetListItem[]) => void;
   }) => (
     <div role="group" aria-label={source}>
       <span>{`${source}-selected:${[...selectedNames].join(',')}`}</span>
+      <span>{`${source}-${isSingleSelect ? 'single' : 'multi'}`}</span>
       <button onClick={() => onSelectionChange(assets.rows.filter((item) => item.name === 'assistant'))}>
         {`pick-${source}`}
       </button>
@@ -158,5 +177,113 @@ describe('TabbedEntityPicker', () => {
     await user.click(screen.getByRole('button', { name: `pick-${AssetSource.ConfigFile}` }));
 
     expect(lastReport()).toEqual([{ source: AssetSource.ConfigFile, name: 'assistant' }]);
+  });
+  describe('single selection', () => {
+    const onChangeSelectedEntity = vi.fn();
+
+    const renderSingle = (entityType = EntitySelectType.Application) =>
+      render(
+        <TabbedEntityPicker
+          entityType={entityType}
+          value=""
+          isModalOpen
+          onChangeSelectedEntity={onChangeSelectedEntity}
+        />,
+      );
+
+    const lastEntity = () => onChangeSelectedEntity.mock.calls.at(-1)?.[0] as PickedEntity | null;
+
+    test('asks the tree and both grids for single selection', () => {
+      renderSingle();
+
+      expect(screen.getByText('tree:single')).toBeTruthy();
+      expect(screen.getByText(`${AssetSource.Platform}-single`)).toBeTruthy();
+      expect(screen.getByText(`${AssetSource.ConfigFile}-single`)).toBeTruthy();
+    });
+
+    test('keeps multi-selection for the callers that pass the multi callback', () => {
+      renderPicker();
+
+      expect(screen.getByText('tree:multi')).toBeTruthy();
+      expect(screen.getByText(`${AssetSource.Platform}-multi`)).toBeTruthy();
+    });
+
+    test('reports a Public pick as the one selected entity', async () => {
+      const user = userEvent.setup();
+      renderSingle();
+
+      await user.click(screen.getByRole('button', { name: 'pick-public' }));
+
+      expect(lastEntity()).toEqual({
+        source: AssetSource.Public,
+        path: 'public/team/app/1.0',
+        name: 'public/team/app/1.0',
+      });
+    });
+
+    test('replaces a Public pick with a Platform pick and clears the tree', async () => {
+      const user = userEvent.setup();
+      renderSingle();
+
+      await user.click(screen.getByRole('button', { name: 'pick-public' }));
+      await user.click(platformTab());
+      await user.click(screen.getByRole('button', { name: `pick-${AssetSource.Platform}` }));
+
+      expect(lastEntity()).toEqual({ source: AssetSource.Platform, name: 'assistant' });
+      expect(onChangeSelectedEntity).toHaveBeenCalledTimes(2);
+    });
+
+    test('replaces a Platform pick with a Public pick and clears the grids', async () => {
+      const user = userEvent.setup();
+      renderSingle();
+
+      await user.click(screen.getByRole('button', { name: `pick-${AssetSource.Platform}` }));
+      await user.click(screen.getByRole('button', { name: 'pick-public' }));
+
+      expect(lastEntity()).toEqual({
+        source: AssetSource.Public,
+        path: 'public/team/app/1.0',
+        name: 'public/team/app/1.0',
+      });
+      expect(screen.getByText(`${AssetSource.Platform}-selected:`)).toBeTruthy();
+      expect(screen.getByText(`${AssetSource.ConfigFile}-selected:`)).toBeTruthy();
+    });
+
+    test('reports null once the pick is cleared', async () => {
+      const user = userEvent.setup();
+      renderSingle();
+
+      await user.click(screen.getByRole('button', { name: `pick-${AssetSource.Platform}` }));
+      await user.click(screen.getByRole('button', { name: `clear-${AssetSource.Platform}` }));
+
+      expect(lastEntity()).toBeNull();
+    });
+
+    test('reports null when the Public pick is cleared and nothing else is picked', async () => {
+      const user = userEvent.setup();
+      renderSingle();
+
+      await user.click(screen.getByRole('button', { name: 'pick-public' }));
+      await user.click(screen.getByRole('button', { name: 'clear-public' }));
+
+      expect(lastEntity()).toBeNull();
+    });
+
+    test('treats a name on both flat tabs as one pick shown on both', async () => {
+      const user = userEvent.setup();
+      renderSingle();
+
+      await user.click(screen.getByRole('button', { name: `pick-${AssetSource.Platform}` }));
+
+      expect(screen.getByText(`${AssetSource.ConfigFile}-selected:assistant`)).toBeTruthy();
+    });
+
+    test('offers a model only the Platform and config.json tabs', () => {
+      renderSingle(EntitySelectType.Model);
+
+      expect(screen.getAllByRole('tab')).toHaveLength(2);
+      expect(screen.queryByRole('tab', { name: AssetTabsI18nKey.Public })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'pick-public' })).toBeNull();
+    });
   });
 });

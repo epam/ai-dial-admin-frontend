@@ -1,7 +1,7 @@
 'use client';
 
 import { Spinner } from '@epam/ai-dial-ui-kit';
-import { ColDef, GridApi, GridReadyEvent, SelectionChangedEvent } from 'ag-grid-community';
+import { ColDef, GridApi, GridReadyEvent, RowSelectedEvent, SelectionChangedEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getEmptyStateContent } from '@/src/components/Assets/BaseAssetList/utils';
@@ -9,9 +9,10 @@ import DeletePlatformAssetsModal from '@/src/components/Assets/Modals/DeletePlat
 import DuplicatePlatformAsset from '@/src/components/Assets/Modals/DuplicatePlatformAsset';
 import DuplicatePlatformKeyModal from '@/src/components/Assets/Platform/Keys/DuplicatePlatformKeyModal';
 import { isItemOpenable } from '@/src/components/Common/FileManager/utils';
+import RadioNameCellRenderer from '@/src/components/Grid/CellRenderers/RadioNameCellRenderer';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ASSETS_ROW_HEIGHT } from '@/src/components/Grid/constants';
-import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
+import { MULTI_ROW_SELECTION, SINGLE_ROW_SELECTION_NO_CHECKBOX } from '@/src/constants/ag-grid';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetTabsI18nKey, PolicyAssignmentsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -23,15 +24,17 @@ import { DialKeyResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { appendUrlQuery, getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { getFlatAssetColumns } from './columns';
-import { FlatAssets } from './models';
+import { FlatAssets, FlatAssetSource } from './models';
 import { PlatformModalType, usePlatformAssetActions } from './use-platform-asset-actions';
 
 interface Props {
   view: ApplicationRoute;
-  source: AssetSource.Platform | AssetSource.ConfigFile;
+  source: FlatAssetSource;
   assets: FlatAssets;
   /** Select mode: a plain multi-select list with no row actions, for a picker. */
   isSelectMode?: boolean;
+  /** Select mode: one row at a time, as a radio, instead of a multi-select list. */
+  isSingleSelect?: boolean;
   /** Select mode: the names that should show as selected, so a name picked on another tab shows here too. */
   selectedNames?: ReadonlySet<string>;
   /** Reports the rows the user has selected; a selection applied from `selectedNames` is not reported back. */
@@ -39,15 +42,20 @@ interface Props {
   onGridApiChange?: (api: GridApi | null) => void;
 }
 
+const SELECT_RADIO_GROUP_NAME = 'flat-asset-selection';
+const SELECT_ICON_SIZE = 28;
+
 /**
- * The flat grid behind a listing's Platform and config.json tabs: no tree, no folders. Platform rows can be
- * duplicated and deleted; config.json rows are read-only and only open.
+ * The flat grid behind a listing's Platform and config.json tabs, and its Public tab where that is flat too: no
+ * tree, no folders. Platform and Public rows can be duplicated and deleted; config.json rows are read-only and only
+ * open.
  */
 const FlatAssetGrid: FC<Props> = ({
   view,
   source,
   assets,
   isSelectMode,
+  isSingleSelect,
   selectedNames,
   onSelectionChange,
   onGridApiChange,
@@ -55,10 +63,9 @@ const FlatAssetGrid: FC<Props> = ({
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const isPlatform = source === AssetSource.Platform;
-  const canWrite = isPlatform && !isReadOnlyAdmin && !isSelectMode;
+  const canWrite = source !== AssetSource.ConfigFile && !isReadOnlyAdmin && !isSelectMode;
 
-  const actions = usePlatformAssetActions({ view, refetch: assets.refetch });
+  const actions = usePlatformAssetActions({ view, source, refetch: assets.refetch });
   const { onOpenDuplicate, onOpenDelete } = actions;
 
   // A config.json row opens read-only through `configFile=true`; Catalog Schemas resolve by `$id` instead.
@@ -88,12 +95,30 @@ const FlatAssetGrid: FC<Props> = ({
   );
 
   const columnDefs = useMemo<ColDef[]>(() => {
-    const columns = getFlatAssetColumns(view, source, getHref, {
+    // A picker row is chosen, not opened, so its name is not a link.
+    const columns = getFlatAssetColumns(view, source, isSelectMode ? () => undefined : getHref, {
       name: t(AssetTabsI18nKey.NameColumn),
       costObject: t(PolicyAssignmentsI18nKey.CostObject),
     });
     if (isSelectMode) {
-      return columns;
+      // A single pick puts the radio inside the name cell (as the other radio pickers do), so there is no
+      // separate selection column to leave empty.
+      return isSingleSelect
+        ? columns.map((column, index) =>
+            index === 0
+              ? {
+                  ...column,
+                  cellRenderer: RadioNameCellRenderer,
+                  cellRendererParams: {
+                    groupName: SELECT_RADIO_GROUP_NAME,
+                    idField: 'name',
+                    iconSize: SELECT_ICON_SIZE,
+                  },
+                  tooltipValueGetter: () => undefined,
+                }
+              : column,
+          )
+        : columns;
     }
 
     return ENTITIES_COLUMNS<AssetListItem>(
@@ -102,7 +127,7 @@ const FlatAssetGrid: FC<Props> = ({
       canWrite ? onOpenDuplicate : undefined,
       onOpenInNewTab,
     );
-  }, [view, source, getHref, t, isSelectMode, canWrite, onOpenDelete, onOpenDuplicate, onOpenInNewTab]);
+  }, [view, source, getHref, t, isSelectMode, isSingleSelect, canWrite, onOpenDelete, onOpenDuplicate, onOpenInNewTab]);
 
   const onSelectionChanged = useCallback(
     (event: SelectionChangedEvent) => {
@@ -115,6 +140,11 @@ const FlatAssetGrid: FC<Props> = ({
     },
     [onSelectionChange],
   );
+
+  // `RadioNameCellRenderer` reads the node's selection state on render, so the row is refreshed when it changes.
+  const onRowSelected = useCallback((event: RowSelectedEvent) => {
+    event.api.refreshCells({ rowNodes: [event.node], force: true });
+  }, []);
 
   const onGridReady = useCallback(
     (event: GridReadyEvent) => {
@@ -139,6 +169,8 @@ const FlatAssetGrid: FC<Props> = ({
 
   const names = useMemo(() => assets.rows.map((row) => row.name), [assets.rows]);
   const emptyState = getEmptyStateContent(view, t);
+  // The description points at the Create button, which a picker and the read-only config.json tab do not have.
+  const emptyDescription = isSelectMode || source === AssetSource.ConfigFile ? '' : emptyState.description;
 
   if (assets.isLoading && assets.rows.length === 0) {
     return <Spinner size={40} fullWidth />;
@@ -152,11 +184,12 @@ const FlatAssetGrid: FC<Props> = ({
           columnDefs={columnDefs}
           storageKey={`${view}:${source}`}
           getRowId={({ data }) => data.path || data.name}
-          getHref={getHref}
-          emptyDataProps={{ title: emptyState.title, description: emptyState.description }}
+          getHref={isSelectMode ? undefined : getHref}
+          emptyDataProps={{ title: emptyState.title, description: emptyDescription }}
           additionalGridOptions={{
-            ...(isSelectMode ? MULTI_ROW_SELECTION : {}),
+            ...(isSelectMode ? (isSingleSelect ? SINGLE_ROW_SELECTION_NO_CHECKBOX : MULTI_ROW_SELECTION) : {}),
             rowHeight: ASSETS_ROW_HEIGHT,
+            ...(isSelectMode && isSingleSelect ? { onRowSelected } : {}),
             onSelectionChanged,
           }}
           onGridReady={onGridReady}

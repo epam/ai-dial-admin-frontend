@@ -8,7 +8,8 @@ import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
 import { isContainerKind } from '@/src/constants/deployments/container-types';
-import { isPlatformBucketRow, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { ROOT_FOLDER } from '@/src/constants/file';
+import { isPlatformBucketRow, isPublicPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 
 export const escapePercentSign = (str: string): string => {
   return str.replace(/%/g, '%25');
@@ -135,9 +136,38 @@ export const getEntityPath = (
       return forRemove ? decodeURIComponent(escapePercentSign(path)) : encodeURIComponent(path);
     }
 
+    // Aliases are flat but live in both buckets, so the bucket has to be part of the identity: a platform alias
+    // (or a config.json row, which has neither `path` nor `folderId`) is the bare name, and a public one carries
+    // its path in `?path=` — the same marker the detail page uses for Applications and Toolsets to tell the two
+    // buckets apart, which is what lets `public/search` and `platform/search` coexist.
+    case ApplicationRoute.AssetsAliases: {
+      const entity = data as {
+        name?: string;
+        path?: string;
+        folderId?: string;
+        bucket?: string;
+        _metadata?: { name?: string; path?: string; folderId?: string };
+      };
+      const path = entity.path || entity._metadata?.path;
+      const folderId = entity.folderId || entity._metadata?.folderId;
+      const name = entity.name || entity._metadata?.name || '';
+      const isPublicRow = isPublicPath(path || folderId) || (!path && !folderId && entity.bucket === 'public');
+
+      if (isPublicRow) {
+        const resolvedPath = path || `${ROOT_FOLDER}/${name}`;
+        return forRemove
+          ? decodeURIComponent(escapePercentSign(resolvedPath))
+          : `${encodeURIComponent(name)}?path=${encodeURIComponent(resolvedPath)}`;
+      }
+
+      const resolvedPath = path || `${PLATFORM_ROOT_FOLDER}/${name}`;
+      return forRemove ? decodeURIComponent(escapePercentSign(resolvedPath)) : encodeURIComponent(name);
+    }
+
     case ApplicationRoute.PlatformModels:
     case ApplicationRoute.PlatformInterceptors:
     case ApplicationRoute.PlatformTranslators:
+    case ApplicationRoute.PlatformPlugins:
     case ApplicationRoute.PlatformRouters:
     case ApplicationRoute.PlatformRoutes:
     case ApplicationRoute.PlatformRoles:

@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getRun } from '@/src/app/[lang]/runs/actions';
@@ -28,7 +29,16 @@ vi.mock('@/src/components/Runs/Compare/useCompareRunLauncher', () => ({
 }));
 
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
-  default: ({ entity, onRemove, children, adaptiveActions, tabs, onChangeActiveTab, statusBadges }: any) => (
+  default: ({
+    entity,
+    onRemove,
+    children,
+    adaptiveActions,
+    tabs,
+    onChangeActiveTab,
+    statusBadges,
+    tabsTrailing,
+  }: any) => (
     <div role="region" aria-label="simple-header">
       <div>entity-id:{entity?.id}</div>
       <div>entity-status:{entity?.status}</div>
@@ -44,6 +54,7 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
         </button>
       ))}
       {children}
+      {tabsTrailing}
       {(adaptiveActions?.trailing ?? []).map((action: any) => (
         <button key={action.id} type="button" disabled={action.disabled} onClick={action.onClick}>
           {action.label}
@@ -61,10 +72,28 @@ vi.mock('../../Summary/SummaryTab', () => ({
   ),
 }));
 
+const resultFixtures = vi.hoisted(() => ({
+  varying: [
+    { id: 'r1', responseStatusCode: 200, runIndex: 0 },
+    { id: 'r2', responseStatusCode: 200, runIndex: 1 },
+  ],
+  uniform: [
+    { id: 'r1', responseStatusCode: 200, runIndex: 0 },
+    { id: 'r2', responseStatusCode: 200, runIndex: 0 },
+  ],
+}));
+
 vi.mock('../ExtractionResult', () => ({
-  default: ({ run }: any) => (
+  default: ({ run, extractionResultState, setExtractionResultState }: any) => (
     <div role="region" aria-label="extraction-result-tab">
       <div>run-id:{run?.id}</div>
+      <div>grouped:{String(extractionResultState.isGroupedByTestCase)}</div>
+      <button type="button" onClick={() => setExtractionResultState({ results: resultFixtures.varying })}>
+        Load varying results
+      </button>
+      <button type="button" onClick={() => setExtractionResultState({ results: resultFixtures.uniform })}>
+        Load uniform results
+      </button>
     </div>
   ),
 }));
@@ -322,5 +351,71 @@ describe('Runs View :: View — polling a cancelling run', () => {
     await tick();
 
     expect(showNotification).not.toHaveBeenCalled();
+  });
+});
+
+describe('Runs View :: group by test case switch', () => {
+  const GROUP_SWITCH = { name: RunsI18nKey.GroupByTestCase };
+
+  const openExtractionResult = async (results?: 'Load varying results' | 'Load uniform results') => {
+    const user = userEvent.setup();
+    render(<RunView run={{ id: 'run-1' } as any} onRemove={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'Tabs.ExtractionResult' }));
+    if (results) await user.click(screen.getByRole('button', { name: results }));
+    return user;
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('is not offered before the results are loaded', async () => {
+    await openExtractionResult();
+
+    expect(screen.queryByRole('switch', GROUP_SWITCH)).toBeNull();
+  });
+
+  test('is offered, and off, when the results vary by run, request or turn', async () => {
+    await openExtractionResult('Load varying results');
+
+    expect(screen.getByRole('switch', GROUP_SWITCH)).not.toBeChecked();
+  });
+
+  test('is not offered when the results do not vary', async () => {
+    await openExtractionResult('Load uniform results');
+
+    expect(screen.queryByRole('switch', GROUP_SWITCH)).toBeNull();
+  });
+
+  test('is not offered on the Summary tab', async () => {
+    const user = await openExtractionResult('Load varying results');
+
+    await user.click(screen.getByRole('button', { name: 'Tabs.Summary' }));
+
+    expect(screen.queryByRole('switch', GROUP_SWITCH)).toBeNull();
+  });
+
+  test('turns grouping on and off in the tab state', async () => {
+    const user = await openExtractionResult('Load varying results');
+
+    await user.click(screen.getByRole('switch', GROUP_SWITCH));
+
+    expect(screen.getByText('grouped:true')).toBeInTheDocument();
+    expect(screen.getByRole('switch', GROUP_SWITCH)).toBeChecked();
+
+    await user.click(screen.getByRole('switch', GROUP_SWITCH));
+
+    expect(screen.getByText('grouped:false')).toBeInTheDocument();
+    expect(screen.getByRole('switch', GROUP_SWITCH)).not.toBeChecked();
+  });
+
+  test('keeps the choice when the user leaves the tab and comes back', async () => {
+    const user = await openExtractionResult('Load varying results');
+    await user.click(screen.getByRole('switch', GROUP_SWITCH));
+
+    await user.click(screen.getByRole('button', { name: 'Tabs.Summary' }));
+    await user.click(screen.getByRole('button', { name: 'Tabs.ExtractionResult' }));
+
+    expect(screen.getByRole('switch', GROUP_SWITCH)).toBeChecked();
   });
 });

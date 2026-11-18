@@ -29,6 +29,7 @@ import {
 import { FilterOperatorDto, SortDirectionDto } from '@/src/types/request';
 import { getRevisionRouteForEntityType } from '@/src/utils/audit/get-revision-route';
 import { isValueTruthy } from '@/src/utils/types';
+import { getIsAdminApiEnabled } from '@/src/utils/env/get-admin-api-toggle';
 
 const SORT_BY_TIME_DESC: SortDto[] = [{ column: 'epochTimestampMs', direction: SortDirectionDto.DESC }];
 
@@ -187,7 +188,7 @@ export const getActivityAuditDetailData = async (
   activityId: string,
   token: Token,
 ): Promise<ActivityAuditDetailData> => {
-  let activity = await lookupActivity(ADMIN_LOOKUP, activityId, token);
+  let activity = getIsAdminApiEnabled() ? await lookupActivity(ADMIN_LOOKUP, activityId, token) : null;
   let isDeploymentActivity = false;
   let isAnalyticsActivity = false;
 

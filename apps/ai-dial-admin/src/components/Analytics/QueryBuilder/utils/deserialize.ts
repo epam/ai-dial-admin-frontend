@@ -31,7 +31,13 @@ import {
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
-import { functionByName, isExpressionArg } from '@/src/components/Analytics/QueryBuilder/utils/functions';
+import {
+  functionByName,
+  implicitMeasureFunction,
+  isExpressionArg,
+  timeBinFunction,
+} from '@/src/components/Analytics/QueryBuilder/utils/functions';
+import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import { deriveAlias, uniqueAlias } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import {
   createAggregate,
@@ -154,9 +160,8 @@ const isArgRepresentable = (
 const isExprRepresentable = (expr: QueryExpr, functions: QueryFunction[] | null, depth = 0): boolean => {
   if (expr.type === QueryExprType.Field) return true;
   if (expr.type !== QueryExprType.Fn) return false;
-  // Re-admitted for an aggregate metric by isSelectEntryRepresentable.
   if (expr.distinct) return false;
-  // No catalog to check against — the caller is judging structure alone (see isBuilderRepresentable).
+  // No catalog to check against — the caller is judging structure alone.
   if (!functions) return true;
   const fn = functionByName(functions, expr.name);
   if (!fn) return false;
@@ -212,23 +217,6 @@ const isListRepresentable = (items: QueryValueExpr[] = []): boolean =>
       item.value === item.value.trim() &&
       !item.value.includes(','),
   );
-
-// A projection entry the builder can hold. A plain column has no alias editor in either mode, so it
-// holds only its own name; a Distinct toggle exists only on an aggregate metric. Without a catalog
-// the function's group is unknown, so an aggregate-mode `distinct` is taken at face value.
-const isSelectEntryRepresentable = (
-  col: QueryOutputColumn,
-  mode: QueryMode,
-  functions: QueryFunction[] | null,
-): boolean => {
-  const { expr } = col;
-  if (expr.type === QueryExprType.Field) return !col.as?.trim() || col.as === expr.name;
-  if (expr.type !== QueryExprType.Fn || !expr.distinct) return isExprRepresentable(expr, functions);
-  if (mode !== QueryMode.Aggregate) return false;
-  const fn = functions ? functionByName(functions, expr.name) : undefined;
-  if (functions && fn?.group === QueryFunctionGroup.Scalar) return false;
-  return isExprRepresentable({ ...expr, distinct: false }, functions);
-};
 
 // The visual builder shows at most two filter levels: the root group plus one level of nested groups
 // holding only conditions. `depth` is the group nesting level of `node`'s parent.
@@ -290,22 +278,103 @@ const isGroupByRepresentable = (query: StructuredQuery, functions: QueryFunction
   });
 };
 
-// Whether the visual builder can show a query without losing part of it: filter (and having) trees no
-// deeper than root + one group level, and every expression it would have to hold — projection entries
-// and condition operands — one it has an editor for. A query it cannot show stays editable and
-// runnable in the written views instead of being hydrated with pieces missing.
-//
-// `functions` is nullable because one caller has no catalog: the saved-queries grid labels which
-// editor a query would open in without loading one. Passing null checks structure alone and takes a
-// function call at face value — the grid can therefore label a query "Builder" that will open in
-// JSON. The page that actually opens it passes the catalog and decides again with it.
-export const isBuilderRepresentable = (query: StructuredQuery, functions: QueryFunction[] | null): boolean => {
-  const filterOk = !query.filter || isFilterRepresentable(query.filter, 0, functions);
-  const havingOk = !query.having || isFilterRepresentable(query.having, 0, functions);
-  const selectOk = (query.select || []).every((col) => isSelectEntryRepresentable(col, query.mode, functions));
-  // `row` mode has no Having section, so a having tree there would be dropped.
-  const havingModeOk = !query.having || query.mode === QueryMode.Aggregate;
-  return filterOk && havingOk && havingModeOk && selectOk && isGroupByRepresentable(query, functions);
+const CHIP_OPERATORS = new Set<QueryOperator>([
+  QueryOperator.Eq,
+  QueryOperator.Ne,
+  QueryOperator.Ico,
+  QueryOperator.Inc,
+  QueryOperator.Lt,
+  QueryOperator.Gt,
+  QueryOperator.Le,
+  QueryOperator.Ge,
+  QueryOperator.In,
+]);
+
+const isChipPredicate = (node: QueryFilterNode): boolean => {
+  if (isGroup(node)) return false;
+  const pred = node as QueryPredicate;
+  const args = pred.args || [];
+  if (args.length !== 2 || !CHIP_OPERATORS.has(pred.op)) return false;
+  const [left, right] = args;
+  if (left.type !== QueryExprType.Field) return false;
+  if (pred.op === QueryOperator.In) {
+    return right.type === QueryExprType.Array && !!right.items?.length && isListRepresentable(right.items);
+  }
+  if (right.type !== QueryExprType.Value) return false;
+  return right.value_type !== QueryValueType.Null || pred.op === QueryOperator.Eq || pred.op === QueryOperator.Ne;
+};
+
+const isChipFilter = (node?: QueryFilterNode): boolean => {
+  if (!node) return true;
+  if (!isGroup(node)) return isChipPredicate(node);
+  return node.op === QueryLogicalOperator.And && (node.args || []).every(isChipPredicate);
+};
+
+const isChipRowSelect = (query: StructuredQuery): boolean =>
+  !query.group_by?.length &&
+  (query.select || []).every(
+    (col) => col.expr.type === QueryExprType.Field && (!col.as?.trim() || col.as === col.expr.name),
+  );
+
+const isTimeBinKey = (col: QueryOutputColumn, functions: QueryFunction[]): boolean => {
+  const bin = timeBinFunction(functions);
+  const { expr } = col;
+  if (!bin || expr.type !== QueryExprType.Fn || expr.name !== bin.fn.name || expr.distinct) return false;
+  const args = expr.args || [];
+  return (
+    args.length === 3 &&
+    args[bin.timestampIndex].type === QueryExprType.Field &&
+    args[bin.amountIndex].type === QueryExprType.Value &&
+    args[bin.unitIndex].type === QueryExprType.Value
+  );
+};
+
+const isChipMeasure = (col: QueryOutputColumn, functions: QueryFunction[]): boolean => {
+  const { expr } = col;
+  if (expr.type !== QueryExprType.Fn) return false;
+  const fn = functionByName(functions, expr.name);
+  if (!fn || fn.group === QueryFunctionGroup.Scalar) return false;
+  if (expr.distinct && !(fn.distinct_supported && fn.name === implicitMeasureFunction(functions)?.name)) return false;
+  const args = expr.args || [];
+  return (
+    args.length <= fn.args.length &&
+    args.every((arg, i) =>
+      isExpressionArg(fn.args[i])
+        ? arg.type === QueryExprType.Field
+        : arg.type === QueryExprType.Value && !!arg.value?.trim(),
+    )
+  );
+};
+
+const isPlainKey = (col: QueryOutputColumn): boolean =>
+  col.expr.type === QueryExprType.Field && (!col.as?.trim() || col.as === col.expr.name);
+
+const isChipAggregate = (query: StructuredQuery, functions: QueryFunction[]): boolean => {
+  const select = query.select || [];
+  const measures = select.filter((col) => isChipMeasure(col, functions));
+  const keys = select.filter((col) => !measures.includes(col));
+  if (measures.length !== 1 || !keys.length || keys.length > 2) return false;
+  const [first, second] = keys;
+  if (!isPlainKey(first) && !isTimeBinKey(first, functions)) return false;
+  if (second && !isPlainKey(second)) return false;
+  return isGroupByRepresentable(query, functions);
+};
+
+const isChipPage = (page?: QueryPage): boolean => page?.type === QueryPageType.Offset && !page.include_total;
+
+export const isChipRepresentable = (
+  query: StructuredQuery,
+  functions: QueryFunction[],
+  fields: AnalyticsEntityField[],
+): boolean => {
+  if (query.distinct || query.having || !isChipPage(query.page)) return false;
+  if ((query.sort || []).some((key) => key.nulls != null && key.nulls !== SORT_NULLS_DEFAULT)) return false;
+
+  const timestamp = findTimestampField(fields);
+  const lifted = timestamp ? liftTimeRange(query.filter, timestamp, functions) : null;
+  if (!isChipFilter(lifted ? lifted.rest : query.filter)) return false;
+
+  return query.mode === QueryMode.Aggregate ? isChipAggregate(query, functions) : isChipRowSelect(query);
 };
 
 // Having conditions name output columns, so a column the parse renamed has to be renamed in them too.

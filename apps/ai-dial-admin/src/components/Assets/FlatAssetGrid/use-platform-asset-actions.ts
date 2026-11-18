@@ -24,7 +24,11 @@ import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialAppRunnerResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
-import { hasPublicSource } from '@/src/utils/files/asset-sources';
+import { hasFlatPublic, hasPublicTree } from '@/src/utils/files/asset-sources';
+import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { ROOT_FOLDER } from '@/src/constants/file';
+import { AssetSource } from '@/src/models/dial/asset-source';
+import { FlatAssetSource } from './models';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
@@ -35,12 +39,14 @@ export enum PlatformModalType {
 
 interface Params {
   view: ApplicationRoute;
+  /** The tab the rows come from: a duplicate of a flat Public row stays public. */
+  source: FlatAssetSource;
   /** Re-reads the Platform rows after a write. */
   refetch: () => Promise<void>;
 }
 
 /** Duplicate and delete for the Platform tab. Platform rows have no folder, so none of this reads a folder context. */
-export const usePlatformAssetActions = ({ view, refetch }: Params) => {
+export const usePlatformAssetActions = ({ view, source, refetch }: Params) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -48,7 +54,7 @@ export const usePlatformAssetActions = ({ view, refetch }: Params) => {
   const [duplicateItem, setDuplicateItem] = useState<AssetWithVersion | null>(null);
   const [deletedItems, setDeletedItems] = useState<AssetListItem[] | null>(null);
   // Applications and Toolsets keep a Public tree, so their platform writes use the bucket-specific actions.
-  const isDualBucket = hasPublicSource(view);
+  const isDualBucket = hasPublicTree(view);
 
   const onCloseModal = useCallback(() => {
     setModalType(null);
@@ -73,9 +79,11 @@ export const usePlatformAssetActions = ({ view, refetch }: Params) => {
 
   const onDuplicate = useCallback(
     async (asset: AssetWithVersion) => {
-      const source = asset as unknown as PlatformAsset;
-      const duplicate = getPlatformAssetDuplicate(view, source);
-      const destination = getFlatDuplicateDestination(view, source, isDualBucket);
+      const original = asset as unknown as PlatformAsset;
+      const duplicate = getPlatformAssetDuplicate(view, original);
+      const destination = hasFlatPublic(view)
+        ? `${source === AssetSource.Public ? ROOT_FOLDER : PLATFORM_ROOT_FOLDER}/`
+        : getFlatDuplicateDestination(view, original, isDualBucket);
       const folderId = destination ?? 'platform/';
       const create =
         (isDualBucket ? PlatformCreateAssetActionMap[view] : undefined) ??
@@ -95,7 +103,7 @@ export const usePlatformAssetActions = ({ view, refetch }: Params) => {
       );
       router.push(getUrnForEntity(view, { ...duplicate, folderId }));
     },
-    [isDualBucket, onCloseModal, refetch, router, showNotification, t, view],
+    [isDualBucket, onCloseModal, refetch, router, showNotification, source, t, view],
   );
 
   const onOpenDelete = useCallback((rows: AssetListItem[]) => {

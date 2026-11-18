@@ -1,3 +1,4 @@
+import { getAliases, getConfigFileAliases } from '@/src/app/[lang]/assets-aliases/actions';
 import { getApps, getConfigFileApplications } from '@/src/app/[lang]/assets-applications/actions';
 import { getConfigFileToolsets, getToolsets } from '@/src/app/[lang]/assets-toolsets/actions';
 import { getConfigFileAppRunners, getRunners } from '@/src/app/[lang]/platform-app-runners/actions';
@@ -11,6 +12,7 @@ import { getConfigFileRoles, getRoles } from '@/src/app/[lang]/platform-roles/ac
 import { getConfigFileRouters, getRouters } from '@/src/app/[lang]/platform-routers/actions';
 import { getConfigFileRoutes, getRoutes } from '@/src/app/[lang]/platform-routes/actions';
 import { getConfigFileTranslators, getTranslators } from '@/src/app/[lang]/platform-translators/actions';
+import { getConfigFilePlugins, getPlugins } from '@/src/app/[lang]/platform-plugins/actions';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetSource } from '@/src/models/dial/asset-source';
 import { ConfigFileReadResult } from '@/src/models/dial/config-file';
@@ -18,7 +20,9 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { toConfigFileItems } from '@/src/utils/files/folder-nodes';
 import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
-import { FlatReadResult } from './models';
+import { ROOT_FOLDER } from '@/src/constants/file';
+import { hasFlatPublic } from '@/src/utils/files/asset-sources';
+import { FlatAssetSource, FlatReadResult } from './models';
 
 type ListFolder = (path: string) => Promise<AssetListItem[] | null | undefined>;
 type ListConfigFileNames = () => Promise<ConfigFileReadResult<string[]>>;
@@ -39,6 +43,7 @@ const FLAT_READERS: Partial<Record<ApplicationRoute, FlatReader>> = {
   },
   [ApplicationRoute.PlatformInterceptors]: { list: getInterceptors, listConfigFileNames: getConfigFileInterceptors },
   [ApplicationRoute.PlatformTranslators]: { list: getTranslators, listConfigFileNames: getConfigFileTranslators },
+  [ApplicationRoute.PlatformPlugins]: { list: getPlugins, listConfigFileNames: getConfigFilePlugins },
   [ApplicationRoute.PlatformRouters]: { list: getRouters, listConfigFileNames: getConfigFileRouters },
   [ApplicationRoute.PlatformRoutes]: { list: getRoutes, listConfigFileNames: getConfigFileRoutes },
   [ApplicationRoute.PlatformRoles]: { list: getRoles, listConfigFileNames: getConfigFileRoles },
@@ -47,6 +52,7 @@ const FLAT_READERS: Partial<Record<ApplicationRoute, FlatReader>> = {
   [ApplicationRoute.PlatformPolicyAssignments]: { list: getPolicyAssignments, isNested: true },
   [ApplicationRoute.AssetsApplications]: { list: getApps, listConfigFileNames: getConfigFileApplications },
   [ApplicationRoute.AssetsToolsets]: { list: getToolsets, listConfigFileNames: getConfigFileToolsets },
+  [ApplicationRoute.AssetsAliases]: { list: getAliases, listConfigFileNames: getConfigFileAliases },
 };
 
 const isFolder = (row: AssetListItem): boolean => row.nodeType === DialFileNodeType.FOLDER;
@@ -63,16 +69,20 @@ const readPlatformRows = async (reader: FlatReader): Promise<AssetListItem[]> =>
 };
 
 /**
- * One flat read for a listing's Platform or config.json source. A failed read is reported as such, never as
- * an empty list, so a caller cannot show a count of zero for a source it could not read.
+ * One flat read for a listing's Platform, config.json or flat Public source. A failed read is reported as such,
+ * never as an empty list, so a caller cannot show a count of zero for a source it could not read.
  */
-export const readFlatAssets = async (
-  view: ApplicationRoute,
-  source: AssetSource.Platform | AssetSource.ConfigFile,
-): Promise<FlatReadResult> => {
+export const readFlatAssets = async (view: ApplicationRoute, source: FlatAssetSource): Promise<FlatReadResult> => {
   const reader = FLAT_READERS[view];
   if (!reader) {
     return { success: false };
+  }
+
+  if (source === AssetSource.Public) {
+    // A public tree is browsed through the file manager, never read flat.
+    return hasFlatPublic(view)
+      ? { success: true, rows: (await reader.list(`${ROOT_FOLDER}/`)) ?? [] }
+      : { success: false };
   }
 
   if (source === AssetSource.Platform) {

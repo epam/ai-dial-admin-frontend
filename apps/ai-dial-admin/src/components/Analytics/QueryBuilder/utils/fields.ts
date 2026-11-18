@@ -232,7 +232,7 @@ export const comparableFieldOptions = (options: FieldOption[], kept: string[] = 
 export const argumentFieldOptions = (options: FieldOption[], kept: string[] = []): FieldOption[] =>
   options.filter((o) => !o.isProjectionOnly || kept.includes(o.name));
 
-export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
+const aggregateOutputOptions = (state: QueryBuilderState): FieldOption[] => {
   const plainColumns = state.groupBy
     .filter((g) => !g.fn)
     .map((g) => plainColumnOption(state, g))
@@ -259,5 +259,5 @@ export const sortFieldOptions = (state: QueryBuilderState, kept: string[] = []):
       ...computedColumnOptions(state),
     ]);
   }
-  return havingFieldOptions(state);
+  return aggregateOutputOptions(state);
 };

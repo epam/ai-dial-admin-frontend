@@ -98,3 +98,11 @@
 
 - [x] 10.1 Run `npm run lint`, `npm run format`, `npm run typecheck`, `npm run typecheck:specs` and
       `npm run test`, and resolve every failure
+
+## 11. Follow-up polish
+
+- [x] 11.1 In `Enrich/OutputsEditor.tsx` present no prose field under the route preset, keeping a stored
+      prose on the output
+- [x] 11.2 In `SystemProperties/EnrichmentRoutes.tsx` name the two columns once above the rows and align each
+      row to its top, so a validation message under one field does not shift the other
+- [x] 11.3 Cover both in `OutputsEditor.spec.tsx` and re-run lint, format, both typechecks and the tests

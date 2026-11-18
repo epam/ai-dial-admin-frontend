@@ -12,8 +12,10 @@ export const isAssetView = (view?: ApplicationRoute): boolean => {
     view === ApplicationRoute.PlatformRoutes ||
     view === ApplicationRoute.PlatformRoles ||
     view === ApplicationRoute.PlatformTranslators ||
+    view === ApplicationRoute.PlatformPlugins ||
     view === ApplicationRoute.PlatformRouters ||
     view === ApplicationRoute.PlatformKeys ||
+    view === ApplicationRoute.AssetsAliases ||
     view === ApplicationRoute.PlatformPolicies ||
     view === ApplicationRoute.PlatformPolicyAssignments ||
     view === ApplicationRoute.Skills ||
@@ -116,12 +118,14 @@ const CATALOG_VIEWS: readonly ApplicationRoute[] = [
   ApplicationRoute.PlatformModels,
   ApplicationRoute.PlatformInterceptors,
   ApplicationRoute.PlatformTranslators,
+  ApplicationRoute.PlatformPlugins,
   ApplicationRoute.PlatformRouters,
   ApplicationRoute.PlatformRoutes,
   ApplicationRoute.PlatformAppRunners,
   ApplicationRoute.PlatformCatalogSchemas,
   ApplicationRoute.PlatformRoles,
   ApplicationRoute.PlatformKeys,
+  ApplicationRoute.AssetsAliases,
   ApplicationRoute.PlatformPolicies,
   ApplicationRoute.PlatformPolicyAssignments,
 ];

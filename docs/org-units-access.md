@@ -29,7 +29,7 @@ A section is shown when the caller holds `read` on its namespace in any unit.
 | Approvals (all publication lists) | `publications`     |
 | Folders Storage                   | `role-assignments` |
 
-Hidden in unit mode: Models, Interceptors, Roles, Keys, Routes, Translators, Catalog schemas, App runners,
+Hidden in unit mode: Models, Interceptors, Roles, Keys, Routes, Translators, Plugins, Aliases, Catalog schemas, App runners,
 Entities, Analytics, Import/Export and System properties.
 
 ## Abilities in unit mode

@@ -22,6 +22,8 @@ import {
 } from '@/src/app/[lang]/platform-interceptors/actions';
 import { bulkDeleteRouters, createRouter, getRouter } from '@/src/app/[lang]/platform-routers/actions';
 import { bulkDeleteTranslators, createTranslator, getTranslator } from '@/src/app/[lang]/platform-translators/actions';
+import { bulkDeletePlugins, createPlugin, getPlugin } from '@/src/app/[lang]/platform-plugins/actions';
+import { bulkDeleteAliases, createAlias, getAlias } from '@/src/app/[lang]/assets-aliases/actions';
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/platform-models/actions';
 import { bulkDeleteKeys, createKey, getKey } from '@/src/app/[lang]/platform-keys/actions';
 import { bulkDeleteRoles, createRole, getRole } from '@/src/app/[lang]/platform-roles/actions';
@@ -62,7 +64,9 @@ import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContex
 import { useCatalogSchemasFolder } from '@/src/context/assets/CatalogSchemasFolderContext';
 import { useInterceptorsFolder } from '@/src/context/assets/InterceptorsFolderContext';
 import { useRoutersFolder } from '@/src/context/assets/RoutersFolderContext';
+import { useAliasesFolder } from '@/src/context/assets/AliasesFolderContext';
 import { useTranslatorsFolder } from '@/src/context/assets/TranslatorsFolderContext';
+import { usePluginsFolder } from '@/src/context/assets/PluginsFolderContext';
 import { useKeysFolder } from '@/src/context/assets/KeysFolderContext';
 import { useRolesFolder } from '@/src/context/assets/RolesFolderContext';
 import { usePoliciesFolder } from '@/src/context/assets/PoliciesFolderContext';
@@ -238,6 +242,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Applications;
     case ApplicationRoute.AssetsToolsets:
       return FileManagerI18nKey.Toolsets;
+    case ApplicationRoute.AssetsAliases:
+      return FileManagerI18nKey.Aliases;
     case ApplicationRoute.Conversations:
       return FileManagerI18nKey.Conversations;
     case ApplicationRoute.PlatformModels:
@@ -250,6 +256,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Interceptors;
     case ApplicationRoute.PlatformTranslators:
       return FileManagerI18nKey.Translators;
+    case ApplicationRoute.PlatformPlugins:
+      return FileManagerI18nKey.Plugins;
     case ApplicationRoute.PlatformRouters:
       return FileManagerI18nKey.Routers;
     case ApplicationRoute.PlatformRoutes:
@@ -291,6 +299,11 @@ export const getEmptyStateContent = (
         title: t(FileManagerI18nKey.ToolsetsEmptyStateTitle),
         description: t(FileManagerI18nKey.ToolsetsEmptyStateDescription),
       };
+    case ApplicationRoute.AssetsAliases:
+      return {
+        title: t(FileManagerI18nKey.AliasesEmptyStateTitle),
+        description: t(FileManagerI18nKey.AliasesEmptyStateDescription),
+      };
     case ApplicationRoute.Conversations:
       return {
         title: t(FileManagerI18nKey.ConversationsEmptyStateTitle),
@@ -320,6 +333,11 @@ export const getEmptyStateContent = (
       return {
         title: t(FileManagerI18nKey.TranslatorsEmptyStateTitle),
         description: t(FileManagerI18nKey.TranslatorsEmptyStateDescription),
+      };
+    case ApplicationRoute.PlatformPlugins:
+      return {
+        title: t(FileManagerI18nKey.PluginsEmptyStateTitle),
+        description: t(FileManagerI18nKey.PluginsEmptyStateDescription),
       };
     case ApplicationRoute.PlatformRouters:
       return {
@@ -435,12 +453,14 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.Prompts]: usePromptFolder,
   [ApplicationRoute.AssetsApplications]: useAppsFolder,
   [ApplicationRoute.AssetsToolsets]: useToolsetFolder,
+  [ApplicationRoute.AssetsAliases]: useAliasesFolder,
   [ApplicationRoute.Conversations]: useConversationFolder,
   [ApplicationRoute.PlatformModels]: useModelsFolder,
   [ApplicationRoute.PlatformAppRunners]: useAppRunnersFolder,
   [ApplicationRoute.PlatformCatalogSchemas]: useCatalogSchemasFolder,
   [ApplicationRoute.PlatformInterceptors]: useInterceptorsFolder,
   [ApplicationRoute.PlatformTranslators]: useTranslatorsFolder,
+  [ApplicationRoute.PlatformPlugins]: usePluginsFolder,
   [ApplicationRoute.PlatformRouters]: useRoutersFolder,
   [ApplicationRoute.PlatformRoutes]: useRoutesFolder,
   [ApplicationRoute.PlatformRoles]: useRolesFolder,
@@ -455,12 +475,14 @@ export const GetAssetActionMap = {
   [ApplicationRoute.Prompts]: getPrompt,
   [ApplicationRoute.AssetsApplications]: getApp,
   [ApplicationRoute.AssetsToolsets]: getToolset,
+  [ApplicationRoute.AssetsAliases]: getAlias,
   [ApplicationRoute.Conversations]: getConversation,
   [ApplicationRoute.PlatformModels]: getModel,
   [ApplicationRoute.PlatformAppRunners]: getRunner,
   [ApplicationRoute.PlatformCatalogSchemas]: getCatalogSchema,
   [ApplicationRoute.PlatformInterceptors]: getInterceptor,
   [ApplicationRoute.PlatformTranslators]: getTranslator,
+  [ApplicationRoute.PlatformPlugins]: getPlugin,
   [ApplicationRoute.PlatformRouters]: getRouter,
   [ApplicationRoute.PlatformRoutes]: getRoute,
   [ApplicationRoute.PlatformRoles]: getRole,
@@ -516,6 +538,9 @@ export const CreateAssetActionMap: Record<CreateAssetRoute, CreateAssetAction> =
   [ApplicationRoute.AssetsToolsets]: createToolset as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  // Not sanitized: `folderId` carries the bucket (`public/` or `platform/`) the alias is written to, and the
+  // action builds the path from it before keeping only the fields Core accepts.
+  [ApplicationRoute.AssetsAliases]: createAlias as unknown as CreateAssetAction,
   [ApplicationRoute.PlatformModels]: sanitizePlatformCreateAsset(
     createModel as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
   ),
@@ -530,6 +555,9 @@ export const CreateAssetActionMap: Record<CreateAssetRoute, CreateAssetAction> =
   ),
   [ApplicationRoute.PlatformTranslators]: sanitizePlatformCreateAsset(
     createTranslator as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformPlugins]: sanitizePlatformCreateAsset(
+    createPlugin as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
   ),
   [ApplicationRoute.PlatformRouters]: sanitizePlatformCreateAsset(
     createRouter as unknown as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
@@ -596,12 +624,14 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.Prompts]: bulkDeletePrompts,
   [ApplicationRoute.AssetsApplications]: bulkDeleteApps,
   [ApplicationRoute.AssetsToolsets]: bulkDeleteToolsets,
+  [ApplicationRoute.AssetsAliases]: bulkDeleteAliases,
   [ApplicationRoute.Conversations]: deleteConversations,
   [ApplicationRoute.PlatformModels]: bulkDeleteModels,
   [ApplicationRoute.PlatformAppRunners]: bulkDeleteRunners,
   [ApplicationRoute.PlatformCatalogSchemas]: bulkDeleteCatalogSchemas,
   [ApplicationRoute.PlatformInterceptors]: bulkDeleteInterceptors,
   [ApplicationRoute.PlatformTranslators]: bulkDeleteTranslators,
+  [ApplicationRoute.PlatformPlugins]: bulkDeletePlugins,
   [ApplicationRoute.PlatformRouters]: bulkDeleteRouters,
   [ApplicationRoute.PlatformRoutes]: bulkDeleteRoutes,
   [ApplicationRoute.PlatformRoles]: bulkDeleteRoles,

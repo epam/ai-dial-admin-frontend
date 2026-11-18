@@ -28,6 +28,35 @@ describe('Server :: Core :: ConfigFileApi', () => {
     expect(result.success && result.data).toEqual(['first', 'second']);
   });
 
+  test('listNames reads the alias names from v1/admin/config/file/aliases', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ items: [{ name: 'assistant-v1' }] }), {
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const result = await instance.listNames(TOKEN_MOCK, ConfigFileEntityType.Aliases);
+
+    expect(fetch.mock.calls[0][0]).toContain('/v1/admin/config/file/aliases');
+    expect(result.success && result.data).toEqual(['assistant-v1']);
+  });
+
+  test('getEntity reads one alias from v1/admin/config/file/aliases/{name}', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ name: 'assistant-v1', target: { path: 'models/gpt' } }), {
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const result = await instance.getEntity(TOKEN_MOCK, ConfigFileEntityType.Aliases, 'assistant-v1');
+
+    expect(fetch.mock.calls[0][0]).toContain('/v1/admin/config/file/aliases/assistant-v1');
+    expect(result.success).toBe(true);
+  });
+
+  test('keys stay refused without a request', async () => {
+    const result = await instance.listNames(TOKEN_MOCK, ConfigFileEntityType.Keys);
+
+    expect(result.success).toBe(false);
+    expect(fetch.mock.calls).toHaveLength(0);
+  });
+
   test('listNames returns an empty list for an empty population', async () => {
     fetch.mockResponseOnce(JSON.stringify({ items: [] }), { headers: { 'content-type': 'application/json' } });
 

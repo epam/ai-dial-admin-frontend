@@ -14,8 +14,10 @@ import {
   DialRouteResource,
   DialToolsetResource,
   DialRouterResource,
+  DialPluginResource,
   DialTranslatorResource,
 } from '@/src/models/dial/resource';
+import { DialAliasResource } from '@/src/models/dial/alias';
 import { BucketType } from '@/src/models/dial/asset-list-item';
 import { DialConversation } from '@/src/models/dial/conversation';
 import { DialFileNodeType } from '@/src/models/dial/file';
@@ -493,6 +495,21 @@ export const mergeTranslatorResource = (
   } as DialTranslatorResource;
 };
 
+/** Plugins are flat and unversioned like translators and, like them, a plain POJO — see `mergeTranslatorResource`. */
+export const mergePluginResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialPluginResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  return {
+    ...rest,
+    _metadata: {
+      ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PLUGIN], content),
+      ...validity,
+    },
+  } as DialPluginResource;
+};
+
 /**
  * Routes are flat and unversioned like models and interceptors — merged via `flatMetadataFields` for
  * the same reason: the metadata `url`'s remainder after stripping `routes/platform/` is a bare name
@@ -520,6 +537,28 @@ export const mergeRouteResource = (
  * `policies/platform/` is `[costObject/]name`. `folderId` is therefore the cost object, `''` for a global
  * policy.
  */
+/**
+ * Aliases are unversioned and dual-bucket: the metadata `url`'s remainder after stripping `aliases/` is
+ * `{public|platform}/{name}`, so `folderId` is the bucket and `name` is the alias's own name, which Core
+ * restricts to characters that never form a `__` version suffix worth splitting. A read of a blob Core
+ * ignores carries `status`/`validationWarnings`, which `splitValidityFields` relocates into `_metadata`.
+ */
+export const mergeAliasResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialAliasResource => {
+  const { content: rest, validity } = splitValidityFields(content);
+  const correctMetadata = folderMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.ALIAS], content);
+  return {
+    ...rest,
+    name: correctMetadata.name,
+    _metadata: {
+      ...correctMetadata,
+      ...validity,
+    },
+  } as DialAliasResource;
+};
+
 export const mergePolicyResource = (
   content: Record<string, unknown>,
   metadata: CoreResourceMetadataNode,
@@ -734,10 +773,12 @@ export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
   [ResourceType.CATALOG_SCHEMA]: mergeCatalogSchemaResource,
   [ResourceType.INTERCEPTOR]: mergeInterceptorResource,
   [ResourceType.TRANSLATOR]: mergeTranslatorResource,
+  [ResourceType.PLUGIN]: mergePluginResource,
   [ResourceType.ROUTER]: mergeRouterResource,
   [ResourceType.ROUTE]: mergeRouteResource,
   [ResourceType.ROLE]: mergeRoleResource,
   [ResourceType.PROJECT_KEY]: mergeKeyResource,
   [ResourceType.POLICY]: mergePolicyResource,
   [ResourceType.POLICY_ASSIGNMENT]: mergePolicyAssignmentResource,
+  [ResourceType.ALIAS]: mergeAliasResource,
 };

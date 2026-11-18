@@ -65,6 +65,8 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           key: MenuI18nKey.PlatformTranslators,
           href: ApplicationRoute.PlatformTranslators,
         },
+        { key: MenuI18nKey.PlatformPlugins, href: ApplicationRoute.PlatformPlugins },
+        { key: MenuI18nKey.PlatformAliases, href: ApplicationRoute.AssetsAliases },
         { key: MenuI18nKey.PlatformRoutes, href: ApplicationRoute.PlatformRoutes },
         { key: MenuI18nKey.Applications, href: ApplicationRoute.AssetsApplications },
         {

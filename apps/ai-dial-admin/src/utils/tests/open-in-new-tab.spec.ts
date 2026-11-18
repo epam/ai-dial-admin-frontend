@@ -380,6 +380,55 @@ describe('Entity list view :: getEntityPath', () => {
   );
 });
 
+describe('Entity list view :: getEntityPath :: aliases', () => {
+  test('is the bare name for a platform alias row', () => {
+    expect(getEntityPath(ApplicationRoute.AssetsAliases, { name: 'assistant', path: 'platform/assistant' })).toBe(
+      'assistant',
+    );
+  });
+
+  test('carries the path of a public alias row, so it cannot be mistaken for a platform alias of the same name', () => {
+    expect(getEntityPath(ApplicationRoute.AssetsAliases, { name: 'search', path: 'public/search' })).toBe(
+      'search?path=public%2Fsearch',
+    );
+  });
+
+  test('reads the identity of a merged detail entity from its _metadata', () => {
+    const _metadata = { name: 'search', path: 'public/search', folderId: 'public/' };
+
+    expect(getEntityPath(ApplicationRoute.AssetsAliases, { _metadata })).toBe('search?path=public%2Fsearch');
+    expect(
+      getEntityPath(ApplicationRoute.AssetsAliases, {
+        _metadata: { name: 'assistant', path: 'platform/assistant', folderId: 'platform/' },
+      }),
+    ).toBe('assistant');
+  });
+
+  test('is the bare name for a config.json row, which has neither a path nor a folder', () => {
+    expect(getEntityPath(ApplicationRoute.AssetsAliases, { name: 'assistant-v1' })).toBe('assistant-v1');
+  });
+
+  test('uses the bucket a row reports when it carries no path', () => {
+    expect(getEntityPath(ApplicationRoute.AssetsAliases, { name: 'search', bucket: 'public' })).toBe(
+      'search?path=public%2Fsearch',
+    );
+  });
+
+  test('resolves to the storage path in either bucket when forRemove is true', () => {
+    expect(getEntityPath(ApplicationRoute.AssetsAliases, { name: 'a', path: 'platform/a' }, true)).toBe('platform/a');
+    expect(getEntityPath(ApplicationRoute.AssetsAliases, { name: 'b', path: 'public/b' }, true)).toBe('public/b');
+    expect(getEntityPath(ApplicationRoute.AssetsAliases, { name: 'c', folderId: 'platform/' }, true)).toBe(
+      'platform/c',
+    );
+  });
+
+  test('builds the detail URL under the aliases route', () => {
+    expect(getUrnForEntity(ApplicationRoute.AssetsAliases, { name: 'search', path: 'public/search' })).toBe(
+      '/assets-aliases/search?path=public%2Fsearch',
+    );
+  });
+});
+
 describe('appendUrlQuery', () => {
   test('joins with ? when the URL carries no query string', () => {
     expect(appendUrlQuery('/platform-models/my-model', 'configFile=true')).toBe(

@@ -82,6 +82,15 @@ export type FilterNode = FilterGroupNode | FilterPredicateNode;
 
 // A call standing in for an `expression` argument's value, with one `args` slot per the called
 // function's own catalog arguments.
+export interface TimeBinFunction {
+  fn: QueryFunction;
+  amountIndex: number;
+  unitIndex: number;
+  timestampIndex: number;
+  units: string[] | null;
+  minAmount: number;
+}
+
 export interface FnCallValue {
   fn: string;
   args: FnArgValue[];
@@ -214,11 +223,20 @@ export interface CompactSelectOptionDescriptor {
   descriptionKey: QueryBuilderI18nKey;
 }
 
+export enum QuerySourceProblem {
+  Unavailable = 'unavailable',
+  SchemaFailed = 'schema-failed',
+}
+
+export enum QueryCopyMode {
+  SaveDraft = 'save-draft',
+  Duplicate = 'duplicate',
+  SaveCopy = 'save-copy',
+}
+
 export enum QueryBuilderView {
   Form = 'form',
-  Json = 'json',
   Sql = 'sql',
-  Ai = 'ai',
 }
 
 // A query run request. Structured (Form/JSON views) posts a StructuredQuery to /execute; SQL posts
@@ -239,13 +257,6 @@ export interface PartialExportNotice {
 export type QueryRunRequest =
   | { kind: QueryRequestKind.Structured; query: StructuredQuery }
   | { kind: QueryRequestKind.Sql; sql: string };
-
-export enum QueryBuilderWarning {
-  MissingGroupByField = 'MissingGroupByField',
-  EmptyAggregate = 'EmptyAggregate',
-  DroppedProjectionColumn = 'DroppedProjectionColumn',
-  DroppedCondition = 'DroppedCondition',
-}
 
 // The builder's own color language, mirroring how the same query reads in the Monaco JSON view:
 // fields/keys are teal, values blue, grouping brackets purple, keywords yellow, numbers orange.

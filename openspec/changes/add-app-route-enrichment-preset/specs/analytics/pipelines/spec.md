@@ -108,6 +108,10 @@ service refuses `jsonata` on a route output and `source` on a chat-completion ou
 An output with no source reads the response member of its own name, so an empty source field SHALL send no
 `source` member.
 
+Under `dial_app_route` the output's **prose** SHALL NOT be presented: no model is told about the field, so
+the service keeps the member as documentation only. A prose already stored on the output SHALL be sent back
+unchanged, so a save does not erase it.
+
 A source that repeats the output's own name is the **identity** expression, which the service refuses. It
 SHALL be handled as the identity `jsonata` is: dropped on read, and marked invalid on the row when typed,
 without blocking the save.
@@ -121,6 +125,16 @@ restores it.
 - **WHEN** the author enters an expression in an output's transform field under the route preset and saves
 - **THEN** that output is sent with `source` holding the expression
 - **AND** it is sent with no `jsonata`
+
+#### Scenario: A route output presents no prose
+
+- **WHEN** an output of an application-route transform is presented
+- **THEN** no prose field is shown for it
+
+#### Scenario: A stored prose survives a save
+
+- **WHEN** an output that carries a prose is edited under the route preset and saved
+- **THEN** that output is sent with its prose unchanged
 
 #### Scenario: An empty source sends nothing
 

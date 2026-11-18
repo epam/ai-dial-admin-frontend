@@ -22,6 +22,8 @@ export interface RoleRow {
   isSensitive: boolean;
   rowsKind: RowsCellKind;
   filter?: QueryFilterNode;
+  columns: string[] | null;
+  warnings: string[];
 }
 
 // `name` is the bare provider role; `origin` is which of Core's populations supplied it after the merge.
@@ -44,10 +46,29 @@ export enum RowsMode {
   Some = 'some',
 }
 
+export enum ColumnsMode {
+  All = 'all',
+  Some = 'some',
+}
+
+export interface EntryDraft {
+  selection: RoleSelection;
+  rowsMode: RowsMode;
+  filter: QueryFilterNode | null;
+  columnsMode: ColumnsMode;
+  columns: string[];
+}
+
 export enum DrawerPhase {
   Editing = 'editing',
-  GrantsSavedWithBanner = 'grants-saved-with-banner',
-  RowLimitFailed = 'row-limit-failed',
+  SavedWithBanner = 'saved-with-banner',
+  Conflict = 'conflict',
+}
+
+export enum AccessChangeOutcome {
+  Done = 'done',
+  Conflict = 'conflict',
+  Failed = 'failed',
 }
 
 export enum AccessStatus {

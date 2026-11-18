@@ -16,4 +16,9 @@ describe('getIsAdminApiEnabled', () => {
     vi.stubEnv('DIAL_ADMIN_API_URL', undefined);
     expect(getIsAdminApiEnabled()).toBe(false);
   });
+
+  test('reads an empty admin backend URL as disabled', () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', '');
+    expect(getIsAdminApiEnabled()).toBe(false);
+  });
 });

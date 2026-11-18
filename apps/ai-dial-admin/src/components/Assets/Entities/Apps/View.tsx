@@ -10,6 +10,8 @@ import { moveApps, removeApp, updateApp } from '@/src/app/[lang]/assets-applicat
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import TabsContent from '@/src/components/Applications/View/TabsContent';
 import { getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
+import { resolveAppRunnerScheme } from '@/src/components/SourceField/Application/resolve-app-runner';
+import ApplicationGrafanaLinks from '@/src/components/Assets/ApplicationGrafanaLinks/ApplicationGrafanaLinks';
 import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -33,6 +35,7 @@ import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { changePath, removeTrailingSlash } from '@/src/utils/files/path';
+import { GrafanaTraceLinks } from '@/src/utils/grafana/models';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
@@ -52,6 +55,7 @@ interface Props {
   catalogSchemas?: CatalogSchemaOptions;
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
+  grafanaLinks?: GrafanaTraceLinks | null;
 }
 
 const AppView: FC<Props> = ({
@@ -65,6 +69,7 @@ const AppView: FC<Props> = ({
   translators,
   catalogSchemas,
   optionWarnings,
+  grafanaLinks,
 }) => {
   const t = useI18n();
   const router = useRouter();
@@ -86,27 +91,42 @@ const AppView: FC<Props> = ({
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
   const [discardKey, setDiscardKey] = useState(0);
 
+  const [appRunner, setAppRunner] = useState<DialApplicationScheme | undefined>(undefined);
+
+  const schemaId = (selectedApp as unknown as DialApplicationResource).application_type_schema_id;
+
+  // `schemes` entries carry a name in `$id`, not the real id, so the runner is resolved the same way as
+  // in ParametersTab. The resolution is async, hence an effect keyed by the schema id rather than a memo.
+  useEffect(() => {
+    let isCancelled = false;
+    const foundRunner = getAppRunner(selectedApp, schemes);
+
+    resolveAppRunnerScheme(foundRunner ?? { $id: schemaId }).then(({ runner, scheme }) => {
+      if (!isCancelled) {
+        setAppRunner(scheme ?? runner);
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schemaId]);
+
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
       isEditorEnabled,
-      isHideJsonSelector: () => {
-        const scheme = getAppRunner(selectedApp, schemes);
-
-        return (
-          activeTab === EntityViewTab.Parameters &&
-          (scheme?.['dial:applicationTypeEditorUrl'] ||
-            selectedApp.editorUrl ||
-            (selectedApp as unknown as DialApplicationResource).editor_url)
-        );
-      },
+      isHideJsonSelector: () =>
+        activeTab === EntityViewTab.Parameters &&
+        (appRunner?.['dial:applicationTypeEditorUrl'] ||
+          selectedApp.editorUrl ||
+          (selectedApp as unknown as DialApplicationResource).editor_url),
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
     }),
-    [activeTab, isEditorEnabled, schemes, selectedApp],
+    [activeTab, isEditorEnabled, appRunner, selectedApp],
   );
 
   useEffect(() => {
-    const appRunner = getAppRunner(originalApp, schemes);
-
     const baseTabs = withResourceDependenciesTab(
       getTabsForAsset(t, ApplicationRoute.AssetsApplications, featureFlags),
       t,
@@ -117,7 +137,7 @@ const AppView: FC<Props> = ({
       setTabs(baseTabs);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [originalApp.mcp?.endpoint]);
+  }, [originalApp.mcp?.endpoint, appRunner]);
 
   useEffect(() => {
     setSelectedApp(cloneDeep(originalApp));
@@ -305,7 +325,9 @@ const AppView: FC<Props> = ({
         onChangeActiveTab={onChangeActiveTab}
         onRemove={removeApp}
         getAssetContext={useAppsFolder}
-      />
+      >
+        <ApplicationGrafanaLinks links={grafanaLinks} />
+      </AssetHeader>
 
       <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled && !(activeTab === EntityViewTab.Parameters) ? (

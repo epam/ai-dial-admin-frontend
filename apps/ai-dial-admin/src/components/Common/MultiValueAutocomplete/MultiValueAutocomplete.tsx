@@ -125,7 +125,7 @@ const MultiValueAutocomplete: FC<Props> = ({
 
   return (
     <div className={classNames('flex flex-col gap-y-1', STANDARD_CONTROL_WIDTH)}>
-      <div className={classNames('dial-kit-input h-auto min-h-[40px] p-[6px]', error && 'dial-kit-input-error')}>
+      <div className={classNames('dial-kit-input h-auto min-h-[40px] py-2 pl-3', error && 'dial-kit-input-error')}>
         <div
           ref={containerRef}
           className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
@@ -137,6 +137,7 @@ const MultiValueAutocomplete: FC<Props> = ({
               closable
               removeLabel={`${t(ButtonsI18nKey.Remove)} ${att.label}`}
               onRemove={handleRemoveItem(idx)}
+              className="h-6 rounded-md border border-secondary bg-layer-sunken"
             />
           ))}
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
@@ -146,7 +147,7 @@ const MultiValueAutocomplete: FC<Props> = ({
               onBlur={handleInputBlur}
               onKeyDown={handleKeyDown}
               disabled={isReadOnlyAdmin}
-              className="outline-hidden border-none w-full flex-1 p-1 dial-kit-input h-auto"
+              className="outline-hidden border-none w-full flex-1 dial-kit-input h-auto"
               placeholder={placeholder || ''}
             />
           </div>

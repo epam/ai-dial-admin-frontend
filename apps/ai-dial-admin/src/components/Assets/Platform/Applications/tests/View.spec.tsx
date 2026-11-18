@@ -1,11 +1,13 @@
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
-import { TabsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, GrafanaLinksI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { GrafanaTraceLinks } from '@/src/utils/grafana/models';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import PlatformApplicationView from '../View';
 
@@ -169,5 +171,52 @@ describe('PlatformApplicationView', () => {
     );
 
     expect(setEntityReadOnly).toHaveBeenCalledWith(false);
+  });
+
+  describe('Grafana trace links', () => {
+    const grafanaLinks: GrafanaTraceLinks = {
+      allTracesUrl: 'https://grafana.example.com/explore?all',
+      errorTracesUrl: 'https://grafana.example.com/explore?errors',
+    };
+
+    const renderWithLinks = (links?: GrafanaTraceLinks | null) =>
+      render(
+        <PlatformApplicationView
+          etag={mockEtag}
+          originalApp={mockOriginalApp}
+          models={mockModels}
+          applications={mockApplications}
+          schemes={mockSchemes}
+          roles={mockRoles}
+          interceptors={mockInterceptors}
+          grafanaLinks={links}
+        />,
+      );
+
+    test('shows one Grafana traces control beside Delete when links are provided', () => {
+      renderWithLinks(grafanaLinks);
+
+      const trigger = screen.getByRole('button', { name: GrafanaLinksI18nKey.Traces });
+      const deleteButtons = screen.getAllByRole('button', { name: ButtonsI18nKey.Delete });
+
+      expect(deleteButtons.some((button) => button.parentElement?.contains(trigger))).toBe(true);
+      expect(screen.queryByRole('link')).toBeNull();
+    });
+
+    test('shows no links when none are provided', () => {
+      renderWithLinks(null);
+
+      expect(screen.queryByRole('button', { name: GrafanaLinksI18nKey.Traces })).toBeNull();
+    });
+
+    test('hides the links while the JSON editor is open', async () => {
+      const user = userEvent.setup();
+      renderWithLinks(grafanaLinks);
+
+      await user.click(screen.getByRole('switch', { name: EntitiesI18nKey.JSONEditor }));
+
+      expect(await screen.findByRole('textbox', { name: 'JSON editor' })).toBeTruthy();
+      expect(screen.queryByRole('button', { name: GrafanaLinksI18nKey.Traces })).toBeNull();
+    });
   });
 });
