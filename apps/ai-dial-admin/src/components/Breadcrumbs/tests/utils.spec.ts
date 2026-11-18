@@ -109,6 +109,23 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(config[1].name).toEqual('compare');
   });
 
+  test('Should link the activity audit crumb to its list when the admin API is enabled', () => {
+    const config = getBreadcrumbs('/en/activity-audit/activity-1', 'en');
+    expect(config[0].href).toEqual('/en/activity-audit');
+    expect(config[0].key).toEqual(MenuI18nKey.ActivityAudit);
+  });
+
+  test('Should render the activity audit crumb without a link when the admin API is disabled', () => {
+    const config = getBreadcrumbs('/en/activity-audit/activity-1', 'en', false);
+    expect(config.length).toEqual(2);
+    expect(config[0].href).toEqual('');
+    expect(config[0].key).toEqual(MenuI18nKey.ActivityAudit);
+  });
+
+  test('Should keep links of other sections when the admin API is disabled', () => {
+    expect(getBreadcrumbs('/en/platform-models/modelId', 'en', false)[0].href).toEqual('/en/platform-models');
+  });
+
   test('Should leave a saved query id out of the breadcrumbs', () => {
     const config = getBreadcrumbs('/en/queries/sq_1', 'en');
     expect(config.length).toEqual(1);

@@ -12,6 +12,7 @@ import {
   shouldEnrichDetailsWithFolderBreadcrumbs,
 } from '@/src/components/Breadcrumbs/utils';
 import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
+import { useAppContext } from '@/src/context/AppContext';
 import { Breadcrumbs as KitBreadcrumbs, BreadcrumbsItem, BreadcrumbsSize } from '@epam/ai-dial-ui-kit';
 
 interface Props {
@@ -24,14 +25,15 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
   const entityPath = useSearchParams()?.get('path');
   const t = useI18n();
   const currentLocale = useCurrentLocale();
+  const { featureFlags } = useAppContext();
   const folderContext = pathname ? getFolderContext?.(pathname, currentLocale)?.() : undefined;
 
   const basicBreadcrumbs = useMemo(() => {
     if (!pathname) {
       return [];
     }
-    return getBreadcrumbs(pathname, currentLocale);
-  }, [pathname, currentLocale]);
+    return getBreadcrumbs(pathname, currentLocale, featureFlags.adminApiEnabled);
+  }, [pathname, currentLocale, featureFlags.adminApiEnabled]);
 
   const [enrichedBreadcrumbs, setEnrichedBreadcrumbs] = useState<Breadcrumb[] | null>(null);
 
