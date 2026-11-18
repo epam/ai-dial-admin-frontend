@@ -151,6 +151,7 @@ describe('TargetField', () => {
       [AliasI18nKey.PresentAsApplication, AliasI18nKey.PresentAsModel, AliasI18nKey.PresentAsToolset],
     ],
     ['toolsets/public/x', [AliasI18nKey.PresentAsToolset]],
+    ['routers/r', [AliasI18nKey.PresentAsRouter, AliasI18nKey.PresentAsModel, AliasI18nKey.PresentAsApplication]],
   ])('offers only the presentations a %s target allows', async (path, labels) => {
     renderField({ target: { path } });
 
@@ -205,7 +206,47 @@ describe('TargetField', () => {
     expect(typeSelect().hasAttribute('disabled') || typeSelect().getAttribute('aria-disabled') === 'true').toBe(true);
   });
 
-  test('is typed over the three target types', () => {
-    expect(Object.values(AliasTargetType)).toHaveLength(3);
+  test('opens the router picker for a router target', async () => {
+    renderField({ target: { path: 'routers/old' } });
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Open }));
+
+    expect(screen.getByText(`picker:${EntitySelectType.Router}:single`)).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: AliasI18nKey.SelectRouterTarget })).toBeTruthy();
+  });
+
+  test('shows a router target with the router presentation by default', () => {
+    renderField({ target: { path: 'routers/r' } });
+
+    expect(typeSelect()).toHaveAccessibleName(new RegExp(AliasI18nKey.TargetTypeRouter));
+    expect(presentAsSelect()).toHaveAccessibleName(new RegExp(AliasI18nKey.PresentAsRouter));
+  });
+
+  test('offers the router target type on a Platform alias', async () => {
+    renderField();
+
+    await user.click(typeSelect());
+
+    expect(screen.getByRole('option', { name: AliasI18nKey.TargetTypeRouter })).toBeTruthy();
+  });
+
+  test('does not offer the router target type on a Public alias', async () => {
+    renderField({ isPublic: true });
+
+    await user.click(typeSelect());
+
+    expect(screen.queryByRole('option', { name: AliasI18nKey.TargetTypeRouter })).toBeNull();
+  });
+
+  test('keeps a stored router target type listed on a Public alias', async () => {
+    renderField({ isPublic: true, target: { path: 'routers/r' } });
+
+    await user.click(typeSelect());
+
+    expect(screen.getByRole('option', { name: AliasI18nKey.TargetTypeRouter })).toBeTruthy();
+  });
+
+  test('is typed over the four target types', () => {
+    expect(Object.values(AliasTargetType)).toHaveLength(4);
   });
 });

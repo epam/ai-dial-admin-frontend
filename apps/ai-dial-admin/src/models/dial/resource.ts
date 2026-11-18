@@ -267,6 +267,7 @@ export interface DialRouterResource extends CoreDeploymentResource {
   decision?: RouterDecision;
   applicationTypeSchemaId?: string;
   applicationProperties?: Record<string, unknown>;
+  editorUrl?: string;
 }
 
 /**

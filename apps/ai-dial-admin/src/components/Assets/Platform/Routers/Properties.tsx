@@ -7,6 +7,7 @@ import { applyRouterMode, getRouterMode } from '@/src/components/Assets/Platform
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import EditorUrlControl from '@/src/components/BaseControls/Endpoint/EditorUrl';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import IconControl from '@/src/components/BaseControls/Icon';
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
@@ -111,6 +112,10 @@ const RouterAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, 
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
           endpoint={asset.baseUrl}
           onChange={(baseUrl) => onChange({ ...asset, baseUrl })}
+        />
+        <EditorUrlControl
+          endpoint={asset.editorUrl}
+          onChange={(editorUrl) => onChange({ ...asset, editorUrl: editorUrl || undefined })}
         />
         <InterfacesField
           interfaces={asset.interfaces}
