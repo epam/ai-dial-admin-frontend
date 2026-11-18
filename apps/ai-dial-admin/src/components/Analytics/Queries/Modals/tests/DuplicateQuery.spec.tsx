@@ -52,6 +52,9 @@ const COMMON: SavedQuery = { ...STRUCTURED, id: 'sq_2', name: 'Shared', scope: S
 
 const CREATED: SavedQuery = { ...STRUCTURED, id: 'sq_new', name: 'Top chats (copy)' };
 
+const HEADER = 'Queries.SaveAsQuery';
+const SUBMIT_LABEL = 'Buttons.Save';
+
 const onClose = vi.fn();
 
 const buildRequest = vi.fn(
@@ -66,7 +69,15 @@ const buildRequest = vi.fn(
 );
 
 const renderModal = (query: SavedQuery | undefined = STRUCTURED) =>
-  render(<DuplicateQuery query={query} onClose={onClose} buildRequest={buildRequest} />);
+  render(
+    <DuplicateQuery
+      header={HEADER}
+      submitLabel={SUBMIT_LABEL}
+      query={query}
+      onClose={onClose}
+      buildRequest={buildRequest}
+    />,
+  );
 
 const sentRequest = () => vi.mocked(createSavedQuery).mock.calls[0][0] as SavedQueryRequest;
 
@@ -171,7 +182,13 @@ describe('DuplicateQuery', () => {
     render(
       <SourcePanelProvider tables={[]} queries={[]}>
         <SelectedTab />
-        <DuplicateQuery query={void 0} onClose={onClose} buildRequest={buildRequest} />
+        <DuplicateQuery
+          header={HEADER}
+          submitLabel={SUBMIT_LABEL}
+          query={void 0}
+          onClose={onClose}
+          buildRequest={buildRequest}
+        />
       </SourcePanelProvider>,
     );
     expect(screen.getByText('tab: none')).toBeInTheDocument();
@@ -190,7 +207,14 @@ describe('DuplicateQuery', () => {
     render(
       <SourcePanelProvider tables={[]} queries={[]}>
         <SelectedTab />
-        <DuplicateQuery query={STRUCTURED} onClose={onClose} buildRequest={buildRequest} onCreated={onCreated} />
+        <DuplicateQuery
+          header={HEADER}
+          submitLabel={SUBMIT_LABEL}
+          query={STRUCTURED}
+          onClose={onClose}
+          buildRequest={buildRequest}
+          onCreated={onCreated}
+        />
       </SourcePanelProvider>,
     );
 
@@ -306,7 +330,16 @@ describe('DuplicateQuery', () => {
   test('hands the created query to onCreated instead of notifying, closing, and navigating', async () => {
     const user = userEvent.setup();
     const onCreated = vi.fn();
-    render(<DuplicateQuery query={STRUCTURED} onClose={onClose} buildRequest={buildRequest} onCreated={onCreated} />);
+    render(
+      <DuplicateQuery
+        header={HEADER}
+        submitLabel={SUBMIT_LABEL}
+        query={STRUCTURED}
+        onClose={onClose}
+        buildRequest={buildRequest}
+        onCreated={onCreated}
+      />,
+    );
 
     await submit(user);
 
@@ -316,14 +349,28 @@ describe('DuplicateQuery', () => {
     expect(mockShowNotification).not.toHaveBeenCalled();
   });
 
-  test('renders the Save query as header', () => {
-    renderModal();
+  test('renders the header and submit label it is given', () => {
+    render(
+      <DuplicateQuery
+        query={STRUCTURED}
+        onClose={onClose}
+        buildRequest={buildRequest}
+        header="Queries.DuplicateQuery"
+        submitLabel="Buttons.Duplicate"
+      />,
+    );
 
-    expect(screen.getByText('Queries.SaveQueryAs')).toBeInTheDocument();
+    expect(screen.getByText('Queries.DuplicateQuery')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Buttons.Duplicate' })).toBeInTheDocument();
+    expect(screen.queryByText('Queries.SaveQueryAs')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Buttons.Save' })).toBeNull();
   });
 
   describe('without a source query', () => {
-    const renderUnseeded = () => render(<DuplicateQuery onClose={onClose} buildRequest={buildRequest} />);
+    const renderUnseeded = () =>
+      render(
+        <DuplicateQuery header={HEADER} submitLabel={SUBMIT_LABEL} onClose={onClose} buildRequest={buildRequest} />,
+      );
 
     test('starts with an empty name and blocks submission', () => {
       renderUnseeded();

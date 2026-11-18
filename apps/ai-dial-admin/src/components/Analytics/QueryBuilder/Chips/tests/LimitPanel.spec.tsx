@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test } from 'vitest';
 
@@ -21,11 +21,18 @@ const fill = async (user: ChipUser, dialog: HTMLElement, name: string, value: st
   if (value) await user.type(input, value);
 };
 
+const openLimit = async (user: ChipUser) => {
+  const dialog = await openChip(user, LIMIT_CHIP);
+  const rows = within(dialog).getByRole('spinbutton', { name: 'QueryChips.Rows' });
+  await waitFor(() => expect(rows).toHaveFocus());
+  return dialog;
+};
+
 describe('LimitPanel', () => {
   test('opens with the current rows and offset, and offers neither Back nor Remove', async () => {
     const user = userEvent.setup();
     renderChipBar({ initial: { page: { ...createInitialPage(), limit: 40, offset: 80 } } });
-    const dialog = await openChip(user, LIMIT_CHIP);
+    const dialog = await openLimit(user);
 
     expect(within(dialog).getByRole('heading', { name: 'QueryBuilder.Limit' })).toBeInTheDocument();
     expect(within(dialog).getByRole('spinbutton', { name: 'QueryChips.Rows' })).toHaveValue(40);
@@ -38,7 +45,7 @@ describe('LimitPanel', () => {
   test('writes the rows and the offset as offset paging', async () => {
     const user = userEvent.setup();
     renderChipBar();
-    const dialog = await openChip(user, LIMIT_CHIP);
+    const dialog = await openLimit(user);
 
     await fill(user, dialog, 'QueryChips.Rows', '25');
     await fill(user, dialog, 'QueryBuilder.Offset', '50');
@@ -53,7 +60,7 @@ describe('LimitPanel', () => {
     renderChipBar({
       initial: { page: { ...createInitialPage(), type: QueryPageType.Cursor, cursor: 'abc', includeTotal: true } },
     });
-    const dialog = await openChip(user, LIMIT_CHIP);
+    const dialog = await openLimit(user);
 
     await fill(user, dialog, 'QueryChips.Rows', '10');
     await apply(user, dialog);
@@ -73,7 +80,7 @@ describe('LimitPanel', () => {
   ])('disables Apply for %s', async (_case, name, value) => {
     const user = userEvent.setup();
     renderChipBar();
-    const dialog = await openChip(user, LIMIT_CHIP);
+    const dialog = await openLimit(user);
 
     await fill(user, dialog, name, value);
 
@@ -86,7 +93,7 @@ describe('LimitPanel', () => {
   ])('keeps Apply enabled for %s', async (_case, name, value) => {
     const user = userEvent.setup();
     renderChipBar();
-    const dialog = await openChip(user, LIMIT_CHIP);
+    const dialog = await openLimit(user);
 
     await fill(user, dialog, name, value);
 

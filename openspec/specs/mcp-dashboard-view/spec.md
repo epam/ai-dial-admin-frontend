@@ -124,14 +124,15 @@ The Toolsets entity audit view SHALL display only the MCP dashboard layout witho
 - **AND** data is filtered by the toolset's deployment name
 
 ### Requirement: Asset Toolsets entity audit shows MCP-only dashboard
-The Asset Toolsets entity view SHALL include an Audit tab (gated by `dashboardEnabled` feature flag) showing only the MCP dashboard. The entity filter SHALL use the full deployment path (`toolsets/<path>`) to match InfluxDB data.
+The Asset Toolsets entity view SHALL include an Audit tab, present when `dashboardEnabled` is set together with `adminApiEnabled` or when `analyticsUsageEnabled` is set (per `admin-api-availability`), showing only the MCP dashboard. The entity filter SHALL use the full deployment path (`toolsets/<path>`) to match InfluxDB data.
 
 #### Scenario: Asset Toolset audit tab visible
-- **WHEN** the `dashboardEnabled` feature flag is true
+- **WHEN** `dashboardEnabled` and `adminApiEnabled` are both true, or `analyticsUsageEnabled` is true
 - **THEN** the Audit tab appears in the Asset Toolset entity view
 
 #### Scenario: Asset Toolset audit tab hidden
-- **WHEN** the `dashboardEnabled` feature flag is false
+- **WHEN** `analyticsUsageEnabled` is false
+- **AND** `dashboardEnabled` or `adminApiEnabled` is false
 - **THEN** the Audit tab does not appear in the Asset Toolset entity view
 
 #### Scenario: Asset Toolset entity filter

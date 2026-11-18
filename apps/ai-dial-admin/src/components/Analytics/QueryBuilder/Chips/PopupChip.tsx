@@ -11,11 +11,14 @@ interface Props {
   label: string;
   widthClassName?: string;
   renderPanel: (props: ChipPanelProps) => ReactNode;
+  isReadOnly?: boolean;
 }
 
-const PopupChip: FC<Props> = ({ prefix, label, widthClassName, renderPanel }) => {
+const PopupChip: FC<Props> = ({ prefix, label, widthClassName, renderPanel, isReadOnly = false }) => {
   const titleId = useId();
   const [isOpen, setIsOpen] = useState(false);
+
+  if (isReadOnly) return <Chip prefix={prefix} label={label} isOpen={false} isReadOnly />;
 
   return (
     <ChipPopup

@@ -7,15 +7,17 @@ import {
   ButtonVariant,
   GhostButton,
   Spinner,
-  OutlinedButton,
   NoDataContent,
   PrimaryButton,
   SegmentedControl,
+  Badge,
+  BadgeColor,
+  BadgeVariant,
+  Button,
 } from '@epam/ai-dial-ui-kit';
 import type { DropdownItem, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
-import { IconCopy, IconPencilMinus, IconPlayerPlay, IconTrashX } from '@tabler/icons-react';
+import { IconCopy, IconPencilMinus, IconPlayerPlay, IconTable, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { createPortal } from 'react-dom';
 
 import { getEntitySchema, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/queries/actions';
 import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
@@ -28,7 +30,10 @@ import ChipBar from '@/src/components/Analytics/QueryBuilder/Chips/ChipBar';
 import { PeriodControl } from '@/src/components/Analytics/QueryBuilder/Chips/models';
 import BuilderArea from '@/src/components/Analytics/QueryBuilder/Layout/BuilderArea';
 import QueryHeader from '@/src/components/Analytics/QueryBuilder/Layout/QueryHeader';
+import SourceProblemIcon from '@/src/components/Analytics/QueryBuilder/Layout/SourceProblemIcon';
+import DeleteQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DeleteQueryPopup';
 import DiscardQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DiscardQueryPopup';
+import ResetQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/ResetQueryPopup';
 import {
   useSourcePanelUnsavedWork,
   useSourceTableDescription,
@@ -39,8 +44,8 @@ import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/con
 import { useSavedQueryPage } from '@/src/components/Analytics/QueryBuilder/use-saved-query-page';
 import DuplicateQuery from '@/src/components/Analytics/Queries/Modals/DuplicateQuery';
 import EditQuery from '@/src/components/Analytics/Queries/Modals/EditQuery';
-import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import DiscardModal from '@/src/components/EntityView/Modals/Discard/Discard';
+import { savedQueryPrimarySource } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { isChipRepresentable, parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
 import {
@@ -53,6 +58,7 @@ import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-for
 import { createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
+import { SAVED_QUERY_SCOPE_I18N } from '@/src/constants/analytics/queries';
 import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
 import { ButtonsI18nKey, QueriesI18nKey, QueryBuilderI18nKey, QueryChipsI18nKey } from '@/src/constants/i18n';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -64,13 +70,15 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryFunction } from '@/src/models/analytics/query-function';
-import { SavedQuery } from '@/src/models/analytics/saved-query';
+import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import {
   ChartConfig,
   ExecutedQueryMeta,
   QueryBuilderState,
   QueryBuilderView,
+  QueryCopyMode,
+  QuerySourceProblem,
   QueryRequestKind,
   QueryResultView,
   QueryRunRequest,
@@ -78,7 +86,6 @@ import {
 } from '@/src/models/analytics/query-builder';
 import { ReadFailure } from '@/src/models/server-action';
 import { TimeRange } from '@/src/models/time-range';
-import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile } from '@/src/utils/download';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -93,10 +100,28 @@ interface Props {
   savedQuery?: SavedQuery;
   translatedSql?: string | null;
   translationFailure?: ReadFailure | null;
+  sourceProblem?: QuerySourceProblem | null;
   onResetDraft?: () => void;
 }
 
 const AI_PANEL_STORAGE_KEY = 'query-builder-ai-panel-open';
+
+const SCOPE_BADGE_COLOR: Record<SavedQueryScope, BadgeColor> = {
+  [SavedQueryScope.Personal]: BadgeColor.Violet,
+  [SavedQueryScope.Common]: BadgeColor.Green,
+};
+
+const COPY_HEADER_I18N: Record<QueryCopyMode, QueriesI18nKey> = {
+  [QueryCopyMode.SaveDraft]: QueriesI18nKey.SaveAsQuery,
+  [QueryCopyMode.Duplicate]: QueriesI18nKey.DuplicateQuery,
+  [QueryCopyMode.SaveCopy]: QueriesI18nKey.SaveACopy,
+};
+
+const COPY_SUBMIT_I18N: Record<QueryCopyMode, QueriesI18nKey | ButtonsI18nKey> = {
+  [QueryCopyMode.SaveDraft]: ButtonsI18nKey.Save,
+  [QueryCopyMode.Duplicate]: ButtonsI18nKey.Duplicate,
+  [QueryCopyMode.SaveCopy]: QueriesI18nKey.SaveACopy,
+};
 
 const QueryBuilder: FC<Props> = ({
   initialEntities,
@@ -107,6 +132,7 @@ const QueryBuilder: FC<Props> = ({
   savedQuery,
   translatedSql,
   translationFailure,
+  sourceProblem,
   onResetDraft,
 }) => {
   const t = useI18n();
@@ -135,6 +161,7 @@ const QueryBuilder: FC<Props> = ({
   const [pendingView, setPendingView] = useState<QueryBuilderView | null>(null);
   const [isResetOpen, setIsResetOpen] = useState(false);
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
+  const [copyMode, setCopyMode] = useState(QueryCopyMode.SaveDraft);
   const [result, setResult] = useState<StructuredQueryResult | null>(null);
   const [resultMeta, setResultMeta] = useState<ExecutedQueryMeta | null>(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -185,6 +212,8 @@ const QueryBuilder: FC<Props> = ({
   const patch = useCallback((partial: Partial<QueryBuilderState>) => setState((prev) => ({ ...prev, ...partial })), []);
 
   const fieldsLoaded = state.fields.length > 0;
+  const isReadOnly = !!savedQuery && !fieldsLoaded;
+  const shownSourceProblem = fieldsLoaded ? null : sourceProblem;
   const timestampField = useMemo(() => findTimestampField(state.fields), [state.fields]);
   const { getCurrentTimeRange } = timeFilter;
   const boundPeriod = timeFilter.isCustom ? undefined : timeFilter.timePeriod;
@@ -481,23 +510,28 @@ const QueryBuilder: FC<Props> = ({
     }
   };
 
-  const runDisabled = !fieldsLoaded || (isSqlView && !sqlText.trim());
+  const runDisabled = (!fieldsLoaded && !isReadOnly) || (isSqlView && !sqlText.trim());
   const isSaveBlocked = runDisabled && !(fieldsLoaded && savedQueryPage.hasUnloadedBody);
 
   const isSaveDisabled = isSaveBlocked || savedQueryPage.isSaving;
 
+  const onOpenCopy = (mode: QueryCopyMode) => {
+    setCopyMode(mode);
+    savedQueryPage.onOpenSaveAs();
+  };
+
   const saveItems: DropdownItem[] = [
-    { key: 'save', label: t(ButtonsI18nKey.Save), onClick: () => void savedQueryPage.onSave() },
-    { key: 'save-as', label: t(QueriesI18nKey.SaveAsNewQuery), onClick: savedQueryPage.onOpenSaveAs },
+    { key: 'save-copy', label: t(QueriesI18nKey.SaveACopyMenuItem), onClick: () => onOpenCopy(QueryCopyMode.SaveCopy) },
   ];
 
   const renderDraftActions = () => (
     <>
       {savedQueryPage.isDirty && <GhostButton label={t(ButtonsI18nKey.Reset)} onClick={() => setIsResetOpen(true)} />}
-      <OutlinedButton
+      <Button
         className={saveAsClassName}
+        variant={ButtonVariant.Neutral}
         label={t(QueriesI18nKey.SaveAsQuery)}
-        onClick={savedQueryPage.onOpenSaveAs}
+        onClick={() => onOpenCopy(QueryCopyMode.SaveDraft)}
         disabled={isSaveDisabled}
       />
     </>
@@ -507,18 +541,29 @@ const QueryBuilder: FC<Props> = ({
     <>
       <GhostButton label={t(ButtonsI18nKey.Discard)} onClick={() => setIsDiscardOpen(true)} />
       {savedQueryPage.isWritable ? (
-        <ButtonDropdown
-          className={saveAsClassName}
-          variant={ButtonVariant.Primary}
-          label={t(ButtonsI18nKey.Save)}
-          items={saveItems}
-          disabled={isSaveDisabled}
-        />
+        <div role="group" aria-label={t(ButtonsI18nKey.Save)} className={classNames('flex', saveAsClassName)}>
+          <Button
+            className="rounded-r-none"
+            variant={ButtonVariant.Neutral}
+            label={t(ButtonsI18nKey.Save)}
+            onClick={() => void savedQueryPage.onSave()}
+            disabled={isSaveDisabled}
+          />
+          <ButtonDropdown
+            className="-ml-px rounded-l-none px-3"
+            variant={ButtonVariant.Neutral}
+            aria-label={t(QueriesI18nKey.SaveOptions)}
+            items={saveItems}
+            disabled={isSaveDisabled}
+            dropdownProps={{ placement: 'bottom-end', matchReferenceWidth: false }}
+          />
+        </div>
       ) : (
-        <OutlinedButton
+        <Button
           className={saveAsClassName}
-          label={t(QueriesI18nKey.SaveAsNewQuery)}
-          onClick={savedQueryPage.onOpenSaveAs}
+          variant={ButtonVariant.Neutral}
+          label={t(QueriesI18nKey.SaveACopy)}
+          onClick={() => onOpenCopy(QueryCopyMode.SaveCopy)}
           disabled={isSaveDisabled}
         />
       )}
@@ -542,11 +587,12 @@ const QueryBuilder: FC<Props> = ({
           onClick={savedQueryPage.onOpenEdit}
         />
       )}
-      <OutlinedButton
+      <Button
         className={saveAsClassName}
+        variant={ButtonVariant.Neutral}
         label={t(ButtonsI18nKey.Duplicate)}
         iconBefore={<IconCopy {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-        onClick={savedQueryPage.onOpenSaveAs}
+        onClick={() => onOpenCopy(QueryCopyMode.Duplicate)}
         disabled={isSaveDisabled}
       />
     </>
@@ -571,7 +617,7 @@ const QueryBuilder: FC<Props> = ({
 
   const period = useMemo<PeriodControl | null>(
     () =>
-      timestampField
+      timestampField || (isReadOnly && savedQuery?.time)
         ? {
             timePeriod: timeFilter.timePeriod,
             isCustom: timeFilter.isCustom,
@@ -582,6 +628,8 @@ const QueryBuilder: FC<Props> = ({
         : null,
     [
       timestampField,
+      isReadOnly,
+      savedQuery?.time,
       timeFilter.timePeriod,
       timeFilter.isCustom,
       timeFilter.timeRange,
@@ -591,8 +639,8 @@ const QueryBuilder: FC<Props> = ({
   );
 
   const renderBuilderArea = () => {
-    if (!fieldsLoaded) return <NoDataContent title={t(QueryBuilderI18nKey.SchemaLoadFailed)} />;
-    if (!isSqlView) return <ChipBar period={period} />;
+    if (!fieldsLoaded && !isReadOnly) return <NoDataContent title={t(QueryBuilderI18nKey.SchemaLoadFailed)} />;
+    if (!isSqlView) return <ChipBar period={period} isReadOnly={isReadOnly} />;
 
     return (
       <div className="flex h-full min-h-0 flex-col gap-2">
@@ -619,6 +667,24 @@ const QueryBuilder: FC<Props> = ({
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 pr-4">
           <QueryHeader
             title={name ?? t(QueriesI18nKey.Title)}
+            badge={
+              savedQueryPage.savedQuery && (
+                <Badge
+                  variant={BadgeVariant.Filled}
+                  color={SCOPE_BADGE_COLOR[savedQueryPage.savedQuery.scope]}
+                  label={t(SAVED_QUERY_SCOPE_I18N[savedQueryPage.savedQuery.scope])}
+                />
+              )
+            }
+            subtitle={
+              savedQueryPage.savedQuery && (
+                <span className="flex items-center gap-2 text-secondary dial-small-text">
+                  <IconTable size={16} className="shrink-0 text-success" aria-hidden />
+                  {state.entityName || savedQueryPrimarySource(savedQueryPage.savedQuery)}
+                  {shownSourceProblem && <SourceProblemIcon problem={shownSourceProblem} />}
+                </span>
+              )
+            }
             description={savedQueryPage.isDraft ? tableDescription : savedQueryPage.savedQuery?.description}
           >
             {renderActions()}
@@ -629,7 +695,7 @@ const QueryBuilder: FC<Props> = ({
           ) : (
             <>
               <div className="flex flex-wrap items-center gap-3">
-                {fieldsLoaded && (
+                {(fieldsLoaded || isReadOnly) && (
                   <SegmentedControl
                     aria-label={t(QueryBuilderI18nKey.ViewSwitcher)}
                     items={viewOptions}
@@ -641,7 +707,7 @@ const QueryBuilder: FC<Props> = ({
                   />
                 )}
                 <div className="ml-auto flex items-center gap-3">
-                  {fieldsLoaded && isSqlView && (
+                  {(fieldsLoaded || isReadOnly) && isSqlView && (
                     <CopyButton
                       value={sqlText}
                       valueLabel={t(QueryBuilderI18nKey.SqlQuery)}
@@ -699,6 +765,8 @@ const QueryBuilder: FC<Props> = ({
 
       {savedQueryPage.isSaveAsOpen && (
         <DuplicateQuery
+          header={t(COPY_HEADER_I18N[copyMode])}
+          submitLabel={t(COPY_SUBMIT_I18N[copyMode])}
           query={savedQueryPage.savedQuery}
           buildRequest={savedQueryPage.buildSaveAsRequest}
           onCreated={savedQueryPage.isDraft ? undefined : savedQueryPage.onSaveAsCreated}
@@ -706,18 +774,13 @@ const QueryBuilder: FC<Props> = ({
         />
       )}
 
-      {savedQueryPage.isDeleteOpen &&
-        savedQueryPage.savedQuery &&
-        createPortal(
-          <DeleteConfirmationModal<SavedQuery>
-            view={ApplicationRoute.AnalyticsQueries}
-            entity={savedQueryPage.savedQuery}
-            isSelectedView
-            onRemoveEntity={savedQueryPage.onRemove}
-            onCloseModal={savedQueryPage.onCloseDelete}
-          />,
-          document.body,
-        )}
+      {savedQueryPage.isDeleteOpen && savedQueryPage.savedQuery && (
+        <DeleteQueryPopup
+          query={savedQueryPage.savedQuery}
+          onRemove={savedQueryPage.onRemove}
+          onClose={savedQueryPage.onCloseDelete}
+        />
+      )}
 
       {isDiscardOpen && (
         <DiscardModal
@@ -727,13 +790,7 @@ const QueryBuilder: FC<Props> = ({
         />
       )}
 
-      {isResetOpen && (
-        <DiscardModal
-          onConfirm={onConfirmReset}
-          onClose={() => setIsResetOpen(false)}
-          onCancel={() => setIsResetOpen(false)}
-        />
-      )}
+      {isResetOpen && <ResetQueryPopup onConfirm={onConfirmReset} onCancel={() => setIsResetOpen(false)} />}
 
       {pendingView !== null && <DiscardQueryPopup onConfirm={onConfirmDiscard} onCancel={() => setPendingView(null)} />}
     </QueryBuilderContext.Provider>
