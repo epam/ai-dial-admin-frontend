@@ -7,9 +7,9 @@ import classNames from 'classnames';
 import Link from 'next/link';
 
 import { useSourcePanel } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
-import { QueriesI18nKey } from '@/src/constants/i18n';
+import { SAVED_QUERY_SCOPE_I18N } from '@/src/constants/analytics/queries';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
-import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query';
+import { SavedQuery } from '@/src/models/analytics/saved-query';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
@@ -18,11 +18,6 @@ interface Props {
   isCurrent: boolean;
   isNested?: boolean;
 }
-
-const SCOPE_I18N: Record<SavedQueryScope, QueriesI18nKey> = {
-  [SavedQueryScope.Personal]: QueriesI18nKey.ScopePersonal,
-  [SavedQueryScope.Common]: QueriesI18nKey.ScopeCommon,
-};
 
 const QueryRow: FC<Props> = ({ query, isCurrent, isNested = false }) => {
   const t = useI18n();
@@ -39,7 +34,7 @@ const QueryRow: FC<Props> = ({ query, isCurrent, isNested = false }) => {
         contentClassName="max-w-[320px]"
         tooltip={
           <span className="flex flex-col items-start gap-1">
-            <Badge label={t(SCOPE_I18N[query.scope])} />
+            <Badge label={t(SAVED_QUERY_SCOPE_I18N[query.scope])} />
             {query.description && <span>{query.description}</span>}
           </span>
         }

@@ -4,59 +4,6 @@
 
 How a query is authored: the resizable builder area above the results and its two mutually exclusive views — Builder and SQL — the chips and popups behind the Builder view, the guarded transitions between them, and the assistant panel beside the builder. Running a query and reading its result is `analytics/query-viewer`.
 ## Requirements
-### Requirement: Query Builder layout and view switcher
-
-The Query Builder SHALL be rendered by two pages: the draft builder (`app/[lang]/queries/page.tsx`) and
-a saved query's page (`app/[lang]/queries/[id]/page.tsx`). Each SHALL render a page heading — the saved
-query's name, or the draft's table name — a toolbar, a main results area, and a query-builder rail on
-the right side of the content area. Both SHALL be laid out to the right of the Source panel specified
-in `analytics/source-panel`. The toolbar SHALL contain the shared time filter, the page's own actions,
-and the Run action; it SHALL NOT contain a source selector. The rail header SHALL offer three mutually
-exclusive views — **Builder** (form), **SQL**, and **JSON** — via a `SegmentedControl`; selecting a view
-SHALL change the rail body without a page reload and the current view SHALL be indicated. The view
-switcher SHALL NOT be shown before a schema is loaded. Base form controls SHALL come from the DIAL UI
-Kit and tabular results SHALL be displayed with the app's grid stack.
-
-The builder SHALL be reachable both through a saved query and as a draft with no stored query behind it.
-
-On both pages the breadcrumbs SHALL show the Queries section only; a saved query's identifier SHALL NOT
-appear as a breadcrumb.
-
-#### Scenario: Results-first layout renders
-
-- **WHEN** the user opens a saved query
-- **THEN** the query's name is shown as the heading
-- **AND** a toolbar with the time filter, the query's actions, and Run is shown
-- **AND** the results area is the main content
-- **AND** the query-builder rail is shown at the right
-
-#### Scenario: A draft renders the same layout
-
-- **WHEN** the user opens the draft builder
-- **THEN** the draft's table name is shown as the heading
-- **AND** the toolbar, the results area and the query-builder rail are shown as on a saved query
-
-#### Scenario: The breadcrumbs omit the query id
-
-- **WHEN** the user opens a saved query
-- **THEN** the breadcrumbs show the Queries section and no identifier
-
-#### Scenario: The toolbar has no source selector
-
-- **WHEN** either query page is shown
-- **THEN** the toolbar offers no control that switches the source
-
-#### Scenario: Three views offered once a schema is loaded
-
-- **WHEN** the page has loaded an entity schema
-- **THEN** the rail header offers Builder, SQL, and JSON views
-- **AND** one view is indicated as selected
-
-#### Scenario: Switcher hidden before a schema loads
-
-- **WHEN** no schema has been loaded yet
-- **THEN** the view switcher is not shown
-
 ### Requirement: Query Builder initial data loading and state
 
 A saved query's page SHALL prefetch, on the server, the queryable entities, the function catalog, the
@@ -94,225 +41,6 @@ empty state.
 - **WHEN** the page provides an empty entities list
 - **THEN** the builder shows the entities-load-failed empty state and no builder sections
 
-### Requirement: Query Builder toolbar
-
-Each query page SHALL render an in-page toolbar containing, left to right: the shared time filter
-(`TimeFilter` with the global preset options and a custom-range picker), then right-aligned the page's
-own actions, followed by Copy and the Run primary action. The toolbar SHALL NOT contain a source
-selector.
-
-On a saved query the page's own actions SHALL be Edit, Delete, Discard, Save, and Save as. Discard and
-Save SHALL be present only while the page holds unsaved changes; Edit and Delete SHALL be present
-whenever the caller may write the query; Save as SHALL be present whether or not the page holds unsaved
-changes.
-
-On a draft the page's own actions SHALL be Reset and Save as query, as specified by the draft
-requirement.
-
-#### Scenario: Toolbar composition
-
-- **WHEN** the user opens a saved query they may write, with entities loaded
-- **THEN** the toolbar shows the time filter, the Edit, Delete and Save as actions, Copy, and the Run action
-- **AND** it shows no source dropdown
-
-#### Scenario: Save and Discard appear with unsaved changes
-
-- **WHEN** the page holds unsaved changes
-- **THEN** the toolbar also shows the Discard and Save actions
-
-#### Scenario: A draft's toolbar
-
-- **WHEN** the user opens the draft builder
-- **THEN** the toolbar shows the time filter, Save as query, Copy, and the Run action
-
-### Requirement: Time range is part of the structured query
-
-The toolbar time filter SHALL be a query control: its range SHALL serialize into the structured query's filter as `ge`/`le` predicates on the source's automatically detected timestamp field (the first temporal-typed field of the loaded schema). The serialized query — as shown in the JSON view, copied by the Copy action, and executed by Run — SHALL include these predicates; nothing is added invisibly at execution time. The time predicates SHALL NOT be shown in the visual Filters tree — the toolbar control is their editor. When the schema has no temporal field, no time predicates SHALL be serialized and the query runs without a time bound. SQL text SHALL never be modified by the time filter.
-
-A **preset** period SHALL serialize as a **relative** bound rather than as two instants: the lower bound SHALL compare the timestamp field against a call subtracting the preset's own unit and amount from the current instant, and the upper bound against the current instant itself. The body then carries the moving window on its own, so a copied, exported, or directly executed body returns the last N units at the moment it runs instead of the window its author happened to be looking at. Because the current instant is read where the query is evaluated rather than from the browser, a relative bound also removes the clock skew an instant resolved client-side carries.
-
-A **custom** range SHALL keep serializing as two absolute instants, and an anchored option's fixed start SHALL stay absolute: both name one specific interval, which is what the user asked for.
-
-Both the subtraction and the current-instant call SHALL be named by the served function catalog, and the frontend SHALL verify they are served before emitting them. When the catalog serves neither — it failed to load, or a deployment's catalog does not carry them — a preset SHALL serialize absolutely, exactly as a custom range does, rather than emit a call the service would reject and take the whole query down.
-
-When parsing JSON back into builder state, a matching `ge` + `le` predicate pair on the timestamp field SHALL be lifted into the toolbar control: a **relative** pair whose subtracted unit and amount match an offered preset SHALL be lifted as that preset, and an **absolute** pair SHALL be lifted as a custom range, exactly as before. Time conditions in any other shape SHALL remain ordinary filter conditions, editable in the Filters tree like any other — including a relative lower bound with no matching upper bound, a relative bound matching no offered preset, and any pair on another field.
-
-The **persisted** body is the one exception, and it is deliberate: the structured body written to a saved query SHALL be serialized without the time bound, and the authored range SHALL be stored separately as time intent (see **Saving persists authored intent, not a resolved range**). Serializing the range into a persisted body would freeze the saved query to the day it was authored.
-
-#### Scenario: Time range serializes into the query
-
-- **WHEN** the user has a time range selected and the schema has a temporal field
-- **THEN** the serialized query's filter includes `ge` and `le` predicates on that field
-- **AND** the JSON view displays these predicates
-- **AND** the visual Filters tree does not display them
-
-#### Scenario: A preset period serializes as a relative bound
-
-- **WHEN** the user selects a preset period of 30 minutes and the schema has a temporal field
-- **THEN** the serialized query's filter includes a `ge` predicate comparing that field against a call subtracting 30 minutes from the current instant
-- **AND** an `le` predicate comparing it against the current instant
-- **AND** the JSON view displays both predicates while the visual Filters tree does not
-
-#### Scenario: A preset period's body stays current when re-run later
-
-- **WHEN** a body serialized from a preset period is executed again some time after it was produced
-- **THEN** it bounds the results by the preset's span measured from the moment of that execution
-- **AND** no instant from the moment of authoring appears in the body
-
-#### Scenario: A custom range serializes as instants
-
-- **WHEN** the user selects a custom range
-- **THEN** the serialized query's filter includes `ge` and `le` predicates carrying that range's two absolute instants
-- **AND** no relative call is emitted
-
-#### Scenario: A relative pair lifts back to its preset
-
-- **WHEN** the JSON view holds a `ge`/`le` pair on the timestamp field whose lower bound subtracts 2 days from the current instant and whose upper bound is the current instant
-- **THEN** the toolbar time filter shows the 2-day preset rather than a custom range
-- **AND** the predicates do not appear in the visual Filters tree
-
-#### Scenario: JSON time predicates round-trip into the toolbar control
-
-- **WHEN** the user edits the JSON's `ge`/`le` predicate pair on the timestamp field to two absolute instants and the JSON is otherwise representable
-- **THEN** the toolbar time filter reflects the edited range as a custom range
-- **AND** the predicates do not appear in the visual Filters tree
-
-#### Scenario: A relative bound the toolbar cannot own stays a filter condition
-
-- **WHEN** a query carries only a `ge` predicate comparing the timestamp field against a call subtracting 30 minutes from the current instant, with no matching upper bound
-- **THEN** it is shown as an ordinary condition in the Filters tree
-- **AND** the toolbar time filter does not claim it
-
-#### Scenario: A catalog without the relative functions falls back to instants
-
-- **WHEN** the served function catalog carries neither the subtraction nor the current-instant function and the user has a preset period selected
-- **THEN** the serialized query's filter carries that preset's resolved instants as absolute values
-- **AND** the query runs
-
-#### Scenario: No temporal field
-
-- **WHEN** the loaded schema has no temporal-typed field
-- **THEN** the serialized query contains no time predicates and the run is not time-bounded
-
-#### Scenario: SQL runs are not modified
-
-- **WHEN** the user runs a query from the SQL view
-- **THEN** the executed SQL is exactly the editor text
-
-#### Scenario: The persisted body carries no time bound
-
-- **WHEN** the user saves a query whose toolbar has a time range selected and whose schema has a temporal field
-- **THEN** the persisted structured body contains no `ge`/`le` predicate on the timestamp field
-- **AND** the range is carried as the saved query's time intent instead
-
-### Requirement: Query builder rail with collapse
-
-The query builder SHALL render in a fixed-width rail at the right edge of the content area with a header containing a collapse control and the view switcher. Collapsing SHALL hide the rail entirely and show a restore ("Query builder") button in the results-area header; restoring SHALL bring the rail back. The collapsed state SHALL be persisted in the browser's local storage under a Query-Builder-specific key and applied SSR-safely on the next visit.
-
-#### Scenario: Collapse frees the results area
-
-- **WHEN** the user activates the rail collapse control
-- **THEN** the rail is hidden and the results area takes the full content width
-- **AND** a restore button appears in the results-area header
-
-#### Scenario: Restore brings the rail back
-
-- **WHEN** the rail is collapsed and the user activates the restore button
-- **THEN** the rail is shown again with its previous view and state
-
-#### Scenario: Collapsed state persists
-
-- **WHEN** the user collapses the rail and reloads the page
-- **THEN** the rail is initially collapsed
-
-### Requirement: Builder sections use section blocks with categorized field dropdowns and collapsible items
-
-<!-- Merged from add-column-labels-and-descriptions (archived): display names, descriptions, and the bounded-width dropdown with hover tooltips. -->
-
-Each Builder-view section (Group by, Aggregates, Select, Filters, Having, Sort, Page) SHALL render as a borderless section tile — a raised background panel, no outline — with a labeled header and a header-level add action where applicable. Field pickers SHALL be searchable dropdowns whose options are grouped by the field's schema tag/category (untagged fields under a default group). Category groups SHALL be collapsible headers showing the group's option count, with at most one category expanded at a time (accordion); the group holding the current selection SHALL start expanded, and an active search term SHALL show all matches regardless of collapse state. Category header colors SHALL cycle the full builder palette. The dropdown's search input SHALL use the same compact boxed style as the builder's other controls.
-
-Field options SHALL display the field's **display name** — the schema `display_name` when set, otherwise the field `name` — as primary text, the field type right-aligned, and the schema `description` as a secondary line when present; fields without display name and description SHALL render as a single line. The dropdown overlay width SHALL stay bounded: long descriptions truncate to one line and the full text is reachable via a hover tooltip of reasonable width. The dropdown search SHALL match against both the field name and its display name. Added items SHALL render compactly — chips for plain fields, collapsible rows for parameterized items (group-by functions, row-mode select functions, aggregates, conditions, having rows, sort keys) that expand into their editor and collapse back to a summary chip tinted with the owning section's palette color — and chips and collapsed summaries SHALL refer to fields by their display name. Display names are presentation-only: structured-query serialization, the JSON view, and the SQL view SHALL always use the raw field `name`. Styling SHALL use the project's palette/theme tokens only. A field whose schema `sensitive` flag is true SHALL show a sensitive marker (a colored dot with a "Sensitive" tooltip) in its dropdown option, after the display name.
-
-The field dropdown SHALL support a multi-select mode, used by the sections whose target is a list of fields — the row-mode Select projection and the plain-column part of Group by. In multi-select mode: picking an option SHALL toggle that field's membership and SHALL leave the overlay open, its search term, and its expanded category untouched, so several fields can be added in one visit; already-selected fields SHALL remain listed among the options rather than being filtered out; a selected option SHALL be marked by a check mark in the row's reserved left gutter plus the same accent background tint the single-select picker uses for its current value (no checkbox control), so the state does not rest on colour alone; clicking a selected option SHALL deselect it; and the listbox SHALL declare itself multi-selectable with each option carrying its selected state for assistive technology. Selection order SHALL be preserved as the section's list order (a newly selected field appends). Single-valued pickers — the Sort key field, the Filter and Having condition field, and function expression arguments — SHALL remain single-select and SHALL keep closing the overlay on pick.
-
-#### Scenario: Sensitive field shows a marker in the dropdown
-
-- **WHEN** a schema field whose `sensitive` flag is true is shown in a field dropdown
-- **THEN** its option renders a sensitive marker with a "Sensitive" tooltip
-- **AND** a non-sensitive field's option renders no such marker
-
-#### Scenario: Field dropdown groups by category
-
-- **WHEN** the user opens a field dropdown in a builder section
-- **THEN** the fields are grouped under collapsible category headers with option counts
-- **AND** expanding one category collapses the previously expanded one
-- **AND** typing in the search shows all matching fields across categories
-
-#### Scenario: Display-named field renders display name, description, and type
-
-- **WHEN** the schema field `total_money` carries display name "Total money spend" and a description
-- **THEN** its dropdown option shows "Total money spend" as primary text with the type right-aligned
-- **AND** the description is shown as a secondary line
-
-#### Scenario: Field without a display name falls back to its name
-
-- **WHEN** a schema field has no display name and no description
-- **THEN** its dropdown option shows the raw field name in a single line, as before
-
-#### Scenario: Search matches the display name
-
-- **WHEN** the user types "money" and only the field `total_money` with display name "Total money spend" matches
-- **THEN** that field is shown in the results
-- **AND** searching by the raw name `total_money` finds it as well
-
-#### Scenario: Chips and summaries use the display name
-
-- **WHEN** the user adds a projection chip and an aggregate over a field with a display name
-- **THEN** the chip shows the field's display name
-- **AND** the collapsed aggregate summary refers to the field by its display name
-- **AND** the serialized query and the JSON view reference the raw field name
-
-#### Scenario: Parameterized item collapses to a summary
-
-- **WHEN** the user collapses an aggregate or filter-condition row
-- **THEN** the row shows a compact summary of its configuration in its section's color
-- **AND** expanding it restores the full editor
-
-#### Scenario: Several fields are selected in one dropdown visit
-
-- **WHEN** the user opens the row-mode Select dropdown, searches for "tokens", and picks two matching fields in turn
-- **THEN** the overlay stays open with the search term and expanded category intact after each pick
-- **AND** both fields are added as chips in the order they were picked
-
-#### Scenario: Selected options stay listed and are marked
-
-- **WHEN** a field is already part of the Select projection and the user opens the Select dropdown
-- **THEN** that field is still listed among the options
-- **AND** its option row carries a check mark beside the name and the accent background tint
-- **AND** an unselected field's option row carries neither
-
-#### Scenario: Clicking a selected option removes the field
-
-- **WHEN** the user clicks a tinted (already selected) option in the Group by dropdown
-- **THEN** that plain group-by column is removed from the section
-- **AND** the overlay stays open with the option now untinted
-
-#### Scenario: Single-valued pickers still close on pick
-
-- **WHEN** the user picks a field for a Sort key or a Filter condition
-- **THEN** the field is set and the overlay closes
-
-#### Scenario: Section tiles carry no border
-
-- **WHEN** the user views the Builder rail
-- **THEN** each section is separated by its background panel alone, with no outline
-
-#### Scenario: A row's editors wrap instead of collapsing
-
-- **WHEN** an expanded aggregate row holds a function selector, its argument editor, a distinct toggle and an alias input, and they no longer fit the rail's width
-- **THEN** the row wraps onto a second line
-- **AND** no editor is squeezed below a usable width
-
 ### Requirement: Served function catalog
 
 The Query Builder SHALL source the set of functions it offers — in `aggregate` mode's Group by and Aggregate sections, in the `row`-mode Select projection, as **either** operand of a Filter condition, and as the value of an `expression` argument of a call already being built — exclusively from the backend function catalog `GET /v1/queries/functions`, fetched on the server when the query-builder page loads and seeded into the builder. The frontend SHALL NOT hardcode any function name, group, argument shape, allowed literal values, numeric bound, distinct support, return type, or hint text: every such property SHALL be read from the served catalog entry. Each catalog entry provides the function `name`, `group` (`scalar`, `aggregate`, or `ordered_set_aggregate`), a `signature`, a `returns` type, a `distinct_supported` flag, a `description`, and an ordered `args` list; each argument provides its `name`, its `kind` (`expression`, `integer_literal`, `numeric_literal`, or `string_literal`), an `optional` flag, and — when applicable — `constraints` with `allowed_values` and/or `min`/`max`.
@@ -349,446 +77,6 @@ Every enum and function picker in the rail (operator, value type, nulls, sort di
 - **WHEN** the catalog describes `lower` as "Lowercases a text expression."
 - **THEN** the Group by Functions group labels it "Lower" rather than lifting the prose
 
-### Requirement: Query mode and DISTINCT
-
-In the Builder view the rail SHALL let the user choose the query mode — `row` (projection) or `aggregate` (group + metrics) — via a two-option `SegmentedControl` at the top of the view. Selecting `row` SHALL show the projection (Select) section and hide the aggregate sections; selecting `aggregate` SHALL show the Group by, Aggregate, and Having sections and hide the projection section.
-
-An aggregate metric whose catalog entry has `distinct_supported: true` SHALL render a per-aggregate DISTINCT control; aggregate metrics whose catalog entry has `distinct_supported: false` SHALL NOT render one, and there SHALL be no query-level DISTINCT toggle. When set, the control SHALL serialize into that aggregate's `distinct` flag. (This supersedes the previous rule that hid all DISTINCT controls: the served catalog now identifies exactly which functions accept `distinct`, so the control is offered precisely and only where it is valid.)
-
-#### Scenario: Switching to aggregate mode swaps sections
-
-- **WHEN** the user selects `aggregate` mode
-- **THEN** the Group by, Aggregate, and Having sections are shown
-- **AND** the projection (Select) section is hidden
-
-#### Scenario: DISTINCT is offered only where the catalog allows it
-
-- **WHEN** the user adds an aggregate whose catalog entry has `distinct_supported: true` (e.g. `count`, `sum`, `avg`)
-- **THEN** a DISTINCT control is rendered on that aggregate row
-- **AND** an aggregate whose catalog entry has `distinct_supported: false` (e.g. `min`, `max`, `percentile_cont`) renders no DISTINCT control
-
-#### Scenario: Setting DISTINCT serializes onto the aggregate
-
-- **WHEN** the user enables DISTINCT on a `count` aggregate over a field
-- **THEN** that aggregate's serialized `fn` expression carries `distinct: true`
-
-### Requirement: Filter (WHERE) builder with nested groups
-
-The Filter section SHALL let the user build a WHERE tree limited to two levels: the root group holds conditions and groups, and nested groups hold only conditions. The "add nested group" action SHALL be offered only at the root group; nested groups SHALL offer only add-condition and remove actions. Each group SHALL expose a logical operator selector (AND / OR / NOT). Each condition SHALL expose a left-operand selector, an operator selector (`eq`, `ne`, `ico`, `inc`, `lt`, `gt`, `le`, `ge`, `in`), a right-operand kind, a value input, a value-type selector, and a remove action. The left operand SHALL be either a schema column or a call to a `scalar` catalog function: the operand dropdown SHALL offer the loaded schema's fields grouped by field category and, in the same Functions group the Group by dropdown carries, the catalog's scalar functions. The functions offered here SHALL exclude those whose catalog return type is `array`: the service accepts an array result as a projected column but rejects it as an operand, and it rejects the whole query for one bad predicate, so such a condition would take every other one down with it. The exclusion SHALL key on the served return type, never on a list of names. Choosing a function SHALL expand the condition into one argument editor per catalog argument — built from the catalog exactly as a group-by function row's editors are — and the condition's collapsed summary SHALL read the call with its arguments in place of a column name. A function operand SHALL serialize as the predicate's left `fn` expression. The **right** operand SHALL offer the same choice: a condition's right-operand kind SHALL be either a literal value — the value input and value-type selector it carries today — or a call to a `scalar` catalog function, picked from the same Functions group the left operand offers, subject to the same array-return exclusion, and expanded into the same per-argument editors. While the right operand is a function, the value input, the value-type selector and the "is null" option SHALL be hidden: the compared type is the function's own and there is no literal to type. The `in` operator SHALL keep taking comma-separated tokens only, because its right operand is an array of literals and a single call is not one; switching a condition to `in` SHALL return its right operand to the literal kind. A function right operand SHALL serialize as the predicate's second `fn` expression, and a condition whose right-operand function has unfilled required arguments SHALL be omitted and SHALL raise the same Filter-header warning a left-operand one does — the query would otherwise run without that predicate and return more rows than were asked for.
-
-An `expression` argument of a function being built — in either operand of a condition, in Group by, in row-mode Select, or in an Aggregate metric — SHALL accept either a schema column or a call to a `scalar` catalog function, nested **one level deep**; a nested call's own `expression` arguments SHALL accept columns only. A nested call taking no arguments at all is what expresses a value read at execution time, which is what makes a bound relative to the current instant authorable in the visual builder. The nested position SHALL offer the catalog's whole `scalar` set **without** the array-return exclusion that applies to a condition's operands: an argument may legitimately take an array, and the catalog does not declare what type an `expression` argument expects, so there is nothing to exclude on. A nested call whose own required arguments are unfilled SHALL leave its parent call incomplete, so the row or condition carrying it is omitted and warned about exactly as any other incomplete call is. Nesting deeper than one level SHALL be expressible only through the JSON and SQL views. The condition's default value type, and the operator-withholding rule below, SHALL follow the operand's **resolved type**: a column's schema type, or a function's catalog return type — resolved, for a function whose return type is declared as its argument's own, from the schema type of its first expression argument's field. Each operator SHALL be shown by its full name (Equals, Not equals, Contains, Does not contain, Less than, Greater than, Less than or equal, Greater than or equal, In list) — in the selector's open list, in its collapsed trigger, and in the condition's collapsed row summary — with no short code shown anywhere, and each option SHALL expose a hover tooltip describing the operator. The two case-insensitive contains operators SHALL be named Contains / Does not contain while serializing to `ico`/`inc` (SQL ILIKE); their tooltips SHALL state that matching is case-insensitive. The case-sensitive `co`/`nc` SHALL NOT be offered as authoring options but SHALL remain valid model values that serialize, deserialize, and round-trip without error when present in a JSON-authored or backend-translated query. For `eq`/`ne` the condition SHALL offer an "is null" option that, when set, serializes the right operand as a null value (`value_type: null`) and hides the value input. For `in` the value SHALL be entered as comma-separated tokens and serialize to an array expression of value expressions (empty tokens dropped). Empty groups, conditions with no left operand, and function conditions whose required catalog arguments are not all filled SHALL be omitted; a condition omitted for an unfilled function argument SHALL raise a warning on the Filter section header, because the query then runs without that predicate and returns more rows than were asked for with nothing else on screen saying so; a `not` group SHALL wrap its single child, or an `and` of its children. Deeper nesting SHALL be expressible only through the SQL view.
-
-The two contains operators SHALL be **withheld** when the condition's left operand resolves to the schema's
-**enum** type — a column the schema types enum, or a function whose resolved return type is that column's. ClickHouse defines comparison over an enum but not the string functions, so the service refuses the
-LIKE-based operators on an enum field — and it rejects the **whole** query for one bad predicate, so a single
-such condition takes the entire result down rather than degrading it. The remaining operators (`eq`, `ne`, the
-four magnitude comparisons, and `in`) SHALL stay offered, since comparison, equality, membership, grouping and
-sorting all work over an enum. The withholding SHALL key on the **resolved operand type alone**: no list in the
-frontend names which fields are enums, so a field an instance begins reporting as an enum is guarded with no
-change here. A condition that already carries a contains operator when its left operand is changed to an
-enum-typed one SHALL be moved to a supported operator rather than left serializing a predicate the service will
-reject.
-
-#### Scenario: Nested group with a condition serializes
-
-- **WHEN** the root group is AND with one condition `field eq value` and one nested OR group
-- **THEN** the serialized `filter` has `op: "and"` whose args include the predicate and the nested `op: "or"` group
-- **AND** groups with no conditions are omitted
-
-#### Scenario: Nested groups cannot nest further
-
-- **WHEN** the user inspects a nested (depth-1) group's actions
-- **THEN** an add-condition action is offered
-- **AND** no add-group action is offered
-
-#### Scenario: is-null predicate
-
-- **WHEN** a condition uses `eq` with "is null" enabled
-- **THEN** the value input is hidden
-- **AND** the predicate's right operand serializes as `{ "type": "value", "value_type": "null", "value": null }`
-
-#### Scenario: in-operator builds an array
-
-- **WHEN** a condition uses `in` with value `a, b, c`
-- **THEN** the predicate's right operand serializes as an array expression with three value items
-
-#### Scenario: Contains authoring is case-insensitive
-
-- **WHEN** the user picks the Contains operator for a condition
-- **THEN** the predicate serializes with `op: "ico"`
-- **AND** the case-sensitive `co`/`nc` operators are not offered in the operator selector
-
-#### Scenario: A case-sensitive contains from an authored query still round-trips
-
-- **WHEN** a JSON-authored or backend-translated query contains a predicate with `op: "co"`
-- **THEN** it deserializes and serializes without error and is not silently changed to `ico`
-
-#### Scenario: Operator list shows full names with tooltips
-
-- **WHEN** the user opens a condition's operator selector
-- **THEN** each option shows only the operator's full name (e.g. "Greater than or equal")
-- **AND** hovering an option shows a tooltip describing that operator
-
-#### Scenario: Collapsed operator trigger and summary read in words
-
-- **WHEN** a condition's operator is `ge` and the selector is closed
-- **THEN** the trigger shows "Greater than or equal"
-- **AND** the condition's collapsed row summary names the operator the same way
-
-#### Scenario: Contains is withheld on an enum-typed field
-
-- **WHEN** a condition's left operand is a column the schema types enum and the user opens its operator selector
-- **THEN** Contains and Does not contain are not offered
-- **AND** Equals, Not equals, the magnitude comparisons and In list remain offered
-
-#### Scenario: Switching a contains condition to an enum field leaves a valid operator
-
-- **WHEN** a condition carrying Contains has its left operand changed to an enum-typed column
-- **THEN** the condition's operator is no longer Contains
-- **AND** the serialized query carries no LIKE-based predicate over that field
-
-#### Scenario: A function left operand serializes as an fn expression
-
-- **WHEN** a condition's left operand is the scalar function `json_extract_string` over a JSON column with the key `baggage`, its operator is Contains, and its value is a token
-- **THEN** the serialized predicate's first argument is an `fn` expression naming that function, with the column as a field argument and the key as a string value argument
-- **AND** the condition's collapsed summary reads the call and its arguments rather than a column name
-
-#### Scenario: An incomplete function condition is omitted, and says so
-
-- **WHEN** a condition's left operand is a function whose required arguments are not all filled
-- **THEN** that condition contributes no predicate to the serialized filter
-- **AND** the rest of the filter tree still serializes
-- **AND** the Filter section header shows a warning that the condition is left out
-
-#### Scenario: An array-returning function is not offered as an operand
-
-- **WHEN** the catalog serves a scalar function whose return type is `array` and the user opens a condition's operand dropdown
-- **THEN** that function is not among the Functions group's options
-- **AND** it is still offered in the row-mode Select dropdown, where its result is projected rather than compared
-
-#### Scenario: The value type follows the function's return type
-
-- **WHEN** the user picks a scalar function returning an integer as a condition's left operand
-- **THEN** the condition's value type defaults to the integer type rather than to string
-
-#### Scenario: A JSON-authored function predicate round-trips
-
-- **WHEN** a query authored in the JSON view carries a predicate whose left operand is an `fn` expression naming a served catalog function
-- **THEN** the Builder view shows that condition with the function selected and its arguments filled
-- **AND** serializing the builder state reproduces the same predicate
-
-#### Scenario: A function right operand serializes as an fn expression
-
-- **WHEN** a condition compares a timestamp column with Greater than or equal, its right operand is a scalar function, and that function's arguments are filled
-- **THEN** the serialized predicate's second argument is an `fn` expression naming that function with its arguments in place
-- **AND** the condition's collapsed summary reads the call rather than a typed value
-
-#### Scenario: A relative bound is authored through a nested call
-
-- **WHEN** a condition compares a timestamp column with Greater than or equal, its right operand is the subtraction function with unit "minute" and amount 30, and that function's timestamp argument is set to the current-instant function
-- **THEN** the serialized predicate's second argument is the subtraction call whose third argument is the current-instant call with an empty argument list
-- **AND** the query runs and returns the last 30 minutes
-
-#### Scenario: A function right operand hides the literal inputs
-
-- **WHEN** a condition's right-operand kind is a function
-- **THEN** the value input, the value-type selector and the "is null" option are not shown
-- **AND** the function's own argument editors are shown instead
-
-#### Scenario: The in operator keeps taking literals
-
-- **WHEN** a condition whose right operand is a function has its operator changed to In list
-- **THEN** the right operand returns to the literal kind and takes comma-separated tokens
-- **AND** no function is offered for that operator's right operand
-
-#### Scenario: An incomplete nested call omits the condition, and says so
-
-- **WHEN** a condition's right-operand function has a nested call whose own required argument is unfilled
-- **THEN** that condition contributes no predicate to the serialized filter
-- **AND** the Filter section header shows a warning that the condition is left out
-
-#### Scenario: A nested call cannot nest further
-
-- **WHEN** the user opens the argument editors of a call that is already nested inside another call's argument
-- **THEN** its `expression` arguments offer schema columns only
-- **AND** no function is offered there
-
-#### Scenario: An array-returning function is offered inside an argument
-
-- **WHEN** the catalog serves a scalar function whose return type is `array` and the user opens a function argument's own dropdown
-- **THEN** that function is among the Functions group's options
-- **AND** it is still withheld from the condition's own two operand dropdowns
-
-#### Scenario: A JSON-authored function right operand round-trips
-
-- **WHEN** a query authored in the JSON view carries a predicate whose right operand is an `fn` expression naming a served catalog function, with a nested call one level deep
-- **THEN** the Builder view shows that condition with both calls selected and their arguments filled
-- **AND** serializing the builder state reproduces the same predicate
-
-### Requirement: Row-mode projection
-
-In `row` mode the Select section SHALL let the user build the projection from two kinds of entry, both added through the section's one categorized searchable dropdown: **schema columns**, offered in multi-select mode and rendered as removable chips, and **`scalar` catalog functions**, offered in the dropdown's Functions group and rendered as collapsible rows carrying one argument editor per catalog argument plus an alias input — the same controls, built the same way from the catalog, as a Group by function row. Entries SHALL serialize to `select` in the order they were added: a column as a field-expression output column, a function as its `fn` expression under its effective alias. A function entry's alias SHALL be prefilled from its function and arguments, rederived while the user has not edited it, kept unique against the query's other output names, and fall back to the derived value when blank — exactly as a computed row's alias does in `aggregate` mode, and for the same reason: it is that output column's only name. A function entry whose required catalog arguments are not all filled SHALL contribute no output column, and SHALL raise a warning on the Select section header so the omission is not silent. When no entry is added, `select` SHALL be omitted (default projection).
-
-#### Scenario: Selected fields become projection columns
-
-- **WHEN** the user adds two fields in row mode
-- **THEN** the serialized `select` contains a field-expression output column for each added field
-- **AND** each added field is shown as a chip with a remove action
-
-#### Scenario: No projection omits select
-
-- **WHEN** no entry is added in row mode
-- **THEN** the serialized query has no `select` key
-
-#### Scenario: A scalar function becomes an aliased projection column
-
-- **WHEN** the user picks `json_extract_string` from the row-mode Select dropdown's Functions group and fills its arguments with a JSON column and a key
-- **THEN** the section shows a collapsible row with an editor per catalog argument and a prefilled alias
-- **AND** the serialized `select` carries that call as an `fn` expression under that alias
-
-#### Scenario: An incomplete function entry is not projected, and says so
-
-- **WHEN** a row-mode function entry has an unfilled required argument
-- **THEN** the serialized `select` carries no column for it
-- **AND** the other entries are still projected
-- **AND** the Select section header shows a warning that the column is left out
-
-#### Scenario: A JSON-authored function column round-trips
-
-- **WHEN** a `row`-mode query authored in the JSON view carries a `select` entry whose expression is an `fn` naming a served catalog function
-- **THEN** the Builder view shows that entry with its function and arguments filled and its authored alias kept
-- **AND** serializing the builder state reproduces the same output column
-
-### Requirement: Aggregate-mode group by, time buckets, and metrics
-
-In `aggregate` mode the builder SHALL provide a single Group by section combining plain columns and scalar-function entries, and an Aggregate section for metrics. The functions offered SHALL be exactly those served by the function catalog (see "Served function catalog"), grouped by their catalog `group`: `scalar` functions in the Group by Functions dropdown group, and `aggregate` / `ordered_set_aggregate` functions in the Aggregate section. There SHALL be no separate Time bucket section, and no function, argument, allowed-value, or bound SHALL be hardcoded.
-
-Picking a plain column SHALL add it as a removable chip. Picking a function SHALL add a parameterized row whose argument editors are generated from the catalog entry's ordered `args`: an `expression` argument SHALL render a field dropdown; an `integer_literal` or `numeric_literal` argument SHALL render a numeric input constrained to the argument's `min`/`max` when present; a `string_literal` argument SHALL render a select of the argument's `allowed_values` when present, otherwise a text input; an argument marked `optional` MAY be left empty and SHALL be omitted from the serialized call. Each function row SHALL also carry an alias. The row's hint text SHALL be the catalog `description`.
-
-A computed row — an Aggregate row or a Group by function row — SHALL be created with a prefilled human-readable alias derived from the row's function and arguments, because the alias is the column's only name: the backend rejects a computed output column without one, and Sort and Having can address it only by that name. The derived alias SHALL combine the argument's display name with the function's label (the same label its picker shows — see "Served function catalog"), reading as `<display name> (<function label>)` (e.g. `sum` over `total_tokens` with display name "Total tokens" derives `Total tokens (Sum)`), SHALL fold a distinct flag into the function part (`Conversation ID (Row count distinct)`), and SHALL name a row with no filled expression argument by that label alone (`avg` derives `Average`). An argument whose field has no schema `display_name` SHALL contribute its raw field name. While the user has not edited the alias, changing the row's function or arguments SHALL rederive it; once the user edits the alias, the row SHALL keep that custom value and SHALL NOT rederive it. An alias deserialized from an authored query SHALL be treated as user-authored and SHALL NOT be rederived. A blank alias SHALL fall back to the derived value at serialization time, so a builder-authored aggregate query SHALL never serialize a computed output column with an empty `as`. Derived aliases SHALL be made unique within the query by suffixing a counter (`Total tokens (sum) 2`), because duplicate output column names collapse in the result and make sort keys ambiguous; a user-typed duplicate SHALL be left as typed.
-
-The serialized query SHALL place plain group-by field projections, aliased scalar-function columns, and aliased aggregate columns into `select`, and SHALL list plain group-by fields by name and function entries by alias in `group_by` (function entries without required arguments are excluded from `group_by`). Plain group-by field projections and row-mode projections SHALL carry no alias: for a schema column the raw field `name` remains the query's contract, and its human-readable label is applied at display time (see "Run query and result"). Each function argument SHALL serialize by its catalog `kind`: an `expression` argument as a field expression, and a literal argument as a value expression of the kind's type. When `aggregate` mode defines no explicit aggregate, the builder SHALL add an implicit count measure chosen from the catalog — the first `aggregate`-group function whose arguments are all optional — so grouped results still carry a value column; if the catalog has no such function, no implicit measure is added.
-
-A function output's type (used to type Having and Sort options) SHALL be taken from the catalog `returns`; a `same_as_argument` return SHALL be resolved to the type of the function's first `expression` argument as declared in the entity schema.
-
-#### Scenario: Aggregate select and group_by are built
-
-- **WHEN** the user adds a group-by column and a `sum` aggregate over a field with alias `total`
-- **THEN** `select` includes the group-by field column and a `sum` function column aliased `total`
-- **AND** `group_by` includes the group-by field
-
-#### Scenario: date_bin builds through the generic argument editor
-
-- **WHEN** the user picks `date_bin` from the Group by Functions group and its catalog args are `amount` (`integer_literal`, `min` 1), `unit` (`string_literal`, `allowed_values`), and `timestamp` (`expression`), and sets 5 / `minute` / a timestamp field with alias `bucket`
-- **THEN** the amount arg renders a numeric input floored at 1, the unit arg renders a select of the advertised units, and the timestamp arg renders a field dropdown
-- **AND** `select` includes a `date_bin` function column aliased `bucket` whose args serialize as an integer value, a string value, and a field expression
-- **AND** `group_by` includes `bucket`
-
-#### Scenario: Multi-argument scalar function builds
-
-- **WHEN** the user picks `width_bucket` whose catalog declares four `expression` args (`operand`, `low`, `high`, `count`) and fills each with a field, aliased `bkt`
-- **THEN** the row renders four field dropdowns and `select` includes a `width_bucket` column aliased `bkt` with four field-expression args
-
-#### Scenario: Ordered-set aggregate with a bounded literal builds
-
-- **WHEN** the user picks `percentile_cont` whose catalog declares a `fraction` (`numeric_literal`, `min` 0, `max` 1) and a `column` (`expression`) argument
-- **THEN** the fraction arg renders a numeric input constrained to `[0, 1]` and the column arg renders a field dropdown
-- **AND** the serialized aggregate carries a numeric value arg and a field-expression arg
-
-#### Scenario: Function select entries parse back into the correct section
-
-- **WHEN** a JSON query's `select` holds a `scalar` catalog function column and an `ordered_set_aggregate` catalog function column
-- **THEN** switching views shows the scalar one as a Group by function row and the ordered-set one as an Aggregate row
-
-#### Scenario: Implicit measure is chosen from the catalog
-
-- **WHEN** the user builds an `aggregate` query with a group-by column and no explicit aggregate
-- **THEN** the serialized `select` includes an implicit measure that is the first catalog `aggregate`-group function whose arguments are all optional (`count`), aliased with the implicit count alias
-
-#### Scenario: New aggregate row arrives with a derived alias
-
-- **WHEN** the user adds a `sum` aggregate over the field `total_tokens` whose schema display name is "Total tokens"
-- **THEN** the row's alias input is prefilled with `Total tokens (Sum)`
-- **AND** the serialized aggregate column carries that value as its `as`
-
-#### Scenario: Derived alias follows the row until the user edits it
-
-- **WHEN** a prefilled `sum` aggregate's argument is changed to another field
-- **THEN** the alias is rederived from the new argument
-- **AND** after the user types a custom alias, changing the function or argument again leaves that custom alias untouched
-
-#### Scenario: Distinct and argument-less aggregates derive readable aliases
-
-- **WHEN** the user adds a `count` aggregate with DISTINCT over `project_id` (display name "Project ID") and a second `count` aggregate with no argument
-- **THEN** the first row's alias is `Project ID (Row count distinct)`
-- **AND** the second row's alias is `Row count`
-
-#### Scenario: Duplicate derived aliases are uniquified
-
-- **WHEN** the user adds a second `sum` aggregate over the same field as an existing prefilled one
-- **THEN** the second row's derived alias is suffixed to stay unique (e.g. `Total tokens (Sum) 2`)
-
-#### Scenario: Cleared alias falls back to the derived value
-
-- **WHEN** the user clears an aggregate row's alias input and runs the query
-- **THEN** the serialized aggregate column's `as` is the derived alias rather than an empty string
-- **AND** the run is not rejected for a missing alias
-
-#### Scenario: An authored alias survives a JSON round-trip
-
-- **WHEN** a JSON query aliases a `sum` column `total` and the user switches to the Builder view
-- **THEN** the aggregate row shows the alias `total`
-- **AND** it is not rewritten to a derived alias
-
-### Requirement: Aggregate-mode HAVING builder
-
-In `aggregate` mode the builder SHALL provide a Having section using the same nested group/condition builder as the Filter section, but whose selectable fields are the query's aggregate output columns, resolved through the same shared name resolver Sort and serialization use: the plain group-by columns, every group-by function entry and aggregate under its effective name (its alias, or the derived name a blank alias falls back to), and — when the query defines no aggregates of its own — the implicit count column. A function entry whose required arguments are unfilled is excluded from the query and SHALL NOT be offered. The built tree SHALL serialize to the query's `having` node under the same rules as the filter tree.
-
-#### Scenario: Having references an aggregate alias
-
-- **WHEN** an aggregate is aliased `total` and the user adds a Having condition `total gt 100`
-- **THEN** the field selector for that condition offers `total`
-- **AND** the serialized query includes a `having` node with that predicate
-
-#### Scenario: Having offers an aggregate whose alias is blank
-
-- **WHEN** an aggregate's alias is empty and the user opens a Having condition's field selector
-- **THEN** the aggregate is offered under the derived name the query will carry
-- **AND** a condition on it serializes against that same name
-
-### Requirement: Sort keys
-
-The Sort section SHALL let the user add, edit, and remove sort keys, each with a field, a direction (`asc` / `desc`), and an optional nulls ordering (default / nulls first / nulls last). The direction selector SHALL show full names (Ascending / Descending) in its open list, its collapsed trigger, and the sort row's collapsed summary; the nulls select SHALL name what each option places — "Nulls: default", "Nulls first", "Nulls last" — in its open list and its trigger, SHALL describe each option in its hover tooltip (the default's stating where the engine puts empty values: last when ascending, first when descending), and a non-default placement SHALL appear in the sort row's collapsed summary. In `row` mode the field options SHALL be the schema fields plus the **effective** alias of every function entry in the projection — a row-mode select alias is one of the query's output names and the service accepts it as a sort key; in `aggregate` mode they SHALL be the aggregate output names: group-by columns, plus every computed row named by its **effective** alias — the row's alias, or the derived alias the serializer would fall back to when it is blank — so a computed column is offered even when its alias is empty (a query parsed from JSON, SQL, or the assistant, or an alias the user cleared). When the query defines no aggregates of its own, the implicit count column SHALL be offered too, since it is one of the query's output columns. Fieldless sort keys SHALL be omitted, and `sort` SHALL be omitted entirely when no valid key remains; the nulls ordering SHALL be omitted when left at default.
-
-#### Scenario: Sort key serializes
-
-- **WHEN** the user adds a sort key on a field with direction `desc`
-- **THEN** the serialized `sort` contains an item with that field and `dir: "desc"`
-
-#### Scenario: Nulls control names itself
-
-- **WHEN** the user opens a sort key's nulls select
-- **THEN** the options read "Nulls: default", "Nulls first", and "Nulls last"
-- **AND** hovering an option shows its description
-
-#### Scenario: A non-default placement shows in the collapsed row
-
-- **WHEN** a sort key places nulls first and its row is collapsed
-- **THEN** the row's summary names the field, the direction, and "Nulls first"
-
-#### Scenario: The default placement stays out of the collapsed row
-
-- **WHEN** a sort key leaves nulls at default and its row is collapsed
-- **THEN** the row's summary names only the field and the direction
-
-#### Scenario: A freshly added aggregate is immediately sortable
-
-- **WHEN** the user adds a `sum` aggregate in aggregate mode and then opens a sort key's field dropdown
-- **THEN** that aggregate's derived alias is offered as a sort field
-- **AND** picking it serializes a sort item naming that alias
-
-#### Scenario: An aggregate whose alias is blank is still sortable
-
-- **WHEN** a query parsed from JSON carries a `sum` column with no `as`, and the user opens a sort key's field dropdown
-- **THEN** that aggregate is offered under the derived alias the query will be serialized with
-- **AND** sorting by it produces a sort key matching that column's `as`
-
-#### Scenario: A row-mode function column is sortable by its alias
-
-- **WHEN** a row-mode projection carries a scalar-function entry and the user opens a sort key's field dropdown
-- **THEN** that entry's effective alias is offered as a sort field
-- **AND** picking it serializes a sort item naming that alias
-
-#### Scenario: The implicit count column is sortable
-
-- **WHEN** aggregate mode has a group-by column and no aggregates of its own
-- **THEN** the implicit count column is offered as a sort field
-
-#### Scenario: Direction reads in words
-
-- **WHEN** the user opens a sort key's direction selector
-- **THEN** the options read "Ascending" and "Descending"
-- **AND** the closed trigger and the row's collapsed summary read the same way
-
-### Requirement: Paging
-
-The Page section SHALL provide an "include page" toggle and a paging strategy selector (`offset` or `cursor`). For `offset` the controls SHALL be offset, limit, and an `include_total` toggle; for `cursor` the controls SHALL be a cursor value and a limit. The serialized `page` object SHALL match the selected strategy, and SHALL be omitted entirely when "include page" is off.
-
-#### Scenario: Offset paging serializes
-
-- **WHEN** "include page" is on with strategy `offset`, offset `0`, limit `25`, include_total off
-- **THEN** `page` is `{ "type": "offset", "offset": 0, "limit": 25, "include_total": false }`
-
-#### Scenario: Paging omitted when disabled
-
-- **WHEN** "include page" is off
-- **THEN** the serialized query has no `page` key
-
-### Requirement: JSON view and copy
-
-The JSON view SHALL render the current serialized `StructuredQuery` as JSON in a Monaco editor. Editing the JSON to a valid query the builder can represent SHALL parse it back into the builder state so the Builder view reflects the last such JSON; invalid JSON SHALL be flagged non-blockingly and SHALL disable Run while invalid. Valid JSON that the visual builder cannot represent (e.g. filter nesting deeper than two levels) SHALL remain fully editable and runnable: a non-blocking informational message SHALL state that the query cannot be shown in the visual builder, Run SHALL stay enabled and SHALL execute the JSON query as written, and the builder state SHALL NOT be updated from that JSON (switching to the Builder view is guarded by the written-mode confirmation). Entering the JSON view SHALL seed the editor from the current builder state, and **while that view is open** a toolbar change — the time filter or the selected source — SHALL re-seed it, so the buffer never shows, or runs, a query the toolbar no longer describes. A re-seed after a source change SHALL resolve the time bound against the newly loaded schema's timestamp column, not the previous source's. An editor the user has taken over, by editing it to a body the visual builder cannot represent, SHALL NOT be re-seeded: it is theirs until they leave the view. The Copy action SHALL copy the currently displayed query text (JSON for the Builder/JSON views, the SQL text for the SQL view).
-
-#### Scenario: JSON reflects the form and round-trips
-
-- **WHEN** the user edits the form, switches to the JSON view, and edits the JSON to valid content the builder can represent
-- **THEN** the JSON initially mirrors the form
-- **AND** the edited valid JSON is parsed back so the form reflects it
-
-#### Scenario: Invalid JSON is flagged and blocks Run
-
-- **WHEN** the JSON editor contains invalid JSON
-- **THEN** a non-blocking invalid-JSON message is shown
-- **AND** the Run action is disabled
-
-#### Scenario: Unrepresentable JSON stays runnable
-
-- **WHEN** the JSON editor contains a valid query whose filter nests deeper than two levels
-- **THEN** a non-blocking message states the query cannot be shown in the visual builder
-- **AND** the Run action stays enabled and executes the JSON query as written
-- **AND** the builder state is not updated from that JSON
-
-#### Scenario: A time filter change reaches the open JSON buffer
-
-- **WHEN** the user is in the JSON view and picks a different period in the toolbar's time filter
-- **THEN** the JSON editor shows the time bound of the newly picked period
-- **AND** Run executes that bound rather than the previous one
-
-#### Scenario: A source change reaches the open JSON buffer
-
-- **WHEN** the user is in the JSON view and selects a different source in the toolbar
-- **THEN** the JSON editor shows a query over the newly selected source
-- **AND** its time bound names that source's own timestamp column
-
-#### Scenario: An edited JSON buffer is left alone
-
-- **WHEN** the user has edited the JSON to a body the visual builder cannot represent and then changes the toolbar's time filter
-- **THEN** the JSON editor still holds exactly what the user wrote
-
-### Requirement: Aggregate validation warnings
-
-While in `aggregate` mode the builder SHALL surface non-blocking warnings when: any Group by function entry lacks a source field; or the query has no group-by entries or aggregates. The warnings SHALL clear when resolved and SHALL NOT prevent running the query. There SHALL be no missing-alias warning: a computed row's alias is prefilled and a blank alias falls back to the derived value at serialization, so the state those warnings described is unreachable.
-
-#### Scenario: Missing function argument warns
-
-- **WHEN** a Group by function entry has an unfilled required argument
-- **THEN** a warning states that the entry needs a source field
-
-#### Scenario: Empty aggregate query warns
-
-- **WHEN** aggregate mode has no group-by entries and no aggregates
-- **THEN** a warning states that the query needs at least one group-by entry or aggregate
-
-#### Scenario: Warnings clear when resolved
-
-- **WHEN** the Group by function entry gains its source field
-- **THEN** the corresponding warning is no longer shown
-
-#### Scenario: A blank alias raises no warning
-
-- **WHEN** the user clears an aggregate row's alias
-- **THEN** no missing-alias warning is shown
-- **AND** the query still runs, serializing the derived alias
-
 ### Requirement: Backend-authoritative query translation
 
 The Query Builder SHALL treat the Analytics data-access service as the single source of truth for translating between the structured query DSL and SQL, via two validation-only endpoints that never run against ClickHouse. The server API layer SHALL expose `translateAction(query)` for `POST /v1/queries/translate` (DSL → SQL, success body `{ "sql": <text> }`) and `translateSqlAction(sql)` for `POST /v1/queries/translate-sql` (SQL → DSL, success body `{ "query": <StructuredQuery> }`), each returning a `ServerActionResponse` envelope and reached through a server action injecting the user token. The frontend SHALL NOT generate SQL from the structured query on the client; the client-side generator is removed. When the backend rejects a translation with a `400` (a DSL the SQL subset cannot express, or SQL that is unparseable or uses an unsupported construct), the failure SHALL be handled per the consuming requirement (SQL-view seeding surfaces the error; the Builder switch falls back to the discard guard; a SQL run falls back to classifying its result columns from the returned rows) and SHALL NOT be presented as a successful translation.
@@ -818,21 +106,6 @@ Running a query from the SQL view SHALL translate the SQL alongside executing it
 - **WHEN** the user runs a query from the SQL view
 - **THEN** the SQL is sent to both the execute-SQL endpoint and the translation endpoint
 - **AND** a rejected translation leaves the executed result shown without an error notification
-
-### Requirement: SQL view shows only a SQL editor
-
-In the SQL view the rail SHALL render a SQL code editor filling the rail body, and SHALL NOT render the Mode, Filter, Select, Group by, Aggregate, Having, Sort, or Page sections. The source selector remains available in the toolbar. The editor SHALL provide SQL syntax highlighting (via the Monaco `sql` language). The Copy and Run actions SHALL remain available; Copy SHALL copy the SQL editor text.
-
-#### Scenario: SQL view hides the builder sections
-
-- **WHEN** the user selects the SQL view
-- **THEN** a SQL editor is shown in the rail
-- **AND** none of the Mode, Filter, Select, aggregate, Sort, or Page sections are shown
-
-#### Scenario: SQL text is highlighted
-
-- **WHEN** the user types a SQL statement in the SQL editor
-- **THEN** the statement is rendered with SQL syntax highlighting
 
 ### Requirement: Schema-aware SQL autocomplete
 
@@ -880,28 +153,6 @@ The SQL view SHALL NOT perform client-side SQL parsing or validation. When the b
 - **THEN** an error notification is shown with the backend's message
 - **AND** any previously shown result is not replaced by a broken grid
 
-### Requirement: SQL view state is an independent buffer
-
-The Query Builder SHALL keep the SQL editor text as its own buffer. Entering the SQL view SHALL seed the editor by translating the current builder query (including the toolbar time bound and the implicit count) to SQL via `POST /v1/queries/translate` through a server action, when the buffer is empty or still matches the last generated text; the seed is asynchronous and the editor SHALL show a loading affordance while the translation is in flight. When the translation is rejected (`400` — a query the SQL subset cannot express), the failure SHALL surface via the app's error-notification convention and the editor SHALL be left empty (with Run disabled), rather than being seeded with a locally generated or partial statement. User-edited SQL SHALL never be overwritten by a re-seed. Switching between the SQL and JSON views SHALL NOT prompt and SHALL leave both buffers intact.
-
-#### Scenario: Entering SQL translates the builder query via the backend
-
-- **WHEN** the user opens the SQL view without prior SQL edits
-- **THEN** the current builder query is sent to `POST /v1/queries/translate`
-- **AND** the editor is pre-filled with the returned SQL, auto-formatted for readability (see "SQL editor auto-formatting")
-
-#### Scenario: A non-expressible query surfaces a translate error
-
-- **WHEN** the user opens the SQL view for a query the SQL subset cannot express and the backend responds `400`
-- **THEN** an error notification is shown with the backend's message
-- **AND** the SQL editor is left empty and Run is disabled
-
-#### Scenario: SQL text persists across written-mode switches
-
-- **WHEN** the user edits SQL, switches to the JSON view, and switches back to the SQL view
-- **THEN** the SQL editor shows the previously edited text unchanged
-- **AND** the edited text is not re-translated over
-
 ### Requirement: SQL editor auto-formatting
 
 The SQL editor SHALL auto-format its contents — there SHALL be no manual "Format" action. Formatting SHALL apply: when text is seeded into the editor (the translated builder query, or SQL returned from a rejected-JSON fallback), as the user types, and as the user pastes, using the Monaco `sql` language's document-formatting provider backed by the `sql-formatter` library. A syntax error in the current text SHALL leave that text unformatted rather than throwing or clearing it. Formatting is a display concern only: the text actually executed or copied is whatever the editor currently holds (the formatted text), and translating that SQL back to a structured query (see "Switching from a written mode to the Builder is guarded") is unaffected by whitespace/formatting differences.
@@ -925,257 +176,6 @@ The SQL editor SHALL auto-format its contents — there SHALL be no manual "Form
 
 - **WHEN** the editor's current text is not valid SQL
 - **THEN** formatting leaves the text unchanged rather than erroring
-
-### Requirement: Switching from a written mode to the Builder is guarded
-
-SQL and JSON are "written" modes: they can hold queries the visual builder cannot display (edited SQL text; JSON with e.g. filter nesting deeper than two levels). When the user switches from the SQL view to the Builder view with an edited SQL buffer, the SQL SHALL first be translated to the structured DSL via `POST /v1/queries/translate-sql`. If the translation succeeds and the resulting query is representable in the two-level visual builder, the builder SHALL be hydrated from that query and the view SHALL switch with no confirmation and no data loss. If the translation fails (`400` — parse failure or an unsupported construct) or the resulting query is not builder-representable, a confirmation popup (danger variant) SHALL warn that switching will drop the current query and reset the builder to its starting point. From the JSON view the same guard applies when the JSON is valid but unrepresentable. Confirming SHALL discard the written query (clear the SQL buffer / discard the JSON edits), reset the builder state to its initial defaults for the selected entity, and switch to the Builder view. Cancelling SHALL keep the user in the written mode with the query intact. Switching to the Builder SHALL NOT prompt when nothing would be lost (empty or unedited generated SQL; SQL that translates to a representable query; JSON that round-trips into the builder).
-
-The guard SHALL follow the SQL buffer rather than the view being left: whenever the buffer holds SQL the
-builder has not been hydrated from — a message the AI view ran as raw SQL, or edited SQL the user left for
-the AI view — selecting the Builder or JSON view from any view SHALL go through the same translation and,
-where it applies, the same confirmation. Cancelling keeps the user in the view they were in. While an AI
-message's query is loading, the view switcher SHALL be disabled, so the SQL that loading leaves in the
-buffer always lands while the AI view is active.
-
-Leaving the SQL view for the **JSON** view is guarded the same way, by the same translation and the same popup — see "Switching from the SQL view to JSON translates the SQL buffer". The two switches differ only in where a successful translation lands: the Builder switch requires a builder-representable body, while the JSON switch shows any translated body.
-
-#### Scenario: Translatable SQL hydrates the builder without a prompt
-
-- **WHEN** the user edits SQL that translates to a builder-representable query and selects the Builder view
-- **THEN** no confirmation is shown
-- **AND** the builder reflects the translated query
-- **AND** the SQL buffer is cleared
-
-#### Scenario: Untranslatable SQL asks for confirmation
-
-- **WHEN** the user edits SQL that the backend rejects (or that translates to an unrepresentable query) and selects the Builder view
-- **THEN** a confirmation popup warns that the current query will be dropped and the builder reset
-
-#### Scenario: Confirming drops the written query and resets the builder
-
-- **WHEN** the confirmation popup is shown and the user confirms
-- **THEN** the view switches to the view that was requested
-- **AND** the written query is discarded
-- **AND** the builder state is reset to its initial defaults for the selected entity
-
-#### Scenario: Cancelling keeps the written query
-
-- **WHEN** the confirmation popup is shown and the user cancels
-- **THEN** the user remains in the written mode
-- **AND** the written query text is unchanged
-
-#### Scenario: Representable JSON switches silently
-
-- **WHEN** the JSON editor holds a valid query the builder can represent and the user selects the Builder view
-- **THEN** no confirmation is shown
-- **AND** the builder reflects that query
-
-#### Scenario: Leaving the AI view after a raw-SQL run asks for confirmation
-
-- **WHEN** the user runs an AI message whose SQL the builder cannot represent and then selects the Builder view
-- **THEN** the confirmation popup is shown instead of the builder showing its earlier query
-- **AND** cancelling keeps the AI view
-
-#### Scenario: Edited SQL left for the AI view is still translated
-
-- **WHEN** the user edits SQL, switches to the AI view, and then selects the Builder view
-- **THEN** the edited SQL is translated and handled exactly as if the switch were made from the SQL view
-
-#### Scenario: The view switcher waits for a message to load
-
-- **WHEN** the user clicks Run on an AI message and its query is still loading
-- **THEN** the view switcher is disabled until loading finishes
-
-### Requirement: Switching from the SQL view to JSON translates the SQL buffer
-
-The JSON view SHALL show the query the user actually authored, never a body derived from builder state the SQL was never hydrated into. When the user leaves the SQL view for the JSON view with an **edited** SQL buffer, that SQL SHALL be translated through `POST /v1/queries/translate-sql` — the same endpoint and the same failure semantics as the Builder switch.
-
-On a successful translation the JSON view SHALL show the translated body and the SQL buffer SHALL be cleared, so the body on screen is the body a save would persist. A translated body the visual builder can represent SHALL additionally hydrate the builder; one it cannot SHALL leave the JSON buffer marked as diverged, so a later switch to the Builder still goes through the written-mode guard.
-
-On a rejected translation — a composite statement (a join, a CTE, a derived table, or a subquery), or any SQL the DSL cannot express — the same danger confirmation popup used for the Builder switch SHALL be shown. Confirming SHALL discard the SQL, reset the builder to its defaults for the selected source, and open the JSON view on that default body rather than on an empty buffer. Cancelling SHALL leave the user in the SQL view with the text unchanged.
-
-The popup SHALL describe the switch the user actually asked for. Its header is shared, but its description SHALL name the destination: the Builder switch SHALL state that the query cannot be shown in the visual builder, while the JSON switch SHALL state that the SQL could not be translated into a structured query — the JSON view can display any structured body, so the failure there is the translation, not the display. Neither description SHALL name the construct the DSL lacks.
-
-An empty or unedited generated SQL buffer SHALL NOT be translated: the JSON view SHALL be filled from the current builder state, as it is when entering JSON from the Builder view.
-
-#### Scenario: Translatable SQL is shown as its translated body
-
-- **WHEN** the user edits SQL that the service translates and selects the JSON view
-- **THEN** the JSON view shows the translated body
-- **AND** the SQL buffer is cleared
-- **AND** no confirmation is shown
-
-#### Scenario: A translated body the builder cannot hold stays diverged
-
-- **WHEN** the edited SQL translates to a query the visual builder cannot represent and the user selects the JSON view
-- **THEN** the JSON view shows that body
-- **AND** switching from there to the Builder view goes through the written-mode confirmation
-
-#### Scenario: A composite statement asks for confirmation
-
-- **WHEN** the user edits SQL that joins two entities, which the service refuses to translate, and selects the JSON view
-- **THEN** a confirmation popup warns that the current query will be dropped
-- **AND** its description states that the SQL could not be translated into a structured query, not that it cannot be shown in the visual builder
-- **AND** the JSON view is not shown while the popup is open
-
-#### Scenario: The Builder switch keeps its own wording
-
-- **WHEN** the same untranslatable SQL is switched to the Builder view instead
-- **THEN** the popup description states that the query cannot be shown in the visual builder
-
-#### Scenario: Confirming opens JSON on the default body
-
-- **WHEN** that confirmation is shown and the user confirms
-- **THEN** the JSON view is shown holding the default body for the selected source
-- **AND** the SQL buffer is discarded
-
-#### Scenario: Cancelling keeps the SQL view
-
-- **WHEN** that confirmation is shown and the user cancels
-- **THEN** the SQL view stays open with its text unchanged
-
-#### Scenario: Unedited SQL is not translated
-
-- **WHEN** the SQL buffer is empty, or holds SQL the page generated from the builder and the user has not edited, and the user selects the JSON view
-- **THEN** no translation request is sent
-- **AND** the JSON view shows the body derived from the current builder state
-
-### Requirement: A query the visual builder cannot hold stays in the written views
-
-The Builder view SHALL never silently drop part of a query. Builder-representability SHALL therefore
-cover every expression the builder would have to hold, not only the shape of the filter tree. Beyond
-the existing two-level nesting rule, a structured query SHALL be treated as representable only when:
-
-- every `fn` expression in a position the builder edits — a `select` entry in either mode, and
-  **either** operand of a `filter` or `having` predicate — names a function the served catalog
-  lists;
-- each such call carries no argument beyond the ones its catalog entry declares (a variadic call
-  carries more, and the builder has exactly one slot per declared argument);
-- each argument is of the kind its position expects — a literal for a literal argument, and for an
-  `expression` argument either a field reference or a call to a served catalog function nested no
-  more than one level deep, whose own `expression` arguments are field references — because those
-  are the only forms the argument editor produces and therefore the only ones it can show back;
-- a predicate carries exactly two operands, and its right operand is a literal value, a call to a served
-  catalog function, or — under `in`, and only there — an array of values; these are the right-hand shapes
-  the condition editor produces;
-- an array operand holds only items the `in` editor's comma-separated text keeps unchanged: string values
-  of one value type, each non-empty, without surrounding whitespace and without a comma;
-- a literal function argument is non-blank, because a blank literal reads as unfilled and drops the call;
-- a plain column `select` entry carries no alias, or one equal to its own name, because a column entry
-  has no alias editor in either mode;
-- `distinct` appears only on an `aggregate`-mode `select` entry calling a non-scalar function, the one
-  place the builder offers a Distinct toggle;
-- a `having` tree appears only in `aggregate` mode, the only mode with a Having section; and
-- in `aggregate` mode, the `select` entries and `group_by` agree both ways: every key names an output
-  column, and every plain column and every scalar call is a key — the builder files each of them under
-  Group by, so one that is not a key would become one (a scalar call wrapping an aggregate would put the
-  aggregate into GROUP BY). Output columns are named as the service names them: an explicit alias, else a
-  field's own name or a call's lowercase function name, suffixed `_1`, `_2`, … for uniqueness.
-
-A call that arrives without an alias is prefilled with its derived alias. Every sort key and every
-`having` condition that named that column by the service's name for it SHALL be rewritten to the
-prefilled alias, so the rebuilt query still sorts and filters on the same column.
-
-A query failing any of these SHALL be handled exactly as filter nesting deeper than two levels
-already is: it stays in the written view, fully editable and runnable, a non-blocking message states
-that it cannot be shown in the visual builder, the builder state SHALL NOT be updated from it —
-including when a stored query is opened, where the builder SHALL start from its defaults rather than
-from a partial parse — and switching to the Builder view SHALL go through the written-mode
-confirmation. An empty or failed catalog therefore makes every function-bearing query unrepresentable
-rather than stripping its functions.
-
-This widens what opens in the written views. A query passing a constant where the catalog declares an
-`expression` argument, or a JSON path of several keys through a variadic argument, previously opened
-in the Builder with that argument blanked; it now opens in the JSON view intact. That is the point:
-the builder has no editor for either, so showing them was showing something the query did not say.
-
-Two shapes move the other way, because the condition editor now produces them: a predicate compared
-against a function call, and a call nested one level inside an `expression` argument. A query
-carrying either — a bound relative to the current instant is the shape that motivated both — SHALL
-hydrate into the Builder rather than be pushed into the written views. So SHALL an aggregate query
-grouped by an unaliased scalar call, whose `group_by` key is the service's name for that call. A call nested two or more
-levels deep SHALL NOT: the argument editor stops at one, so showing it would again show less than
-the query says.
-
-#### Scenario: A query using an unserved function stays in the written view
-
-- **WHEN** the JSON view holds a valid query whose filter predicate calls a function the served catalog does not list
-- **THEN** the informational message states the query cannot be shown in the visual builder
-- **AND** Run stays enabled and executes the query as written
-- **AND** the builder state is not updated from it
-
-#### Scenario: A call carrying more arguments than the catalog declares stays in the written view
-
-- **WHEN** a query calls a served function with an extra argument beyond the ones its catalog entry declares
-- **THEN** the query is not builder-representable and is not hydrated with the extra argument dropped
-
-#### Scenario: A literal where the catalog declares an expression stays in the written view
-
-- **WHEN** a query passes a constant to an argument the catalog declares as an `expression`
-- **THEN** the query is not builder-representable and is not hydrated with that argument blank
-
-#### Scenario: A stored query the builder cannot hold does not seed builder state
-
-- **WHEN** a saved query whose body the builder cannot represent is opened
-- **THEN** it opens in the JSON view showing that body
-- **AND** the builder rail holds its defaults rather than a partial parse of the body
-
-#### Scenario: A served function is representable
-
-- **WHEN** the same query calls a function the catalog does list, in a position the builder edits, with arguments of the declared kinds
-- **THEN** the query is representable and hydrates into the Builder view with that call intact
-
-#### Scenario: A predicate compared against a call is representable
-
-- **WHEN** a query's predicate compares a column against an `fn` expression naming a served catalog function whose arguments are of the declared kinds
-- **THEN** the query is representable and hydrates into the Builder view with that condition intact
-
-#### Scenario: A call nested one level deep is representable
-
-- **WHEN** a query's predicate compares a timestamp column against a subtraction call whose timestamp argument is a call to the served current-instant function
-- **THEN** the query is representable and hydrates into the Builder view with both calls intact
-
-#### Scenario: A call nested two levels deep stays in the written view
-
-- **WHEN** a query's predicate carries a call whose `expression` argument is a call whose own `expression` argument is a third call
-- **THEN** the query is not builder-representable and is not hydrated with the deepest call dropped
-- **AND** Run stays enabled and executes the query as written
-
-#### Scenario: A renamed plain column stays in the written view
-
-- **WHEN** the SQL view holds `SELECT project_id AS project …` and the user switches to the Builder view
-- **THEN** the written-mode confirmation is shown instead of hydrating the builder without the alias
-- **AND** cancelling keeps the SQL text as written
-
-#### Scenario: Distinct outside an aggregate metric stays in the written view
-
-- **WHEN** a query sets `distinct` on a row-mode `select` call, a scalar group-by call, or a predicate operand
-- **THEN** the query is not builder-representable
-
-#### Scenario: A predicate with other than two operands stays in the written view
-
-- **WHEN** a query's predicate carries one operand, or three
-- **THEN** the query is not builder-representable
-
-#### Scenario: A list the `in` editor would rewrite stays in the written view
-
-- **WHEN** a query's array operand is used under an operator other than `in`, or holds an item containing a comma, an empty or padded item, or items of different value types
-- **THEN** the query is not builder-representable
-
-#### Scenario: A scalar call wrapping an aggregate stays in the written view
-
-- **WHEN** an aggregate-mode query selects `model` and `round(avg(latency))`, grouped by `model` only
-- **THEN** the query is not builder-representable
-
-#### Scenario: References to an unaliased call follow its prefilled alias
-
-- **WHEN** an aggregate-mode query selects `count(*)` without an alias and sorts by `count`
-- **THEN** the query hydrates into the Builder, and the rebuilt query sorts by the alias the count column now carries
-
-#### Scenario: A list the `in` editor keeps is representable
-
-- **WHEN** a query compares a column under `in` against an array of trimmed, comma-free string items
-- **THEN** the query is representable and comes back from the builder unchanged
 
 ### Requirement: The SQL editor reads the selected source from the builder context
 
@@ -1218,29 +218,6 @@ AND `process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT` is present (non-empty); otherw
 
 - **WHEN** `ANALYTICS_ENABLED` is falsy
 - **THEN** `featureFlags.queryAssistantEnabled` is `false` regardless of the deployment variable
-
-### Requirement: Query Builder rail offers an AI view when the assistant is enabled
-
-The Query Builder view switcher SHALL include a fourth mutually exclusive view — AI — alongside Form,
-JSON, and SQL, rendered in the existing segmented control and marked with a spark icon. The AI option
-SHALL be present only when `featureFlags.queryAssistantEnabled` is `true`. When the flag is `false` the
-switcher SHALL offer exactly the existing three views. As with the other views, the switcher (and thus
-the AI option) is available only once an entity schema has loaded.
-
-#### Scenario: AI option shown when enabled
-
-- **WHEN** the schema has loaded and `queryAssistantEnabled` is `true`
-- **THEN** the view switcher offers Form, JSON, SQL, and AI
-
-#### Scenario: AI option hidden when disabled
-
-- **WHEN** the schema has loaded and `queryAssistantEnabled` is `false`
-- **THEN** the view switcher offers only Form, JSON, and SQL and no AI option is present
-
-#### Scenario: Selecting the AI view
-
-- **WHEN** the user selects the AI view
-- **THEN** the rail shows the AI panel and the current view is indicated as AI
 
 ### Requirement: AI panel accepts a plain-language prompt with suggestions
 
@@ -1377,99 +354,6 @@ currently the loaded query (see "Running a message's query loads it into the bui
 - **THEN** that message's Run action is disabled, while other SQL-bearing messages' Run actions remain
   enabled
 
-### Requirement: Running a message's query loads it into the builder and executes it
-
-Clicking a message's Run action SHALL translate that message's SQL into a structured query and, when
-the builder can represent it, hydrate the builder state so the Builder, JSON, and SQL views all reflect
-it; when the query cannot be represented (or translation fails), the raw SQL SHALL remain runnable and
-visible in the SQL view instead. In the same action, the system SHALL execute the query (via the
-structured or SQL execution path, matching whichever form was loaded) and show the result in the
-existing result area. The AI view SHALL remain active after Run (no forced view switch). The message
-whose Run was most recently clicked SHALL have its Run action disabled to indicate it is the currently
-loaded query (see "Each assistant message with extracted SQL offers inline Run and Copy") — no separate
-visual badge is used.
-
-#### Scenario: Representable query loads and runs
-
-- **WHEN** the user clicks Run on a message whose query the builder can represent
-- **THEN** the Builder, JSON, and SQL views are hydrated with that query, the query executes, and the
-  result appears in the result area
-
-#### Scenario: Non-representable query still runs via SQL
-
-- **WHEN** the user clicks Run on a message whose query the builder cannot represent (or translation
-  fails)
-- **THEN** the raw SQL remains visible and runnable in the SQL view, and the query still executes via
-  the SQL path
-
-#### Scenario: Running an earlier message updates which query is loaded
-
-- **WHEN** a later message's Run was previously clicked and the user then clicks an earlier message's
-  Run
-- **THEN** the earlier message's Run action becomes disabled, the later message's Run action becomes
-  enabled again, and the Builder/JSON/SQL views and any subsequent toolbar-independent Copy reflect the
-  earlier query instead
-
-#### Scenario: Changing the entity clears the conversation and loaded state
-
-- **WHEN** a query has been run from the AI view and the user selects a different entity
-- **THEN** the conversation is cleared entirely (no messages remain, so no Run action is disabled or
-  present)
-
-### Requirement: Toolbar Run and Copy are not shown in the AI view
-
-When the AI view is active, the Query Builder toolbar SHALL NOT render its Run action or its Copy
-action; the entity selector and time filter controls remain. Running and copying a query in the AI view
-happens only through the per-message actions on the transcript.
-
-#### Scenario: Toolbar Run hidden in AI view
-
-- **WHEN** the AI view is active
-- **THEN** the toolbar does not show a Run action
-
-#### Scenario: Toolbar Copy hidden in AI view
-
-- **WHEN** the AI view is active
-- **THEN** the toolbar does not show a Copy action
-
-#### Scenario: Entity and time controls remain available
-
-- **WHEN** the AI view is active
-- **THEN** the entity selector and time filter controls are still shown and usable
-
-### Requirement: The AI conversation outlives leaving the AI view
-
-The AI conversation and which of its messages is the loaded query SHALL persist while the user shows another
-view (Form, JSON, SQL) or collapses and restores the rail, and SHALL be shown unchanged on returning to the
-AI view. Only selecting a different entity clears them (see "Changing the entity clears the conversation
-and loaded state"); a reply still in flight from a cleared conversation SHALL NOT appear in the next one.
-
-#### Scenario: Returning from another view shows the same conversation
-
-- **WHEN** the user has run a message in the AI view, switches to the SQL view, and returns to the AI view
-- **THEN** the earlier messages are shown and the run message's Run action is still disabled
-
-#### Scenario: A new reply after returning is runnable
-
-- **WHEN** the user returns to the AI view after running a message and sends a new request whose reply
-  carries SQL
-- **THEN** the new reply's Run action is enabled
-
-#### Scenario: Collapsing the rail keeps the conversation
-
-- **WHEN** the user collapses and restores the rail while the AI view holds a conversation
-- **THEN** the conversation is shown unchanged
-
-#### Scenario: A reply for a cleared conversation is dropped
-
-- **WHEN** the user selects a different entity while a reply is still in flight
-- **THEN** the late reply does not appear and the prompt is usable again
-
-#### Scenario: A send that fails in transit
-
-- **WHEN** the request for a reply fails in transit
-- **THEN** a failure notification is shown and the prompt and Send remain usable
-
 ### Requirement: Running a message survives a failed translation round trip
 
 When translating a message's SQL, or reading the schema its query targets, fails in transit, running that
@@ -1488,128 +372,1053 @@ message's query SHALL NOT leave the transcript's Run actions disabled.
   read fails in transit
 - **THEN** the query executes via the SQL path
 
-### Requirement: A map field is offered only where the service accepts it
+### Requirement: Query page layout
 
-A schema field the entity schema types `map` SHALL NOT be offered as a **column** in any builder position the
-service refuses a raw map in: the left operand of a Filter condition, a plain **Group by** column, and a
-**Sort** key's field. The service defines no comparison, grouping or ordering over a map — it answers every
-operator over one, the null tests included, with a refusal — and it rejects the whole query for one bad
-predicate or key, so a single such entry would take the entire result down rather than degrading it. The
-exclusion SHALL key on the field's **schema type alone**: no list in the frontend names which fields are maps, so
-a field an instance begins reporting as a map is guarded with no change here. The row-limit editor, which reuses
-the Filter condition editor, inherits the exclusion.
+The Query Builder SHALL be rendered by two pages: the draft builder (`app/[lang]/queries/page.tsx`) and
+a saved query's page (`app/[lang]/queries/[id]/page.tsx`). Both SHALL be laid out to the right of the
+Source panel specified in `analytics/source-panel`, as one column holding, top to bottom: the page
+heading with its description and actions, the view switcher row with the Run action, the builder area,
+and the results area. When the assistant is enabled its panel SHALL sit to the right of that column.
 
-A map field SHALL stay offered where the service accepts it:
+The heading SHALL show the saved query's name, or the draft's table name. Under it the page SHALL show
+a description when there is one — the saved query's description, or the draft table's description —
+on one line, with a control that expands it to its full text when it does not fit. A page with no
+description SHALL show no description line.
 
-- in the row-mode **Select** projection, where it returns as a JSON object;
-- as an `expression` argument of a function being built, in every section that builds one — because a function
-  reading one key of a map is how a map is filtered, grouped and sorted on, and the served catalog does not
-  declare what type an `expression` argument expects, so there is nothing to exclude on.
+The builder area SHALL sit above the results area, separated from it by a handle the user can drag, or
+move with the keyboard, to change the builder area's height. The height SHALL stay within a minimum
+that keeps one row of chips visible and a maximum that leaves the results area usable, and SHALL be
+remembered in the browser across reloads. The handle SHALL carry an accessible name and expose its
+value.
 
-The builder SHALL NOT name any map function itself: reading a key goes through whichever functions the served
-catalog offers (see "Served function catalog"), and the key is that function's own `string_literal` argument,
-typed as it is stored — a key containing a dot is one flat key, not a path. A function reading a key returns the
-catalog's declared type, so its condition's operators, its value type and its eligibility as a Group by or Sort
-entry follow that return type exactly as for any other function.
+The builder SHALL be reachable both through a saved query and as a draft with no stored query behind
+it. On both pages the breadcrumbs SHALL show the Queries section only; a saved query's identifier SHALL
+NOT appear as a breadcrumb. The page SHALL offer no control that switches its source.
 
-A query authored in the JSON or SQL view, or proposed by the assistant, that already names a map field in one of
-the excluded positions SHALL be carried as authored: the exclusion governs what the builder offers, not what it
-parses, and the service's own error is what reports the problem.
+Base form controls SHALL come from the DIAL UI Kit and tabular results SHALL be displayed with the
+app's grid stack.
 
-#### Scenario: A map field is withheld from Filter, Group by and Sort
+#### Scenario: A saved query renders the layout
 
-- **WHEN** the selected entity's schema has a field `span_attributes` typed `map`
-- **THEN** the Filter condition's left-operand dropdown, the plain-column part of the Group by dropdown and the Sort key's field dropdown do not list it
+- **WHEN** the user opens a saved query
+- **THEN** the query's name is shown as the heading
+- **AND** the view switcher with Run, the builder area and the results area are shown one under another
+- **AND** no rail is shown beside the results
 
-#### Scenario: A map field stays projectable
+#### Scenario: A draft renders the same layout
 
-- **WHEN** the user opens the row-mode Select dropdown for an entity with a `map` field
-- **THEN** the map field is listed and can be added as a projection chip
+- **WHEN** the user opens the draft builder
+- **THEN** the draft's table name is shown as the heading
+- **AND** the view switcher, the builder area and the results area are shown as on a saved query
 
-#### Scenario: A map field is offered as a function argument
+#### Scenario: A description is shown under the heading
 
-- **WHEN** the user picks a catalog function in a Filter condition's operand and opens its `expression` argument's dropdown
-- **THEN** the entity's `map` fields are listed there
-- **AND** with the map field and a key filled, the condition serializes as that function call compared against the literal
+- **WHEN** the draft's table has a description
+- **THEN** the description is shown on one line under the heading
 
-#### Scenario: The exclusion follows the schema type
+#### Scenario: A long description expands
 
-- **WHEN** an instance's schema reports a field typed `map` that the frontend has never named
-- **THEN** it is withheld from the Filter, Group by and Sort column options with no frontend change
+- **WHEN** the description does not fit one line and the user activates its expand control
+- **THEN** the full description is shown
 
-### Requirement: A projection-only field is offered only as a row-mode projection
+#### Scenario: No description means no line
 
-The entity schema marks every field with `projection_only`. A field marked `true` is computed by the service
-after the query runs rather than stored, and the service accepts it only as a plain column of a row-mode
-projection: naming it in a filter, a sort, a group-by, a having condition, an aggregate, `distinct`, or as any
-function's argument rejects the whole query with `400 bad_request`.
+- **WHEN** the page's table or query has no description
+- **THEN** no description line and no expand control are shown
 
-The builder SHALL offer a projection-only field only in the row-mode **Select** projection. It SHALL NOT offer
-one as the left operand of a Filter condition (the row-limit editor inherits this), a Group by column, a Sort
-key, a Having operand, an aggregate's operand, or an argument of a function being built in any section. The SQL
-view's completions are not clause-aware and SHALL keep proposing every schema field, a projection-only one
-included, since it is legal in the select list.
+#### Scenario: The builder area is resized
 
-The exclusion SHALL key on the flag alone, so a field an instance begins marking projection-only is guarded with
-no change here. A field with no flag, or the flag `false`, SHALL be offered as today. The flag SHALL add to the
-type-based exclusion under **A map field is offered only where the service accepts it**, not replace it: the
-service sets the flag only on computed fields, so a `map` field keeps its own rule and stays offered as a function
-argument.
+- **WHEN** the user drags the handle between the builder area and the results
+- **THEN** the builder area's height follows, within its minimum and maximum
+- **AND** the results area takes the remaining height
 
-A query authored in the JSON or SQL view, or proposed by the assistant, that already names a projection-only
-field in an excluded position SHALL be carried as authored; the service's own error reports the problem.
+#### Scenario: The height is remembered
 
-#### Scenario: A projection-only field is listed only in Select
+- **WHEN** the user resizes the builder area and reloads the page
+- **THEN** the builder area has the height the user left it at
 
-- **WHEN** the selected entity's schema reports a field with `projection_only: true`
-- **THEN** the row-mode Select dropdown lists it
-- **AND** the Filter, Group by, Sort and Having column dropdowns do not list it
-- **AND** no function argument dropdown in any section lists it
+#### Scenario: The handle works from the keyboard
 
-#### Scenario: Aggregate mode does not offer a projection-only field
+- **WHEN** the handle has focus and the user presses an arrow key
+- **THEN** the builder area's height changes by one step
 
-- **WHEN** the builder is in aggregate mode for an entity whose schema reports a projection-only field
-- **THEN** no aggregate or measure operand dropdown lists it
+#### Scenario: The breadcrumbs omit the query id
 
-#### Scenario: A field without the flag is unaffected
+- **WHEN** the user opens a saved query
+- **THEN** the breadcrumbs show the Queries section and no identifier
 
-- **WHEN** the schema reports a field without `projection_only`, or with it `false`
-- **THEN** the field is offered in every position its type admits, as before
+### Requirement: Query page actions
 
-### Requirement: The builder opens as a draft without a stored query
+The heading row SHALL carry the page's own actions, right-aligned, and a saved query SHALL show one of
+two sets. While the page holds no unsaved changes: Delete and Edit, each only when the caller may write
+the query, and Duplicate. While it holds unsaved changes: Discard, and a split Save control whose main
+part saves and whose menu offers Save a copy…; Delete, Edit and Duplicate SHALL NOT be shown then, since
+they act on the stored query while the page shows something else. A caller who may not write the query
+SHALL be offered Save a copy as an action of its own in place of the Save control. Duplicate and Save a
+copy are specified in `analytics/saved-queries`. Duplicate, Save and Save as query SHALL be drawn as
+outlined accent buttons.
+
+Next to a saved query's heading the page SHALL show a badge naming its visibility, Personal or Public,
+and under the heading a line with the query's primary source table.
+
+Deleting a saved query SHALL ask for confirmation in a dialog naming the query, whose confirm action is
+Delete query. Resetting a draft SHALL ask for confirmation in a dialog that states the columns, filters,
+sorting and limit go back to the table defaults, whose actions are Reset and Continue editing.
+
+On a draft the actions SHALL be Reset and Save
+as query, as specified by the draft requirement.
+
+The Run primary action SHALL sit in the view switcher row. Run SHALL be disabled until a schema is
+loaded, and in the SQL view while the editor is empty.
+
+A Copy action SHALL be offered in the SQL view only, beside Run, and SHALL copy the SQL editor text.
+The Builder view SHALL offer no Copy action.
+
+The page SHALL NOT contain a source selector, and SHALL NOT contain a time filter outside the builder
+area: the period is a chip.
+
+#### Scenario: Actions of a saved query
+
+- **WHEN** the user opens a saved query they may write
+- **THEN** the heading row shows the Delete, Edit and Duplicate actions
+- **AND** the view switcher row shows Run
+
+#### Scenario: Save and Discard appear with unsaved changes
+
+- **WHEN** the page holds unsaved changes
+- **THEN** the heading row shows Discard and the split Save control in place of Delete, Edit and Duplicate
+- **AND** the main part of the Save control saves, and its menu offers Save a copy…
+
+#### Scenario: A saved query shows its visibility and source
+
+- **WHEN** the user opens a saved query
+- **THEN** a badge next to the heading names its visibility
+- **AND** a line under the heading names its primary source table
+
+#### Scenario: Actions of a draft
+
+- **WHEN** the user opens the draft builder
+- **THEN** the heading row shows Save as query
+- **AND** the view switcher row shows Run
+
+#### Scenario: Copy is offered in the SQL view only
+
+- **WHEN** the SQL view is shown
+- **THEN** a Copy action is offered beside Run
+- **WHEN** the Builder view is shown
+- **THEN** no Copy action is offered
+
+#### Scenario: No time filter outside the builder area
+
+- **WHEN** either query page is shown
+- **THEN** the only period control is the Period chip in the builder area
+
+### Requirement: The view switcher offers Builder and SQL
+
+The view switcher SHALL offer two mutually exclusive views via a `SegmentedControl`: **Builder** and
+**SQL**. There SHALL be no JSON view, and the assistant SHALL NOT be a view: it is a panel beside the
+builder, as specified in "The assistant is a collapsible panel beside the builder". Selecting a view
+SHALL change the content of the builder area without a page reload, and the current view SHALL be
+indicated. The switcher SHALL NOT be shown before a schema is loaded.
+
+#### Scenario: Two views
+
+- **WHEN** the schema has loaded
+- **THEN** the view switcher offers Builder and SQL only, whether or not the assistant is enabled
+
+#### Scenario: No JSON view
+
+- **WHEN** the view switcher is shown
+- **THEN** it offers no JSON view
+
+#### Scenario: Switcher hidden before a schema loads
+
+- **WHEN** no schema has been loaded yet
+- **THEN** the view switcher is not shown
+
+### Requirement: The assistant is a collapsible panel beside the builder
+
+When `featureFlags.queryAssistantEnabled` is `true` and a schema is loaded, the page SHALL show the
+assistant as a panel at the right edge of the query page, beside the heading, the builder area and the
+results, which stay visible and usable while it is open. When the flag is `false` the page SHALL show
+neither the panel nor its collapsed control.
+
+The panel SHALL start collapsed. Collapsed, it SHALL be a narrow vertical control carrying a spark icon
+and the label Ask AI, exposing its collapsed state; activating it SHALL open the panel. Open, the panel
+SHALL hold the assistant — its heading, suggestions, prompt and transcript — and a control that
+collapses it. Whether the panel is open SHALL be remembered in the browser and applied after mount, so
+the server render and the first client render agree.
+
+On a viewport narrower than the tablet breakpoint the open panel SHALL be laid over the page content
+instead of beside it.
+
+#### Scenario: The panel is offered when the assistant is enabled
+
+- **WHEN** the schema has loaded and `queryAssistantEnabled` is `true`
+- **THEN** the collapsed Ask AI control is shown at the right edge of the page
+
+#### Scenario: No panel without the assistant
+
+- **WHEN** `queryAssistantEnabled` is `false`
+- **THEN** neither the Ask AI control nor the panel is shown
+
+#### Scenario: Opening the panel keeps the builder in place
+
+- **WHEN** the user activates the collapsed Ask AI control
+- **THEN** the assistant is shown in the panel
+- **AND** the view switcher, the builder area and the results stay visible
+
+#### Scenario: The panel state is remembered
+
+- **WHEN** the user opens the panel and reloads the page
+- **THEN** the panel is open again
+
+### Requirement: The builder is a bar of chips
+
+In the Builder view the builder area SHALL show the query as a bar of chips that wraps onto further
+rows as it grows. Each chip SHALL state one part of the query in words and SHALL be a control that
+opens a popup editing that part. The bar SHALL hold, in this order: the Period chip, the Limit chip,
+the Filter chips in the order they were added, the Aggregate chip, the Show columns chip, the Sort
+chips in the order they were added, and the Add control.
+
+The Add control SHALL open a menu offering Filter, Aggregate, Show columns, and Sort. Choosing an entry
+SHALL open that part's popup in its adding form, which carries a control that returns to the menu. An
+entry whose part the query can hold only once — Aggregate, Show columns — SHALL be unavailable while
+that chip is present. Show columns SHALL be unavailable while the Aggregate chip is present, and the
+Show columns chip SHALL be removed when an Aggregate chip is applied, because an aggregate query's
+columns are its group-bys and its metric.
+
+A popup SHALL edit a copy of the part: nothing in the query SHALL change until the user activates
+Apply, and Cancel, Escape, or a click outside the popup SHALL close it leaving the query as it was.
+Apply SHALL be unavailable while the popup's required fields are not all set. The popup of a chip that
+can be removed — Filter, Aggregate, Show columns, Sort — SHALL offer Remove when it was opened from the
+chip, which deletes that part and its chip; the adding form SHALL NOT offer Remove. The Period and
+Limit chips SHALL NOT be removable.
+
+A popup SHALL be a dialog named by its title, SHALL move focus into itself when it opens and SHALL
+return focus to the control that opened it when it closes. A chip SHALL expose that it opens a popup
+and whether that popup is open.
+
+Applying, removing, or resetting a part SHALL NOT run the query; the shown result stays until the user
+runs again.
+
+#### Scenario: A fresh draft shows Period, Limit and Add
+
+- **WHEN** a draft is opened on a table with a temporal column
+- **THEN** the bar shows the Period chip, the Limit chip and the Add control, in that order
+
+#### Scenario: The Add menu offers the four parts
+
+- **WHEN** the user opens the Add control
+- **THEN** a menu offers Filter, Aggregate, Show columns, and Sort
+
+#### Scenario: Adding opens the part's popup with a way back
+
+- **WHEN** the user chooses Filter in the Add menu
+- **THEN** the Add filter popup opens
+- **AND** it offers a control that returns to the Add menu
+- **AND** it offers no Remove
+
+#### Scenario: Apply adds the chip
+
+- **WHEN** the user fills the Add filter popup and activates Apply
+- **THEN** the popup closes and a Filter chip stating the condition is shown before the Add control
+
+#### Scenario: Cancel leaves the query unchanged
+
+- **WHEN** the user changes a value in a chip's popup and activates Cancel
+- **THEN** the popup closes and the chip states what it stated before
+
+#### Scenario: Apply waits for the required fields
+
+- **WHEN** a popup's required field is not set
+- **THEN** Apply is unavailable
+
+#### Scenario: A chip's popup removes its part
+
+- **WHEN** the user opens a Filter chip's popup and activates Remove
+- **THEN** the chip is gone and the query no longer carries that condition
+
+#### Scenario: Aggregate and Show columns are added once
+
+- **WHEN** the bar already holds an Aggregate chip
+- **THEN** the Add menu's Aggregate and Show columns entries are unavailable
+
+#### Scenario: Applying an aggregate drops the shown columns
+
+- **WHEN** the bar holds a Show columns chip and the user applies an Aggregate
+- **THEN** the Show columns chip is removed
+
+#### Scenario: Editing does not run the query
+
+- **WHEN** the user applies a change in a popup while a result is shown
+- **THEN** the shown result is unchanged until the user runs the query
+
+#### Scenario: Focus follows the popup
+
+- **WHEN** the user opens a chip's popup and closes it
+- **THEN** focus moved into the popup on opening and returns to the chip on closing
+
+### Requirement: The Period chip bounds the query in time
+
+The Period chip SHALL be a query control: its range SHALL serialize into the structured query's filter
+as `ge`/`le` predicates on the source's automatically detected timestamp field (the first
+temporal-typed field of the loaded schema). The serialized query — as translated for the SQL view and
+executed by Run — SHALL include these predicates; nothing is added invisibly at execution time. The
+time predicates SHALL NOT be shown as Filter chips — the Period chip is their editor. When the schema
+has no temporal field, the Period chip SHALL NOT be shown, no time predicates SHALL be serialized and
+the query runs without a time bound. SQL text SHALL never be modified by the period.
+
+The chip SHALL state the selected preset by its label, or a custom range by its two dates. Its popup
+SHALL offer the preset periods as a list, marking the selected one, and a custom range, set either by
+picking days on a calendar or by typing the two dates into the Start and End fields as year, month and
+day. The calendar and the fields SHALL show the same range: a range picked on the calendar SHALL be
+written into the fields, and a range typed into the fields SHALL be highlighted on the calendar.
+Applying a preset or a complete custom range SHALL replace the period; Apply SHALL be unavailable for a
+custom range while either date is missing or unreadable, while the end precedes the start, and while
+the end lies after today.
+
+A **preset** period SHALL serialize as a **relative** bound rather than as two instants: the lower
+bound SHALL compare the timestamp field against a call subtracting the preset's own unit and amount
+from the current instant, and the upper bound against the current instant itself. The body then carries
+the moving window on its own, so a translated, exported, or directly executed body returns the last N
+units at the moment it runs instead of the window its author happened to be looking at. Because the
+current instant is read where the query is evaluated rather than from the browser, a relative bound
+also removes the clock skew an instant resolved client-side carries.
+
+A **custom** range SHALL serialize as two absolute instants: it names one specific interval, which is
+what the user asked for.
+
+Both the subtraction and the current-instant call SHALL be named by the served function catalog, and
+the frontend SHALL verify they are served before emitting them. When the catalog serves neither — it
+failed to load, or a deployment's catalog does not carry them — a preset SHALL serialize absolutely,
+exactly as a custom range does, rather than emit a call the service would reject and take the whole
+query down.
+
+When a structured query is loaded into the builder — from a stored query, from translated SQL, or from
+an assistant message — a matching `ge` + `le` predicate pair on the timestamp field SHALL be lifted
+into the Period chip: a **relative** pair whose subtracted unit and amount match an offered preset
+SHALL be lifted as that preset, and an **absolute** pair SHALL be lifted as a custom range. A time
+condition in any other shape is not something the Period chip can own; whether the chips can show it
+at all is decided by the representability rule.
+
+The **persisted** body is the one exception, and it is deliberate: the structured body written to a
+saved query SHALL be serialized without the time bound, and the authored range SHALL be stored
+separately as time intent (see **Saving persists authored intent, not a resolved range**). Serializing
+the range into a persisted body would freeze the saved query to the day it was authored.
+
+#### Scenario: The period serializes into the query
+
+- **WHEN** the Period chip holds a range and the schema has a temporal field
+- **THEN** the serialized query's filter includes `ge` and `le` predicates on that field
+- **AND** no Filter chip shows them
+
+#### Scenario: A preset period serializes as a relative bound
+
+- **WHEN** the user applies a preset period of 30 minutes and the schema has a temporal field
+- **THEN** the serialized query's filter includes a `ge` predicate comparing that field against a call subtracting 30 minutes from the current instant
+- **AND** an `le` predicate comparing it against the current instant
+
+#### Scenario: A preset period's body stays current when re-run later
+
+- **WHEN** a body serialized from a preset period is executed again some time after it was produced
+- **THEN** it bounds the results by the preset's span measured from the moment of that execution
+- **AND** no instant from the moment of authoring appears in the body
+
+#### Scenario: A custom range serializes as instants
+
+- **WHEN** the user applies a custom range
+- **THEN** the serialized query's filter includes `ge` and `le` predicates carrying that range's two absolute instants
+- **AND** no relative call is emitted
+
+#### Scenario: The chip states the period
+
+- **WHEN** the two-day preset is selected
+- **THEN** the Period chip states that preset's label
+- **WHEN** a custom range is applied
+- **THEN** the Period chip states the range's two dates
+
+#### Scenario: A half-picked range cannot be applied
+
+- **WHEN** the user has typed only a start date in the Period popup
+- **THEN** Apply is unavailable
+
+#### Scenario: A typed range is applied
+
+- **WHEN** the user types a start date and a later end date, neither after today, and activates Apply
+- **THEN** the Period chip states the range's two dates
+
+#### Scenario: A picked range fills the date fields
+
+- **WHEN** the user picks two days on the calendar
+- **THEN** the Start and End fields show those two dates
+
+#### Scenario: A relative pair lifts back to its preset
+
+- **WHEN** a loaded query holds a `ge`/`le` pair on the timestamp field whose lower bound subtracts 2 days from the current instant and whose upper bound is the current instant
+- **THEN** the Period chip shows the 2-day preset rather than a custom range
+- **AND** no Filter chip shows the pair
+
+#### Scenario: An absolute pair lifts back to a custom range
+
+- **WHEN** a loaded query holds a `ge`/`le` pair of two absolute instants on the timestamp field
+- **THEN** the Period chip shows that custom range
+
+#### Scenario: A catalog without the relative functions falls back to instants
+
+- **WHEN** the served function catalog carries neither the subtraction nor the current-instant function and a preset period is selected
+- **THEN** the serialized query's filter carries that preset's resolved instants as absolute values
+- **AND** the query runs
+
+#### Scenario: No temporal field
+
+- **WHEN** the loaded schema has no temporal-typed field
+- **THEN** no Period chip is shown
+- **AND** the serialized query contains no time predicates and the run is not time-bounded
+
+#### Scenario: SQL runs are not modified
+
+- **WHEN** the user runs a query from the SQL view
+- **THEN** the executed SQL is exactly the editor text
+
+#### Scenario: The persisted body carries no time bound
+
+- **WHEN** the user saves a query whose Period chip holds a range and whose schema has a temporal field
+- **THEN** the persisted structured body contains no `ge`/`le` predicate on the timestamp field
+- **AND** the range is carried as the saved query's time intent instead
+
+### Requirement: The Limit chip sets rows and offset
+
+The Limit chip SHALL always be present in the Builder view and SHALL state the number of rows the query
+returns. Its popup SHALL offer two whole-number fields, Rows and Offset. Rows SHALL be at least 1 and
+Offset at least 0; Apply SHALL be unavailable while either is not a whole number in range. The query
+SHALL serialize offset paging with those two values and without a requested total. A new draft SHALL
+start at 25 rows and offset 0.
+
+#### Scenario: The chip states the row limit
+
+- **WHEN** a fresh draft is shown
+- **THEN** the Limit chip states 25 rows
+
+#### Scenario: Applying new values changes the page
+
+- **WHEN** the user sets Rows to 100 and Offset to 50 and activates Apply
+- **THEN** the chip states 100 rows
+- **AND** the serialized query pages by offset with limit 100 and offset 50
+
+#### Scenario: Invalid values cannot be applied
+
+- **WHEN** Rows is empty, zero or not a whole number
+- **THEN** Apply is unavailable
+
+### Requirement: A Filter chip holds one condition
+
+A Filter chip SHALL hold one condition — a column, an operator, and a value — and SHALL state it as
+column, operator and value. The query SHALL combine all Filter chips with AND, and SHALL carry no
+filter when there are none.
+
+The popup SHALL offer:
+
+- **Column** — the fields of the schema that the service accepts in a comparison, searchable by
+  name.
+- **Operator** — equals, does not equal, contains, does not contain, less than, greater than, at most,
+  at least, in list, is empty, and is not empty. The two containment operators SHALL NOT be offered for
+  an enum column. Changing the column to one that does not offer the selected operator SHALL reset the
+  operator to equals.
+- **Value** — shaped by the column and the operator: the column's values as a choice for an enum
+  column; true or false as a choice for a boolean column; otherwise a text field. With "in list" the
+  value SHALL be several values — several choices for an enum column, a comma-separated list otherwise.
+  With "is empty" and "is not empty" no value SHALL be offered.
+
+The value SHALL be typed by its column: the popup SHALL NOT ask for a value type. "Is empty" and "is
+not empty" SHALL serialize as the null comparison the service reads as `IS NULL` and `IS NOT NULL`.
+
+Apply SHALL be unavailable until a column is chosen and, for an operator that takes one, a value is
+given.
+
+#### Scenario: A filter is added
+
+- **WHEN** the user chooses a column, the operator equals and a value, and activates Apply
+- **THEN** a Filter chip states that column, operator and value
+- **AND** the serialized query's filter carries that comparison
+
+#### Scenario: Several filters are combined with AND
+
+- **WHEN** the bar holds two Filter chips
+- **THEN** the serialized query's filter requires both conditions
+
+#### Scenario: An enum column offers its values
+
+- **WHEN** the chosen column is an enum column
+- **THEN** the value is chosen from that column's values
+- **AND** the operators contains and does not contain are not offered
+
+#### Scenario: A boolean column offers true and false
+
+- **WHEN** the chosen column is a boolean column
+- **THEN** the value is chosen between true and false
+
+#### Scenario: In list takes several values
+
+- **WHEN** the operator is in list on a text column and the user enters two values separated by a comma
+- **THEN** the chip states both values
+- **AND** the serialized comparison carries a list of the two
+
+#### Scenario: Is empty takes no value
+
+- **WHEN** the operator is is empty
+- **THEN** no value field is shown and Apply is available once a column is chosen
+- **AND** the serialized comparison is the null comparison
+
+#### Scenario: Changing the column resets an operator it does not offer
+
+- **WHEN** the operator is contains and the user changes the column to an enum column
+- **THEN** the operator becomes equals
+
+#### Scenario: A filter is edited
+
+- **WHEN** the user opens a Filter chip, changes its value and activates Apply
+- **THEN** the chip states the new value
+
+### Requirement: The Aggregate chip groups rows and computes one measure
+
+A query SHALL be an aggregate query exactly when the bar holds the Aggregate chip, and a row query
+otherwise; there SHALL be no separate mode control. The chip SHALL state its function, the function's
+column when it has one, the group-by columns, and the time bucket when one is set.
+
+The popup SHALL offer:
+
+- **Group by** — required; a field the service accepts as a grouping key.
+- **Secondary group by** — optional, added by an "add secondary grouping" control and removable by a
+  control beside it; a field other than the first group-by. At most one.
+- **Function** — required; the aggregate functions of the served catalog, by their labels. Where the
+  catalog's counting function supports distinct, the list SHALL also offer its distinct form as an
+  entry of its own.
+- **The function's column** — shown, and required, when the chosen function needs a column, under a
+  label naming the function; a field the service accepts as that function's argument. A function that
+  counts rows SHALL show no column field. The distinct count SHALL require a column.
+- Any further argument the catalog declares for the function SHALL be offered as the catalog describes
+  it — its allowed values or its numeric bounds — and SHALL be required unless the catalog marks it
+  optional.
+
+The serialized query SHALL carry the group-by columns as its grouping keys and output columns, and the
+measure as an output column under a derived, unique name. The chips SHALL NOT offer a HAVING condition,
+a second measure, or a renamed output column.
+
+#### Scenario: An aggregate is added
+
+- **WHEN** the user chooses a group-by column and the counting function and activates Apply
+- **THEN** the Aggregate chip states the function and the group-by column
+- **AND** the serialized query is an aggregate query grouped by that column with that measure
+
+#### Scenario: A function that needs a column asks for it
+
+- **WHEN** the user chooses the averaging function
+- **THEN** a column field labelled with that function is shown
+- **AND** Apply is unavailable until a column is chosen
+
+#### Scenario: Counting rows asks for no column
+
+- **WHEN** the user chooses the counting function
+- **THEN** no column field is shown
+
+#### Scenario: The distinct count is its own entry
+
+- **WHEN** the served counting function supports distinct
+- **THEN** the Function list offers a distinct count entry
+- **AND** choosing it requires a column
+
+#### Scenario: A secondary grouping is added and removed
+
+- **WHEN** the user adds a secondary grouping, chooses a column and activates Apply
+- **THEN** the query is grouped by both columns
+- **WHEN** the user reopens the chip, removes the secondary grouping and activates Apply
+- **THEN** the query is grouped by the first column only
+
+#### Scenario: The secondary grouping differs from the first
+
+- **WHEN** the user picks the secondary group-by column
+- **THEN** the first group-by column is not offered
+
+#### Scenario: Removing the chip returns to a row query
+
+- **WHEN** the user removes the Aggregate chip
+- **THEN** the serialized query is a row query with no grouping
+
+#### Scenario: The functions come from the catalog
+
+- **WHEN** the served catalog carries an aggregate function
+- **THEN** the Function list offers it by its label
+- **AND** no function absent from the catalog is offered
+
+### Requirement: A temporal group-by can be split by period
+
+When the first group-by column is a temporal field and the served catalog carries the time-binning
+function, the Aggregate popup SHALL offer **Split by period** under the group-by: none, a list of
+preset bucket sizes, and Custom. The presets SHALL be limited to those whose unit the catalog's binning
+function allows. When the group-by column is not temporal, or the catalog does not serve the binning
+function, Split by period SHALL NOT be shown and the column SHALL be grouped as it is.
+
+Choosing a preset SHALL group by the column binned to that size. Choosing Custom SHALL show a Period
+field taking an amount and a unit as text; Apply SHALL be unavailable until the text names a whole
+amount of at least 1 and a unit the catalog's binning function allows. Choosing none SHALL group by the
+column unbinned.
+
+A binned group-by SHALL serialize as the catalog's binning function over the column with the chosen
+amount and unit, and the chip SHALL state the bucket size after the column.
+
+#### Scenario: A temporal group-by offers Split by period
+
+- **WHEN** the first group-by column is a timestamp column and the catalog serves the binning function
+- **THEN** Split by period is offered, with none selected
+
+#### Scenario: A preset bucket bins the column
+
+- **WHEN** the user chooses the 15-minute preset and activates Apply
+- **THEN** the serialized query groups by the column binned to 15 minutes
+- **AND** the Aggregate chip states the 15-minute bucket after the column
+
+#### Scenario: A custom bucket is entered as text
+
+- **WHEN** the user chooses Custom and enters an amount and an allowed unit
+- **THEN** Apply becomes available and the query groups by the column binned to that size
+
+#### Scenario: A custom bucket the catalog cannot bin is refused
+
+- **WHEN** the Period text names no whole amount, or a unit the binning function does not allow
+- **THEN** Apply is unavailable
+
+#### Scenario: A non-temporal group-by is not split
+
+- **WHEN** the first group-by column is a text column
+- **THEN** Split by period is not shown
+
+#### Scenario: A catalog without the binning function offers no split
+
+- **WHEN** the served catalog does not carry the time-binning function
+- **THEN** Split by period is not shown for a temporal group-by
+
+### Requirement: The Show columns chip picks the columns of a row query
+
+The Show columns chip SHALL hold the columns a row query returns and SHALL state how many are chosen.
+A row query with no Show columns chip SHALL request no explicit columns, which returns the service's
+default projection.
+
+The popup SHALL list the schema's fields as a tree grouped by tag, each field with a checkbox, a
+sensitive field with its marker; fields without a tag SHALL be listed after the groups. A group
+SHALL carry a checkbox that selects or clears all its fields, a count of how many of its fields are
+selected, and SHALL be collapsible. An entry above the tree SHALL select or clear every field. A
+checkbox over a partly selected set SHALL show the mixed state. Every field the service accepts in a
+projection SHALL be offered, including those it accepts nowhere else.
+
+Apply SHALL be unavailable while no field is selected: to return to the default projection the user
+removes the chip. The serialized query SHALL request the selected fields in schema order.
+
+#### Scenario: Columns are chosen
+
+- **WHEN** the user selects three fields and activates Apply
+- **THEN** the Show columns chip states three columns
+- **AND** the serialized query requests those three fields
+
+#### Scenario: No chip means the default projection
+
+- **WHEN** a row query has no Show columns chip
+- **THEN** the serialized query requests no explicit columns
+
+#### Scenario: A group selects all its fields
+
+- **WHEN** the user checks a tag group whose fields are not all selected
+- **THEN** every field of that group is selected and the group's count shows all of them
+
+#### Scenario: A partly selected group shows the mixed state
+
+- **WHEN** some but not all fields of a group are selected
+- **THEN** the group's checkbox shows the mixed state and its count shows how many are selected
+
+#### Scenario: Nothing selected cannot be applied
+
+- **WHEN** no field is selected in the popup
+- **THEN** Apply is unavailable
+
+#### Scenario: Removing the chip restores the default projection
+
+- **WHEN** the user removes the Show columns chip
+- **THEN** the serialized query requests no explicit columns
+
+### Requirement: A Sort chip holds one sort key
+
+A Sort chip SHALL hold one sort key — a field and a direction — and SHALL state both. The query SHALL
+sort by the Sort chips in the order they appear in the bar.
+
+The popup SHALL offer **Field** and **Direction** (ascending, descending). In a row query the fields
+SHALL be the schema fields the service accepts as a sort key; in an aggregate query they SHALL be the
+query's group-by columns and its measure. A field already used by another Sort chip SHALL NOT be
+offered. Apply SHALL be unavailable until a field is chosen. The chips SHALL NOT offer where nulls sort.
+
+Removing or changing the Aggregate chip SHALL remove every Sort chip whose field the query no longer
+returns.
+
+#### Scenario: A sort key is added
+
+- **WHEN** the user chooses a field and descending and activates Apply
+- **THEN** a Sort chip states the field and the direction
+- **AND** the serialized query sorts by that field descending
+
+#### Scenario: Sort keys keep their order
+
+- **WHEN** the bar holds two Sort chips
+- **THEN** the serialized query sorts by the first chip's key and then by the second's
+
+#### Scenario: An aggregate query sorts by its own columns
+
+- **WHEN** the bar holds an Aggregate chip and the user opens the Add sort popup
+- **THEN** the offered fields are the group-by columns and the measure
+
+#### Scenario: A used field is not offered again
+
+- **WHEN** a Sort chip already sorts by a field
+- **THEN** the Add sort popup does not offer that field
+
+#### Scenario: A sort the query no longer returns is dropped
+
+- **WHEN** the query sorts by the measure and the user removes the Aggregate chip
+- **THEN** that Sort chip is removed
+
+### Requirement: Chip popups offer a field only where the service accepts it
+
+A field whose type is `map` SHALL NOT be offered as a Filter column, a group-by, or a sort key: the
+service refuses a comparison, a grouping key and an ordering over a map. A field the schema marks
+projection-only SHALL be offered in Show columns only. Both SHALL be offered in Show columns, and a
+map field SHALL be offered as a function's column where the catalog declares an expression argument.
+
+#### Scenario: A map field is not a filter column
+
+- **WHEN** the schema has a map field and the user opens the Add filter popup
+- **THEN** that field is not offered as a column
+
+#### Scenario: A map field is not a group-by or a sort key
+
+- **WHEN** the schema has a map field
+- **THEN** the Aggregate popup's group-by lists and the Sort popup's field list do not offer it
+
+#### Scenario: A projection-only field is offered in Show columns
+
+- **WHEN** the schema marks a field projection-only
+- **THEN** the Show columns popup offers it
+- **AND** the Filter, Aggregate and Sort popups do not
+
+### Requirement: The SQL view is an editor over its own buffer
+
+In the SQL view the builder area SHALL show a SQL code editor filling it, with SQL syntax highlighting,
+and SHALL NOT show the chips. The Query Builder SHALL keep the SQL editor text as its own buffer.
+
+Entering the SQL view SHALL seed the editor by translating the current builder query — including the
+period — to SQL via `POST /v1/queries/translate` through a server action, when the buffer is empty or
+still matches the last generated text; the seed is asynchronous and the editor SHALL show a loading
+affordance while the translation is in flight. When the translation is rejected (`400` — a query the
+SQL subset cannot express), the failure SHALL surface via the app's error-notification convention and
+the editor SHALL be left empty (with Run disabled), rather than being seeded with a locally generated
+or partial statement. User-edited SQL SHALL never be overwritten by a re-seed.
+
+#### Scenario: The SQL view hides the chips
+
+- **WHEN** the user selects the SQL view
+- **THEN** a SQL editor is shown in the builder area
+- **AND** no chip is shown
+
+#### Scenario: SQL text is highlighted
+
+- **WHEN** the user types a SQL statement in the SQL editor
+- **THEN** the statement is rendered with SQL syntax highlighting
+
+#### Scenario: Entering SQL translates the builder query via the backend
+
+- **WHEN** the user opens the SQL view without prior SQL edits
+- **THEN** the current builder query is sent to `POST /v1/queries/translate`
+- **AND** the editor is pre-filled with the returned SQL, auto-formatted for readability (see "SQL editor auto-formatting")
+
+#### Scenario: A non-expressible query surfaces a translate error
+
+- **WHEN** the user opens the SQL view for a query the SQL subset cannot express and the backend responds `400`
+- **THEN** an error notification is shown with the backend's message
+- **AND** the SQL editor is left empty and Run is disabled
+
+#### Scenario: Edited SQL survives the assistant panel
+
+- **WHEN** the user edits SQL, opens the assistant panel, and collapses it
+- **THEN** the SQL editor shows the edited text unchanged
+- **AND** the edited text is not re-translated over
+
+### Requirement: Switching from SQL to the Builder is guarded
+
+The SQL view can hold a query the chips cannot show. When the user switches to the Builder view with an
+edited SQL buffer, the SQL SHALL first be translated to the structured DSL via
+`POST /v1/queries/translate-sql`. If the translation succeeds and the resulting query is representable
+by the chips, the builder SHALL be hydrated from that query and the view SHALL switch with no
+confirmation and no data loss. If the translation fails (`400` — parse failure or an unsupported
+construct) or the resulting query is not representable by the chips, a confirmation popup (danger
+variant) SHALL warn that switching will drop the current query and reset the builder to its starting
+point. Confirming SHALL discard the SQL, reset the builder state to its initial defaults for the page's
+table, and switch to the Builder view. Cancelling SHALL keep the user in the view they were in with the
+query intact. Switching to the Builder SHALL NOT prompt when nothing would be lost (empty or unedited
+generated SQL; SQL that translates to a representable query).
+
+The guard SHALL follow the SQL buffer rather than the view being left: whenever the buffer holds SQL
+the builder has not been hydrated from — including a message the assistant ran as raw SQL — selecting
+the Builder view SHALL go through the same translation and, where it applies, the same confirmation.
+While an assistant message's query is loading, the view switcher SHALL be disabled, so the user cannot
+switch views before the loaded query has landed.
+
+#### Scenario: Translatable SQL hydrates the builder without a prompt
+
+- **WHEN** the user edits SQL that translates to a query the chips can show and selects the Builder view
+- **THEN** no confirmation is shown
+- **AND** the chips reflect the translated query
+- **AND** the SQL buffer is cleared
+
+#### Scenario: SQL the chips cannot show asks for confirmation
+
+- **WHEN** the user edits SQL that the backend rejects, or that translates to a query the chips cannot show, and selects the Builder view
+- **THEN** a confirmation popup warns that the current query will be dropped and the builder reset
+
+#### Scenario: Confirming drops the SQL and resets the builder
+
+- **WHEN** the confirmation popup is shown and the user confirms
+- **THEN** the view switches to the Builder view
+- **AND** the SQL is discarded
+- **AND** the chips show the builder's initial defaults for the page's table
+
+#### Scenario: Cancelling keeps the SQL
+
+- **WHEN** the confirmation popup is shown and the user cancels
+- **THEN** the user remains in the view they were in
+- **AND** the SQL text is unchanged
+
+#### Scenario: Going to the Builder after a raw-SQL message run asks for confirmation
+
+- **WHEN** the user runs an assistant message whose SQL the chips cannot show and then selects the Builder view
+- **THEN** the confirmation popup is shown instead of the chips showing their earlier query
+- **AND** cancelling keeps the SQL view
+
+#### Scenario: The view switcher waits for a message to load
+
+- **WHEN** the user clicks Run on an assistant message and its query is still loading
+- **THEN** the view switcher is disabled until loading finishes
+
+### Requirement: A query the chips cannot show is held in the SQL view
+
+The chips SHALL show a structured query only when every part of it is something a chip states. One
+rule SHALL decide this for every way a query reaches the builder — a stored query, SQL translated on a
+view switch, and an assistant message — and a query that fails it SHALL be held in the SQL view and
+SHALL NOT seed the chips with a partial reading of it. A structured query is representable when all of
+the following hold:
+
+- **Filter** — absent, one comparison, or one AND of comparisons, once the pair the Period chip owns is
+  lifted out. No OR, no NOT, no nested group.
+- **Each comparison** — exactly two operands: a plain column on the left; on the right a value, a null,
+  or, for "in list", a non-empty list of values of one type. No function call and no caller value on
+  either side, and no column on the right.
+- **Row query** — every output column is a plain, unrenamed field; no grouping keys; no HAVING.
+- **Aggregate query** — one or two grouping keys and exactly one measure. The first key is a plain
+  field or the catalog's binning function over a plain field with a literal amount and unit; the second
+  is a plain field. The measure is a served aggregate function whose expression arguments are plain
+  fields. No HAVING, no other output column.
+- **Distinct** — not requested for the rows of the query; allowed on the measure only where the catalog
+  says the function supports it.
+- **Sort** — each key sorts with the default placement of nulls.
+- **Paging** — offset paging, without a requested total.
+- **Functions** — every function the query names is served by the catalog, with no more arguments than
+  the catalog declares and a literal only where the catalog declares one.
+
+#### Scenario: A flat AND of comparisons is shown as chips
+
+- **WHEN** a loaded query's filter is an AND of two plain comparisons
+- **THEN** the Builder view shows two Filter chips
+
+#### Scenario: An OR is held in the SQL view
+
+- **WHEN** a loaded query's filter combines two comparisons with OR
+- **THEN** the query is held in the SQL view and no Filter chip is seeded from it
+
+#### Scenario: A nested group is held in the SQL view
+
+- **WHEN** a loaded query's filter holds a group inside its AND
+- **THEN** the query is held in the SQL view
+
+#### Scenario: A function operand is held in the SQL view
+
+- **WHEN** a comparison's left or right operand is a function call
+- **THEN** the query is held in the SQL view
+
+#### Scenario: A HAVING is held in the SQL view
+
+- **WHEN** an aggregate query carries a HAVING condition
+- **THEN** the query is held in the SQL view
+
+#### Scenario: Two measures are held in the SQL view
+
+- **WHEN** an aggregate query computes two measures
+- **THEN** the query is held in the SQL view
+
+#### Scenario: Three grouping keys are held in the SQL view
+
+- **WHEN** an aggregate query groups by three columns
+- **THEN** the query is held in the SQL view
+
+#### Scenario: A binned first key is shown as a split
+
+- **WHEN** an aggregate query's first grouping key is the catalog's binning function over a timestamp column with a literal amount and unit
+- **THEN** the Aggregate chip shows that column split by that period
+
+#### Scenario: A computed column in a row query is held in the SQL view
+
+- **WHEN** a row query's output holds a function call or a renamed column
+- **THEN** the query is held in the SQL view
+
+#### Scenario: Cursor paging or a requested total is held in the SQL view
+
+- **WHEN** a query pages by cursor, carries no page, or requests a total
+- **THEN** the query is held in the SQL view
+
+#### Scenario: A non-default nulls placement is held in the SQL view
+
+- **WHEN** a sort key places nulls first or last explicitly
+- **THEN** the query is held in the SQL view
+
+#### Scenario: A query using an unserved function is held in the SQL view
+
+- **WHEN** a query names a function the served catalog does not carry
+- **THEN** the query is held in the SQL view
+
+#### Scenario: A stored query the chips cannot show does not seed the chips
+
+- **WHEN** a saved query whose structured body the chips cannot show is opened
+- **THEN** the Builder view's chips are not seeded from it
+
+### Requirement: Running an assistant message loads its query and executes it
+
+Clicking a message's Run action SHALL translate that message's SQL into a structured query and, when
+the chips can show it, hydrate the builder state so the Builder and SQL views both reflect it; when the
+chips cannot show it (or translation fails), the raw SQL SHALL remain runnable and visible in the SQL
+view instead. In the same action, the system SHALL execute the query (via the structured or SQL
+execution path, matching whichever form was loaded) and show the result in the results area. The view
+SHALL switch to the one that shows the loaded query — Builder for a query the chips can show, SQL
+otherwise — and the assistant panel SHALL stay open. The message whose Run was most recently
+clicked SHALL have its Run action disabled to indicate it is the currently loaded query (see "Each
+assistant message with extracted SQL offers inline Run and Copy") — no separate visual badge is used.
+
+#### Scenario: A query the chips can show loads and runs
+
+- **WHEN** the user clicks Run on a message whose query the chips can show
+- **THEN** the Builder view is selected with its chips showing that query, the query executes, and the
+  result appears in the results area
+
+#### Scenario: A query the chips cannot show still runs via SQL
+
+- **WHEN** the user clicks Run on a message whose query the chips cannot show (or translation fails)
+- **THEN** the SQL view is selected with the raw SQL in its editor, and the query still executes via the
+  SQL path
+
+#### Scenario: Running an earlier message updates which query is loaded
+
+- **WHEN** a later message's Run was previously clicked and the user then clicks an earlier message's
+  Run
+- **THEN** the earlier message's Run action becomes disabled, the later message's Run action becomes
+  enabled again, and the Builder and SQL views reflect the earlier query instead
+
+### Requirement: Run and Copy do not depend on the assistant panel
+
+The view switcher row SHALL show its Run action whether the assistant panel is open or collapsed, and
+its Copy action in the SQL view only. A message's own Run and Copy actions on the transcript are
+specified in "Each assistant message with extracted SQL offers inline Run and Copy".
+
+#### Scenario: Run stays available with the panel open
+
+- **WHEN** the assistant panel is open
+- **THEN** the view switcher row shows the Run action
+
+#### Scenario: Copy follows the view, not the panel
+
+- **WHEN** the assistant panel is open and the Builder view is selected
+- **THEN** the view switcher row shows no Copy action
+
+### Requirement: The AI conversation lasts as long as the page
+
+The AI conversation and which of its messages is the loaded query SHALL persist while the user switches
+views, resizes the builder area, or collapses the assistant panel, and SHALL be shown unchanged when the
+panel is opened again. A conversation belongs to the page it was held on: opening another table's draft
+or another saved query starts with an empty conversation, and a reply still in flight for a page that
+was left SHALL NOT appear on the next one.
+
+#### Scenario: Reopening the panel shows the same conversation
+
+- **WHEN** the user has run a message, collapses the assistant panel, and opens it again
+- **THEN** the earlier messages are shown and the run message's Run action is still disabled
+
+#### Scenario: A new reply after reopening is runnable
+
+- **WHEN** the user reopens the panel after running a message and sends a new request whose reply
+  carries SQL
+- **THEN** the new reply's Run action is enabled
+
+#### Scenario: Another page starts an empty conversation
+
+- **WHEN** the user holds a conversation on one draft and opens a draft on another table
+- **THEN** the assistant panel of the new page shows no messages
+
+#### Scenario: A send that fails in transit
+
+- **WHEN** the request for a reply fails in transit
+- **THEN** a failure notification is shown and the prompt and Send remain usable
+
+### Requirement: The builder opens as a draft on a table held by the page
 
 The Analytics group SHALL provide the Query Builder at `/queries` as a **draft**: a builder on one
 queryable table with no stored query behind it. The page SHALL be an `async` server component gated by
 the same Analytics access check the other Analytics pages use, resolving to a 403 page when access is
 denied. A draft SHALL be runnable, and its result exportable, without being saved.
 
-The draft's table SHALL be named by the `table` query parameter. When the parameter is absent, or names
-a table that is not among the queryable ones, the draft SHALL be built on the first queryable table.
+The draft's table SHALL be the table last picked in the Source panel, as specified in
+`analytics/source-panel`, and the first queryable table when none was picked. The address SHALL stay
+`/queries` whatever the table: the table is not part of the address. The picked table SHALL be held for
+as long as the user stays within the Queries pages, so returning to the draft from a saved query SHALL
+show the table picked before; reloading the page SHALL return the draft to the first queryable table.
 The page heading SHALL show the draft's table name.
+
+The first queryable table's schema SHALL be read on the server with the page. The schema of a table
+picked afterwards SHALL be read when it is picked; while it is being read the builder SHALL show a
+loading indicator in place of the draft, and a schema that cannot be read SHALL leave the draft on that
+table with the schema-load failure state.
 
 A draft SHALL start from the builder's defaults for its table. Its state SHALL live in the page only:
 reloading the page, or leaving and returning, SHALL start the draft again from those defaults.
 
-In place of the saved query's own actions, a draft's toolbar SHALL offer **Save as query**, and SHALL
-offer **Reset** while the draft differs from its starting state. Reset SHALL ask for confirmation and,
-on confirmation, SHALL return the draft to its starting state for the same table. A draft SHALL NOT
-offer Edit, Save, Discard or Delete, because there is no stored query for them to act on. Saving a draft
-is specified in `analytics/saved-queries`.
+In place of the saved query's own actions, a draft's heading row SHALL offer **Save as query**, and
+SHALL offer **Reset** while the draft differs from its starting state. Reset SHALL ask for confirmation
+and, on confirmation, SHALL return the draft to its starting state for the same table. A draft SHALL
+NOT offer Edit, Save, Discard or Delete, because there is no stored query for them to act on. Saving a
+draft is specified in `analytics/saved-queries`.
 
 #### Scenario: The menu item opens a draft
 
-- **WHEN** the user opens `/queries` with no query parameter
+- **WHEN** the user opens `/queries` without having picked a table
 - **THEN** the builder is shown on the first queryable table
 - **AND** the heading shows that table's name
 
-#### Scenario: The table parameter picks the draft's table
+#### Scenario: A picked table becomes the draft's table
 
-- **WHEN** the user opens `/queries?table=<name>` for a queryable table
+- **WHEN** the user picks a table in the Source panel
 - **THEN** the builder is shown on that table with its fields available
+- **AND** the address is `/queries` with no query parameter
 
-#### Scenario: An unknown table falls back to the first one
+#### Scenario: The picked table is kept across a saved query
 
-- **WHEN** the user opens `/queries?table=<name>` and no queryable table has that name
+- **WHEN** the user picks a table, opens a saved query, and returns to `/queries`
+- **THEN** the draft is shown on the table picked before
+
+#### Scenario: A reload returns to the first table
+
+- **WHEN** the user picks a table other than the first and reloads the page
 - **THEN** the builder is shown on the first queryable table
 
 #### Scenario: A draft runs without being saved
@@ -1621,18 +1430,18 @@ is specified in `analytics/saved-queries`.
 #### Scenario: A draft does not survive a reload
 
 - **WHEN** the user changes a draft and reloads the page
-- **THEN** the draft is back at the builder's defaults for its table
+- **THEN** the draft is back at the builder's defaults
 
 #### Scenario: A draft offers Save as query
 
 - **WHEN** a draft is open
-- **THEN** the toolbar offers Save as query
+- **THEN** the heading row offers Save as query
 - **AND** it offers neither Edit nor Delete
 
 #### Scenario: Reset appears once the draft has changed
 
 - **WHEN** the user changes anything a saved query would store — a filter, the time period, the result view
-- **THEN** the toolbar offers Reset
+- **THEN** the heading row offers Reset
 
 #### Scenario: Reset returns the draft to its starting state
 

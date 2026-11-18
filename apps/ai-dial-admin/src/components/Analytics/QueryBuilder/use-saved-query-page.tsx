@@ -311,7 +311,7 @@ const captureFrom = (
   state: current.state,
   // The SQL buffer is the authored body whenever it holds one, whatever view is open: keying this on
   // the active view let a SQL query be replaced by never-hydrated builder state on a view switch.
-  sqlText: current.sqlText,
+  sqlText: current.sqlText === current.lastGeneratedSql.current ? '' : current.sqlText,
   fallbackQuery: unloaded,
   time: { period: current.timePeriod, isCustom: current.isCustom, range: current.timeRange },
   resultView: current.resultView,

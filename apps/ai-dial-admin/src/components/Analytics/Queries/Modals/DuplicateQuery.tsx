@@ -29,6 +29,8 @@ interface Props {
   onClose: () => void;
   buildRequest: (meta: QueryMetadataForm) => SavedQueryRequest;
   onCreated?: (created: SavedQuery) => void;
+  header: string;
+  submitLabel: string;
 }
 
 // Deliberately not the shared `getClonedEntityName`, which returns the name untouched once it contains
@@ -47,7 +49,7 @@ const formFromQuery = (query: SavedQuery | undefined, isFullAdmin: boolean): Que
   scope: query && isFullAdmin ? query.scope : SavedQueryScope.Personal,
 });
 
-const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated }) => {
+const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated, header, submitLabel }) => {
   const t = useI18n();
   const router = useRouter();
   const { isFullAdmin } = useAppContext();
@@ -107,13 +109,13 @@ const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated }) 
   return (
     <Popup
       open
-      header={t(QueriesI18nKey.SaveQueryAs)}
+      header={header}
       portalId="DuplicateQueryModal"
       size={PopupSize.Md}
       onClose={onClose}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
-        submitLabel: t(ButtonsI18nKey.Save),
+        submitLabel,
         isSubmitDisabled: !isValid || !form.name.trim() || isSaving,
         onCancel: onClose,
         onSubmit: onSubmit,
