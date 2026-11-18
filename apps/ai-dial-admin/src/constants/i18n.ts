@@ -3167,7 +3167,6 @@ export enum AnalyticsTableAccessI18nKey {
   ColumnsScope = 'AnalyticsTableAccess.ColumnsScope',
   ColumnsEnrichmentsFailed = 'AnalyticsTableAccess.ColumnsEnrichmentsFailed',
   ColumnSensitive = 'AnalyticsTableAccess.ColumnSensitive',
-  ColumnOfEnrichment = 'AnalyticsTableAccess.ColumnOfEnrichment',
   DerivedTablesNote = 'AnalyticsTableAccess.DerivedTablesNote',
   ConflictMessage = 'AnalyticsTableAccess.ConflictMessage',
   ReloadRole = 'AnalyticsTableAccess.ReloadRole',

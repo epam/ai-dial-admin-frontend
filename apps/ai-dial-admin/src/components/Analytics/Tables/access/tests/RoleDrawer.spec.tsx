@@ -288,8 +288,10 @@ describe('RoleDrawer — the columns step', () => {
     expect(screen.getByRole('option', { name: /^user_email/ })).toHaveTextContent(
       AnalyticsTableAccessI18nKey.ColumnSensitive,
     );
+    const enrichmentColumn = screen.getByRole('option', { name: /^project_owners\.owner/ });
+    expect(enrichmentColumn).toHaveTextContent(/^project_owners\.owner$/);
     await user.click(screen.getByRole('option', { name: /^project_id/ }));
-    await user.click(screen.getByRole('option', { name: /^project_owners\.owner/ }));
+    await user.click(enrichmentColumn);
     await user.click(saveButton());
 
     expect(access.saveEntry).toHaveBeenCalledExactlyOnceWith('team-x', {
