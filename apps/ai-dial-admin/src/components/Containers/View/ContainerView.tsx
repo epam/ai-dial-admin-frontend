@@ -27,7 +27,11 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getContainerRedeploySnapshot, sanitizeContainerProbe } from '@/src/utils/deployments/containers';
-import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
+import {
+  getTranslatedDeploymentType,
+  getTranslatedType,
+  normalizeAllowedDomains,
+} from '@/src/utils/deployments/entity';
 import { isImageNotInstalled } from '@/src/utils/deployments/images';
 import { decodeVariables } from '@/src/utils/deployments/variables';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -138,7 +142,15 @@ const ContainerView: FC<Props> = ({
   useEffect(() => {
     const { status: __status, url: __URL, ...compareContainer } = container;
     const { status: __selectedStatus, url: __selectedURL, ...compareSelectedContainer } = selectedContainer;
-    setIsChanged(!isEqualSkippingUndefined(compareContainer, compareSelectedContainer));
+    setIsChanged(
+      !isEqualSkippingUndefined(
+        { ...compareContainer, allowedDomains: normalizeAllowedDomains(compareContainer.allowedDomains) },
+        {
+          ...compareSelectedContainer,
+          allowedDomains: normalizeAllowedDomains(compareSelectedContainer.allowedDomains),
+        },
+      ),
+    );
     setIsRedeployRequired(
       container.status === CONTAINER_STATUS.RUNNING &&
         !isEqualSkippingUndefined(

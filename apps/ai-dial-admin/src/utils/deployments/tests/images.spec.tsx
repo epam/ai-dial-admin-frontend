@@ -106,6 +106,33 @@ describe('images utils', () => {
       const img2 = { name: 'img', updatedAt: 2, buildStatus: 'fail' } as any;
       expect(validateImageChanged(img1, img2)).toBe(false);
     });
+
+    test('returns false when allowed domains differ only by empty entries or absence', () => {
+      expect(validateImageChanged({ name: 'img' } as Image, { name: 'img', allowedDomains: [''] } as Image)).toBe(
+        false,
+      );
+      expect(
+        validateImageChanged(
+          { name: 'img', allowedDomains: ['a.com'] } as Image,
+          {
+            name: 'img',
+            allowedDomains: ['a.com', ''],
+          } as Image,
+        ),
+      ).toBe(false);
+    });
+
+    test('returns true when allowed domains differ', () => {
+      expect(
+        validateImageChanged(
+          { name: 'img', allowedDomains: [] as string[] } as Image,
+          {
+            name: 'img',
+            allowedDomains: ['a.com'],
+          } as Image,
+        ),
+      ).toBe(true);
+    });
   });
 
   describe('getVersionsList', () => {
