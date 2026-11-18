@@ -237,7 +237,7 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
   },
   [ApplicationRoute.ActivityAudit]: {
     segments: [
-      { name: 'Activity Audit', i18nKey: MenuI18nKey.ActivityAudit },
+      { name: 'Activity Audit', i18nKey: MenuI18nKey.ActivityAudit, isAdminApiOnly: true },
       {
         name: 'Id',
         href: false,

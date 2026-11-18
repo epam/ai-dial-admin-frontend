@@ -230,6 +230,16 @@ describe('Entities :: tabs', () => {
     expect(tabs).toEqual([{ id: 'Activities', label: TabsI18nKey.Activities }]);
   });
 
+  test.each([
+    ['AssetsToolsets', ApplicationRoute.AssetsToolsets],
+    ['PlatformModels', ApplicationRoute.PlatformModels],
+  ])('returns dashboard and traces tabs for %s when only analyticsUsageEnabled is true', (_, view) => {
+    expect(getAuditTabs(t, flags({ dashboardEnabled: false, analyticsUsageEnabled: true }), view)).toEqual([
+      { id: 'Dashboard', label: TabsI18nKey.Dashboard },
+      { id: 'Traces', label: TabsI18nKey.Traces },
+    ]);
+  });
+
   test('returns dashboard and traces tabs for AssetsToolsets when dashboardEnabled is true', () => {
     const tabs = getAuditTabs(t, flags({ dashboardEnabled: true }), ApplicationRoute.AssetsToolsets);
     expect(tabs).toEqual([
@@ -350,6 +360,26 @@ describe('Entities :: tabs', () => {
     expect(
       getTabsForAsset(t, ApplicationRoute.AssetsToolsets, flags({ dashboardEnabled: true, adminApiEnabled: true })),
     ).toEqual([propertiesTab(t), toolsTab(t), catalogTab(t), auditTab(t)]);
+  });
+
+  test('appends Audit for AssetsToolsets when analyticsUsageEnabled is true without adminApiEnabled', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets, flags({ analyticsUsageEnabled: true }))).toEqual([
+      propertiesTab(t),
+      toolsTab(t),
+      catalogTab(t),
+      auditTab(t),
+    ]);
+  });
+
+  test('appends Audit for PlatformModels when analyticsUsageEnabled is true without adminApiEnabled', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformModels, flags({ analyticsUsageEnabled: true }))).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      catalogTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      auditTab(t),
+    ]);
   });
 
   test('returns only Dashboard and Traces tabs for PlatformModels when dashboardEnabled is true', () => {
