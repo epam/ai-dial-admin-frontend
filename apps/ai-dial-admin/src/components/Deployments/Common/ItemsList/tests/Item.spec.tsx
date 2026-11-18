@@ -75,4 +75,12 @@ describe('Common Item component', () => {
 
     expect(onRemove).toHaveBeenCalledWith(1);
   });
+
+  test('disables remove button for a placeholder item', () => {
+    render(
+      <Item item="" index={0} onChange={onChange} onRemove={onRemove} isModal={false} disabled={false} isPlaceholder />,
+    );
+
+    expect(screen.getByRole('button')).toBeDisabled();
+  });
 });
