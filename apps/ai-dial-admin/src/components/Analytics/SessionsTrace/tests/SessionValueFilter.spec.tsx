@@ -311,7 +311,7 @@ describe('SessionValueFilter', () => {
     await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Upstream unavailable',
+          title: 'SessionsTrace.ValuesLoadFailed',
           description: 'value read timed out',
           requestId: 'trace-1',
         }),

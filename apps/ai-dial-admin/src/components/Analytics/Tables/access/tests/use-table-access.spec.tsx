@@ -125,10 +125,12 @@ describe('useTableAccess — loading', () => {
 
     expect(result.current.status).toBe(AccessStatus.Failed);
     expect(result.current.isTabOffered).toBe(true);
-    expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ title: 'boom' }));
+    expect(showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: AnalyticsTablesI18nKey.AccessLoadFailed }),
+    );
   });
 
-  test('uses the fallback title when the failed read carries none', async () => {
+  test('titles a failed read without a header with its own string', async () => {
     vi.mocked(getTableAccess).mockResolvedValue({ success: false, status: 500 });
 
     await renderLoaded();
@@ -246,7 +248,11 @@ describe('useTableAccess — saveEntry', () => {
 
     expect(outcome).toEqual({ outcome: AccessChangeOutcome.Failed, errorMessage: 'region is not a column' });
     expect(showNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'refused', description: 'region is not a column', requestId: 'req-1' }),
+      expect.objectContaining({
+        title: AnalyticsTableAccessI18nKey.SaveFailed,
+        description: 'region is not a column',
+        requestId: 'req-1',
+      }),
     );
     expect(getTableAccess).toHaveBeenCalledOnce();
     expect(result.current.rows.map((row) => row.role)).not.toContain('team-z');

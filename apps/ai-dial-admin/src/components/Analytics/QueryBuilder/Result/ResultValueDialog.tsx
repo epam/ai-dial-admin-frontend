@@ -14,7 +14,7 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { EDITOR_THEMES } from '@/src/types/editor';
 import { beautifyValue } from '@/src/utils/evaluation/detail-panel';
-import { getCopyToClipboardNotification } from '@/src/utils/notification';
+import { getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
   column: string;
@@ -61,11 +61,7 @@ const ResultValueDialog: FC<Props> = ({ column, value, onClose }) => {
   // other caller needs.
   const onCopyValue = () => {
     navigator.clipboard.writeText(text);
-    showNotification(
-      getCopyToClipboardNotification(
-        <p className="dial-small-semi-text">{`${column} ${t(BasicI18nKey.CopiedSuccessfully)}`}</p>,
-      ),
-    );
+    showNotification(getSuccessNotification(`${column} ${t(BasicI18nKey.CopiedSuccessfully)}`));
   };
 
   return (

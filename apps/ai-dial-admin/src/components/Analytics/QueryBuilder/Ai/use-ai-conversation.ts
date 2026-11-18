@@ -27,8 +27,8 @@ export const useAiConversation = () => {
     const nextMessages: QueryAssistantMessage[] = [...messages, { role: QueryAssistantRole.User, content: prompt }];
     setMessages(nextMessages);
     setIsSending(true);
-    const notifyFailed = (header?: string, message?: string, requestId?: string) =>
-      showNotification(getErrorNotification(header || t(QueryBuilderI18nKey.AiGenerateFailed), message, requestId));
+    const notifyFailed = (message?: string, requestId?: string) =>
+      showNotification(getErrorNotification(t(QueryBuilderI18nKey.AiGenerateFailed), message, requestId));
     try {
       // The transcript is sent verbatim: the assistant deployment owns its system prompt and resolves any
       // schema it needs through its own tools, so the page adds no message of its own.
@@ -42,7 +42,7 @@ export const useAiConversation = () => {
           setMessages([...nextMessages, reply]);
         }
       } else {
-        notifyFailed(res.errorHeader, res.errorMessage, res.requestId);
+        notifyFailed(res.errorMessage, res.requestId);
       }
     } catch {
       if (sentIn === generation.current) {

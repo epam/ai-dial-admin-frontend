@@ -130,7 +130,7 @@ describe('useCustomDashboard', () => {
     expect(result.current.isSaving).toBe(false);
     expect(result.current.isEditing).toBe(true);
     expect(useNotification().showNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ title: ErrorI18nKey.Error }),
+      expect.objectContaining({ title: CustomDashboardsI18nKey.SaveFailed }),
     );
   });
 

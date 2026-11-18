@@ -274,11 +274,7 @@ const QueryBuilder: FC<Props> = ({
     const schemaRead = await getEntitySchema(entityName);
     if (schemaRead.response) return schemaRead.response.fields || [];
     showNotification(
-      getErrorNotification(
-        schemaRead.errorHeader ?? t(QueryBuilderI18nKey.SchemaLoadFailed),
-        schemaRead.errorMessage,
-        schemaRead.requestId,
-      ),
+      getErrorNotification(t(QueryBuilderI18nKey.SchemaLoadFailed), schemaRead.errorMessage, schemaRead.requestId),
     );
     return [];
   };
@@ -326,11 +322,7 @@ const QueryBuilder: FC<Props> = ({
       lastGeneratedSql.current = '';
       setSqlError(res.errorMessage || t(QueryBuilderI18nKey.SqlTranslateFailed));
       showNotification(
-        getErrorNotification(
-          res.errorHeader || t(QueryBuilderI18nKey.SqlTranslateFailed),
-          res.errorMessage,
-          res.requestId,
-        ),
+        getErrorNotification(t(QueryBuilderI18nKey.SqlTranslateFailed), res.errorMessage, res.requestId),
       );
     }
     setSqlLoading(false);
@@ -439,9 +431,7 @@ const QueryBuilder: FC<Props> = ({
       setResultMeta(buildExecutedMeta(request, response, runFields, runEntityName, translated));
       setLastRequest(request);
     } else {
-      showNotification(
-        getErrorNotification(runRes.errorHeader || t(QueryBuilderI18nKey.RunFailed), runRes.error, runRes.requestId),
-      );
+      showNotification(getErrorNotification(t(QueryBuilderI18nKey.RunFailed), runRes.error, runRes.requestId));
     }
     setIsRunning(false);
   };
@@ -473,9 +463,7 @@ const QueryBuilder: FC<Props> = ({
       setLastRequest(request);
     } else {
       // Keep the previously shown result instead of replacing it with a broken grid.
-      showNotification(
-        getErrorNotification(res.errorHeader || t(QueryBuilderI18nKey.RunFailed), res.error, res.requestId),
-      );
+      showNotification(getErrorNotification(t(QueryBuilderI18nKey.RunFailed), res.error, res.requestId));
     }
     setIsRunning(false);
   };
@@ -493,9 +481,7 @@ const QueryBuilder: FC<Props> = ({
     if (res.isCancelled) return;
 
     if (!res.isSuccess || !res.file) {
-      showNotification(
-        getErrorNotification(res.errorHeader || t(QueryBuilderI18nKey.ExportCsvFailed), res.error, res.requestId),
-      );
+      showNotification(getErrorNotification(t(QueryBuilderI18nKey.ExportCsvFailed), res.error, res.requestId));
       return;
     }
 

@@ -468,7 +468,7 @@ describe('QueryBuilder — a stored saved query', () => {
 
     await vi.waitFor(() =>
       expect(mockShowNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Error.Error', description: 'Queries.ErrorGeneric' }),
+        expect.objectContaining({ title: 'Queries.SaveFailed', description: 'Queries.ErrorGeneric' }),
       ),
     );
     expect(saveButton()).toBeEnabled();
@@ -721,7 +721,7 @@ describe('QueryBuilder — a stored saved query', () => {
       await user.click(within(dialog).getByRole('button', { name: 'Queries.DeleteQuery' }));
 
       await vi.waitFor(() => expect(mockShowNotification).toHaveBeenCalled());
-      expect(mockShowNotification).toHaveBeenCalledWith(expect.objectContaining({ title: 'forbidden' }));
+      expect(mockShowNotification).toHaveBeenCalledWith(expect.objectContaining({ title: 'Queries.DeleteFailed' }));
       expect(dialog).toBeInTheDocument();
       expect(mockPush).not.toHaveBeenCalled();
       expect(mockRefresh).not.toHaveBeenCalled();
@@ -946,7 +946,7 @@ describe('QueryBuilder — a stored saved query', () => {
       expect(createdRequest().scope).toBe(SavedQueryScope.Personal);
     });
 
-    test('stays on the source page, still dirty, and links to the new query from the notification', async () => {
+    test('stays on the source page, still dirty, and offers to open the new query from the notification', async () => {
       const user = userEvent.setup();
       renderPage();
 
@@ -956,13 +956,18 @@ describe('QueryBuilder — a stored saved query', () => {
       expect(mockPush).not.toHaveBeenCalled();
       expect(saveButton()).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Top chats' })).toBeInTheDocument();
-
-      const notification = mockShowNotification.mock.calls[0][0];
-      render(<>{notification.description}</>);
-      expect(screen.getByRole('link', { name: 'Top chats (copy)' })).toHaveAttribute(
-        'href',
-        expect.stringMatching(/^\/en\/queries\/.*sq_new/),
+      expect(mockShowNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Queries.SavedAsNewQueryTitle',
+          description: 'Queries.SavedAsNewQuery',
+          action: expect.objectContaining({ label: 'Queries.OpenQuery' }),
+        }),
       );
+
+      const [notification] = mockShowNotification.mock.lastCall ?? [];
+      notification.action.onClick();
+
+      expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/^\/queries\/.*sq_new/));
     });
 
     test('keeps the modal open when the create fails', async () => {

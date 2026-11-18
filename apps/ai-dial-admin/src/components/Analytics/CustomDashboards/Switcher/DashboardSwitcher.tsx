@@ -65,7 +65,9 @@ const DashboardSwitcher: FC<Props> = ({ dashboards, createPermissions, currentId
     async ({ name, description, compare, visibility }: DashboardDetails): Promise<boolean> => {
       const res = await createDashboard(newDashboardRequest(name, description, compare, visibility));
       if (!res.success || !res.response) {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        showNotification(
+          getErrorNotification(t(CustomDashboardsI18nKey.CreateFailed), res.errorMessage, res.requestId),
+        );
         return false;
       }
       showNotification(getSuccessNotification(t(CustomDashboardsI18nKey.Created), res.response.name));

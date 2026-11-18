@@ -77,9 +77,7 @@ export const usePipelineBackfillRuns = ({ pipelineName, onRunsChange }: Params):
       return;
     }
 
-    showNotification(
-      getErrorNotification(res.errorHeader || t(BackfillI18nKey.ReadFailed), res.errorMessage, res.requestId),
-    );
+    showNotification(getErrorNotification(t(BackfillI18nKey.ReadFailed), res.errorMessage, res.requestId));
   }, [apply, guarded, pipelineName, showNotification, t]);
 
   useEffect(() => {
@@ -109,7 +107,7 @@ export const usePipelineBackfillRuns = ({ pipelineName, onRunsChange }: Params):
         return true;
       }
 
-      showNotification(getErrorNotification(res.errorHeader || t(failureKey), res.errorMessage, res.requestId));
+      showNotification(getErrorNotification(t(failureKey), res.errorMessage, res.requestId));
       return false;
     },
     [showNotification, t],

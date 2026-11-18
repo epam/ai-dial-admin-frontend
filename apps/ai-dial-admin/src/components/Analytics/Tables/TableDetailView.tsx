@@ -231,13 +231,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
 
   const notifyFailed = useCallback(
     (res: ServerActionResponse) =>
-      showNotification(
-        getErrorNotification(
-          res.errorHeader || t(AnalyticsTablesI18nKey.ActionFailed),
-          res.errorMessage,
-          res.requestId,
-        ),
-      ),
+      showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.ActionFailed), res.errorMessage, res.requestId)),
     [showNotification, t],
   );
 
@@ -344,7 +338,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       const others = columns.filter((c) => c.name !== from).map((c) => c.name);
       const error = getAnalyticsIdentifierError(target, others, t);
       if (error) {
-        showNotification(getErrorNotification(error.text));
+        showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.RenameFailed), error.text));
         void reload();
         return;
       }
