@@ -3924,7 +3924,6 @@ export default {
     ColumnsEnrichmentsFailed:
       "Could not load the columns of this table's enrichments. Only its own columns are offered.",
     ColumnSensitive: 'Sensitive',
-    ColumnOfEnrichment: 'Column of {enrichment}',
     DerivedTablesNote:
       'Tables that pipelines build from this table do not inherit the limit. Give them access entries of their own.',
     ConflictMessage:
