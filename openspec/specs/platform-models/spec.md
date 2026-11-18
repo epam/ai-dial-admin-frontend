@@ -55,10 +55,11 @@ The system SHALL show name, author, created-at, and updated-at columns for model
 
 ### Requirement: Model asset detail view tab set
 
-The system SHALL render a model asset's detail view with `Properties`, `Features`, `Roles`, and
-`Interceptors`, in that order, and SHALL append `Audit` as a fifth and last tab when the
-`dashboardEnabled` feature flag is set. When that flag is unset the tab set SHALL remain exactly the
-first four tabs.
+The system SHALL render a model asset's detail view with `Properties`, `Features`, `Catalog`, `Roles`,
+and `Interceptors`, in that order, and SHALL append `Audit` after them when the Audit gate is open.
+The gate is open when `dashboardEnabled` is set together with `adminApiEnabled`, or when
+`analyticsUsageEnabled` is set, per `admin-api-availability`. When the gate is closed the tab set
+SHALL remain exactly those five tabs.
 
 There SHALL be no revision link, no rollback control, and no Core-sync banner, because DIAL Core
 exposes no audit, revision, history, or snapshot surface for config resources — the rationale that
@@ -68,41 +69,40 @@ query the analytics service and depend on nothing Core stores. There SHALL be no
 Dependencies tab.
 
 `dashboardEnabled` is derived once per request in `apps/ai-dial-admin/src/app/[lang]/layout.tsx` from
-`DISABLE_MENU_ITEMS` not containing `dashboard`, and is the same flag that already gates the
-`Assets ▸ Toolsets` Audit tab. No new flag or environment variable is introduced.
+`DISABLE_MENU_ITEMS` not containing `dashboard`; `analyticsUsageEnabled` requires both
+`ANALYTICS_ENABLED` and `ANALYTICS_USAGE_ENABLED`. The same gate governs the `Assets ▸ Toolsets`
+Audit tab. No new flag or environment variable is introduced.
 
 Gating the tab's *presence* is a known and accepted divergence from `Entities ▸ Models`, which lists
 `Audit` unconditionally and, with `dashboardEnabled` unset, still shows it carrying only its
 `Activities` sub-tab. `Catalog ▸ Models` has no `Activities` sub-tab to fall back on (see the Audit
-requirement below), so an unconditional tab would be empty here. Consistency with `Entities ▸ Models`
-therefore holds wherever the dashboard feature is enabled — the default — and the flag-unset
-four-tab state below is deliberate, not an oversight to be "fixed" by rendering the tab always.
+requirement below), so an unconditional tab would be empty here. The closed-gate tab set below is
+deliberate, not an oversight to be "fixed" by rendering the tab always.
 
 Two scenario headings below are retained from the previous wording of this requirement, because a
 scenario's name is the identity a delta rewrites content under: `Detail view renders exactly four
-tabs` is now the `dashboardEnabled`-unset case rather than the only case, and `No Audit tab or sync
-banner` now prohibits only the revision/rollback/Core-sync surface it used to bundle the tab with.
+tabs` is now the closed-gate case, and `No Audit tab or sync banner` now prohibits only the
+revision/rollback/Core-sync surface it used to bundle the tab with.
 
 #### Scenario: Audit is the fifth tab when the dashboard feature is enabled
 
 - **WHEN** a user opens a model asset's detail view (`/platform-models/[id]`) in a deployment whose
-  `dashboardEnabled` flag is set
-- **THEN** the tab list reads `Properties`, `Features`, `Roles`, `Interceptors`, `Audit`, in that
-  order
+  Audit gate is open
+- **THEN** the tab list reads `Properties`, `Features`, `Catalog`, `Roles`, `Interceptors`, `Audit`,
+  in that order
 
 #### Scenario: Detail view renders exactly four tabs
 
-Rescoped: the four-tab set is what a deployment with the dashboard feature disabled shows.
+Rescoped: the base tab set is what a deployment with the Audit gate closed shows.
 
-- **WHEN** a user opens a model asset's detail view in a deployment whose `dashboardEnabled` flag is
-  unset (`DISABLE_MENU_ITEMS` includes `dashboard`)
-- **THEN** the tab list contains exactly `Properties`, `Features`, `Roles`, and `Interceptors`, in
-  that order, and no `Audit` tab is shown
+- **WHEN** a user opens a model asset's detail view in a deployment whose Audit gate is closed
+- **THEN** the tab list contains exactly `Properties`, `Features`, `Catalog`, `Roles`, and
+  `Interceptors`, in that order, and no `Audit` tab is shown
 
 #### Scenario: No Audit tab or sync banner
 
 Rescoped: the prohibition now covers the revision/rollback/Core-sync surface only. The `Audit` tab
-itself is prohibited only while `dashboardEnabled` is unset, per the scenario above.
+itself is prohibited only while the Audit gate is closed, per the scenario above.
 
 - **WHEN** a user opens a model asset's detail view, with the `Audit` tab present or absent
 - **THEN** no revision link, rollback control, or Core-sync status banner is rendered

@@ -26,7 +26,7 @@ const decodePathSegment = (segment: string): string => {
   }
 };
 
-export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcrumb[] {
+export function getBreadcrumbs(pathname: string, currentLocale: string, isAdminApiEnabled = true): Breadcrumb[] {
   const segments = pathname.split('/').filter((segment) => segment);
   const isLocale = currentLocale?.includes(segments[0]);
   const locale = isLocale ? segments[0] : null;
@@ -43,8 +43,8 @@ export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcr
     if (configSegment.isHidden) return [];
 
     const translated = TRANSLATE_BREADCRUMBS[pathSegment as keyof typeof TRANSLATE_BREADCRUMBS];
-    const defaultHref =
-      configSegment.href !== false ? `/${[locale, ...pathSegments.slice(0, index + 1)].filter(Boolean).join('/')}` : '';
+    const hasLink = configSegment.href !== false && (isAdminApiEnabled || !configSegment.isAdminApiOnly);
+    const defaultHref = hasLink ? `/${[locale, ...pathSegments.slice(0, index + 1)].filter(Boolean).join('/')}` : '';
 
     return [
       {
