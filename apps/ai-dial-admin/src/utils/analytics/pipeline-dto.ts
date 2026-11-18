@@ -77,6 +77,11 @@ export const buildPipelineDto = (
     dto.transform = buildTransformDto(draft.transform, storedTransform);
   }
 
+  if (dto.advanced && dto.trigger?.kind !== TriggerKind.Group) {
+    dto.advanced = { ...dto.advanced };
+    delete dto.advanced.input_token_budget;
+  }
+
   if (draft.kind !== PipelineKind.Aggregate && getSourceMode(draft.inputs, sourceTable) === SourceMode.Follow) {
     delete dto.inputs;
   }

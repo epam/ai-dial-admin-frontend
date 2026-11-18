@@ -106,6 +106,37 @@ describe('Utils :: analytics :: buildPipelineDto — the shared half', () => {
     expect(buildPipelineDto({ ...draft, advanced: { rows_per_call: 0 } }).advanced?.rows_per_call).toBe(0);
   });
 
+  test.each([0, 4000])('sends an input token budget of %s on a group trigger', (budget) => {
+    const dto = buildPipelineDto({
+      ...draft,
+      trigger: { kind: TriggerKind.Group, group_by: 'chat_id' },
+      advanced: { input_token_budget: budget },
+    });
+
+    expect(dto.advanced?.input_token_budget).toBe(budget);
+  });
+
+  test('drops the input token budget off a schedule trigger and keeps the other knobs', () => {
+    const dto = buildPipelineDto({ ...draft, advanced: { input_token_budget: 4000, rows_per_call: 2 } });
+
+    expect(dto.advanced).toEqual({ rows_per_call: 2 });
+  });
+
+  test('drops an advanced block that held only the input token budget off a non-group trigger', () => {
+    expect(buildPipelineDto({ ...draft, advanced: { input_token_budget: 4000 } })).not.toHaveProperty('advanced');
+    expect(
+      buildPipelineDto({ ...draft, trigger: undefined, advanced: { input_token_budget: 4000 } }),
+    ).not.toHaveProperty('advanced');
+  });
+
+  test('leaves the draft input token budget in place when it drops it from the request', () => {
+    const withBudget = { ...draft, advanced: { input_token_budget: 4000 } };
+
+    buildPipelineDto(withBudget);
+
+    expect(withBudget.advanced.input_token_budget).toBe(4000);
+  });
+
   test('keeps enabled false', () => {
     expect(buildPipelineDto({ ...draft, enabled: false }).enabled).toBe(false);
   });
