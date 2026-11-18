@@ -3929,7 +3929,6 @@ export default {
     ColumnsEnrichmentsFailed:
       "Could not load the columns of this table's enrichments. Only its own columns are offered.",
     ColumnSensitive: 'Sensitive',
-    ColumnOfEnrichment: 'Column of {enrichment}',
     DerivedTablesNote:
       'Tables that pipelines build from this table do not inherit the limit. Give them access entries of their own.',
     ConflictMessage:
@@ -4957,17 +4956,20 @@ export default {
     TargetTypeModel: 'Model',
     TargetTypeApplication: 'Application',
     TargetTypeToolset: 'Toolset',
+    TargetTypeRouter: 'Router',
     TargetPlaceholder: 'Select a target',
     TargetRequired: 'Select a target',
     UnparsableTarget: 'The current target "{path}" cannot be edited here. Select a new target to replace it.',
     SelectModelTarget: 'Select model',
     SelectApplicationTarget: 'Select application',
     SelectToolsetTarget: 'Select toolset',
+    SelectRouterTarget: 'Select router',
     PresentAs: 'Present as',
     PresentAsDescription: 'The type the alias is listed and called as. Defaults to the type of the target.',
     PresentAsModel: 'Model',
     PresentAsApplication: 'Application',
     PresentAsToolset: 'Toolset',
+    PresentAsRouter: 'Router',
     DisplayVersion: 'Display version',
     NameInvalid: 'The name may contain only letters, digits, ".", "_" and "-".',
     NameTaken: 'The name "{name}" is already used by another deployment.',

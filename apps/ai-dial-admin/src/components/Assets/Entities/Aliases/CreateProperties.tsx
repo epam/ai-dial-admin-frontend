@@ -18,6 +18,8 @@ interface Props {
   entity: DialAliasResource;
   /** The aliases already in the bucket the new one is written to. */
   names: string[];
+  /** The alias is written to the Public bucket. */
+  isPublic?: boolean;
   isUniqueNameError?: boolean;
   externalError?: string;
   onChangeEntity: (entity: object) => void;
@@ -32,6 +34,7 @@ const AliasCreateProperties: FC<Props> = ({
   step,
   entity,
   names,
+  isPublic,
   isUniqueNameError,
   externalError,
   onChangeEntity,
@@ -45,7 +48,15 @@ const AliasCreateProperties: FC<Props> = ({
   );
 
   if (step === AliasCreateStep.Target) {
-    return <TargetField isModal target={entity.target} presentAs={entity.presentAs} onChange={onChangeTarget} />;
+    return (
+      <TargetField
+        isModal
+        isPublic={isPublic}
+        target={entity.target}
+        presentAs={entity.presentAs}
+        onChange={onChangeTarget}
+      />
+    );
   }
 
   return (

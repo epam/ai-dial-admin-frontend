@@ -13,6 +13,7 @@ export enum EntitySelectType {
   Application = 'application',
   Toolset = 'toolset',
   Model = 'model',
+  Router = 'router',
 }
 
 /** Everything that differs between entity pickers: the folder tree it browses and how the reference is built. */

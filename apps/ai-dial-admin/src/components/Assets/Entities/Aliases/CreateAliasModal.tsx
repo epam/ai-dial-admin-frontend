@@ -130,6 +130,7 @@ const CreateAliasModal: FC<Props> = ({
           step={step}
           entity={alias}
           names={names}
+          isPublic={bucket === AssetSource.Public}
           onChangeEntity={(entity) => setAlias(entity as DialAliasResource)}
         />
       </div>
