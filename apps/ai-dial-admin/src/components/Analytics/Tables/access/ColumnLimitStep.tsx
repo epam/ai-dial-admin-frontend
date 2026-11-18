@@ -48,9 +48,7 @@ const ColumnLimitStep: FC<Props> = ({
       })),
     );
     const known = new Set([...own, ...enriched].map((option) => option.value));
-    const kept = value
-      .filter((name) => !known.has(name))
-      .map((name) => ({ value: name, label: name }));
+    const kept = value.filter((name) => !known.has(name)).map((name) => ({ value: name, label: name }));
 
     return [...own, ...enriched, ...kept];
   }, [columns, enrichments, value, t]);

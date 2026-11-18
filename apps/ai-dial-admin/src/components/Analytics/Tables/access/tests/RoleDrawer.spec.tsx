@@ -289,7 +289,7 @@ describe('RoleDrawer — the columns step', () => {
       AnalyticsTableAccessI18nKey.ColumnSensitive,
     );
     const enrichmentColumn = screen.getByRole('option', { name: /^project_owners\.owner/ });
-    expect(enrichmentColumn.textContent).toBe('project_owners.owner');
+    expect(enrichmentColumn).toHaveTextContent(/^project_owners\.owner$/);
     await user.click(screen.getByRole('option', { name: /^project_id/ }));
     await user.click(enrichmentColumn);
     await user.click(saveButton());
