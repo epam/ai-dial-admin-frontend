@@ -57,8 +57,10 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
       let data: DeploymentData | null = null;
       try {
         data = await getDeployment(model);
-      } catch {
-        // A failed lookup offers no link, like a deployment Core does not know.
+      } catch (error) {
+        // `getDeployment` already maps a failed Core call to `null`; this is the server action itself failing.
+        // It offers no link either, but is logged so it is not mistaken for a deployment Core does not know.
+        console.error('Getting conversation deployment error:', error);
       }
       if (!cancelled) {
         setDeployment(data);

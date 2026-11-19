@@ -111,14 +111,17 @@ describe('Assets Conversations :: Properties', () => {
     expect(getModelMock).not.toHaveBeenCalled();
   });
 
-  test('shows the agent without a link when the lookup fails', async () => {
-    getDeploymentMock.mockRejectedValue(new Error('Network error'));
+  test('shows the agent without a link and logs the error when the lookup fails', async () => {
+    const error = new Error('Network error');
+    vi.mocked(console.error).mockClear();
+    getDeploymentMock.mockRejectedValue(error);
 
     renderProperties('gpt-4');
 
     expect(await screen.findByText('gpt-4')).toBeTruthy();
     expect(screen.queryByRole('status')).toBeNull();
     expect(screen.queryByRole('button')).toBeNull();
+    expect(console.error).toHaveBeenCalledWith('Getting conversation deployment error:', error);
   });
 
   test('offers no external link when the lookup finds no deployment', async () => {
