@@ -10,6 +10,7 @@ import { ALIAS_NAME_PATTERN } from '@/src/constants/aliases';
 import { AliasI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAliasResource } from '@/src/models/dial/alias';
+import { applyAliasTargetChange } from '@/src/utils/aliases/default-headers';
 import { AliasCreateStep } from './constants';
 import TargetField, { AliasTargetChange } from './TargetField';
 
@@ -43,7 +44,7 @@ const AliasCreateProperties: FC<Props> = ({
   const nameError = entity.name && !ALIAS_NAME_PATTERN.test(entity.name) ? t(AliasI18nKey.NameInvalid) : undefined;
 
   const onChangeTarget = useCallback(
-    ({ target, presentAs }: AliasTargetChange) => onChangeEntity({ ...entity, target, presentAs }),
+    (change: AliasTargetChange) => onChangeEntity(applyAliasTargetChange(entity, change)),
     [entity, onChangeEntity],
   );
 

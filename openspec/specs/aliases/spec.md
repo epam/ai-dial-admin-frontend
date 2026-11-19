@@ -114,16 +114,31 @@ unsupported target form) SHALL be shown verbatim from Core's rejection.
 ### Requirement: Alias detail view
 The system SHALL render an alias detail view with Properties, Target and Roles tabs and a JSON tab. Properties SHALL
 show the name (read-only), display name, display version, description, icon URL and intro, in that order (the create wizard likewise puts the display version straight after the display name); it SHALL NOT show a
-callable name. Target SHALL show the target type, target and present-as. Roles SHALL edit `userRoles` the way the
+callable name. Target SHALL show the target type, target and present-as, followed by the alias's
+`defaultHeaders` as a key-value grid, the editor the Routers Properties tab uses. The default headers SHALL NOT be
+offered on an alias whose present-as (stored, or the target type's default) is Toolset, because Core refuses them
+there; a target or present-as change that makes the alias a toolset SHALL clear them. Roles SHALL edit `userRoles` the way the
 Models Roles tab does (an "available to specific roles" switch, a grid of roles, add and remove); its tab carries a
 warning when `userRoles` is an empty list. `descriptionKeywords` is edited in the JSON tab. Save SHALL write only the
-fields Core's alias body accepts (`target`, `presentAs`, `userRoles`, `displayName`, `displayVersion`, `iconUrl`,
+fields Core's alias body accepts (`target`, `presentAs`, `userRoles`, `defaultHeaders`, `displayName`, `displayVersion`, `iconUrl`,
 `description`, `intro`, `descriptionKeywords`) with the loaded etag as `If-Match`; a 412 SHALL follow the established
 etag-conflict handling. A config.json alias SHALL open read-only.
 
 #### Scenario: Properties, Target and Roles are separate tabs
 - **WHEN** an admin opens an alias
 - **THEN** the tabs are Properties, Target and Roles, and the target fields appear only on Target and the roles only on Roles
+
+#### Scenario: Default headers are edited on Target
+- **WHEN** an admin adds the header `X-Team: a` on the Target tab of a model alias and saves
+- **THEN** the request body carries `defaultHeaders: {"X-Team": "a"}`
+
+#### Scenario: A toolset alias has no default headers
+- **WHEN** an admin opens the Target tab of an alias presented as a toolset
+- **THEN** no default headers grid is shown
+
+#### Scenario: Becoming a toolset clears the default headers
+- **WHEN** an admin changes the present-as of an alias with default headers to Toolset
+- **THEN** its `defaultHeaders` are cleared, so the save is not refused by Core
 
 #### Scenario: Save sends only accepted fields
 - **WHEN** an admin edits the description of an alias loaded with extra fields and saves
