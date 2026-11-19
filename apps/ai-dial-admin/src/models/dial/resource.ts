@@ -254,6 +254,11 @@ export interface DialModelResource extends CoreDeploymentResource {
   endpoint?: string;
   responsesEndpoint?: string;
   interceptors?: string[];
+  provider?: string;
+  /** `YYYY-MM-DD`, informational; Core neither validates nor enforces it. */
+  deprecationDate?: string;
+  /** `YYYY-MM-DD`, informational; Core neither validates nor enforces it. */
+  endOfService?: string;
 }
 
 /**

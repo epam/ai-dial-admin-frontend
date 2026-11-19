@@ -2,7 +2,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { EntityFieldsI18nKey, ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntityFieldsI18nKey, ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import { DialModelResource, DialModelResourceType } from '@/src/models/dial/resource';
 import ModelAssetProperties from '../Properties';
@@ -208,5 +209,64 @@ describe('Model asset Properties :: interface base URL fallback', () => {
     const updatedInterface = updatedAsset.interfaces[DeploymentInterfaceType.OpenAIChatCompletions];
     expect(updatedInterface.base_url).toBeUndefined();
     expect(updatedInterface.defaults).toEqual({ temperature: 1 });
+  });
+});
+
+describe('Model asset Properties :: provider and lifecycle dates', () => {
+  const providerInput = () => screen.getByRole('textbox', { name: EntityFieldsI18nKey.provider });
+
+  test('Should show the stored provider and dates', () => {
+    renderProperties({ provider: 'Azure', deprecationDate: '2027-06-30', endOfService: '2027-12-31' });
+
+    expect(providerInput()).toHaveValue('Azure');
+    expect(screen.getByText(/30 Jun 2027/)).toBeInTheDocument();
+    expect(screen.getByText(/31 Dec 2027/)).toBeInTheDocument();
+  });
+
+  test('Should write a typed provider onto the resource', async () => {
+    const onChange = vi.fn();
+    render(<ModelAssetProperties asset={baseAsset} onChange={onChange} />);
+
+    await userEvent.type(providerInput(), 'G');
+
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ provider: 'G' }));
+  });
+
+  test('Should drop the provider key when it is emptied', async () => {
+    const onChange = vi.fn();
+    render(<ModelAssetProperties asset={{ ...baseAsset, provider: 'Azure' }} onChange={onChange} />);
+
+    await userEvent.clear(providerInput());
+
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ provider: undefined }));
+  });
+
+  test('Should remove a date from the resource when its clear button is used', async () => {
+    const onChange = vi.fn();
+    render(<ModelAssetProperties asset={{ ...baseAsset, endOfService: '2027-12-31' }} onChange={onChange} />);
+
+    await userEvent.click(
+      screen.getByRole('button', { name: `${ButtonsI18nKey.Clear} ${EntityFieldsI18nKey.endOfService}` }),
+    );
+
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ endOfService: undefined }));
+  });
+
+  test('Should offer no clear button on an untouched model', () => {
+    renderProperties();
+
+    expect(screen.queryByRole('button', { name: new RegExp(`^${ButtonsI18nKey.Clear} `) })).not.toBeInTheDocument();
+  });
+
+  test('Should disable all three fields for a read-only admin', () => {
+    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    renderProperties({ provider: 'Azure', deprecationDate: '2027-06-30' });
+
+    expect(providerInput()).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: `${ButtonsI18nKey.Clear} ${EntityFieldsI18nKey.deprecationDate}` }),
+    ).toBeDisabled();
+
+    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
   });
 });
