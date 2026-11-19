@@ -26,6 +26,7 @@ import {
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset } from '@/src/models/evaluation/dataset';
+import { RunTestSuiteParams } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -202,8 +203,8 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   }, []);
 
   const onRun = useCallback(
-    (num?: string | number) => {
-      return runTestSuite(selectedTestSuite.id, num).then((res) => {
+    (params: RunTestSuiteParams) => {
+      return runTestSuite(selectedTestSuite.id, params).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.RunSuccess), t(TestSuitesI18nKey.RunSuccessDescription)),
