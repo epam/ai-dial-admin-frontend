@@ -32,7 +32,7 @@ import BuilderArea from '@/src/components/Analytics/QueryBuilder/Layout/BuilderA
 import QueryHeader from '@/src/components/Analytics/QueryBuilder/Layout/QueryHeader';
 import SourceProblemIcon from '@/src/components/Analytics/QueryBuilder/Layout/SourceProblemIcon';
 import DeleteQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DeleteQueryPopup';
-import DiscardQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DiscardQueryPopup';
+import SwitchToBuilderPopup from '@/src/components/Analytics/QueryBuilder/Modals/SwitchToBuilderPopup';
 import ResetQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/ResetQueryPopup';
 import {
   useSourcePanelUnsavedWork,
@@ -267,6 +267,19 @@ const QueryBuilder: FC<Props> = ({
   ];
 
   const sqlEdited = !!sqlText.trim() && sqlText !== lastGeneratedSql.current;
+  const queryFingerprint = useMemo(
+    () =>
+      sqlEdited
+        ? `sql:${sqlText}`
+        : JSON.stringify({ query: buildQuery(state), period: boundPeriod ?? getCurrentTimeRange() }),
+    [sqlEdited, sqlText, state, boundPeriod, getCurrentTimeRange],
+  );
+  const [ranFingerprint, setRanFingerprint] = useState<string | null>(null);
+  useEffect(() => {
+    setRanFingerprint(result ? queryFingerprint : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result]);
+  const isQueryChanged = !!result && ranFingerprint !== null && ranFingerprint !== queryFingerprint;
 
   const resolveFieldsForEntity = async (entityName: string): Promise<AnalyticsEntityField[]> => {
     if (!entityName || entityName === state.entityName) return state.fields;
@@ -715,6 +728,7 @@ const QueryBuilder: FC<Props> = ({
                 result={result}
                 meta={resultMeta}
                 isRunning={isRunning}
+                isQueryChanged={isQueryChanged}
                 view={resultView}
                 onChangeView={setResultView}
                 chartConfig={chartConfig}
@@ -778,7 +792,9 @@ const QueryBuilder: FC<Props> = ({
 
       {isResetOpen && <ResetQueryPopup onConfirm={onConfirmReset} onCancel={() => setIsResetOpen(false)} />}
 
-      {pendingView !== null && <DiscardQueryPopup onConfirm={onConfirmDiscard} onCancel={() => setPendingView(null)} />}
+      {pendingView !== null && (
+        <SwitchToBuilderPopup onConfirm={onConfirmDiscard} onCancel={() => setPendingView(null)} />
+      )}
     </QueryBuilderContext.Provider>
   );
 };

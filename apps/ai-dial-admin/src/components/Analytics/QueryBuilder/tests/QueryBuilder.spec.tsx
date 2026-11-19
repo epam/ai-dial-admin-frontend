@@ -166,7 +166,7 @@ describe('QueryBuilder', () => {
 
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeEnabled();
     expect(screen.queryByRole('button', { name: COPY })).toBeNull();
-    expect(screen.getByText('QueryBuilder.ResultsEmptyDescription')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.ResultsReadyTitle')).toBeInTheDocument();
   });
 
   test('offers the parts a query can take from the Add menu', async () => {
@@ -240,7 +240,7 @@ describe('QueryBuilder', () => {
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
     expect(await screen.findByRole('button', { name: /project_id .* 'p1'/ })).toBeInTheDocument();
-    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
+    expect(screen.queryByText('QueryBuilder.SwitchToBuilderHeader')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('sql-editor')).toBeNull();
   });
 
@@ -257,10 +257,10 @@ describe('QueryBuilder', () => {
     await user.paste('SELECT bad');
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
-    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
-    expect(screen.getByText('QueryBuilder.DiscardQueryDescriptionBuilder')).toBeInTheDocument();
+    expect(await screen.findByText('QueryBuilder.SwitchToBuilderHeader')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.SwitchToBuilderDescription')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.StayInSql' }));
 
     expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT bad');
   });
@@ -281,8 +281,8 @@ describe('QueryBuilder', () => {
     await typeSql(user, 'SELECT project_id AS project');
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
-    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+    expect(await screen.findByText('QueryBuilder.SwitchToBuilderHeader')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.StayInSql' }));
     expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT project_id AS project');
   });
 
@@ -302,8 +302,8 @@ describe('QueryBuilder', () => {
       await typeSql(user, 'SELECT project_id FROM dial_usage_log');
       await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
-      expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+      expect(await screen.findByText('QueryBuilder.SwitchToBuilderHeader')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'QueryBuilder.StayInSql' }));
       expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT project_id FROM dial_usage_log');
     },
   );
@@ -318,11 +318,11 @@ describe('QueryBuilder', () => {
     await screen.findByRole('button', { name: /project_id .* 'p1'/ });
     await typeSql(user, 'SELECT bad');
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
-    await user.click(await screen.findByRole('button', { name: 'Buttons.Discard' }));
+    await user.click(await screen.findByRole('button', { name: 'QueryBuilder.SwitchToBuilder' }));
 
     expect(await screen.findByRole('group', { name: 'QueryChips.Bar' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /project_id/ })).toBeNull();
-    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).toBeNull();
+    expect(screen.queryByText('QueryBuilder.SwitchToBuilderHeader')).toBeNull();
 
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
     expect(await screen.findByLabelText('sql-editor')).toHaveDisplayValue(/FROM\s+dial_usage_log/);
@@ -338,7 +338,7 @@ describe('QueryBuilder', () => {
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
     expect(await screen.findByRole('group', { name: 'QueryChips.Bar' })).toBeInTheDocument();
-    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
+    expect(screen.queryByText('QueryBuilder.SwitchToBuilderHeader')).not.toBeInTheDocument();
     expect(translateSqlToQuery).not.toHaveBeenCalled();
   });
 
@@ -359,6 +359,49 @@ describe('QueryBuilder', () => {
       expect.objectContaining({ entity: 'dial_usage_log', mode: QueryMode.Row, filter: TIME_BOUND }),
     );
     expect(runSqlMock).not.toHaveBeenCalled();
+  });
+
+  test('says the query changed after an edit, and reports the row count again once it runs', async () => {
+    const user = userEvent.setup();
+    runQueryMock.mockResolvedValue({
+      isSuccess: true,
+      result: { columns: ['event_id'], rows: [{ event_id: '1' }] },
+    } as never);
+    renderBuilder();
+
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+    expect(await screen.findByText('QueryChips.ResultsCount')).toBeInTheDocument();
+
+    await addProjectFilter(user, 'p1');
+    expect(await screen.findByText('QueryBuilder.ResultsQueryChanged')).toBeInTheDocument();
+    expect(screen.queryByText('QueryChips.ResultsCount')).toBeNull();
+
+    runQueryMock.mockResolvedValue({ isSuccess: true, result: { columns: ['event_id'], rows: [] } } as never);
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+
+    expect(await screen.findByText('QueryBuilder.NoRows')).toBeInTheDocument();
+    expect(screen.getByText('QueryChips.ResultsCount')).toBeInTheDocument();
+    expect(screen.queryByText('QueryBuilder.ResultsQueryChanged')).toBeNull();
+  });
+
+  test('switching to SQL without editing it does not mark the result as out of date', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT 1' } });
+    runQueryMock.mockResolvedValue({
+      isSuccess: true,
+      result: { columns: ['event_id'], rows: [{ event_id: '1' }] },
+    } as never);
+    renderBuilder();
+
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+    expect(await screen.findByText('QueryChips.ResultsCount')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' }));
+    await vi.waitFor(() => expect(translateQuery).toHaveBeenCalled());
+
+    expect(await screen.findByRole('radio', { name: 'QueryBuilder.ViewSql', checked: true })).toBeInTheDocument();
+    expect(screen.getByText('QueryChips.ResultsCount')).toBeInTheDocument();
+    expect(screen.queryByText('QueryBuilder.ResultsQueryChanged')).toBeNull();
   });
 
   test('offers no Period chip and sends no time bound when the schema has no timestamp field', async () => {
@@ -582,7 +625,7 @@ describe('QueryBuilder — AI panel', () => {
 
     expect(await screen.findByRole('button', { name: /project_id .* 'p1'/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' })).toBeChecked();
-    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).toBeNull();
+    expect(screen.queryByText('QueryBuilder.SwitchToBuilderHeader')).toBeNull();
     expect(runButton).toBeDisabled();
     expect(runQueryMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -633,7 +676,7 @@ describe('QueryBuilder — AI panel', () => {
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
     expect(await screen.findByRole('group', { name: 'QueryChips.Bar' })).toBeInTheDocument();
-    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).toBeNull();
+    expect(screen.queryByText('QueryBuilder.SwitchToBuilderHeader')).toBeNull();
     expect(translateSqlToQuery).toHaveBeenCalledOnce();
     expect(runSqlMock).not.toHaveBeenCalled();
   });
@@ -820,8 +863,8 @@ describe('QueryBuilder — AI panel', () => {
 
     await user.click(builderRadio);
 
-    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+    expect(await screen.findByText('QueryBuilder.SwitchToBuilderHeader')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.StayInSql' }));
 
     expect(screen.getByRole('radio', { name: 'QueryBuilder.ViewSql' })).toBeChecked();
     expect(screen.getByLabelText('sql-editor')).toHaveValue(formatSql('SELECT 1'));
@@ -861,7 +904,7 @@ describe('QueryBuilder — AI panel', () => {
     await openAiPanel(user);
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewForm' }));
 
-    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+    expect(await screen.findByText('QueryBuilder.SwitchToBuilderHeader')).toBeInTheDocument();
     expect(translateSqlToQuery).toHaveBeenCalledWith('SELECT bad');
   });
 });

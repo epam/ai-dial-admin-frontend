@@ -15,7 +15,7 @@ cell SHALL instead show a bounded preview and a named control that opens the val
 SHALL present the value in a read-only editor that scrolls, folds and searches, SHALL indent a value that is
 JSON — including one that arrives as JSON text, which is the shape the heavy columns take — and SHALL offer
 copying it and closing. No tooltip SHALL be offered past that length, where one could not show the value
-anyway. The cell SHALL carry only the preview, not the whole document. A result column that names a schema field SHALL be headed by that field's display name, resolved through the same executed-query column-label map the chart views use; a column produced by a computed output column SHALL be headed by its alias, which is already human-readable. A SQL-view run, whose columns the builder cannot attribute to schema fields, SHALL head every column by its returned name. Before any run, the results area SHALL show an empty state inviting the user to run the query. An empty result SHALL show an empty-state message. A failed run SHALL surface an error via the app's notification convention and SHALL NOT replace a previously shown result with a broken grid. Run SHALL be disabled until a schema is loaded.
+anyway. The cell SHALL carry only the preview, not the whole document. A result column that names a schema field SHALL be headed by that field's display name, resolved through the same executed-query column-label map the chart views use; a column produced by a computed output column SHALL be headed by its alias, which is already human-readable. A SQL-view run, whose columns the builder cannot attribute to schema fields, SHALL head every column by its returned name. Before any run, the results area SHALL show a "Ready to run" empty state — an illustration, the title "Ready to run" and the line "Run the query to see results here". An empty result SHALL show the "No matching results" empty state with the line "Adjust or remove filters, then run the query.". A failed run SHALL surface an error via the app's notification convention and SHALL NOT replace a previously shown result with a broken grid. Run SHALL be disabled until a schema is loaded.
 
 #### Scenario: Successful run renders a result grid
 
@@ -25,12 +25,13 @@ anyway. The cell SHALL carry only the preview, not the whole document. A result 
 #### Scenario: Empty state before the first run
 
 - **WHEN** the page is open and no query has been run yet
-- **THEN** the results area shows an empty state inviting the user to run the query
+- **THEN** the results area shows the "Ready to run" empty state
 
 #### Scenario: Empty result
 
 - **WHEN** a run returns no rows
-- **THEN** an empty-state message is shown instead of a grid
+- **THEN** the "No matching results" empty state is shown instead of a grid, suggesting to adjust or remove
+  filters
 
 #### Scenario: Failed run surfaces an error
 
@@ -491,7 +492,7 @@ The export SHALL run with the signed-in user's own token, as Run does, and SHALL
 
 ### Requirement: An empty result over a row-restricted table says so
 
-When a run returns no rows and the query's source is a table for which `GET /v1/tables/{name}` of the analytics-data-access-service reports `permissions.rows_restricted = true`, the result area's empty state SHALL add a hint that no rows match the user's access, beside the usual empty-result text. The hint SHALL state only that access limits the rows; the limit itself SHALL NOT be shown or requested.
+When a run returns no rows and the query's source is a table for which `GET /v1/tables/{name}` of the analytics-data-access-service reports `permissions.rows_restricted = true`, the result area's empty state SHALL show a hint that no rows match the user's access in place of the usual suggestion to adjust filters. The hint SHALL state only that access limits the rows; the limit itself SHALL NOT be shown or requested.
 
 The hint SHALL NOT be shown when the source reports `rows_restricted` as false or omits it, when the source's permissions cannot be read — which SHALL produce no notification — or for a SQL-view run, whose source tables the viewer does not attribute. A result that has rows SHALL be unaffected.
 
@@ -499,7 +500,7 @@ The hint SHALL NOT be shown when the source reports `rows_restricted` as false o
 
 - **GIVEN** a query whose source table reports `permissions.rows_restricted = true`
 - **WHEN** the run returns no rows
-- **THEN** the empty state shows the usual empty-result text and a hint that no rows match the user's access
+- **THEN** the empty state shows the usual empty-result title and a hint that no rows match the user's access
 
 #### Scenario: An unconfined caller's empty result is unchanged
 
@@ -526,6 +527,12 @@ service computes a total only for a row query paged by offset that requested one
 request, so a total appears only for a result produced another way. No count of result columns and no
 timing SHALL be shown.
 
+When the query has changed since the shown result was produced, the count SHALL be replaced by "Query
+changed · Run to update results" until the query runs again; the result stays shown but dimmed, while the results header and its controls keep full strength. A change is judged
+by the query itself: the SQL text when the SQL buffer was edited, otherwise the builder's query and its
+period. Switching between the Builder and SQL views without editing, and the clock moving a relative
+period forward, SHALL NOT count as a change.
+
 The results header SHALL also carry, right-aligned, the Add to dashboard action — for a saved query
 without unsaved changes, where custom dashboards are enabled — and the Export CSV action.
 
@@ -539,6 +546,18 @@ without unsaved changes, where custom dashboards are enabled — and the Export 
 
 - **WHEN** a run's response includes a total count
 - **THEN** the results header states the total beside the number of returned rows
+
+#### Scenario: An edit since the run marks the result out of date
+
+- **WHEN** a result is shown and the user then adds a filter
+- **THEN** the results header reads "Query changed · Run to update results" instead of the count
+- **AND** the shown result is dimmed
+- **AND** after the next run it states the count again and the result is no longer dimmed
+
+#### Scenario: Switching views alone is not a change
+
+- **WHEN** a result is shown and the user switches from the Builder to the SQL view without editing
+- **THEN** the results header still states the count
 
 #### Scenario: No count before a run
 
