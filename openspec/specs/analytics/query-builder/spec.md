@@ -1184,10 +1184,11 @@ edited SQL buffer, the SQL SHALL first be translated to the structured DSL via
 `POST /v1/queries/translate-sql`. If the translation succeeds and the resulting query is representable
 by the chips, the builder SHALL be hydrated from that query and the view SHALL switch with no
 confirmation and no data loss. If the translation fails (`400` — parse failure or an unsupported
-construct) or the resulting query is not representable by the chips, a confirmation popup (danger
-variant) SHALL warn that switching will drop the current query and reset the builder to its starting
-point. Confirming SHALL discard the SQL, reset the builder state to its initial defaults for the page's
-table, and switch to the Builder view. Cancelling SHALL keep the user in the view they were in with the
+construct) or the resulting query is not representable by the chips, a confirmation popup titled
+"Switch to the builder?" SHALL say that the query is too complex for the builder to show and that
+switching will replace it with a new builder query, offering Stay in SQL and Switch to builder.
+Switch to builder SHALL discard the SQL, reset the builder state to its initial defaults for the page's
+table, and switch to the Builder view. Stay in SQL SHALL keep the user in the view they were in with the
 query intact. Switching to the Builder SHALL NOT prompt when nothing would be lost (empty or unedited
 generated SQL; SQL that translates to a representable query).
 
@@ -1207,18 +1208,18 @@ switch views before the loaded query has landed.
 #### Scenario: SQL the chips cannot show asks for confirmation
 
 - **WHEN** the user edits SQL that the backend rejects, or that translates to a query the chips cannot show, and selects the Builder view
-- **THEN** a confirmation popup warns that the current query will be dropped and the builder reset
+- **THEN** the "Switch to the builder?" popup says the query is too complex for the builder and will be replaced
 
-#### Scenario: Confirming drops the SQL and resets the builder
+#### Scenario: Switch to builder drops the SQL and resets the builder
 
-- **WHEN** the confirmation popup is shown and the user confirms
+- **WHEN** the confirmation popup is shown and the user chooses Switch to builder
 - **THEN** the view switches to the Builder view
 - **AND** the SQL is discarded
 - **AND** the chips show the builder's initial defaults for the page's table
 
-#### Scenario: Cancelling keeps the SQL
+#### Scenario: Stay in SQL keeps the SQL
 
-- **WHEN** the confirmation popup is shown and the user cancels
+- **WHEN** the confirmation popup is shown and the user chooses Stay in SQL
 - **THEN** the user remains in the view they were in
 - **AND** the SQL text is unchanged
 
@@ -1226,7 +1227,7 @@ switch views before the loaded query has landed.
 
 - **WHEN** the user runs an assistant message whose SQL the chips cannot show and then selects the Builder view
 - **THEN** the confirmation popup is shown instead of the chips showing their earlier query
-- **AND** cancelling keeps the SQL view
+- **AND** Stay in SQL keeps the SQL view
 
 #### Scenario: The view switcher waits for a message to load
 
