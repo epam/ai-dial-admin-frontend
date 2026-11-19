@@ -1,5 +1,7 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
+import type { DeploymentData } from '@epam/ai-dial-typescript-sdk';
+
 import { IconButton, Label, Spinner, Tooltip } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
@@ -12,7 +14,8 @@ import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialConversation } from '@/src/models/dial/conversation';
-import { Deployment } from '@/src/models/evaluation/deployment';
+import { DeploymentType } from '@/src/models/evaluation/deployment';
+import { getDeploymentTypeFromCoreObject } from '@/src/utils/deployment-navigation';
 
 interface Props {
   selectedConversation: DialConversation;
@@ -22,14 +25,15 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
   const [isModelLoading, setIsModelLoading] = useState(true);
-  const [deployment, setDeployment] = useState<Deployment | null>(null);
+  const [deployment, setDeployment] = useState<DeploymentData | null>(null);
 
   const model = selectedConversation.model?.id as string;
-  const { modelRoute, isLoading: isModelRouteLoading } = useModelDeploymentRoute(model, deployment?.$type);
+  const deploymentType = getDeploymentTypeFromCoreObject(deployment);
+  const { modelRoute, isLoading: isModelRouteLoading } = useModelDeploymentRoute(model, deploymentType);
 
   const agentLink = useMemo(
-    () => getAgentLinkForConversation(deployment, currentLocale, modelRoute),
-    [currentLocale, deployment, modelRoute],
+    () => getAgentLinkForConversation(model, deployment, deploymentType, currentLocale, modelRoute),
+    [currentLocale, deployment, deploymentType, model, modelRoute],
   );
 
   const openResourceInNewTab = () => {
@@ -49,24 +53,32 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
     let cancelled = false;
     setIsModelLoading(true);
 
-    getDeployment(model)
-      .then((data) => {
-        if (!cancelled) {
-          setDeployment(data);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsModelLoading(false);
-        }
-      });
+    const loadDeployment = async () => {
+      let data: DeploymentData | null = null;
+      try {
+        data = await getDeployment(model);
+      } catch {
+        // A failed lookup offers no link, like a deployment Core does not know.
+      }
+      if (!cancelled) {
+        setDeployment(data);
+        setIsModelLoading(false);
+      }
+    };
+
+    void loadDeployment();
 
     return () => {
       cancelled = true;
     };
   }, [model]);
 
-  const isResolvingAgent = isModelLoading || isModelRouteLoading;
+  // The hook's `isLoading` turns true in an effect, so for one render after the lookup lands a model has
+  // neither a route nor a loading flag; waiting on the route itself keeps the name from flashing unlinked.
+  // TODO: fix the gap in `useModelDeploymentRoute` instead (key the route by the id it was resolved for and
+  // report loading until it matches), so `DeploymentExternalLink` and TestSuites `Properties` get it too.
+  const isModelRoutePending = deploymentType === DeploymentType.Model && modelRoute === undefined;
+  const isResolvingAgent = isModelLoading || isModelRouteLoading || isModelRoutePending;
 
   return (
     <div className={`size-full flex flex-col gap-y-8 ${STANDARD_CONTROL_WIDTH}`}>

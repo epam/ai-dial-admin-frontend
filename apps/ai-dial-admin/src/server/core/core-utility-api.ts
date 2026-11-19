@@ -1,3 +1,5 @@
+import type { DeploymentData } from '@epam/ai-dial-typescript-sdk';
+
 import { Token } from '@/src/models/auth';
 import { ConfigHealthResponse } from '@/src/models/dial/config-health';
 import { CoreCallerDeploymentsResponse } from '@/src/models/dial/core-caller-options';
@@ -5,11 +7,9 @@ import { CoreUserInfoResponse } from '@/src/models/dial/core-user-info';
 import { CoreUserOrgUnitsResponse } from '@/src/models/dial/core-user-org-units';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { UserInfo } from '@/src/models/user-info';
+import { encodeCorePath } from '@/src/server/publications/path';
 import { CoreApi } from './core-api';
-import { Deployment } from '@/src/models/evaluation/deployment';
 
-export const DEPLOYMENTS_URL = 'v1/deployments';
-export const DEPLOYMENT_URL = (name: string) => `${DEPLOYMENTS_URL}/${name}`;
 export const USER_ROLE_ASSIGNMENTS_URL = 'v1/user/role-assignments';
 export const VERSION_URL = 'version';
 export const APPLICATION_TYPE_SCHEMAS_URL = 'v1/application_type_schemas/schemas';
@@ -25,21 +25,29 @@ const EMAIL_CLAIM = 'email';
 
 /**
  * Direct-to-Core replacements for the admin-backend endpoints that only ever proxied Core
- * unchanged: deployment listing/lookup, the caller's own identity, and the current Core version.
+ * unchanged: deployment lookup, the caller's own identity, and the current Core version.
  * The global-settings singleton lives on {@link SettingsApi} instead, which already owns that
  * resource. {@link UtilityApi} keeps the Admin-backend-owned import/export, version configuration,
  * and config-sync operations so those aren't duplicated or moved here.
  *
- * `getUserInfo` goes through the SDK; `getCoreVersion` stays hand-written because it reads `text/plain`.
+ * `getUserInfo` and the deployment lookups go through the SDK; `getCoreVersion` stays hand-written because it
+ * reads `text/plain`.
  */
 export class CoreUtilityApi extends CoreApi {
-  // TODO: move the deployment reads onto the SDK (`getDeployment` and the listing) in the next phase.
-  checkDeploymentByName(name: string, token: Token): Promise<Deployment | null> {
-    return this.get(DEPLOYMENT_URL(name), token);
+  /**
+   * Looks up a deployment by a name a user typed. Encoded per segment, so `?`, `#`, `%` or a space stay part of
+   * the name while `/` stays a separator. `null` when Core has no such deployment, `undefined` on 403.
+   */
+  checkDeploymentByName(name: string, token: Token): Promise<DeploymentData | null> {
+    return this.getDeploymentInfo(encodeCorePath(name), token);
   }
 
-  getAllDeployments(token: Token): Promise<ServerActionResponse> {
-    return this.getAction(DEPLOYMENTS_URL, token);
+  /**
+   * Looks up a deployment by an id Core issued, such as a conversation's `model.id`. Sent unchanged: the id is
+   * already percent-encoded, and encoding it again would turn `My%20App` into `My%2520App` and miss.
+   */
+  getDeploymentById(id: string, token: Token): Promise<DeploymentData | null> {
+    return this.getDeploymentInfo(id, token);
   }
 
   getCoreVersion(token: Token): Promise<string | null> {
@@ -83,5 +91,10 @@ export class CoreUtilityApi extends CoreApi {
     kind: CallerDeploymentKind,
   ): Promise<ServerActionResponse<CoreCallerDeploymentsResponse>> {
     return this.getAction(`openai/${kind}`, token);
+  }
+
+  /** `/v1/deployments/{…}`, not the SDK's `getDeployment`, which reads `/openai/deployments/{…}`. */
+  private getDeploymentInfo(path: string, token: Token): Promise<DeploymentData | null> {
+    return this.sdkGet<DeploymentData>(token, (init) => this.sdk.getDeploymentInfo(path, init));
   }
 }

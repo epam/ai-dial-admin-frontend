@@ -1,5 +1,6 @@
 'use server';
 
+import type { DeploymentData } from '@epam/ai-dial-typescript-sdk';
 import { cookies, headers } from 'next/headers';
 
 import { assetApi, coreUtilityApi } from '@/src/app/api/api';
@@ -29,12 +30,8 @@ export async function deleteConversations(paths: { path: string }[]) {
   return bulkDeleteAssets(assetApi, token, ResourceType.CONVERSATION, paths);
 }
 
-export async function getAllDeployments() {
+/** `id` is the conversation's `model.id`, as Core issued it. */
+export async function getDeployment(id: string): Promise<DeploymentData | null> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return coreUtilityApi.getAllDeployments(token);
-}
-
-export async function getDeployment(name: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return coreUtilityApi.checkDeploymentByName(name, token);
+  return coreUtilityApi.getDeploymentById(id, token);
 }

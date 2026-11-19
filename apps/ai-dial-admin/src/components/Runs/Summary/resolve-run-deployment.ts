@@ -84,7 +84,7 @@ export const resolveRunDeployment = (
     };
   }
   if (suiteContext.deploymentRef?.name && suiteContext.deploymentRef?.id && deploymentType) {
-    const navigationTarget = resolveDeploymentNavigationTarget(suiteContext.deploymentRef, deploymentType, [], {
+    const navigationTarget = resolveDeploymentNavigationTarget(suiteContext.deploymentRef, deploymentType, {
       modelRoute,
     });
     if (!navigationTarget) {

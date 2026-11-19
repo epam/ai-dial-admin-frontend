@@ -1,5 +1,6 @@
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
@@ -897,99 +898,67 @@ describe('getImportNotificationContent', () => {
 });
 
 describe('getAgentLinkForConversation', () => {
-  test('returns empty string when deployment is null', () => {
-    expect(getAgentLinkForConversation(null, 'en')).toBe('');
+  const MODEL = { object: 'model', id: 'gpt-4' } as const;
+  const APPLICATION = { object: 'application', id: 'app' } as const;
+
+  test('returns an empty string when the lookup found nothing', () => {
+    expect(getAgentLinkForConversation('gpt-4', null, undefined, 'en')).toBe('');
+    expect(getAgentLinkForConversation('gpt-4', undefined, undefined, 'en')).toBe('');
   });
 
-  test('returns empty string when deployment is empty object', () => {
-    expect(getAgentLinkForConversation({}, 'en')).toBe('');
+  test('returns an empty string without a conversation model id', () => {
+    expect(getAgentLinkForConversation(undefined, MODEL, DeploymentType.Model, 'en', ApplicationRoute.Models)).toBe('');
   });
 
-  test('returns model link when deployment has model', () => {
-    const deployment = { model: 'gpt-4' };
-    const result = getAgentLinkForConversation(deployment, 'en');
-    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
+  test('returns an empty model link until the model route is probed', () => {
+    expect(getAgentLinkForConversation('gpt-4', MODEL, DeploymentType.Model, 'en')).toBe('');
   });
 
-  test('encodes special characters in model name', () => {
-    const deployment = { model: 'my model/v1' };
-    const result = getAgentLinkForConversation(deployment, 'en');
-    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('my model/v1')}`);
-  });
-
-  test('returns application link when application equals reference', () => {
-    const deployment = { application: 'my-app', reference: 'my-app' };
-    const result = getAgentLinkForConversation(deployment, 'en');
-    expect(result).toBe(`/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`);
-  });
-
-  test('returns assets application link when application differs from reference', () => {
-    const deployment = {
-      application: 'applications/my-app',
-      reference: 'other-ref',
-      displayName: 'My App',
-    };
-    const result = getAgentLinkForConversation(deployment, 'en');
-    expect(result).toBe(`/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('My App')}?path=my-app`);
-  });
-
-  test('model takes precedence over application', () => {
-    const deployment = { model: 'gpt-4', application: 'my-app', reference: 'my-app' };
-    const result = getAgentLinkForConversation(deployment, 'en');
-    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
-  });
-
-  test('uses currentLocale in the path', () => {
-    const deployment = { model: 'gpt-4' };
-    expect(getAgentLinkForConversation(deployment, 'fr')).toContain('/fr/');
-    expect(getAgentLinkForConversation(deployment, 'de')).toContain('/de/');
-  });
-
-  test('returns model link from eval deployment $type', () => {
-    const result = getAgentLinkForConversation(
-      { $type: 'dial-model', deploymentId: 'gpt-4', displayName: 'GPT-4' },
-      'en',
-      ApplicationRoute.Models,
+  test('returns the probed model route', () => {
+    expect(getAgentLinkForConversation('gpt-4', MODEL, DeploymentType.Model, 'en', ApplicationRoute.Models)).toBe(
+      `/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`,
     );
-    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
+    expect(
+      getAgentLinkForConversation('msh-responses', MODEL, DeploymentType.Model, 'en', ApplicationRoute.PlatformModels),
+    ).toBe(`/en${ApplicationRoute.PlatformModels}/${encodeURIComponent('msh-responses')}`);
   });
 
-  test('returns empty model link until modelRoute is resolved', () => {
+  test('returns an Assets Applications link without the prefix for an applications/ id', () => {
     const result = getAgentLinkForConversation(
-      { $type: 'dial-model', deploymentId: 'gpt-4', displayName: 'GPT-4' },
+      'applications/folder/my-app__1.0.0',
+      APPLICATION,
+      DeploymentType.Application,
       'en',
     );
-    expect(result).toBe('');
-  });
 
-  test('returns platform model link when modelRoute is Catalog', () => {
-    const result = getAgentLinkForConversation(
-      { $type: 'dial-model', deploymentId: 'msh-responses', displayName: 'msh-responses' },
-      'en',
-      ApplicationRoute.PlatformModels,
-    );
-    expect(result).toBe(`/en${ApplicationRoute.PlatformModels}/${encodeURIComponent('msh-responses')}`);
-  });
-
-  test('returns application link from eval deployment $type', () => {
-    const result = getAgentLinkForConversation(
-      { $type: 'dial-application', deploymentId: 'my-app', displayName: 'My App' },
-      'en',
-    );
-    expect(result).toBe(`/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`);
-  });
-
-  test('returns assets application link from applications/ id prefix', () => {
-    const result = getAgentLinkForConversation(
-      {
-        $type: 'dial-application',
-        deploymentId: 'applications/folder/my-app__1.0.0',
-        displayName: 'My Asset App',
-      },
-      'en',
-    );
     expect(result).toBe(
-      `/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('My Asset App')}?path=${encodeURIComponent('folder/my-app__1.0.0')}`,
+      `/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('applications/folder/my-app__1.0.0')}?path=${encodeURIComponent('folder/my-app__1.0.0')}`,
+    );
+  });
+
+  test('returns an Applications link for an unprefixed id whatever the reference', () => {
+    const deployment = { ...APPLICATION, application: 'my-app', reference: 'other-ref' };
+
+    expect(getAgentLinkForConversation('my-app', deployment, DeploymentType.Application, 'en')).toBe(
+      `/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`,
+    );
+  });
+
+  test('falls back to the catalog record fields when the object does not map', () => {
+    const deployment = { object: 'toolset', id: 'tools', model: 'gpt-4' } as const;
+
+    expect(getAgentLinkForConversation('tools', deployment, undefined, 'en')).toBe(
+      `/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`,
+    );
+  });
+
+  test('returns an empty string when an unmapped deployment names nothing to link', () => {
+    expect(getAgentLinkForConversation('router-1', { object: 'router', id: 'router-1' }, undefined, 'en')).toBe('');
+  });
+
+  test('uses the current locale in the path', () => {
+    expect(getAgentLinkForConversation('gpt-4', MODEL, DeploymentType.Model, 'fr', ApplicationRoute.Models)).toContain(
+      '/fr/',
     );
   });
 });

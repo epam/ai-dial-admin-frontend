@@ -6,7 +6,6 @@ import { SuiteType } from '@/src/models/evaluation/test-suite';
 import DeploymentExternalLink from '../DeploymentExternalLink';
 
 const getDeploymentByIdMock = vi.fn();
-const getAllDeploymentsMock = vi.fn();
 const getModelMock = vi.fn();
 const onOpenInNewTabMock = vi.fn();
 
@@ -16,10 +15,6 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 
 vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
   getModel: (...args: unknown[]) => getModelMock(...args),
-}));
-
-vi.mock('@/src/app/[lang]/conversations/actions', () => ({
-  getAllDeployments: (...args: unknown[]) => getAllDeploymentsMock(...args),
 }));
 
 vi.mock('@/src/utils/open-in-new-tab', () => ({
@@ -40,7 +35,6 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 describe('DeploymentExternalLink', () => {
   beforeEach(() => {
     getDeploymentByIdMock.mockReset();
-    getAllDeploymentsMock.mockReset();
     getModelMock.mockReset();
     getModelMock.mockResolvedValue(null);
     onOpenInNewTabMock.mockReset();
@@ -58,7 +52,6 @@ describe('DeploymentExternalLink', () => {
     );
 
     expect(screen.getByRole('status', { name: 'loading' })).toBeInTheDocument();
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
 
   test('renders external link when type is resolved', async () => {
@@ -78,7 +71,6 @@ describe('DeploymentExternalLink', () => {
     expect(await screen.findByRole('button', { name: 'Open deployment' })).toBeInTheDocument();
 
     expect(getDeploymentByIdMock).toHaveBeenCalledTimes(1);
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
 
   test('renders nothing when lookup fails', async () => {
@@ -98,7 +90,6 @@ describe('DeploymentExternalLink', () => {
     expect(screen.queryByRole('button', { name: 'Open deployment' })).not.toBeInTheDocument();
     expect(screen.queryByRole('status', { name: 'loading' })).not.toBeInTheDocument();
     expect(container).toBeEmptyDOMElement();
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
 
   test('skips by-id lookup when type is stored', () => {
@@ -112,7 +103,6 @@ describe('DeploymentExternalLink', () => {
 
     expect(screen.getByRole('button', { name: 'Open deployment' })).toBeInTheDocument();
     expect(getDeploymentByIdMock).not.toHaveBeenCalled();
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
 
   test('skips by-id lookup for MCP suites', () => {
@@ -127,6 +117,5 @@ describe('DeploymentExternalLink', () => {
 
     expect(screen.getByRole('button', { name: 'Open deployment' })).toBeInTheDocument();
     expect(getDeploymentByIdMock).not.toHaveBeenCalled();
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
 });
