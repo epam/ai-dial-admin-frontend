@@ -499,7 +499,7 @@ describe('QueryBuilder — AI panel', () => {
     }) as never;
 
   const ask = async (user: User, panel: HTMLElement, prompt: string) => {
-    await user.type(within(panel).getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), prompt);
+    await user.type(within(panel).getByRole('textbox', { name: 'QueryBuilder.AskAi' }), prompt);
     await user.click(within(panel).getByRole('button', { name: 'QueryBuilder.AiSend' }));
   };
 
@@ -507,11 +507,12 @@ describe('QueryBuilder — AI panel', () => {
     vi.mocked(generateQuery).mockResolvedValue(assistantReply(content));
     const panel = await openAiPanel(user);
     await ask(user, panel, 'cost by deployment');
-    const runButton = await within(panel).findByRole('button', { name: 'QueryBuilder.Run' });
+    const runButton = await within(panel).findByRole('button', { name: 'QueryBuilder.ProposedQueryApply' });
     return { panel, runButton };
   };
 
-  const messageRuns = (panel: HTMLElement) => within(panel).getAllByRole('button', { name: 'QueryBuilder.Run' });
+  const messageRuns = (panel: HTMLElement) =>
+    within(panel).getAllByRole('button', { name: 'QueryBuilder.ProposedQueryApply' });
 
   test('offers the AI panel only when the query assistant is enabled', () => {
     setQueryAssistantEnabled(false);
@@ -548,8 +549,8 @@ describe('QueryBuilder — AI panel', () => {
 
     const panel = await openAiPanel(user);
 
-    expect(within(panel).getByRole('heading', { name: 'QueryBuilder.AiPanelHeading' })).toBeInTheDocument();
-    expect(within(panel).getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' })).toBeInTheDocument();
+    expect(within(panel).getByRole('heading', { name: 'QueryBuilder.AskAi' })).toBeInTheDocument();
+    expect(within(panel).getByRole('textbox', { name: 'QueryBuilder.AskAi' })).toBeInTheDocument();
     expect(within(panel).getByRole('button', { name: 'QueryBuilder.AiPanelCollapse' })).toHaveAttribute(
       'aria-expanded',
       'true',
@@ -587,7 +588,7 @@ describe('QueryBuilder — AI panel', () => {
 
     const panel = await screen.findByRole('complementary', { name: 'QueryBuilder.AskAi' });
 
-    expect(within(panel).getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' })).toBeInTheDocument();
+    expect(within(panel).getByRole('textbox', { name: 'QueryBuilder.AskAi' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'QueryBuilder.AiPanelExpand' })).toBeNull();
   });
 
@@ -714,7 +715,7 @@ describe('QueryBuilder — AI panel', () => {
 
     expect(runButton).toBeDisabled();
     expect(within(panel).getByText('cost by deployment')).toBeInTheDocument();
-    expect(within(panel).getByText(/^SELECT\s+1$/)).toBeInTheDocument();
+    expect(within(panel).getByText('QueryBuilder.ProposedQueryAppliedNote')).toBeInTheDocument();
   });
 
   test('a follow-up reply without SQL does not disturb a previously loaded query', async () => {
@@ -749,13 +750,14 @@ describe('QueryBuilder — AI panel', () => {
 
     vi.mocked(generateQuery).mockResolvedValue(assistantReply('```sql\nSELECT 2\n```'));
     await ask(user, panel, 'now by project');
-    await within(panel).findByText(/^SELECT\s+2$/);
+    await waitFor(() => expect(messageRuns(panel)).toHaveLength(2));
     const runButtons = messageRuns(panel);
     expect(runButtons).toHaveLength(2);
     await waitFor(() => expect(runButtons[1]).toBeEnabled());
 
     await user.click(runButtons[1]);
     await waitFor(() => expect(firstRun).toBeEnabled());
+    expect(within(panel).getAllByText('QueryBuilder.ProposedQueryAppliedNote')).toHaveLength(2);
     expect(runButtons[1]).toBeDisabled();
     expect(runSqlMock).toHaveBeenLastCalledWith('SELECT 2');
 
@@ -785,11 +787,11 @@ describe('QueryBuilder — AI panel', () => {
     const reopened = await openAiPanel(user);
 
     expect(within(reopened).getByText('cost by deployment')).toBeInTheDocument();
-    expect(within(reopened).getByRole('button', { name: 'QueryBuilder.Run' })).toBeDisabled();
+    expect(within(reopened).getByRole('button', { name: 'QueryBuilder.ProposedQueryApply' })).toBeDisabled();
 
     vi.mocked(generateQuery).mockResolvedValue(assistantReply('```sql\nSELECT 2\n```'));
     await ask(user, reopened, 'now by project');
-    await within(reopened).findByText(/^SELECT\s+2$/);
+    await waitFor(() => expect(messageRuns(reopened)).toHaveLength(2));
 
     await waitFor(() => expect(messageRuns(reopened)[1]).toBeEnabled());
     expect(messageRuns(reopened)[0]).toBeDisabled();
@@ -804,7 +806,7 @@ describe('QueryBuilder — AI panel', () => {
     const panel = await openAiPanel(user);
     await ask(user, panel, 'cost by deployment');
 
-    const prompt = within(panel).getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' });
+    const prompt = within(panel).getByRole('textbox', { name: 'QueryBuilder.AskAi' });
     await waitFor(() => expect(prompt).toBeEnabled());
     expect(showNotificationMock).toHaveBeenCalled();
   });
@@ -843,7 +845,7 @@ describe('QueryBuilder — AI panel', () => {
 
     vi.mocked(generateQuery).mockResolvedValue(assistantReply('```sql\nSELECT 2\n```'));
     await ask(user, panel, 'now by project');
-    await within(panel).findByText(/^SELECT\s+2$/);
+    await waitFor(() => expect(messageRuns(panel)).toHaveLength(2));
 
     await waitFor(() => expect(messageRuns(panel)[1]).toBeEnabled());
   });
