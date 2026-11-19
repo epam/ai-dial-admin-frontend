@@ -30,7 +30,7 @@ const RemoveButton: FC<RemoveButtonProps> = (props) => {
       icon={
         <IconTrashX
           size={DIAL_ICON_SIZE.SM}
-          className={props.disabled ? 'text-controls-disable-primary' : 'text-error'}
+          className={props.disabled ? 'text-controls-disable' : 'text-error'}
           aria-hidden
         />
       }
