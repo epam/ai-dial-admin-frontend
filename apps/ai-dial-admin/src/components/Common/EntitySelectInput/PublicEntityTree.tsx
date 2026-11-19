@@ -1,6 +1,7 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialFileManager, DialFileNodeType, FileManagerGridRow } from '@epam/ai-dial-react-file-manager';
+import type { FirstDataRenderedEvent } from 'ag-grid-community';
 
 import { getGridOptions, getTreeOptions } from '@/src/components/Common/FileManager/utils';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -11,6 +12,20 @@ import { ENTITY_SELECT_CONFIGS } from './constants';
 import { EntitySelectType } from './models';
 
 const ROOT_PATH = `${ROOT_FOLDER}/`;
+
+interface SelectableTreeNode {
+  path: string;
+  items?: SelectableTreeNode[];
+}
+
+/** `files` is a nested folder tree, so a stored file is not a top-level entry. */
+const treeContainsPath = (nodes: SelectableTreeNode[] | null | undefined, path: string): boolean => {
+  if (!path || !nodes?.length) {
+    return false;
+  }
+
+  return nodes.some((node) => node.path === path || treeContainsPath(node.items, path));
+};
 
 interface Props {
   entityType: EntitySelectType;
@@ -53,6 +68,9 @@ const PublicEntityTree: FC<Props> = ({
   const [unresolvedValue, setUnresolvedValue] = useState<string | null>(null);
   const isValueUnresolved = unresolvedValue === value;
   const effectiveValue = isValueUnresolved ? '' : value;
+  // DialFileManager reads defaultSelectedPaths only on mount, and drops a path that is not in `items`
+  // yet. Hold the selection back until the stored file is in the tree, then remount so it sticks.
+  const isInitialSelectionReady = !effectiveValue || treeContainsPath(files as SelectableTreeNode[], effectiveValue);
 
   useEffect(() => {
     if ((files == null || files.length === 0) && isModalOpen) {
@@ -139,6 +157,8 @@ const PublicEntityTree: FC<Props> = ({
     [loadedPaths, fetchFiles],
   );
 
+  const fileGridOptions = getGridOptions(route, isReadOnlyAdmin, gridColumns, t, !isMultiple);
+
   // A grouping folder is browsable but never a choice, so only an entity row (an ITEM) is reported.
   const onSelectEntity = useCallback(
     (rows: FileManagerGridRow[]) => {
@@ -152,9 +172,20 @@ const PublicEntityTree: FC<Props> = ({
     [onChangeSelectedPath, onChangeSelectedPaths],
   );
 
+  const onGridFirstDataRendered = useCallback(
+    (event: FirstDataRenderedEvent) => {
+      const selectedNode = effectiveValue ? event.api.getRowNode(effectiveValue) : undefined;
+      if (selectedNode) {
+        event.api.ensureNodeVisible(selectedNode, 'middle');
+      }
+    },
+    [effectiveValue],
+  );
+
   return (
     <div className="size-full min-h-0">
       <DialFileManager
+        key={isInitialSelectionReady ? 'selection-ready' : 'selection-pending'}
         className="bg-transparent [&_div:has(>[role=tree])]:py-4!"
         gridClassName="p-3"
         showNavigationPanel
@@ -174,8 +205,14 @@ const PublicEntityTree: FC<Props> = ({
           setExpandedFolders,
           t,
         )}
-        defaultSelectedPaths={effectiveValue ? new Set([effectiveValue]) : void 0}
-        gridOptions={getGridOptions(route, isReadOnlyAdmin, gridColumns, t, !isMultiple)}
+        defaultSelectedPaths={isInitialSelectionReady && effectiveValue ? new Set([effectiveValue]) : void 0}
+        gridOptions={{
+          ...fileGridOptions,
+          additionalGridOptions: {
+            ...fileGridOptions.additionalGridOptions,
+            onFirstDataRendered: onGridFirstDataRendered,
+          },
+        }}
         onPathChange={onPathChange}
         onFolderPopupPathChange={onFolderPopupPathChange}
         handleSelectionClick={onSelectEntity}
