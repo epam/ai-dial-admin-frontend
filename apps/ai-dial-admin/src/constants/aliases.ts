@@ -27,6 +27,7 @@ export const ALIAS_WRITABLE_FIELDS = [
   'target',
   'presentAs',
   'userRoles',
+  'defaultHeaders',
   'displayName',
   'displayVersion',
   'iconUrl',
