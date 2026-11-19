@@ -21,7 +21,7 @@ import { DialRouteResource } from '@/src/models/dial/resource';
 import { DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Metric } from '@/src/models/evaluation/metric';
-import { DeploymentPeriodCosts, EMPTY_DEPLOYMENT_COSTS } from '@/src/models/evaluation/run';
+import { DeploymentPeriodCosts, EMPTY_DEPLOYMENT_COSTS, RunTestSuiteParams } from '@/src/models/evaluation/run';
 import { TestSuite, TryOutVariablesByRequest } from '@/src/models/evaluation/test-suite';
 import { FilterDto, SortDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
@@ -63,9 +63,14 @@ export async function updateTestSuite(suite: TestSuite, etag: string) {
   return testSuitesApi.updateTestSuite(suite, etag, token);
 }
 
-export async function runTestSuite(id?: string, numberOfRuns?: number | string) {
+export async function runTestSuite(id?: string, params?: RunTestSuiteParams) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.runTestSuite(token, id, numberOfRuns);
+  return testSuitesApi.runTestSuite(token, id, params);
+}
+
+export async function getTestSuiteRunConfig() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getTestSuiteRunConfig(token);
 }
 
 export async function getTestSuites(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
