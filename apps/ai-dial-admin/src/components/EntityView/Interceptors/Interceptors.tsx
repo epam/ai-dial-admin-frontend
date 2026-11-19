@@ -173,18 +173,18 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
 
   const onAddInterceptors = useCallback(
     (interceptors: (DialInterceptor | InterceptorOption)[]) => {
+      const updatedInterceptors = [
+        ...new Set([...(entityInterceptors || []), ...interceptors.map((i) => i.name as string)]),
+      ];
       if (isAppRunnerView) {
         onChangeEntity({
           ...entity,
-          'dial:applicationTypeInterceptors': [
-            ...(entityInterceptors || []),
-            ...interceptors.map((i) => i.name as string),
-          ],
+          'dial:applicationTypeInterceptors': updatedInterceptors,
         });
       } else {
         onChangeEntity({
           ...entity,
-          interceptors: [...(entityInterceptors || []), ...interceptors.map((i) => i.name as string)],
+          interceptors: updatedInterceptors,
         });
       }
 
