@@ -40,9 +40,7 @@ const baseAsset = {
 } as DialTranslatorResource;
 
 const renderProperties = (asset: Partial<DialTranslatorResource> = {}, plugins?: PluginOptions) =>
-  render(
-    <TranslatorAssetProperties asset={{ ...baseAsset, ...asset }} plugins={plugins} onChange={vi.fn()} />,
-  );
+  render(<TranslatorAssetProperties asset={{ ...baseAsset, ...asset }} plugins={plugins} onChange={vi.fn()} />);
 
 describe('Translator asset Properties', () => {
   test('Should render the in/out interface-type fields and a base URL field', () => {
