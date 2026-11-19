@@ -122,9 +122,9 @@ Opening a toolset with pre-existing empty Client ID/Secret will show validation 
 ## Requirements
 
 ### Requirement: Stored client secret is represented by a masked placeholder
-When an Assets OAuth auth-settings entity (an Assets toolset or an application external service) is
-loaded with a `client_secret_hint`, the Client Secret field SHALL show a `••••` placeholder with an empty
-value, SHALL NOT show the "This field is required" error, and SHALL NOT block Save while the field is empty.
+An Assets OAuth auth-settings entity with a `client_secret_hint` SHALL show a `••••` placeholder in the Client Secret
+field with an empty value. This applies to Assets toolsets and application external services. The field SHALL NOT
+show the "This field is required" error, and SHALL NOT block Save while it is empty.
 
 #### Scenario: Saved OAuth toolset opens with a stored secret
 - **WHEN** a user opens an Assets toolset whose OAuth auth settings carry a `client_secret_hint`
@@ -251,3 +251,21 @@ stripped.
 #### Scenario: External services in an application
 - **WHEN** the user saves an application with OAuth external services
 - **THEN** each service's auth settings keep their `resource` under the same rules
+
+### Requirement: Inactive OAuth credentials do not block saving
+
+Client ID and Client Secret validation SHALL apply only while their controls are mounted. Hiding or leaving the OAuth credential editor SHALL remove those controls' validation entries without removing unrelated validation. Showing the editor again SHALL validate the current credential values using the existing rules.
+
+#### Scenario: Invalid credentials are hidden
+- **WHEN** invalid Client ID or Client Secret controls are hidden by leaving the OAuth configuration editor
+- **THEN** their validation no longer blocks Save
+- **AND** other invalid fields continue to block Save
+
+#### Scenario: Credentials are shown again
+- **WHEN** the OAuth configuration editor is shown again
+- **THEN** Client ID and Client Secret are validated using their current values
+- **AND** invalid visible credentials block Save and show their existing errors
+
+#### Scenario: External service editor is closed
+- **WHEN** a user leaves an external service editor with invalid OAuth credentials
+- **THEN** those hidden credentials no longer block the enclosing form
