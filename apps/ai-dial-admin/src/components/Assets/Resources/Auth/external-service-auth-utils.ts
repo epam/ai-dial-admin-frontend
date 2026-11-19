@@ -102,3 +102,10 @@ export const getExternalServiceLevels = (): ExternalServiceCredentialLevel[] => 
   }
   return [];
 };
+
+// Core registers only when it creates the service or changes its type to OAUTH, so the choice follows
+// the type as loaded: the one being edited can be switched away from OAUTH and back with no effect.
+export const isDynamicRegistrationOffered = (
+  services: Record<string, DialExternalService>,
+  originalId: string,
+): boolean => !originalId || services[originalId]?.auth_settings?.authentication_type !== ToolsetAuthType.OAUTH;

@@ -1,12 +1,26 @@
-import { FC, useMemo } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
-import { Notification, NotificationType, NotificationVariant, SelectOption, Select } from '@epam/ai-dial-ui-kit';
+import {
+  Notification,
+  NotificationType,
+  NotificationVariant,
+  OutlinedButton,
+  SelectOption,
+  Select,
+} from '@epam/ai-dial-ui-kit';
 
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import ClientIdControl from '@/src/components/Toolsets/Auth/Controls/ClientIdControl';
 import ClientSecretControl from '@/src/components/Toolsets/Auth/Controls/ClientSecretControl';
 import { CLIENT_SECRET_MIN_LENGTH } from '@/src/components/Assets/Resources/Auth/constants';
+import { ClientRegistrationMode } from '@/src/components/Assets/Resources/Auth/models';
+import {
+  getRegistrationMode,
+  toAutomaticSettings,
+  toExistingSettings,
+  toStaticFromRegistered,
+} from '@/src/components/Assets/Resources/Auth/utils/registration';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import {
@@ -16,21 +30,40 @@ import {
   ToolsetCodeChallengeMethod,
 } from '@/src/models/dial/resource';
 
-enum AuthType {
-  DYNAMIC = 'dynamic',
-  EXISTING = 'existing',
-}
-
 interface Props {
   authSettings?: DialToolsetResourceAuthSettings;
   disabled?: boolean;
+  // Set for application external services only: Core rejects `discovery_url` on a toolset.
+  isDiscoveryUrlSupported?: boolean;
+  // Set when Core will register a client for what is saved (see `isDynamicRegistrationOffered`).
+  isDynamicRegistrationOffered?: boolean;
+  redirectUri?: string;
   onChange?: (entity: DialToolsetResourceAuthSettings) => void;
 }
 
-const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) => {
+const ResourceOAuthSection: FC<Props> = ({
+  disabled,
+  authSettings,
+  isDiscoveryUrlSupported,
+  isDynamicRegistrationOffered,
+  redirectUri,
+  onChange,
+}) => {
   const t = useI18n();
+  // The one state the settings cannot show: "Register automatically" chosen before a URL is typed.
+  const [chosenMode, setChosenMode] = useState(ClientRegistrationMode.Existing);
+  const mode = authSettings?.dynamically_registered ? getRegistrationMode(authSettings) : chosenMode;
+  const isAutomatic = mode === ClientRegistrationMode.Automatic;
+  const isRegistered = mode === ClientRegistrationMode.Registered;
+  // A stored OAuth external service has no choice: its mode follows what is stored.
+  const isTypeSelectorShown = !isDiscoveryUrlSupported || !!isDynamicRegistrationOffered;
 
-  const types: SelectOption[] = [{ value: AuthType.EXISTING, label: t(ToolsetI18nKey.ExistingClient) }];
+  const types: SelectOption[] = [
+    { value: ClientRegistrationMode.Existing, label: t(ToolsetI18nKey.ExistingClient) },
+    ...(isDynamicRegistrationOffered
+      ? [{ value: ClientRegistrationMode.Automatic, label: t(ToolsetI18nKey.RegisterAutomatically) }]
+      : []),
+  ];
 
   const methods: SelectOption[] = [
     { value: BasicI18nKey.None, label: t(BasicI18nKey.None) },
@@ -58,6 +91,41 @@ const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) =
   }, [authSettings]);
 
   const isAuthDisabled = disabled || isLoggedIn;
+  const isFieldsDisabled = isAuthDisabled || isRegistered;
+
+  const onChangeMode = useCallback(
+    (type: ClientRegistrationMode) => {
+      if (type === mode) return;
+      setChosenMode(type);
+      onChange?.(
+        type === ClientRegistrationMode.Automatic
+          ? toAutomaticSettings(authSettings)
+          : toExistingSettings(authSettings, redirectUri),
+      );
+    },
+    [authSettings, mode, onChange, redirectUri],
+  );
+
+  const onUseExistingClient = useCallback(() => {
+    setChosenMode(ClientRegistrationMode.Existing);
+    onChange?.(toStaticFromRegistered(authSettings));
+  }, [authSettings, onChange]);
+
+  const discoveryUrlControl = isDiscoveryUrlSupported && (
+    <EndpointControl
+      id="discoveryUrl"
+      disabled={isFieldsDisabled}
+      required={isAutomatic}
+      isFullWidth
+      label={t(ToolsetI18nKey.DiscoveryUrl)}
+      endpoint={authSettings?.discovery_url || ''}
+      placeholder={t(EntityPlaceholdersI18nKey.DiscoveryUrl)}
+      caption={t(ToolsetI18nKey.DiscoveryUrlCaption)}
+      // EndpointControl emits undefined when cleared; map it to '' so Core clears the stored value
+      // (omitting the key would tell Core to keep it).
+      onChange={(discovery_url) => onChange?.({ ...(authSettings || {}), discovery_url: discovery_url ?? '' })}
+    />
+  );
 
   return (
     <div className="flex flex-col pl-[26px]">
@@ -70,118 +138,141 @@ const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) =
           />
         </div>
       )}
+      {isRegistered && (
+        <div className="mb-3">
+          <Notification
+            type={NotificationType.SectionMessage}
+            variant={NotificationVariant.Info}
+            message={t(ToolsetI18nKey.RegisteredByCore)}
+          />
+        </div>
+      )}
       <div className="flex flex-col gap-y-4">
-        <Select
-          id="type"
-          disabled={isAuthDisabled}
-          labelProps={{ label: t(ToolsetI18nKey.ClientRegistrationType) }}
-          value={AuthType.EXISTING}
-          options={types}
-          onChange={(type) => {
-            onChange?.({
-              ...(authSettings || {}),
-              client_id: type === AuthType.EXISTING ? '' : undefined,
-            } as DialToolsetResourceAuthSettings);
-          }}
-        />
+        {isTypeSelectorShown && (
+          <Select
+            id="type"
+            disabled={isAuthDisabled}
+            labelProps={{ label: t(ToolsetI18nKey.ClientRegistrationType) }}
+            value={mode}
+            options={types}
+            onChange={(type) => onChangeMode(type as ClientRegistrationMode)}
+          />
+        )}
 
-        <Select
-          id="tokenEndpointAuthMethod"
-          disabled={isAuthDisabled}
-          labelProps={{ label: t(ToolsetI18nKey.TokenEndpointAuthMethod) }}
-          value={authSettings?.token_endpoint_auth_method ?? TokenEndpointAuthMethod.CLIENT_SECRET_BASIC}
-          options={tokenEndpointAuthMethods}
-          onChange={(tokenEndpointAuthMethod) => {
-            onChange?.({
-              ...(authSettings || {}),
-              token_endpoint_auth_method: tokenEndpointAuthMethod as TokenEndpointAuthMethod,
-            });
-          }}
-        />
+        {discoveryUrlControl}
+
+        {!isAutomatic && (
+          <Select
+            id="tokenEndpointAuthMethod"
+            disabled={isFieldsDisabled}
+            labelProps={{ label: t(ToolsetI18nKey.TokenEndpointAuthMethod) }}
+            value={authSettings?.token_endpoint_auth_method ?? TokenEndpointAuthMethod.CLIENT_SECRET_BASIC}
+            options={tokenEndpointAuthMethods}
+            onChange={(tokenEndpointAuthMethod) => {
+              onChange?.({
+                ...(authSettings || {}),
+                token_endpoint_auth_method: tokenEndpointAuthMethod as TokenEndpointAuthMethod,
+              });
+            }}
+          />
+        )}
       </div>
 
-      <div className="flex flex-col gap-y-4 mt-4 w-full">
-        <ClientIdControl
-          clientId={authSettings?.client_id}
-          disabled={isAuthDisabled}
-          isLoggedIn={isLoggedIn}
-          onChange={(client_id) => onChange?.({ ...(authSettings || {}), client_id })}
-        />
-        <ClientSecretControl
-          clientSecret={authSettings?.client_secret}
-          disabled={isAuthDisabled}
-          isLoggedIn={isLoggedIn}
-          hasSecretHint={!!authSettings?.client_secret_hint}
-          minLength={CLIENT_SECRET_MIN_LENGTH}
-          onChange={(client_secret) => onChange?.({ ...(authSettings || {}), client_secret })}
-        />
-        <Multiselect
-          elementId="scopes"
-          disabled={isAuthDisabled}
-          selectedItems={authSettings?.scopes_supported}
-          allItems={authSettings?.scopes_supported}
-          onChangeItems={(scopes_supported: string[]) => {
-            onChange?.({ ...(authSettings || {}), scopes_supported });
-          }}
-          heading={t(EntityFieldsI18nKey.scopes)}
-          label={t(EntityFieldsI18nKey.scopes)}
-          addTitle={t(BasicI18nKey.AddField)}
-        />
+      {!isAutomatic && (
+        <div className="flex flex-col gap-y-4 mt-4 w-full">
+          <ClientIdControl
+            clientId={authSettings?.client_id}
+            disabled={isFieldsDisabled}
+            isLoggedIn={isLoggedIn}
+            onChange={(client_id) => onChange?.({ ...(authSettings || {}), client_id })}
+          />
+          {!isRegistered && (
+            <ClientSecretControl
+              clientSecret={authSettings?.client_secret}
+              disabled={isFieldsDisabled}
+              isLoggedIn={isLoggedIn}
+              hasSecretHint={!!authSettings?.client_secret_hint}
+              minLength={CLIENT_SECRET_MIN_LENGTH}
+              onChange={(client_secret) => onChange?.({ ...(authSettings || {}), client_secret })}
+            />
+          )}
+          <Multiselect
+            elementId="scopes"
+            disabled={isFieldsDisabled}
+            selectedItems={authSettings?.scopes_supported}
+            allItems={authSettings?.scopes_supported}
+            onChangeItems={(scopes_supported: string[]) => {
+              onChange?.({ ...(authSettings || {}), scopes_supported });
+            }}
+            heading={t(EntityFieldsI18nKey.scopes)}
+            label={t(EntityFieldsI18nKey.scopes)}
+            addTitle={t(BasicI18nKey.AddField)}
+          />
 
-        <EndpointControl
-          disabled={isAuthDisabled}
-          required
-          isFullWidth
-          id="authEndpoint"
-          label={t(EntityFieldsI18nKey.authorizationEndpoint)}
-          endpoint={authSettings?.authorization_endpoint || ''}
-          placeholder={t(EntityPlaceholdersI18nKey.AuthorizationEndpoint)}
-          onChange={(authorization_endpoint) => onChange?.({ ...(authSettings || {}), authorization_endpoint })}
-        />
+          <EndpointControl
+            disabled={isFieldsDisabled}
+            required
+            isFullWidth
+            id="authEndpoint"
+            label={t(EntityFieldsI18nKey.authorizationEndpoint)}
+            endpoint={authSettings?.authorization_endpoint || ''}
+            placeholder={t(EntityPlaceholdersI18nKey.AuthorizationEndpoint)}
+            onChange={(authorization_endpoint) => onChange?.({ ...(authSettings || {}), authorization_endpoint })}
+          />
 
-        <EndpointControl
-          id="tokenEndpoint"
-          disabled={isAuthDisabled}
-          required
-          isFullWidth
-          label={t(EntityFieldsI18nKey.tokenEndpoint)}
-          endpoint={authSettings?.token_endpoint || ''}
-          placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}
-          onChange={(token_endpoint) => onChange?.({ ...(authSettings || {}), token_endpoint })}
-        />
+          <EndpointControl
+            id="tokenEndpoint"
+            disabled={isFieldsDisabled}
+            required
+            isFullWidth
+            label={t(EntityFieldsI18nKey.tokenEndpoint)}
+            endpoint={authSettings?.token_endpoint || ''}
+            placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}
+            onChange={(token_endpoint) => onChange?.({ ...(authSettings || {}), token_endpoint })}
+          />
 
-        <EndpointControl
-          id="resource"
-          disabled={isAuthDisabled}
-          isFullWidth
-          label={t(EntityFieldsI18nKey.resource)}
-          endpoint={authSettings?.resource || ''}
-          placeholder={t(EntityPlaceholdersI18nKey.Resource)}
-          caption={t(ToolsetI18nKey.ResourceCaption)}
-          // EndpointControl emits undefined when cleared; map it to '' so Core clears the stored value
-          // (omitting the key would tell Core to keep it).
-          onChange={(resource) => onChange?.({ ...(authSettings || {}), resource: resource ?? '' })}
-        />
+          <EndpointControl
+            id="resource"
+            disabled={isFieldsDisabled}
+            isFullWidth
+            label={t(EntityFieldsI18nKey.resource)}
+            endpoint={authSettings?.resource || ''}
+            placeholder={t(EntityPlaceholdersI18nKey.Resource)}
+            caption={t(ToolsetI18nKey.ResourceCaption)}
+            // EndpointControl emits undefined when cleared; map it to '' so Core clears the stored value
+            // (omitting the key would tell Core to keep it).
+            onChange={(resource) => onChange?.({ ...(authSettings || {}), resource: resource ?? '' })}
+          />
 
-        <Select
-          className="w-[192px]"
-          id="type"
-          disabled={isAuthDisabled}
-          labelProps={{ label: t(EntityFieldsI18nKey.codeChallengeMethod) }}
-          value={!authSettings?.code_challenge_method ? BasicI18nKey.None : authSettings.code_challenge_method}
-          options={methods}
-          onChange={(code_challenge_method) => {
-            onChange?.({
-              ...(authSettings || {}),
-              code_challenge_method: (code_challenge_method === BasicI18nKey.None
-                ? undefined
-                : code_challenge_method) as ToolsetCodeChallengeMethod,
-              code_challenge: authSettings?.code_challenge,
-              code_verifier: authSettings?.code_verifier,
-            });
-          }}
-        />
-      </div>
+          <Select
+            className="w-[192px]"
+            id="type"
+            disabled={isFieldsDisabled}
+            labelProps={{ label: t(EntityFieldsI18nKey.codeChallengeMethod) }}
+            value={!authSettings?.code_challenge_method ? BasicI18nKey.None : authSettings.code_challenge_method}
+            options={methods}
+            onChange={(code_challenge_method) => {
+              onChange?.({
+                ...(authSettings || {}),
+                code_challenge_method: (code_challenge_method === BasicI18nKey.None
+                  ? undefined
+                  : code_challenge_method) as ToolsetCodeChallengeMethod,
+                code_challenge: authSettings?.code_challenge,
+                code_verifier: authSettings?.code_verifier,
+              });
+            }}
+          />
+
+          {isRegistered && !disabled && (
+            <OutlinedButton
+              className="self-start"
+              disabled={isLoggedIn}
+              label={t(ToolsetI18nKey.UseExistingClientInstead)}
+              onClick={onUseExistingClient}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };

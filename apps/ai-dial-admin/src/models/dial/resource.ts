@@ -548,6 +548,10 @@ export interface DialToolsetResourceAuthSettings {
   /** Read-only: Core returns the stored secret's trailing characters here and never `client_secret`. */
   client_secret_hint?: string;
   redirect_uri?: string;
+  /** Where Core reads OAuth metadata from. External services only: Core rejects it for toolsets. A blank value clears the stored one; an omitted one keeps it. */
+  discovery_url?: string;
+  /** Read-only: true when Core registered the client itself. Core ignores it on write. */
+  dynamically_registered?: boolean;
   authorization_endpoint?: string;
   code_challenge?: string;
   code_verifier?: string;

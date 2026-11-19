@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { DialExternalService, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/resource';
 import {
   getExternalServiceRowAction,
+  isDynamicRegistrationOffered,
   isExternalServiceApproved,
   isLoggedInToExternalService,
   isUnrecognisedAuthType,
@@ -128,5 +129,30 @@ describe('isUnrecognisedAuthType', () => {
 
   test('is false when the type is absent', () => {
     expect(isUnrecognisedAuthType(service())).toBe(false);
+  });
+});
+
+describe('isDynamicRegistrationOffered', () => {
+  const services = {
+    stored: { auth_settings: { authentication_type: ToolsetAuthType.OAUTH } },
+    key: { auth_settings: { authentication_type: ToolsetAuthType.API_KEY } },
+    bare: {},
+  };
+
+  test('is offered for a new service', () => {
+    expect(isDynamicRegistrationOffered(services, '')).toBe(true);
+  });
+
+  test('is not offered when the stored type is OAUTH', () => {
+    expect(isDynamicRegistrationOffered(services, 'stored')).toBe(false);
+  });
+
+  test('is offered when the stored type is another one', () => {
+    expect(isDynamicRegistrationOffered(services, 'key')).toBe(true);
+  });
+
+  test('is offered for a stored service with no auth settings or an unknown id', () => {
+    expect(isDynamicRegistrationOffered(services, 'bare')).toBe(true);
+    expect(isDynamicRegistrationOffered(services, 'missing')).toBe(true);
   });
 });
