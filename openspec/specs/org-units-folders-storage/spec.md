@@ -137,9 +137,9 @@ The add-holder form SHALL offer the holder types Email, Role, Custom claim and E
 each with its icon; Custom claim SHALL use a braces icon. For Email and Role the form SHALL show one value input.
 For Custom claim it SHALL show a claim name input and a value input, and Add SHALL stay disabled until both are
 valid. Adding SHALL create an `EQUAL` `claimsPredicate` on the trimmed claim name with the trimmed value as its only
-target. The claim names `email`, `roles` and `sub` SHALL be refused with an inline error, because they have their own
-holder types. Both inputs SHALL have an accessible name, and a field SHALL show its error once it has content. A
-successful add SHALL clear both inputs.
+target. The claim names `email`, `roles` and `sub` SHALL be refused because they have their own holder types.
+Both inputs SHALL have an accessible name. Custom claim inputs SHALL NOT show inline validation errors; other holder
+inputs SHALL show their error once they have content. A successful add SHALL clear both inputs.
 
 #### Scenario: Holder types and order
 - **WHEN** the add-holder form is shown
@@ -160,7 +160,11 @@ successful add SHALL clear both inputs.
 
 #### Scenario: Reserved claim name
 - **WHEN** the user enters `email`, `roles` or `sub` as the claim name
-- **THEN** an inline error is shown and Add is disabled
+- **THEN** Add is disabled without an inline validation error
+
+#### Scenario: Incomplete custom claim
+- **WHEN** the claim name or claim value is blank
+- **THEN** Add is disabled without marking either input invalid or showing an inline validation error
 
 #### Scenario: Reserved name in another case
 - **WHEN** the user enters `Email` as the claim name

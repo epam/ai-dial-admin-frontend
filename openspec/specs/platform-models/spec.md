@@ -265,11 +265,15 @@ to all by omission.
 - **THEN** the tab shows zero granted roles and the "not available to any end-users" notification is shown
 
 ### Requirement: Interceptors tab
-The system SHALL provide an Interceptors tab on the model asset detail view, editing the resource's `interceptors`, with a `Source` column distinguishing the two Core populations an option can come from, matching the same column on `Assets > App Runners`.
+The system SHALL provide an Interceptors tab on the model asset detail view, editing the resource's `interceptors`, with a `Source` column distinguishing the two Core populations an option can come from, matching the same column on `Assets > App Runners`. Adding interceptors SHALL retain only the first occurrence of each reference, preserving their order.
 
 #### Scenario: Interceptor selection round-trips on the model resource
 - **WHEN** a user selects interceptors on a model asset and saves
 - **THEN** the selection persists to the resource's `interceptors` and is rendered as selected when the view is reopened
+
+#### Scenario: Re-adding an existing interceptor
+- **WHEN** a user adds an interceptor that is already selected, alongside a new interceptor
+- **THEN** each reference occurs once in the model's selection, with the original order preserved and new references appended
 
 #### Scenario: An unresolvable interceptor reference is reported
 - **WHEN** a save is rejected by Core because a selected interceptor does not resolve in the merged config
