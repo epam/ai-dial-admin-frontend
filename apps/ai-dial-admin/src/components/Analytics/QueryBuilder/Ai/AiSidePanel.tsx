@@ -19,6 +19,7 @@ interface Props {
 const AiSidePanel: FC<Props> = ({ isOpen, isOverlay, onToggle, children }) => {
   const t = useI18n();
   const panelId = useId();
+  const headingId = useId();
   const expandRef = useRef<HTMLButtonElement>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
   const isFocusMoved = useRef(false);
@@ -57,7 +58,7 @@ const AiSidePanel: FC<Props> = ({ isOpen, isOverlay, onToggle, children }) => {
   return (
     <aside
       id={panelId}
-      aria-label={t(QueryBuilderI18nKey.AskAi)}
+      aria-labelledby={headingId}
       className={classNames(
         'flex w-[400px] max-w-full shrink-0 flex-col border-l border-tertiary',
         isOverlay && 'absolute inset-y-0 right-0 z-10 bg-layer-1 shadow-lg',
@@ -65,7 +66,9 @@ const AiSidePanel: FC<Props> = ({ isOpen, isOverlay, onToggle, children }) => {
     >
       <div ref={controlsRef} className="flex shrink-0 items-center gap-2 border-b border-tertiary px-4 py-3">
         <IconSparkles size={18} className="shrink-0 text-accent-primary" aria-hidden />
-        <h2 className="dial-small-semi-text text-primary">{t(QueryBuilderI18nKey.AskAi)}</h2>
+        <h2 id={headingId} className="dial-small-semi-text text-primary">
+          {t(QueryBuilderI18nKey.AskAi)}
+        </h2>
         <GhostIconButton
           className="ml-auto"
           size={ElementSize.Small}
