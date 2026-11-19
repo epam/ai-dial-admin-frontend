@@ -1592,6 +1592,7 @@ export enum EntityPlaceholdersI18nKey {
   ReasoningEfforts = 'EntityPlaceholders.ReasoningEfforts',
   EmbeddingDimensions = 'EntityPlaceholders.EmbeddingDimensions',
   Provider = 'EntityPlaceholders.Provider',
+  SelectDate = 'EntityPlaceholders.SelectDate',
 }
 
 export enum EntityCaptionsI18nKey {
@@ -1843,6 +1844,8 @@ export enum EntityFieldsI18nKey {
   agent = 'EntityFields.agent',
   embeddingDimensions = 'EntityFields.embeddingDimensions',
   provider = 'EntityFields.provider',
+  deprecationDate = 'EntityFields.deprecationDate',
+  endOfService = 'EntityFields.endOfService',
 }
 
 export enum ToolsetI18nKey {
@@ -2301,6 +2304,7 @@ export enum TestSuitesI18nKey {
   DatasetRequiredForMetrics = 'TestSuites.DatasetRequiredForMetrics',
   OpenDataset = 'TestSuites.OpenDataset',
   ChangeDataset = 'TestSuites.ChangeDataset',
+  TestCasesPrivateTagTooltip = 'TestSuites.TestCasesPrivateTagTooltip',
   NoTestCasesDescription = 'TestSuites.NoTestCasesDescription',
   More = 'TestSuites.More',
   AttachDataset = 'TestSuites.AttachDataset',
