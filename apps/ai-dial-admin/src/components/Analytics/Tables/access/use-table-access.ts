@@ -54,8 +54,8 @@ export const useTableAccess = (name: string, isEnabled: boolean): TableAccessSta
   const generation = useRef(0);
 
   const notifyError = useCallback(
-    (res: ServerActionResponse, fallback: string) =>
-      showNotification(getErrorNotification(res.errorHeader || fallback, res.errorMessage, res.requestId)),
+    (res: ServerActionResponse, title: string) =>
+      showNotification(getErrorNotification(title, res.errorMessage, res.requestId)),
     [showNotification],
   );
 

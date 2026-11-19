@@ -6,8 +6,9 @@ import { ReadFailure } from '@/src/models/server-action';
 import { getErrorNotification } from '@/src/utils/notification';
 
 // A server component cannot raise a notification, so it hands the failure across as a prop and the client
-// view reports it from here. `fallbackTitleKey` titles a failure the response carried no header for.
-export const useReadFailureNotification = (failure: ReadFailure | null | undefined, fallbackTitleKey: string) => {
+// view reports it from here. The service header is a machine code, so `titleKey` always titles the
+// notification and the service message is its description.
+export const useReadFailureNotification = (failure: ReadFailure | null | undefined, titleKey: string) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const reportedKey = useRef<string | null>(null);
@@ -28,6 +29,6 @@ export const useReadFailureNotification = (failure: ReadFailure | null | undefin
     }
 
     reportedKey.current = key;
-    showNotification(getErrorNotification(errorHeader ?? t(fallbackTitleKey), errorMessage, requestId));
-  }, [key, errorHeader, errorMessage, requestId, fallbackTitleKey, showNotification, t]);
+    showNotification(getErrorNotification(t(titleKey), errorMessage, requestId));
+  }, [key, errorMessage, requestId, titleKey, showNotification, t]);
 };

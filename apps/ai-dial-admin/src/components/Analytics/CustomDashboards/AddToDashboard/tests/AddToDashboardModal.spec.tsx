@@ -212,7 +212,7 @@ describe('AddToDashboardModal', () => {
     await act(async () => {});
 
     expect(useNotification().showNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ title: ErrorI18nKey.Error }),
+      expect.objectContaining({ title: CustomDashboardsI18nKey.SaveFailed }),
     );
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Add })).toBeEnabled();
     expect(onClose).not.toHaveBeenCalled();

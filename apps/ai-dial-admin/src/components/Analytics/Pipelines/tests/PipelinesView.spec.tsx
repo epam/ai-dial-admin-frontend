@@ -156,7 +156,7 @@ describe('Pipelines :: PipelinesView', () => {
     await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Upstream unavailable',
+          title: 'AnalyticsPipelines.PipelinesLoadFailed',
           description: 'registry timed out',
           requestId: 'trace-1',
         }),
@@ -166,7 +166,7 @@ describe('Pipelines :: PipelinesView', () => {
     expect(screen.getByText('rows: 0')).toBeInTheDocument();
   });
 
-  test('falls back to its own title when the seeded failure carries no header', async () => {
+  test('reports a seeded failure without a header under its own title', async () => {
     render(<PipelinesView initialPipelines={[]} loadFailure={{}} />);
 
     await vi.waitFor(() =>
@@ -330,7 +330,10 @@ describe('Pipelines :: PipelinesView', () => {
 
     await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'rule_validation_failed', description: 'the rule is referenced elsewhere' }),
+        expect.objectContaining({
+          title: 'AnalyticsPipelines.ActionFailed',
+          description: 'the rule is referenced elsewhere',
+        }),
       ),
     );
     expect(screen.getByText('rows: 1')).toBeInTheDocument();
@@ -353,7 +356,7 @@ describe('Pipelines :: PipelinesView', () => {
     await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Upstream unavailable',
+          title: AnalyticsPipelinesI18nKey.PipelinesLoadFailed,
           description: 'registry timed out',
           requestId: 'trace-2',
         }),

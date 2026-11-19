@@ -21,9 +21,9 @@ describe('getDashboardWriteErrorNotification', () => {
     );
   });
 
-  test('passes any other refusal through with the service header and message', () => {
+  test('titles any other refusal as a failed save and keeps the service message', () => {
     expect(
       getDashboardWriteErrorNotification({ success: false, status: 422, errorHeader: 'h', errorMessage: 'bad row' }, t),
-    ).toEqual(expect.objectContaining({ title: 'h', description: 'bad row' }));
+    ).toEqual(expect.objectContaining({ title: CustomDashboardsI18nKey.SaveFailed, description: 'bad row' }));
   });
 });

@@ -3,6 +3,7 @@ import {
   getAssetTemplate,
   getAssetView,
   getCurrentPolicy,
+  normalizeAllowedDomains,
   getDeploymentEntityKey,
   getEntityId,
   getEntityName,
@@ -388,6 +389,20 @@ describe('entity utils', () => {
 
     test('should co CUSTOM when "*" not present', () => {
       expect(getCurrentPolicy({ allowedDomains: ['asd.com'] } as Image)).toBe(WHITELIST_POLICY.CUSTOM);
+    });
+  });
+
+  describe('normalizeAllowedDomains', () => {
+    test('drops empty entries', () => {
+      expect(normalizeAllowedDomains(['a.com', '', 'b.com'])).toEqual(['a.com', 'b.com']);
+    });
+
+    test('returns empty list for undefined value', () => {
+      expect(normalizeAllowedDomains(undefined)).toEqual([]);
+    });
+
+    test('returns empty list for null value', () => {
+      expect(normalizeAllowedDomains(null)).toEqual([]);
     });
   });
 });

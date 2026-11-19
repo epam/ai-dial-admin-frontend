@@ -15,4 +15,4 @@ export const getDashboardWriteErrorNotification = (
         t(CustomDashboardsI18nKey.ChangedElsewhereHint),
         res.requestId,
       )
-    : getErrorNotification(res.errorHeader, res.errorMessage, res.requestId);
+    : getErrorNotification(t(CustomDashboardsI18nKey.SaveFailed), res.errorMessage, res.requestId);

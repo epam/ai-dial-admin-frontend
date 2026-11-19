@@ -90,11 +90,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
       return;
     }
     showNotification(
-      getErrorNotification(
-        read.errorHeader ?? t(AnalyticsTablesI18nKey.TablesLoadFailed),
-        read.errorMessage,
-        read.requestId,
-      ),
+      getErrorNotification(t(AnalyticsTablesI18nKey.TablesLoadFailed), read.errorMessage, read.requestId),
     );
   }, [showNotification, t]);
 
@@ -149,13 +145,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
       showNotification(getSuccessNotification(t(AnalyticsTablesI18nKey.Deleted)));
       void reload();
     } else {
-      showNotification(
-        getErrorNotification(
-          res.errorHeader || t(AnalyticsTablesI18nKey.ActionFailed),
-          res.errorMessage,
-          res.requestId,
-        ),
-      );
+      showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.ActionFailed), res.errorMessage, res.requestId));
     }
   };
 
@@ -175,13 +165,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
       setEditTarget(null);
       void reload();
     } else {
-      showNotification(
-        getErrorNotification(
-          res.errorHeader || t(AnalyticsTablesI18nKey.ActionFailed),
-          res.errorMessage,
-          res.requestId,
-        ),
-      );
+      showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.ActionFailed), res.errorMessage, res.requestId));
     }
   };
 

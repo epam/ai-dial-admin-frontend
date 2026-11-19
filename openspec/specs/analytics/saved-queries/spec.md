@@ -372,8 +372,8 @@ from the modal. The source query SHALL NOT be modified.
 On success the modal SHALL close and the browser SHALL stay on the source query's page. The page SHALL
 keep whatever edits it held and SHALL indicate unsaved changes against the source exactly as it did
 before, so the user can go on editing, save again as another query, save over the source, or discard. A
-success notification SHALL be shown that carries a link to the new query's page; activating the link
-SHALL navigate there. The notification SHALL dismiss itself after the standard success duration, like
+success notification SHALL be shown that names the new query and offers an **Open query** button;
+activating the button SHALL navigate to the new query's page and close the notification. The notification SHALL dismiss itself after the standard success duration, like
 any other success notification. On failure an error notification SHALL be shown following the
 machine-error-code rules, and the modal SHALL stay open with the entered values intact. Because the
 service revalidates a body on create, a stored query whose body it no longer accepts SHALL fail at this
@@ -443,14 +443,14 @@ SHALL leave the page and its unsaved edits as they were.
 - **THEN** the modal closes and the browser stays on the source query's page
 - **AND** the page holds the same edits, and the same unsaved-changes indication, as before
 
-#### Scenario: The success notification links to the new query
+#### Scenario: The success notification offers to open the new query
 
 - **WHEN** a Save as succeeds
-- **THEN** a success notification is shown with a link to the new query
+- **THEN** a success notification names the new query and offers an Open query button
 
-#### Scenario: The link opens the new query
+#### Scenario: The button opens the new query
 
-- **WHEN** the user activates the link in the success notification
+- **WHEN** the user activates Open query in the success notification
 - **THEN** the browser navigates to the new query's page
 
 #### Scenario: Failure keeps the modal open

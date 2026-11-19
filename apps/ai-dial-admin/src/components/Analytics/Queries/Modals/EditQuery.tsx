@@ -52,7 +52,7 @@ const EditQuery: FC<Props> = ({ query, onClose, onSaved }) => {
       const descriptor = describeSavedQueryError(res);
       showNotification(
         getErrorNotification(
-          res.errorHeader,
+          t(QueriesI18nKey.SaveFailed),
           descriptor.isServerMessageShown ? res.errorMessage : t(descriptor.hintKey),
           res.requestId,
         ),

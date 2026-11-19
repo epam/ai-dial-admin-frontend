@@ -17,6 +17,7 @@ vi.mock('@/src/context/SaveValidationContext', () => ({
   useSaveValidationContext: () => ({ dispatch: mockDispatch }),
   ValidationActionType: {
     SetField: 'SetField',
+    RemoveField: 'RemoveField',
   },
 }));
 
