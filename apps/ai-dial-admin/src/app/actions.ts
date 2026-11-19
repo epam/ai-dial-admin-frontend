@@ -15,6 +15,7 @@ export async function checkIsUniqueDeploymentName(name: string): Promise<boolean
     !process.env.DIAL_ADMIN_API_URL ? Promise.resolve<null>(null) : interceptorsApi.checkInterceptorByName(name, token),
   ]);
 
+  // Only `null` (404) means free. A forbidden lookup resolves to `undefined` and deliberately reads as taken.
   return deploymentResponse === null && interceptorResponse === null;
 }
 
