@@ -1680,6 +1680,8 @@ export default {
     agent: 'Agent',
     embeddingDimensions: 'Embedding Dimensions',
     provider: 'Provider',
+    deprecationDate: 'Deprecation date',
+    endOfService: 'End of service',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1769,6 +1771,7 @@ export default {
     ReasoningEfforts: 'Select or type reasoning effort',
     EmbeddingDimensions: 'Enter embedding dimensions',
     Provider: 'Enter provider',
+    SelectDate: 'Select date',
   },
   EntityCaptions: {
     ProbeEnableCustom: 'Use custom values instead of default probe configuration',
