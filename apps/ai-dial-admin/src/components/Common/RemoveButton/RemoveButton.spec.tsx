@@ -45,7 +45,7 @@ describe('Common components :: RemoveButton', () => {
 
       const icon = screen.getByRole('button').querySelector('svg');
 
-      expect(icon).toHaveClass('text-controls-disable');
+      expect(icon).toHaveClass('text-controls-disable-primary');
       expect(icon).not.toHaveClass('text-error');
     });
 
