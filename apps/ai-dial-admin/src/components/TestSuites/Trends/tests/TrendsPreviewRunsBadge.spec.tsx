@@ -11,4 +11,10 @@ describe('TrendsPreviewRunsBadge', () => {
     expect(screen.getByText(`${TestSuitesI18nKey.TrendsPreviewRuns}:`)).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.TrendsPreviewRunsLastN)).toBeInTheDocument();
   });
+
+  test('hides the badge while the run count is still unknown', () => {
+    const { container } = render(<TrendsPreviewRunsBadge runCount={null} />);
+
+    expect(container).toBeEmptyDOMElement();
+  });
 });
