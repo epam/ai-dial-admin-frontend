@@ -1,9 +1,13 @@
+import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import TranslatorAssetView from '@/src/components/Assets/Platform/Translators/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialTranslatorResource } from '@/src/models/dial/resource';
+import { readPluginOptions } from '@/src/server/config-entities/read-plugin-options';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { errorObjLog } from '@/src/server/logger';
 import { getConfigFileTranslator, getTranslator } from '../actions';
 
@@ -14,6 +18,7 @@ export default async function Page(params: {
   searchParams: Promise<{ configFile?: string }>;
 }) {
   const isConfigFileMode = (await params.searchParams).configFile === 'true';
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   let etag = DEFAULT_ETAG;
   let translator: DialTranslatorResource | null = null;
 
@@ -33,13 +38,20 @@ export default async function Page(params: {
     errorObjLog(e, 'Failed to fetch translator asset data');
   }
 
+  const plugins = await readPluginOptions(token);
+
   if (translator == null) {
     notFound();
   }
 
   return (
     <SaveValidationContextProvider>
-      <TranslatorAssetView etag={etag} originalTranslator={translator} isConfigFileSource={isConfigFileMode} />
+      <TranslatorAssetView
+        etag={etag}
+        originalTranslator={translator}
+        isConfigFileSource={isConfigFileMode}
+        plugins={plugins}
+      />
     </SaveValidationContextProvider>
   );
 }

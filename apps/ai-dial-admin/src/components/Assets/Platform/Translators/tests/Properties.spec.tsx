@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import { DialTranslatorResource } from '@/src/models/dial/resource';
 import TranslatorAssetProperties from '../Properties';
@@ -37,8 +39,10 @@ const baseAsset = {
   folderId: '',
 } as DialTranslatorResource;
 
-const renderProperties = (asset: Partial<DialTranslatorResource> = {}) =>
-  render(<TranslatorAssetProperties asset={{ ...baseAsset, ...asset }} onChange={vi.fn()} />);
+const renderProperties = (asset: Partial<DialTranslatorResource> = {}, plugins?: PluginOptions) =>
+  render(
+    <TranslatorAssetProperties asset={{ ...baseAsset, ...asset }} plugins={plugins} onChange={vi.fn()} />,
+  );
 
 describe('Translator asset Properties', () => {
   test('Should render the in/out interface-type fields and a base URL field', () => {
@@ -61,6 +65,43 @@ describe('Translator asset Properties', () => {
     expect(screen.queryByText(EntityFieldsI18nKey.displayName)).not.toBeInTheDocument();
     expect(screen.queryByText(EntityFieldsI18nKey.description)).not.toBeInTheDocument();
     expect(screen.queryByText(EntityFieldsI18nKey.topics)).not.toBeInTheDocument();
+  });
+
+  test('shows a read-only plugin reference without editable source choices', () => {
+    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    renderProperties({ baseUrl: 'dial-plugin://example/v2' });
+    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+
+    expect(screen.getByRole('textbox', { name: /EntityFields.baseUrl/ })).toHaveValue('dial-plugin://example/v2');
+    expect(screen.getByRole('textbox', { name: /EntityFields.baseUrl/ })).toBeDisabled();
+    expect(screen.queryByRole('radio', { name: BasicI18nKey.Plugin })).not.toBeInTheDocument();
+  });
+
+  test('preserves a missing plugin reference and suffix when options are unavailable', () => {
+    const onChange = vi.fn();
+    render(
+      <TranslatorAssetProperties
+        asset={{ ...baseAsset, baseUrl: 'dial-plugin://missing/v2' }}
+        plugins={{ options: [], error: EntitiesI18nKey.OptionListUnavailable }}
+        onChange={onChange}
+      />,
+    );
+
+    expect(screen.getByRole('radio', { name: BasicI18nKey.Plugin })).toBeChecked();
+    expect(screen.getByRole('combobox', { name: BasicI18nKey.Plugin })).toHaveValue('dial-plugin://missing');
+    expect(screen.getByRole('status')).toHaveTextContent(EntitiesI18nKey.OptionListUnavailable);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  test('writes a changed plugin without altering the other translator fields', () => {
+    const onChange = vi.fn();
+    const asset = { ...baseAsset, baseUrl: 'dial-plugin://missing/v2' };
+    render(<TranslatorAssetProperties asset={asset} plugins={{ options: ['other'] }} onChange={onChange} />);
+
+    fireEvent.change(screen.getByRole('combobox', { name: BasicI18nKey.Plugin }), {
+      target: { value: 'dial-plugin://other' },
+    });
+    expect(onChange).toHaveBeenCalledWith({ ...asset, baseUrl: 'dial-plugin://other' });
   });
 
   test('Should call onChange with the selected in-interface type', () => {

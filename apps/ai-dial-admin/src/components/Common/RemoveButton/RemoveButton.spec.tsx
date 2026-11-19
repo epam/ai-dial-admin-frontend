@@ -40,6 +40,15 @@ describe('Common components :: RemoveButton', () => {
       expect(onClick).toHaveBeenCalledOnce();
     });
 
+    test('greys the icon out when disabled', () => {
+      render(<RemoveButton disabled onClick={vi.fn()} />);
+
+      const icon = screen.getByRole('button').querySelector('svg');
+
+      expect(icon).toHaveClass('text-controls-disable');
+      expect(icon).not.toHaveClass('text-error');
+    });
+
     test('does not call onClick when disabled', async () => {
       const user = userEvent.setup();
       const onClick = vi.fn();
