@@ -134,6 +134,17 @@ export interface RunsTotalCostsRequest {
   runIds: string[];
 }
 
+/** Limits from `GET /api/v1/test-suite-runs/config` used to bound run-form inputs. */
+export interface TestSuiteRunConfig {
+  maxConcurrencyLevel: number;
+}
+
+/** Arguments for starting a test suite run. */
+export interface RunTestSuiteParams {
+  numberOfRuns?: number | string;
+  concurrencyLevel?: number | string;
+}
+
 /**
  * `GET /api/v1/costs/deployment/{id}` totals for one `[from, to]` window.
  * A phase is `null` when dial-adas has no matching usage rows (not the same as `$0`).

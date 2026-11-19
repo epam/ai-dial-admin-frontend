@@ -2,7 +2,7 @@ import { Token } from '@/src/models/auth';
 import { CustomFile, DialFile } from '@/src/models/dial/file';
 import { Deployment, DeploymentType, ToolDefinition } from '@/src/models/evaluation/deployment';
 import { Metric, MetricResponse } from '@/src/models/evaluation/metric';
-import { Run } from '@/src/models/evaluation/run';
+import { Run, RunTestSuiteParams, TestSuiteRunConfig } from '@/src/models/evaluation/run';
 import {
   TemplateVariablesByRequest,
   TestCase,
@@ -28,6 +28,7 @@ export const DEPLOYMENTS_URL = `${API}/deployments`;
 export const DEPLOYMENT_BY_ID_URL = (id: string) => `${DEPLOYMENTS_URL}/all/${id}`;
 export const DEPLOYMENT_TOOLS_URL = (id: string) => `${DEPLOYMENTS_URL}/tools?deploymentId=${encodeURIComponent(id)}`;
 export const TEST_SUITES_RUNS_URL = `${API}/test-suite-runs`;
+export const TEST_SUITE_RUNS_CONFIG_URL = `${TEST_SUITES_RUNS_URL}/config`;
 export const TEST_SUITE_TEMPLATE_VARIABLES_URL = (id: string) => `${TEST_SUITE_URL(id)}/template-variables`;
 export const TEST_CASE_TEMPLATE_VARIABLES_URL = (id: string, testCaseId: string) =>
   `${TEST_CASES_URL(id)}/${testCaseId}/template-variables`;
@@ -150,8 +151,22 @@ export class TestSuitesApi extends BaseApi {
     return this.putActionWithEtag(TEST_SUITE_URL(suite.id), normalizeTestSuitePayload(suite), token, etag);
   }
 
-  runTestSuite(token: Token, id?: string, numberOfRuns?: number | string): Promise<ServerActionResponse> {
-    return this.postAction(TEST_SUITE_RUN_URL(id), { runConfig: { numberOfRuns } }, token);
+  getTestSuiteRunConfig(token: Token): Promise<ServerActionResponse<TestSuiteRunConfig>> {
+    return this.getAction(TEST_SUITE_RUNS_CONFIG_URL, token);
+  }
+
+  runTestSuite(token: Token, id?: string, params?: RunTestSuiteParams): Promise<ServerActionResponse> {
+    const { numberOfRuns, concurrencyLevel } = params ?? {};
+    return this.postAction(
+      TEST_SUITE_RUN_URL(id),
+      {
+        runConfig: {
+          numberOfRuns,
+          ...(concurrencyLevel != null && { execution: { concurrencyLevel } }),
+        },
+      },
+      token,
+    );
   }
 
   private getFiltersAndSortsStr(sorts: SortDto[], filters: FilterDto[]): string {

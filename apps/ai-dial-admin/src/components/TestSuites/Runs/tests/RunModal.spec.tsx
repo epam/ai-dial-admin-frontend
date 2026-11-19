@@ -2,7 +2,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import * as actions from '@/src/app/[lang]/datasets/actions';
+import * as datasetActions from '@/src/app/[lang]/datasets/actions';
+import * as testSuiteActions from '@/src/app/[lang]/test-suites/actions';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import { ComparisonOp, ExprType, FilterNode, ValueType } from '@/src/models/evaluation/structured-query';
@@ -13,6 +14,10 @@ import RunModal from '../RunModal';
 vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   getTestCases: vi.fn(),
   getDataset: vi.fn(),
+}));
+
+vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
+  getTestSuiteRunConfig: vi.fn(),
 }));
 
 const schema = [{ name: 'expected', type: TestCaseItemType.STRING, required: false, description: '', perTurn: true }];
@@ -62,17 +67,23 @@ const suite: TestSuite = {
   testCaseFilter: notContainsLondon,
 };
 
-const renderModal = (selectedTestSuite: TestSuite = suite) => {
-  return render(
-    <RunModal isModalOpen={true} selectedTestSuite={selectedTestSuite} onClose={vi.fn()} onRun={vi.fn()} />,
-  );
+const renderModal = (selectedTestSuite: TestSuite = suite, onRun = vi.fn()) => {
+  return render(<RunModal isModalOpen={true} selectedTestSuite={selectedTestSuite} onClose={vi.fn()} onRun={onRun} />);
 };
+
+const getRunsInput = () => document.getElementById('numberOfRuns') as HTMLInputElement;
+const getConcurrencyInput = () => document.getElementById('concurrencyLevel') as HTMLInputElement;
+const getButton = (key: TestSuitesI18nKey) => screen.getByRole('button', { name: key });
 
 describe('RunModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(actions.getTestCases).mockResolvedValue(pageData as never);
-    vi.mocked(actions.getDataset).mockResolvedValue({ response: { testCaseSchema: schema } } as never);
+    vi.mocked(datasetActions.getTestCases).mockResolvedValue(pageData as never);
+    vi.mocked(datasetActions.getDataset).mockResolvedValue({ response: { testCaseSchema: schema } } as never);
+    vi.mocked(testSuiteActions.getTestSuiteRunConfig).mockResolvedValue({
+      success: true,
+      response: { maxConcurrencyLevel: 5 },
+    } as never);
   });
 
   test('counts included multi-turn cases after expanding per-turn rows', async () => {
@@ -88,9 +99,6 @@ describe('RunModal', () => {
   });
 
   describe('number of runs stepper', () => {
-    const getInput = () => screen.getByRole('spinbutton') as HTMLInputElement;
-    const getButton = (key: TestSuitesI18nKey) => screen.getByRole('button', { name: key });
-
     const renderLoaded = async () => {
       renderModal();
       await screen.findByText(TestSuitesI18nKey.SelectedTestCasesCount);
@@ -102,7 +110,7 @@ describe('RunModal', () => {
 
       await user.click(getButton(TestSuitesI18nKey.IncreaseRuns));
 
-      expect(getInput().value).toBe('2');
+      expect(getRunsInput().value).toBe('2');
     });
 
     test('decrement stops at 1', async () => {
@@ -111,7 +119,7 @@ describe('RunModal', () => {
 
       await user.click(getButton(TestSuitesI18nKey.DecreaseRuns));
 
-      expect(getInput().value).toBe('1');
+      expect(getRunsInput().value).toBe('1');
     });
 
     test.each([TestSuitesI18nKey.IncreaseRuns, TestSuitesI18nKey.DecreaseRuns])(
@@ -120,21 +128,48 @@ describe('RunModal', () => {
         const user = userEvent.setup();
         await renderLoaded();
 
-        await user.clear(getInput());
-        expect(getInput().value).toBe('');
+        await user.clear(getRunsInput());
+        expect(getRunsInput().value).toBe('');
 
         await user.click(getButton(key));
 
-        expect(getInput().value).toBe('1');
+        expect(getRunsInput().value).toBe('1');
       },
     );
+  });
+
+  describe('concurrency stepper', () => {
+    const renderLoaded = async () => {
+      renderModal();
+      await screen.findByText(TestSuitesI18nKey.SelectedTestCasesCount);
+    };
+
+    test('increments up to the loaded max', async () => {
+      const user = userEvent.setup();
+      await renderLoaded();
+
+      for (let i = 0; i < 6; i++) {
+        await user.click(getButton(TestSuitesI18nKey.IncreaseParallelTestCases));
+      }
+
+      expect(getConcurrencyInput().value).toBe('5');
+    });
+
+    test('decrement stops at 1', async () => {
+      const user = userEvent.setup();
+      await renderLoaded();
+
+      await user.click(getButton(TestSuitesI18nKey.DecreaseParallelTestCases));
+
+      expect(getConcurrencyInput().value).toBe('1');
+    });
   });
 
   test('ignores a second Run click while the first request is in flight', async () => {
     const user = userEvent.setup();
     const onRun = vi.fn(() => new Promise(() => undefined));
 
-    render(<RunModal isModalOpen={true} selectedTestSuite={suite} onClose={vi.fn()} onRun={onRun} />);
+    renderModal(suite, onRun);
 
     expect(await screen.findByText(TestSuitesI18nKey.SelectedTestCasesCount)).toBeInTheDocument();
 
@@ -143,7 +178,7 @@ describe('RunModal', () => {
     await user.click(runButton);
 
     expect(onRun).toHaveBeenCalledTimes(1);
-    expect(onRun).toHaveBeenCalledWith(1);
+    expect(onRun).toHaveBeenCalledWith({ numberOfRuns: 1, concurrencyLevel: 1 });
     expect(runButton).toBeDisabled();
   });
 });
