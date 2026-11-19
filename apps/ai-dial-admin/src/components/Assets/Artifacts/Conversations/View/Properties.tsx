@@ -56,7 +56,8 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
     const loadDeployment = async () => {
       let data: DeploymentData | null = null;
       try {
-        data = await getDeployment(model);
+        // A forbidden lookup (`undefined`) offers no link, like an unknown deployment.
+        data = (await getDeployment(model)) ?? null;
       } catch (error) {
         // `getDeployment` already maps a failed Core call to `null`; this is the server action itself failing.
         // It offers no link either, but is logged so it is not mistaken for a deployment Core does not know.

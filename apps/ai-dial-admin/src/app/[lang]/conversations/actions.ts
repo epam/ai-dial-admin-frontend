@@ -31,7 +31,7 @@ export async function deleteConversations(paths: { path: string }[]) {
 }
 
 /** `id` is the conversation's `model.id`, as Core issued it. */
-export async function getDeployment(id: string): Promise<DeploymentData | null> {
+export async function getDeployment(id: string): Promise<DeploymentData | null | undefined> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return coreUtilityApi.getDeploymentById(id, token);
 }

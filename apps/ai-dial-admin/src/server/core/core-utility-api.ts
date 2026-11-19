@@ -36,9 +36,9 @@ const EMAIL_CLAIM = 'email';
 export class CoreUtilityApi extends CoreApi {
   /**
    * Looks up a deployment by a name a user typed. Encoded per segment, so `?`, `#`, `%` or a space stay part of
-   * the name while `/` stays a separator. `null` when Core has no such deployment, `undefined` on 403.
+   * the name while `/` stays a separator.
    */
-  checkDeploymentByName(name: string, token: Token): Promise<DeploymentData | null> {
+  checkDeploymentByName(name: string, token: Token): Promise<DeploymentData | null | undefined> {
     return this.getDeploymentInfo(encodeCorePath(name), token);
   }
 
@@ -46,7 +46,7 @@ export class CoreUtilityApi extends CoreApi {
    * Looks up a deployment by an id Core issued, such as a conversation's `model.id`. Sent unchanged: the id is
    * already percent-encoded, and encoding it again would turn `My%20App` into `My%2520App` and miss.
    */
-  getDeploymentById(id: string, token: Token): Promise<DeploymentData | null> {
+  getDeploymentById(id: string, token: Token): Promise<DeploymentData | null | undefined> {
     return this.getDeploymentInfo(id, token);
   }
 
@@ -93,8 +93,11 @@ export class CoreUtilityApi extends CoreApi {
     return this.getAction(`openai/${kind}`, token);
   }
 
-  /** `/v1/deployments/{…}`, not the SDK's `getDeployment`, which reads `/openai/deployments/{…}`. */
-  private getDeploymentInfo(path: string, token: Token): Promise<DeploymentData | null> {
+  /**
+   * `/v1/deployments/{…}`, not the SDK's `getDeployment`, which reads `/openai/deployments/{…}`. `null` when Core has
+   * no such deployment or the call fails, `undefined` on 403 — typed here because `sdkGet` hides it behind `R | null`.
+   */
+  private getDeploymentInfo(path: string, token: Token): Promise<DeploymentData | null | undefined> {
     return this.sdkGet<DeploymentData>(token, (init) => this.sdk.getDeploymentInfo(path, init));
   }
 }

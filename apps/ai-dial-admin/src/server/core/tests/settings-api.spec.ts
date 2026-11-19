@@ -46,7 +46,7 @@ describe('SettingsApi.globalSettings', () => {
     expect(result).toMatchObject({ success: false, status: 404 });
   });
 
-  test('omits name and status while keeping fields admin does not model', async () => {
+  test('omits name and status but keeps any other field, including metadata Core adds later (denylist)', async () => {
     fetch.mockResponseOnce(JSON.stringify({ ...SETTINGS, name: 'global', status: 'ok', futureField: 1 }), {
       headers: JSON_HEADERS,
     });
@@ -138,7 +138,7 @@ describe('SettingsApi.updateSystemProperties', () => {
     expect(result).toMatchObject({ success: false, status: 412 });
   });
 
-  test('writes back an unmodelled field from the read without name or status', async () => {
+  test('writes back an unknown field from the read, by design, without name or status', async () => {
     fetch.mockResponseOnce(JSON.stringify({ ...SETTINGS, name: 'global', status: 'ok', futureField: 1 }), {
       headers: JSON_HEADERS,
     });

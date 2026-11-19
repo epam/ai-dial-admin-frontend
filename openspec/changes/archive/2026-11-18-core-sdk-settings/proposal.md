@@ -49,5 +49,9 @@ None.
 - Specs: `openspec/specs/core-client/spec.md`.
 - Ordering: archive before `core-sdk-deployments`. Both MODIFY the same `core-client` requirement; the
   deployments delta is written against this change's result.
+- Follow-up (DTO cleanup phase): `GlobalSettings` duplicates the SDK's settings schema, and the read needs a
+  cast plus the `name` / `status` strip only because Core's OpenAPI mixes `EntityMetadata` into it. Remove the
+  duplicate there, or fix the read type on the Core OpenAPI side. Until then the strip is a denylist: a metadata
+  field Core adds later reaches the page and is written back on the next save, as the unknown-field specs show.
 - Dependency: `@epam/ai-dial-typescript-sdk` on the stable `^0.2.1` (from `^0.2.0`); no dev build. 0.2.1 already
   has every operation this change and `core-sdk-deployments` use.
