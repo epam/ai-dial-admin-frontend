@@ -1,7 +1,7 @@
 # aliases Specification
 
 ## Purpose
-The Aliases entity of the admin console: an alias is an admin-managed deployment of DIAL Core with its own name, catalog entry and `userRoles` that forwards calls to a model, application or toolset. Covers the AI Gateway menu entry, the Platform, Public and config.json listing, the create wizard, duplicate and delete, name validation, the Properties, Target and Roles detail tabs, the target and present-as selection, broken-alias reporting and i18n. Created by archiving change `add-aliases`.
+The Aliases entity of the admin console: an alias is an admin-managed deployment of DIAL Core with its own name, catalog entry and `userRoles` that forwards calls to a model, application, toolset or router. Covers the AI Gateway menu entry, the Platform, Public and config.json listing, the create wizard, duplicate and delete, name validation, the Properties, Target and Roles detail tabs, the target and present-as selection, broken-alias reporting and i18n. Created by archiving change `add-aliases`.
 
 ## Requirements
 
@@ -114,16 +114,31 @@ unsupported target form) SHALL be shown verbatim from Core's rejection.
 ### Requirement: Alias detail view
 The system SHALL render an alias detail view with Properties, Target and Roles tabs and a JSON tab. Properties SHALL
 show the name (read-only), display name, display version, description, icon URL and intro, in that order (the create wizard likewise puts the display version straight after the display name); it SHALL NOT show a
-callable name. Target SHALL show the target type, target and present-as. Roles SHALL edit `userRoles` the way the
+callable name. Target SHALL show the target type, target and present-as, followed by the alias's
+`defaultHeaders` as a key-value grid, the editor the Routers Properties tab uses. The default headers SHALL NOT be
+offered on an alias whose present-as (stored, or the target type's default) is Toolset, because Core refuses them
+there; a target or present-as change that makes the alias a toolset SHALL clear them. Roles SHALL edit `userRoles` the way the
 Models Roles tab does (an "available to specific roles" switch, a grid of roles, add and remove); its tab carries a
 warning when `userRoles` is an empty list. `descriptionKeywords` is edited in the JSON tab. Save SHALL write only the
-fields Core's alias body accepts (`target`, `presentAs`, `userRoles`, `displayName`, `displayVersion`, `iconUrl`,
+fields Core's alias body accepts (`target`, `presentAs`, `userRoles`, `defaultHeaders`, `displayName`, `displayVersion`, `iconUrl`,
 `description`, `intro`, `descriptionKeywords`) with the loaded etag as `If-Match`; a 412 SHALL follow the established
 etag-conflict handling. A config.json alias SHALL open read-only.
 
 #### Scenario: Properties, Target and Roles are separate tabs
 - **WHEN** an admin opens an alias
 - **THEN** the tabs are Properties, Target and Roles, and the target fields appear only on Target and the roles only on Roles
+
+#### Scenario: Default headers are edited on Target
+- **WHEN** an admin adds the header `X-Team: a` on the Target tab of a model alias and saves
+- **THEN** the request body carries `defaultHeaders: {"X-Team": "a"}`
+
+#### Scenario: A toolset alias has no default headers
+- **WHEN** an admin opens the Target tab of an alias presented as a toolset
+- **THEN** no default headers grid is shown
+
+#### Scenario: Becoming a toolset clears the default headers
+- **WHEN** an admin changes the present-as of an alias with default headers to Toolset
+- **THEN** its `defaultHeaders` are cleared, so the save is not refused by Core
 
 #### Scenario: Save sends only accepted fields
 - **WHEN** an admin edits the description of an alias loaded with extra fields and saves
@@ -142,16 +157,19 @@ etag-conflict handling. A config.json alias SHALL open read-only.
 - **THEN** Core's 412 is handled as for the other entities and the user's edits are not lost silently
 
 ### Requirement: Target and present-as selection
-The system SHALL let the user choose the **target type** (Model, Application, Toolset), then pick the **target** with
+The system SHALL let the user choose the **target type** (Model, Application, Toolset, Router), then pick the **target** with
 the shared entity picker in single-selection mode, opened from a read-only input with an open icon (the pattern of the
 other popup-backed fields; no separate Select/Change button), then choose **present-as**. Present-as options SHALL be limited to:
-Model → Model, Application; Application → Model, Application, Toolset; Toolset → Toolset. Present-as SHALL default to
-the target type and SHALL be written only when it differs from that default. Changing the target type SHALL clear the
+Model → Model, Application; Application → Model, Application, Toolset; Toolset → Toolset; Router → Router, Model,
+Application. Present-as Router SHALL be offered for a Router target only. Present-as SHALL default to
+the target type and SHALL be written only when it differs from that default. The Router target type SHALL be offered
+only on a Platform alias, because Core refuses a router target on a Public alias; a Public alias already stored with a
+router target SHALL still show that type. Changing the target type SHALL clear the
 target. The picker SHALL offer every source the chosen type has: Application and Toolset the Public tree, Platform
-and config.json; Model Platform and config.json. The picked target SHALL be stored as `target.path`: a Public pick as
+and config.json; Model and Router Platform and config.json. The picked target SHALL be stored as `target.path`: a Public pick as
 `<type>/<picked public path>` with each path segment percent-encoded, the form Core parses (for example
 `applications/public/team/assistant`, or `applications/public/QA/Code%20Apps%20ALS/assistant` for a folder named
-`Code Apps ALS`), and a Platform or config.json pick as `<type>/<name>`. The stored path SHALL be decoded again where
+`Code Apps ALS`), and a Platform or config.json pick as `<type>/<name>` (for example `routers/smart-router`). The stored path SHALL be decoded again where
 it is shown or reused. A `target.path` the form cannot parse SHALL be shown as plain text and SHALL be left unchanged
 until the user picks a target.
 
@@ -162,6 +180,14 @@ until the user picks a target.
 #### Scenario: Application target offers all three presentations
 - **WHEN** the target type is Application
 - **THEN** present-as offers Model, Application and Toolset, with Application preselected
+
+#### Scenario: Router target offers router, model and application presentations
+- **WHEN** the target type is Router
+- **THEN** present-as offers Router, Model and Application, with Router preselected, and a Router pick is stored as `routers/<name>`
+
+#### Scenario: Public alias is not offered a router target
+- **WHEN** an admin opens the target type on a Public alias
+- **THEN** Router is not among the options; on a Platform alias it is
 
 #### Scenario: Target is an input with an open icon
 - **WHEN** an admin views the Target step or tab
@@ -191,8 +217,8 @@ until the user picks a target.
 - **WHEN** an admin selects an entity on the Public tab and then selects another on the Platform tab
 - **THEN** only the second is selected, Apply is enabled, and applying reports exactly one entity
 
-#### Scenario: Model picker has no Public tab
-- **WHEN** an admin opens the target picker for a Model target
+#### Scenario: Model and Router pickers have no Public tab
+- **WHEN** an admin opens the target picker for a Model or Router target
 - **THEN** only the Platform and config.json tabs are offered
 
 #### Scenario: Unparseable existing target is not rewritten

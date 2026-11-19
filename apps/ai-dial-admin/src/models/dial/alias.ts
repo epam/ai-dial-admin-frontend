@@ -5,6 +5,7 @@ export enum AliasPresentAs {
   Model = 'model',
   Application = 'application',
   Toolset = 'toolset',
+  Router = 'router',
 }
 
 /** The type of deployment an alias forwards to — the first segment of `target.path`. */
@@ -12,6 +13,7 @@ export enum AliasTargetType {
   Model = 'models',
   Application = 'applications',
   Toolset = 'toolsets',
+  Router = 'routers',
 }
 
 export interface AliasTarget {
@@ -32,6 +34,7 @@ export interface DialAliasResource extends CoreResource {
   target?: AliasTarget;
   presentAs?: AliasPresentAs;
   userRoles?: string[];
+  defaultHeaders?: Record<string, string>;
   displayName?: string;
   displayVersion?: string;
   iconUrl?: string;

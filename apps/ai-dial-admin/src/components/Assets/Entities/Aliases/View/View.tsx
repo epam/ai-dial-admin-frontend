@@ -32,9 +32,11 @@ interface Props {
   healthIssue?: ConfigHealthSkippedEntity;
   /** A config.json alias is declared in the config file, so it can be read here and nowhere changed. */
   isConfigFileSource?: boolean;
+  /** A stored Public alias, which Core does not let target a router. */
+  isPublicSource?: boolean;
 }
 
-const AliasView: FC<Props> = ({ etag, originalAlias, roles, healthIssue, isConfigFileSource }) => {
+const AliasView: FC<Props> = ({ etag, originalAlias, roles, healthIssue, isConfigFileSource, isPublicSource }) => {
   const t = useI18n();
   const router = useRouter();
   const { fetchFiles } = useAliasesFolder();
@@ -129,10 +131,12 @@ const AliasView: FC<Props> = ({ etag, originalAlias, roles, healthIssue, isConfi
           />
         ) : (
           <TabsContent
+            key={discardKey}
             activeTab={activeTab}
             selectedAlias={selectedAlias}
             roles={roles}
             healthIssue={healthIssue}
+            isPublicSource={isPublicSource}
             onChange={setSelectedAlias}
           />
         )}

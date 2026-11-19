@@ -10,6 +10,7 @@ import { ALIAS_NAME_PATTERN } from '@/src/constants/aliases';
 import { AliasI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAliasResource } from '@/src/models/dial/alias';
+import { applyAliasTargetChange } from '@/src/utils/aliases/default-headers';
 import { AliasCreateStep } from './constants';
 import TargetField, { AliasTargetChange } from './TargetField';
 
@@ -18,6 +19,8 @@ interface Props {
   entity: DialAliasResource;
   /** The aliases already in the bucket the new one is written to. */
   names: string[];
+  /** The alias is written to the Public bucket. */
+  isPublic?: boolean;
   isUniqueNameError?: boolean;
   externalError?: string;
   onChangeEntity: (entity: object) => void;
@@ -32,6 +35,7 @@ const AliasCreateProperties: FC<Props> = ({
   step,
   entity,
   names,
+  isPublic,
   isUniqueNameError,
   externalError,
   onChangeEntity,
@@ -40,12 +44,20 @@ const AliasCreateProperties: FC<Props> = ({
   const nameError = entity.name && !ALIAS_NAME_PATTERN.test(entity.name) ? t(AliasI18nKey.NameInvalid) : undefined;
 
   const onChangeTarget = useCallback(
-    ({ target, presentAs }: AliasTargetChange) => onChangeEntity({ ...entity, target, presentAs }),
+    (change: AliasTargetChange) => onChangeEntity(applyAliasTargetChange(entity, change)),
     [entity, onChangeEntity],
   );
 
   if (step === AliasCreateStep.Target) {
-    return <TargetField isModal target={entity.target} presentAs={entity.presentAs} onChange={onChangeTarget} />;
+    return (
+      <TargetField
+        isModal
+        isPublic={isPublic}
+        target={entity.target}
+        presentAs={entity.presentAs}
+        onChange={onChangeTarget}
+      />
+    );
   }
 
   return (

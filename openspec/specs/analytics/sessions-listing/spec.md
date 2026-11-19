@@ -1606,10 +1606,9 @@ the notification is what persists.
 string only where the response supplied none. The failed state SHALL NOT be collapsed into the empty one:
 "no values" asserts that the column has none, which is the one thing a failed read did not establish.
 
-Where the response supplied no words, the two reports fall back to **different** strings, because they
-answer different questions: in the popup the fallback states that the values are unavailable, and in the
-notification it names the read that failed. The notification additionally carries the error header and the
-request id, which the popup has no room to state.
+The two reports use **different** strings of this app's own, because they answer different questions: in the
+popup the fallback states that the values are unavailable, and the notification's title names the read that
+failed. The notification additionally carries the request id, which the popup has no room to state.
 
 An enum column SHALL keep its place in the grid's **floating-filter row**, so its affordance sits level with
 every neighbouring column's filter rather than a row above it. It MUST NOT take the row's default floating
@@ -1674,7 +1673,7 @@ programmatically rather than by styling alone.
 #### Scenario: A failed value read notifies and states the service's message in place
 
 - **WHEN** the value query fails and the response carries an error message
-- **THEN** an error notification reports the failure, carrying that message, the error header and the request id
+- **THEN** an error notification titled with the read that failed reports the failure, carrying that message and the request id
 - **AND** the popup's live region states that same message
 - **AND** it does not state that the column has no values
 

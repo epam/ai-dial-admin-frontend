@@ -205,7 +205,7 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
     setIsDeleteOpen(false);
     const res = await deleteDashboard(stored.id);
     if (!res.success) {
-      showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      showNotification(getErrorNotification(t(CustomDashboardsI18nKey.DeleteFailed), res.errorMessage, res.requestId));
       return;
     }
     showNotification(getSuccessNotification(t(CustomDashboardsI18nKey.Deleted), stored.name));

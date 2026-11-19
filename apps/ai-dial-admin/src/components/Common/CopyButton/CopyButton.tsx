@@ -5,7 +5,7 @@ import { FC, useCallback } from 'react';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { getCopyToClipboardNotification } from '@/src/utils/notification';
+import { getSuccessNotification } from '@/src/utils/notification';
 import classNames from 'classnames';
 
 interface Props {
@@ -28,10 +28,7 @@ const CopyButton: FC<Props> = ({ buttonLabel, value, valueLabel, className, size
   const onClick = useCallback(() => {
     if (valueLabel && value) {
       navigator.clipboard.writeText(value);
-      const customTitle = (
-        <p className="dial-small-semi-text">{`${valueLabel} ${t(BasicI18nKey.CopiedSuccessfully)}`}</p>
-      );
-      showNotification(getCopyToClipboardNotification(customTitle));
+      showNotification(getSuccessNotification(`${valueLabel} ${t(BasicI18nKey.CopiedSuccessfully)}`));
     }
   }, [value, valueLabel, showNotification, t]);
 

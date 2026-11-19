@@ -44,6 +44,12 @@ const ClientSecretControl: FC<Props> = ({ clientSecret, disabled, isLoggedIn, ha
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientSecret, hasSecretHint, minLength]);
 
+  useEffect(() => {
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: 'authSettings.clientSecret' });
+    };
+  }, [dispatch]);
+
   const onChangeClientSecret = useCallback(
     (value?: string) => {
       const trimmed = value?.trimStart() || '';

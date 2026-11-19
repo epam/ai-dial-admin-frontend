@@ -45,13 +45,10 @@ const ColumnLimitStep: FC<Props> = ({
       (enrichment.columns ?? []).map((column) => ({
         value: `${enrichment.name}.${column.name}`,
         label: `${enrichment.name}.${column.name}`,
-        description: t(AnalyticsTableAccessI18nKey.ColumnOfEnrichment, { enrichment: enrichment.name }),
       })),
     );
     const known = new Set([...own, ...enriched].map((option) => option.value));
-    const kept = value
-      .filter((name) => !known.has(name))
-      .map((name) => ({ value: name, label: name, description: undefined }));
+    const kept = value.filter((name) => !known.has(name)).map((name) => ({ value: name, label: name }));
 
     return [...own, ...enriched, ...kept];
   }, [columns, enrichments, value, t]);

@@ -67,7 +67,8 @@ export default async function Page(params: {
   }
 
   // Admins only: Core answers the health report to nobody else. Outside the fetch's try for the same reason as the roles.
-  const healthIssue = isFullAdmin ? await getAliasHealthIssue(name, !isPlatformBucket && !isConfigFileMode) : undefined;
+  const isPublicSource = !isPlatformBucket && !isConfigFileMode;
+  const healthIssue = isFullAdmin ? await getAliasHealthIssue(name, isPublicSource) : undefined;
 
   return (
     <SaveValidationContextProvider>
@@ -77,6 +78,7 @@ export default async function Page(params: {
         roles={roles}
         healthIssue={healthIssue}
         isConfigFileSource={isConfigFileMode}
+        isPublicSource={isPublicSource}
       />
     </SaveValidationContextProvider>
   );

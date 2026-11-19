@@ -145,7 +145,7 @@ Running a query in the SQL view SHALL execute the editor's SQL text against `POS
 
 ### Requirement: SQL validation is backend-authoritative
 
-The SQL view SHALL NOT perform client-side SQL parsing or validation. When the backend rejects the SQL (a `400` — parse/validation failure or an unsupported construct such as a join, CTE, subquery, arithmetic, `CAST`, or a `LIMIT` above the maximum), the failure SHALL surface via the app's notification convention (error header/message), and a previously shown result SHALL NOT be replaced by a broken grid.
+The SQL view SHALL NOT perform client-side SQL parsing or validation. When the backend rejects the SQL (a `400` — parse/validation failure or an unsupported construct such as a join, CTE, subquery, arithmetic, `CAST`, or a `LIMIT` above the maximum), the failure SHALL surface via the app's notification convention (this app's own title, the service's message), and a previously shown result SHALL NOT be replaced by a broken grid.
 
 #### Scenario: Rejected SQL surfaces an error
 
@@ -262,7 +262,7 @@ On success the assistant's reply SHALL be appended as a new message in the trans
 (no SQL extraction applied to the rendered text). When the reply contains an extractable SQL block, that
 message additionally renders the extracted SQL read-only with its own Copy and Run actions (see "Each
 assistant message with extracted SQL offers inline Run and Copy"). On failure the system SHALL surface an
-error notification (header, message, and request id when available); the just-sent user message SHALL
+error notification (this app's own title, the service's message, and request id when available); the just-sent user message SHALL
 remain visible in the transcript and no assistant message SHALL be appended, so the user can retry or
 continue the conversation without losing what they asked.
 

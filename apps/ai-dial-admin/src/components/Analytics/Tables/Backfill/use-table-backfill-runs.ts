@@ -53,9 +53,7 @@ export const useTableBackfillRuns = (onRunsChange: (runs: TableBackfillRun[]) =>
       return;
     }
 
-    showNotification(
-      getErrorNotification(res.errorHeader || t(BackfillI18nKey.ReadFailed), res.errorMessage, res.requestId),
-    );
+    showNotification(getErrorNotification(t(BackfillI18nKey.ReadFailed), res.errorMessage, res.requestId));
   }, [apply, guarded, showNotification, t]);
 
   useEffect(() => {
@@ -86,9 +84,7 @@ export const useTableBackfillRuns = (onRunsChange: (runs: TableBackfillRun[]) =>
         const res = await startTableBackfill(from, to, shouldIncludeIngested);
 
         if (!res.success) {
-          showNotification(
-            getErrorNotification(res.errorHeader || t(BackfillI18nKey.StartFailed), res.errorMessage, res.requestId),
-          );
+          showNotification(getErrorNotification(t(BackfillI18nKey.StartFailed), res.errorMessage, res.requestId));
           return false;
         }
 
