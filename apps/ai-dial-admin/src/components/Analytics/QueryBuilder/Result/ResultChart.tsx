@@ -167,7 +167,7 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig, trendSou
         types={availableTypes}
         onChangeType={onChangeType}
         slots={slots}
-        legend={isScorecard ? void 0 : legend}
+        legend={isScorecard ? undefined : legend}
         onChangeLegend={onChangeLegend}
       />
     </div>

@@ -200,8 +200,8 @@ export const CHART_SLOT_DESCRIPTORS: Record<ChartType, ChartSlotDescriptor> = {
     ...AXIS_SLOTS,
   },
   [ChartType.Scorecard]: {
-    xSource: ChartColumnSource.Numeric,
-    ySource: ChartColumnSource.Numeric,
+    xSource: ChartColumnSource.Aggregates,
+    ySource: ChartColumnSource.Aggregates,
     isMultiY: false,
     xLabelKey: QueryBuilderI18nKey.ChartValue,
     yLabelKey: QueryBuilderI18nKey.ChartValue,

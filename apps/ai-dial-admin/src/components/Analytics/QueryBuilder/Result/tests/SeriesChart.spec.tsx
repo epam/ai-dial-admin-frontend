@@ -61,3 +61,15 @@ describe('SeriesChart — legend configuration', () => {
     expect(screen.getByRole('list').parentElement).toHaveClass(layoutClass);
   });
 });
+
+describe('SeriesChart — a changed set of series', () => {
+  test('drops the pinned series when the chart draws other series', async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<SeriesChart option={series(['Returning', 'New'])} />);
+    await user.click(screen.getByRole('button', { name: 'New' }));
+
+    rerender(<SeriesChart option={series(['positive', 'neutral'])} />);
+
+    expect(screen.getByRole('button', { name: 'neutral' }).getAttribute('aria-pressed')).toBe('false');
+  });
+});

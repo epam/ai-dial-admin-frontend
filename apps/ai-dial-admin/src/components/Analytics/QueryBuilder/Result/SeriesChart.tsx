@@ -36,6 +36,11 @@ const SeriesChart: FC<Props> = ({ option, ariaLabel, legendConfig = DEFAULT_CHAR
     if (seriesIndex != null) instance.dispatchAction({ type: 'highlight', seriesIndex });
   }, []);
 
+  const legendKey = legend.map((entry) => entry.id).join('|');
+  useEffect(() => {
+    setPinnedSeriesIndex(null);
+  }, [legendKey]);
+
   useEffect(() => {
     focusSeries(pinnedSeriesIndex);
   }, [option, pinnedSeriesIndex, focusSeries]);
