@@ -80,6 +80,7 @@ export const COST_FETCH_POLL_INTERVAL_MS = 5_000;
  */
 export const COST_FETCH_MAX_WAIT_MS = 15 * 60 * 1_000;
 
-export const DISTRIBUTION_STAT_CARDS_GRID_CLASS = 'grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+export const DISTRIBUTION_STAT_CARDS_GRID_CLASS =
+  'grid grid-cols-[repeat(auto-fill,minmax(min(12rem,100%),1fr))] gap-3';
 
 export const DISTRIBUTION_STAT_CARD_CLASS = 'min-w-0';

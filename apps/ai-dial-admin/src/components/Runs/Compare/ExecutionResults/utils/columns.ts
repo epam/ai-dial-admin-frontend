@@ -30,6 +30,7 @@ import {
   COMPARE_OVERALL_SCORE_COLUMN_WIDTH,
   ELLIPSIS_HEADER_PARAMS,
   RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS,
+  RIGHT_ALIGNED_HEADER_GROUP_PARAMS,
 } from '@/src/components/Runs/grid-column-layout';
 import { CompareRun, CompareRunIndex } from '@/src/components/Runs/Compare/models';
 import {
@@ -333,6 +334,7 @@ const getUniformComparePairFields = (results: AnalyticsResult[], runs: CompareRu
 const buildExecutionFieldGroup = (label: string, leaves: ColDef[], uniformFields: Set<string>): ColGroupDef => ({
   headerName: label,
   headerGroupComponent: EllipsisHeaderGroup,
+  headerGroupComponentParams: RIGHT_ALIGNED_HEADER_GROUP_PARAMS,
   children: hideUniformColumns(leaves, uniformFields),
 });
 
@@ -380,6 +382,7 @@ const getComparedMetricGroupColumns = (
     children: Object.keys(groupValues).map((key) => ({
       headerName: key,
       headerGroupComponent: EllipsisHeaderGroup,
+      headerGroupComponentParams: RIGHT_ALIGNED_HEADER_GROUP_PARAMS,
       children: [
         ...buildRunColumns(runs, hideHighlights, (context) => buildRunMetricColumn(context, groupKey, key)),
         buildMetricDeltaColumn(groupKey, key, deltaHeader),

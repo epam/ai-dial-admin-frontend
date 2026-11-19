@@ -12,6 +12,7 @@ import { CompareColumnPanelContext } from '@/src/components/Runs/Compare/Executi
 import { CompareRun, CompareRunIndex } from '@/src/components/Runs/Compare/models';
 import { OVERALL_SCORE_COL_ID, OVERALL_SCORE_HEADER } from '@/src/components/Runs/constants';
 import { getCompareRunColId } from '@/src/components/Runs/Compare/utils';
+import { RIGHT_ALIGNED_HEADER_GROUP_PARAMS } from '@/src/components/Runs/grid-column-layout';
 
 const EXECUTION_FIELD_GROUPS = [
   { fieldLabel: '# Run number', colId: 'runIndex' },
@@ -208,6 +209,7 @@ const flattenGroupedNode = (node: ColDef): ColDef | ColGroupDef => {
         children: children.map((fieldGroup) => ({
           headerName: fieldGroup.headerName,
           headerGroupComponent: EllipsisHeaderGroup,
+          headerGroupComponentParams: RIGHT_ALIGNED_HEADER_GROUP_PARAMS,
           children: getChildren(fieldGroup).map(stripPanelContext),
         })),
       };

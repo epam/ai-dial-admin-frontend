@@ -65,6 +65,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import DatasetBanner from './DatasetBanner';
 import HeaderButtons from './Header';
+import PrivateDatasetTag from './PrivateDatasetTag';
 import RunCondition from './RunCondition/RunCondition';
 import { useIncludedIds } from './RunCondition/use-included-ids';
 import { GridRowType } from '@/src/types/grid-row-type';
@@ -714,6 +715,8 @@ const TestCasesList: FC<Props> = ({
       ? includedIds.size
       : lastIncludedCountRef.current;
 
+  const datasetTag = isPrivate && <PrivateDatasetTag />;
+
   const isPublicDatasetAttached = !isPrivate && !!dataset?.visibility;
 
   return (
@@ -769,6 +772,7 @@ const TestCasesList: FC<Props> = ({
           onPublish={onPublish}
           onAttachDataset={onAttachDataset}
           onBeforeAttach={onBeforeAttach}
+          datasetTag={datasetTag}
         />
       </ListEntities>
       {isDeleteModalOpen &&

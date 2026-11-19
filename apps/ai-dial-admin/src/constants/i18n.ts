@@ -1592,6 +1592,7 @@ export enum EntityPlaceholdersI18nKey {
   ReasoningEfforts = 'EntityPlaceholders.ReasoningEfforts',
   EmbeddingDimensions = 'EntityPlaceholders.EmbeddingDimensions',
   Provider = 'EntityPlaceholders.Provider',
+  SelectDate = 'EntityPlaceholders.SelectDate',
 }
 
 export enum EntityCaptionsI18nKey {
@@ -1843,6 +1844,8 @@ export enum EntityFieldsI18nKey {
   agent = 'EntityFields.agent',
   embeddingDimensions = 'EntityFields.embeddingDimensions',
   provider = 'EntityFields.provider',
+  deprecationDate = 'EntityFields.deprecationDate',
+  endOfService = 'EntityFields.endOfService',
 }
 
 export enum ToolsetI18nKey {
@@ -2301,6 +2304,7 @@ export enum TestSuitesI18nKey {
   DatasetRequiredForMetrics = 'TestSuites.DatasetRequiredForMetrics',
   OpenDataset = 'TestSuites.OpenDataset',
   ChangeDataset = 'TestSuites.ChangeDataset',
+  TestCasesPrivateTagTooltip = 'TestSuites.TestCasesPrivateTagTooltip',
   NoTestCasesDescription = 'TestSuites.NoTestCasesDescription',
   More = 'TestSuites.More',
   AttachDataset = 'TestSuites.AttachDataset',
@@ -2926,16 +2930,17 @@ export enum QueryBuilderI18nKey {
   AskAi = 'QueryBuilder.AskAi',
   AiPanelExpand = 'QueryBuilder.AiPanelExpand',
   AiPanelCollapse = 'QueryBuilder.AiPanelCollapse',
-  AiPanelHeading = 'QueryBuilder.AiPanelHeading',
-  AiPanelDescription = 'QueryBuilder.AiPanelDescription',
+  AiEmptyTitle = 'QueryBuilder.AiEmptyTitle',
+  AiEmptyDescription = 'QueryBuilder.AiEmptyDescription',
   AiPromptPlaceholder = 'QueryBuilder.AiPromptPlaceholder',
   AiSend = 'QueryBuilder.AiSend',
   AiSending = 'QueryBuilder.AiSending',
   AiGenerateFailed = 'QueryBuilder.AiGenerateFailed',
-  AiSuggestionCost = 'QueryBuilder.AiSuggestionCost',
-  AiSuggestionFailedRequests = 'QueryBuilder.AiSuggestionFailedRequests',
-  AiSuggestionMcpLatency = 'QueryBuilder.AiSuggestionMcpLatency',
-  AiSuggestionSlowestCalls = 'QueryBuilder.AiSuggestionSlowestCalls',
+  ProposedQueryApply = 'QueryBuilder.ProposedQueryApply',
+  ProposedQueryDismiss = 'QueryBuilder.ProposedQueryDismiss',
+  ProposedQueryDismissed = 'QueryBuilder.ProposedQueryDismissed',
+  ProposedQueryAppliedNote = 'QueryBuilder.ProposedQueryAppliedNote',
+  ProposedQueryDismissedNote = 'QueryBuilder.ProposedQueryDismissedNote',
   OperatorEq = 'QueryBuilder.OperatorEq',
   OperatorEqDescription = 'QueryBuilder.OperatorEqDescription',
   OperatorNe = 'QueryBuilder.OperatorNe',

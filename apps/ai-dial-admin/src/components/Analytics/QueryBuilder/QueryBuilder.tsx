@@ -25,6 +25,7 @@ import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import AiPanel from '@/src/components/Analytics/QueryBuilder/Ai/AiPanel';
 import AiSidePanel from '@/src/components/Analytics/QueryBuilder/Ai/AiSidePanel';
 import { useAiConversation } from '@/src/components/Analytics/QueryBuilder/Ai/use-ai-conversation';
+import { ProposedQueryStatus } from '@/src/components/Analytics/QueryBuilder/Ai/models';
 import AddToDashboardButton from '@/src/components/Analytics/CustomDashboards/AddToDashboard/AddToDashboardButton';
 import ChipBar from '@/src/components/Analytics/QueryBuilder/Chips/ChipBar';
 import { PeriodControl } from '@/src/components/Analytics/QueryBuilder/Chips/models';
@@ -179,6 +180,7 @@ const QueryBuilder: FC<Props> = ({
   const [aiLoading, setAiLoading] = useState(false);
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
   const [aiLoadedMessageIndex, setAiLoadedMessageIndex] = useState<number | null>(null);
+  const [aiMessageStatuses, setAiMessageStatuses] = useState<Record<number, ProposedQueryStatus>>({});
   const aiConversation = useAiConversation();
   const timeFilter = useTimeFilter();
 
@@ -379,6 +381,9 @@ const QueryBuilder: FC<Props> = ({
     if (sqlError) setSqlError(null);
   };
 
+  const onDismissAiMessage = (index: number) =>
+    setAiMessageStatuses((statuses) => ({ ...statuses, [index]: ProposedQueryStatus.Dismissed }));
+
   // Clicking a chat message's Run both loads the query (translate → hydrate, or fall back to raw SQL —
   // same path the old generate-time auto-load used) and immediately executes it. Building the request
   // from `hydrateBuilderFromQuery`'s return value (not the `state` closure) picks up both the hydrated
@@ -430,6 +435,7 @@ const QueryBuilder: FC<Props> = ({
       setResult(response);
       setResultMeta(buildExecutedMeta(request, response, runFields, runEntityName, translated));
       setLastRequest(request);
+      setAiMessageStatuses((statuses) => ({ ...statuses, [index]: ProposedQueryStatus.Applied }));
     } else {
       showNotification(getErrorNotification(t(QueryBuilderI18nKey.RunFailed), runRes.error, runRes.requestId));
     }
@@ -735,6 +741,8 @@ const QueryBuilder: FC<Props> = ({
               conversation={aiConversation}
               onRunMessage={onRunAiMessage}
               loadedMessageIndex={aiLoadedMessageIndex}
+              messageStatuses={aiMessageStatuses}
+              onDismissMessage={onDismissAiMessage}
               runInFlight={aiLoading || isRunning}
             />
           </AiSidePanel>
