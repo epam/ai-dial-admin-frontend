@@ -40,6 +40,12 @@ const ClientIdControl: FC<Props> = ({ clientId, disabled, isLoggedIn, onChange }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId]);
 
+  useEffect(() => {
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: 'authSettings.clientId' });
+    };
+  }, [dispatch]);
+
   const onChangeClientId = useCallback(
     (value?: string) => {
       const trimmed = value?.trimStart() || '';
