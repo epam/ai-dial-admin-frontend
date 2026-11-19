@@ -13,4 +13,16 @@ describe('EllipsisHeaderGroup', () => {
 
     expect(screen.getByText('Context Precision')).toHaveClass('truncate');
   });
+
+  test('keeps the label at the start by default', () => {
+    render(<EllipsisHeaderGroup {...headerGroupParams} displayName="Context Precision" />);
+
+    expect(screen.getByText('Context Precision').closest('.text-end')).toBeNull();
+  });
+
+  test('pushes the label to the end when right aligned', () => {
+    render(<EllipsisHeaderGroup {...headerGroupParams} displayName="score" isRightAligned />);
+
+    expect(screen.getByText('score').closest('.text-end')).not.toBeNull();
+  });
 });

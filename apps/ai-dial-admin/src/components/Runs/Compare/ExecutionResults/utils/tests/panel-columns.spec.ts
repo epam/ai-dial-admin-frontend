@@ -93,6 +93,7 @@ describe('panel-columns', () => {
       'Duration',
     ]);
     expect(fields.every((field) => field.headerGroupComponent === EllipsisHeaderGroup)).toBe(true);
+    expect(fields.every((field) => field.headerGroupComponentParams?.isRightAligned === true)).toBe(true);
     expect(fields.map((field) => getChildren(field).map(getColId))).toEqual([
       ['runIndex', 'cmp_runIndex'],
       ['requestIndex', 'cmp_requestIndex'],

@@ -131,6 +131,7 @@ const AliasView: FC<Props> = ({ etag, originalAlias, roles, healthIssue, isConfi
           />
         ) : (
           <TabsContent
+            key={discardKey}
             activeTab={activeTab}
             selectedAlias={selectedAlias}
             roles={roles}

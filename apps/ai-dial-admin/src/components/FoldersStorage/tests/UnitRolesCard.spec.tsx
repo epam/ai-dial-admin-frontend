@@ -117,9 +117,42 @@ describe('UnitRolesCard', () => {
     await user.type(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimKey }), key);
     await user.type(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue }), 'v');
 
-    expect(editor.getByText(FoldersI18nKey.HolderClaimKeyReserved)).toBeTruthy();
+    expect(editor.queryByText(FoldersI18nKey.HolderClaimKeyReserved)).toBeNull();
+    expect(editor.queryByText(FoldersI18nKey.HolderInvalid)).toBeNull();
+    expect(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimKey })).not.toBeInvalid();
+    expect(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue })).not.toBeInvalid();
     expect(editor.getByRole('button', { name: ButtonsI18nKey.Add })).toBeDisabled();
     expect(onAdd).not.toHaveBeenCalled();
+  });
+
+  test('keeps an incomplete custom claim disabled without showing validation errors', async () => {
+    const user = userEvent.setup();
+    renderCard();
+    const editor = within(screen.getByRole('group', { name: 'editor' }));
+
+    await user.click(editor.getByRole('radio', { name: FoldersI18nKey.HolderClaim }));
+    const claimKey = editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimKey });
+    const claimValue = editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue });
+    const add = editor.getByRole('button', { name: ButtonsI18nKey.Add });
+
+    await user.type(claimValue, 'test');
+    await user.type(claimKey, ' ');
+    expect(add).toBeDisabled();
+    expect(claimKey).not.toBeInvalid();
+    expect(claimValue).not.toBeInvalid();
+    expect(editor.queryByText(FoldersI18nKey.HolderInvalid)).toBeNull();
+
+    await user.clear(claimKey);
+    await user.type(claimKey, 'department');
+    await user.clear(claimValue);
+    await user.type(claimValue, ' ');
+    expect(add).toBeDisabled();
+    expect(claimKey).not.toBeInvalid();
+    expect(claimValue).not.toBeInvalid();
+    expect(editor.queryByText(FoldersI18nKey.HolderInvalid)).toBeNull();
+
+    await user.type(claimValue, 'risk');
+    expect(add).toBeEnabled();
   });
 
   test('accepts a reserved name in another case', async () => {
@@ -132,6 +165,17 @@ describe('UnitRolesCard', () => {
     await user.type(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue }), 'v');
 
     expect(editor.getByRole('button', { name: ButtonsI18nKey.Add })).toBeEnabled();
+  });
+
+  test('continues to show validation errors for an invalid email', async () => {
+    const user = userEvent.setup();
+    renderCard();
+    const editor = within(screen.getByRole('group', { name: 'editor' }));
+
+    await user.type(editor.getByRole('textbox', { name: FoldersI18nKey.AddHolder }), 'invalid');
+
+    expect(editor.getByText(FoldersI18nKey.HolderEmailInvalid)).toBeTruthy();
+    expect(editor.getByRole('button', { name: ButtonsI18nKey.Add })).toBeDisabled();
   });
 
   test('keeps Add disabled for a blank value', () => {

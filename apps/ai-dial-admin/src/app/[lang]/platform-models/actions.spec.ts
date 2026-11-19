@@ -240,6 +240,28 @@ describe('Assets model :: upstream secrets are never written as empty strings', 
     expect(payloadOf((assetApi.put as any).mock.calls[0]).upstreams?.[0]).not.toHaveProperty('secretExtraData');
   });
 
+  test('Should pass the provider and lifecycle fields through unchanged on update', async () => {
+    await updateModel(
+      { name: 'm', provider: 'Azure', deprecationDate: '2027-06-30', endOfService: '2027-12-31' } as any,
+      'etag',
+    );
+
+    expect((assetApi.put as any).mock.calls[0][3]).toMatchObject({
+      provider: 'Azure',
+      deprecationDate: '2027-06-30',
+      endOfService: '2027-12-31',
+    });
+  });
+
+  test('Should not introduce the provider and lifecycle fields when they are absent', async () => {
+    await updateModel({ name: 'm' } as any, 'etag');
+
+    const payload = (assetApi.put as any).mock.calls[0][3];
+    expect(payload).not.toHaveProperty('provider');
+    expect(payload).not.toHaveProperty('deprecationDate');
+    expect(payload).not.toHaveProperty('endOfService');
+  });
+
   test('Should strip the read-only status and validationWarnings Core rejects on write', async () => {
     // The validity projections graft under `_metadata` — `stripMetadata` drops the whole object,
     // so neither they nor the graft object itself may reach the write payload.

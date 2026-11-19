@@ -1680,6 +1680,8 @@ export default {
     agent: 'Agent',
     embeddingDimensions: 'Embedding Dimensions',
     provider: 'Provider',
+    deprecationDate: 'Deprecation date',
+    endOfService: 'End of service',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1769,6 +1771,7 @@ export default {
     ReasoningEfforts: 'Select or type reasoning effort',
     EmbeddingDimensions: 'Enter embedding dimensions',
     Provider: 'Enter provider',
+    SelectDate: 'Select date',
   },
   EntityCaptions: {
     ProbeEnableCustom: 'Use custom values instead of default probe configuration',
@@ -2373,6 +2376,8 @@ export default {
     DatasetRequiredForMetrics: 'Please link a dataset to this test suite before adding metrics.',
     OpenDataset: 'Open dataset',
     ChangeDataset: 'Change dataset',
+    TestCasesPrivateTagTooltip:
+      'Test cases are private to this suite. To share them with other suites, publish them to a new dataset or attach from existing one.',
     NoTestCasesDescription: 'Add test cases manually or attach from dataset',
     More: 'More',
     AttachDataset: 'Attach dataset',

@@ -49,6 +49,9 @@ export const lockedWidthColDef = (width: number): Pick<ColDef, 'width' | 'minWid
 /** Leaf headers keep the kit's header typography and gain a tooltip once the label is truncated. */
 export const ELLIPSIS_HEADER_PARAMS = { innerHeaderComponent: EllipsisHeader };
 
+/** For a group header whose leaves hold numbers, so its title sits over the right-aligned values. */
+export const RIGHT_ALIGNED_HEADER_GROUP_PARAMS = { isRightAligned: true };
+
 export const RIGHT_ALIGNED_ELLIPSIS_HEADER_PARAMS = {
   innerHeaderComponent: EllipsisHeader,
   innerHeaderComponentParams: { isRightAligned: true },
