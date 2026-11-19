@@ -4,6 +4,11 @@ import { describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 import EntityInterceptors from '../Interceptors';
 
+// The component reads global interceptors through this action; unmocked, it reaches the SDK-backed SettingsApi.
+vi.mock('@/src/app/[lang]/system-properties/actions', () => ({
+  getProperties: vi.fn().mockResolvedValue({ success: true, response: { globalInterceptors: [] } }),
+}));
+
 describe('EntityInterceptors', () => {
   test('renders interceptors count and grid', () => {
     const entity = { interceptors: ['int1', 'int2'] };
