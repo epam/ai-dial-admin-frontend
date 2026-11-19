@@ -1,20 +1,10 @@
 'use client';
 
 import { FC, Fragment, useEffect, useRef, useState } from 'react';
-import {
-  Checkbox,
-  GhostButton,
-  GhostIconButton,
-  Label,
-  Input,
-  Tooltip,
-  SelectOption,
-  Select,
-} from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
+import { Checkbox, GhostButton, Label, Input, Tooltip, SelectOption, Select } from '@epam/ai-dial-ui-kit';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { createMeasureRow, toMeasureRows, toMeasures } from '@/src/components/Analytics/Pipelines/Aggregate/measures';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Measure } from '@/src/models/analytics/pipeline';
 import { MeasureRow } from '@/src/models/analytics/pipeline-ui';
@@ -158,9 +148,8 @@ const MeasuresEditor: FC<Props> = ({ measures, fields, targetColumns, functions,
                 <span />
               )}
 
-              <GhostIconButton
+              <RemoveButton
                 className="shrink-0"
-                icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
                 aria-label={`${t(ButtonsI18nKey.Delete)} ${index + 1}`}
                 onClick={() => commit(rows.filter((candidate) => candidate.id !== row.id))}
               />

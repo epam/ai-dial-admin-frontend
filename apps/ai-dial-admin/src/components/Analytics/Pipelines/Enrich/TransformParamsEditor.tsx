@@ -2,11 +2,10 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { GhostButton, GhostIconButton, Input } from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
+import { GhostButton, Input } from '@epam/ai-dial-ui-kit';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { TransformParamRow } from '@/src/models/analytics/pipeline-ui';
 import { toParamRows, toParams } from '@/src/utils/analytics/transform-dto';
@@ -80,8 +79,7 @@ const TransformParamsEditor: FC<Props> = ({ params, isDisabled, onChange }) => {
               containerClassName="max-w-[220px]"
               onChange={(v) => onChangeRow(row.id, { value: v ?? '' })}
             />
-            <GhostIconButton
-              icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
+            <RemoveButton
               aria-label={`${t(ButtonsI18nKey.Delete)} ${row.key || position}`}
               disabled={isDisabled}
               onClick={() => commit(rows.filter((item) => item.id !== row.id))}

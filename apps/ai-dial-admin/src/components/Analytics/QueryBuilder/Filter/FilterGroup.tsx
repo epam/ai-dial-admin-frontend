@@ -1,9 +1,9 @@
 import { FC, useMemo } from 'react';
 
 import classNames from 'classnames';
-import { GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
+import { ElementSize } from '@epam/ai-dial-ui-kit';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import FilterCondition from '@/src/components/Analytics/QueryBuilder/Filter/FilterCondition';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
@@ -89,12 +89,7 @@ const FilterGroup: FC<Props> = ({
           {operatorSelect}
           <SectionAction label={t(QueryBuilderI18nKey.AddCondition)} onClick={addCondition} />
           <div className="flex-1" />
-          <GhostIconButton
-            size={ElementSize.Small}
-            aria-label={t(ButtonsI18nKey.Remove)}
-            icon={<IconTrashX size={16} className="text-error" />}
-            onClick={remove}
-          />
+          <RemoveButton size={ElementSize.Small} aria-label={t(ButtonsI18nKey.Remove)} onClick={remove} />
         </div>
       )}
       {isRoot && showOperator && <div className="flex items-center gap-1.5">{operatorSelect}</div>}

@@ -3,7 +3,7 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import { GhostIconButton, Input, Label, OutlinedButton, PrimaryButton, ElementSize } from '@epam/ai-dial-ui-kit';
-import { IconArrowLeft, IconEdit, IconPlus, IconTrashX } from '@tabler/icons-react';
+import { IconArrowLeft, IconEdit, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import {
@@ -12,6 +12,7 @@ import {
   signOutExternalService,
   withdrawExternalServiceConsent,
 } from '@/src/app/[lang]/assets-applications/actions';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import {
   ButtonsI18nKey,
   EntityFieldsI18nKey,
@@ -261,10 +262,9 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
                         icon={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
                         onClick={() => onEdit(serviceId)}
                       />
-                      <GhostIconButton
+                      <RemoveButton
                         aria-label={t(ButtonsI18nKey.Delete)}
                         size={ElementSize.Small}
-                        icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" />}
                         onClick={() => onDelete(serviceId)}
                       />
                     </>
