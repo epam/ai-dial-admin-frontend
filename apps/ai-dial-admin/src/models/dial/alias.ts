@@ -34,6 +34,7 @@ export interface DialAliasResource extends CoreResource {
   target?: AliasTarget;
   presentAs?: AliasPresentAs;
   userRoles?: string[];
+  defaultHeaders?: Record<string, string>;
   displayName?: string;
   displayVersion?: string;
   iconUrl?: string;

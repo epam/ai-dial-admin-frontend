@@ -36,12 +36,13 @@ describe('present-as compatibility table', () => {
 });
 
 describe('ALIAS_WRITABLE_FIELDS', () => {
-  test('is exactly the nine fields Core keeps for a stored alias', () => {
+  test('is exactly the ten fields Core keeps for a stored alias', () => {
     expect([...ALIAS_WRITABLE_FIELDS].sort()).toEqual(
       [
         'target',
         'presentAs',
         'userRoles',
+        'defaultHeaders',
         'displayName',
         'displayVersion',
         'iconUrl',
