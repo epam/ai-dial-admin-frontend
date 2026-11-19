@@ -47,8 +47,8 @@ const mapSuitePassRateResponse = (response: SuitePassRateResponse | null): Suite
   return {
     passRate: response.passRate ?? null,
     previousPassRate: response.previousPassRate ?? null,
-    suiteCount: response.suiteCount ?? 0,
-    previousSuiteCount: response.previousSuiteCount ?? 0,
+    suiteCount: response.suiteCount,
+    previousSuiteCount: response.previousSuiteCount,
   };
 };
 

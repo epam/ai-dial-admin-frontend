@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { getSuitePassRate } from '@/src/app/[lang]/test-suites/actions';
 import { EMPTY_SUITE_PASS_RATE_SUMMARY, SuitePassRateSummary } from '@/src/components/EvalTrendsTab/suite-pass-rate';
@@ -11,13 +11,12 @@ export interface SuitePassRateState {
 }
 
 export const useSuitePassRate = (suiteIds: string[]): SuitePassRateState => {
-  const suiteIdsKey = useMemo(() => [...suiteIds].sort().join(','), [suiteIds]);
+  const suiteIdsKey = JSON.stringify([...suiteIds].sort());
   const [summary, setSummary] = useState<SuitePassRateSummary>({ ...EMPTY_SUITE_PASS_RATE_SUMMARY });
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const ids = suiteIdsKey ? suiteIdsKey.split(',') : [];
-    if (ids.length === 0) {
+    if (suiteIds.length === 0) {
       setSummary({ ...EMPTY_SUITE_PASS_RATE_SUMMARY });
       setIsLoading(false);
       return;
@@ -28,7 +27,7 @@ export const useSuitePassRate = (suiteIds: string[]): SuitePassRateState => {
 
     const load = async () => {
       try {
-        const next = await getSuitePassRate(ids);
+        const next = await getSuitePassRate(suiteIds);
         if (!cancelled) {
           setSummary(next);
         }
@@ -48,7 +47,7 @@ export const useSuitePassRate = (suiteIds: string[]): SuitePassRateState => {
     return () => {
       cancelled = true;
     };
-  }, [suiteIdsKey]);
+  }, [suiteIdsKey]); // eslint-disable-line react-hooks/exhaustive-deps -- suiteIds captured when suiteIdsKey changes
 
   return { summary, isLoading };
 };

@@ -4,7 +4,7 @@
  */
 export const SUITE_PASS_RATE_BATCH_SIZE = 100;
 
-/** Response from `POST /api/v1/analytics/test-suites/pass-rate`. Rates are 0–1. */
+/** Client-side aggregated summary derived from one or more SuitePassRateResponse batch results. Rates are 0–1. */
 export interface SuitePassRateSummary {
   /** Mean latest-run pass rate; null when no suite contributed. */
   passRate: number | null;

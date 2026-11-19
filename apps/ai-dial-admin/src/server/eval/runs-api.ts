@@ -24,6 +24,7 @@ export const DEPLOYMENT_COSTS_URL = (deploymentId: string, fromMs: number, toMs:
 export const RUN_CANCEL_URL = (id: string) => `${RUN_URL(id)}/cancel`;
 export const RUN_RESULTS_URL = `${API}/analytics/test-case-results`;
 export const SUITE_PASS_RATE_URL = `${API}/analytics/test-suites/pass-rate`;
+
 export class RunsApi extends BaseApi {
   getRuns(
     page: number,
