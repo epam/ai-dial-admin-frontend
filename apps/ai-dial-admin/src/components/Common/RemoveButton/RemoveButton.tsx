@@ -27,7 +27,13 @@ const RemoveButton: FC<RemoveButtonProps> = (props) => {
     <GhostIconButton
       aria-label={t(ButtonsI18nKey.Delete)}
       {...props}
-      icon={<IconTrashX size={DIAL_ICON_SIZE.SM} className="text-error" aria-hidden />}
+      icon={
+        <IconTrashX
+          size={DIAL_ICON_SIZE.SM}
+          className={props.disabled ? 'text-controls-disable' : 'text-error'}
+          aria-hidden
+        />
+      }
     />
   );
 };

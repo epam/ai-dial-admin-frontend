@@ -14,6 +14,7 @@ import { AssetModel } from '@/src/models/dial/deployment-asset';
 import { DialModelResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModelDeploymentId } from '@/src/utils/models/deployment-id';
@@ -31,6 +32,7 @@ interface Props {
   interceptors: DialInterceptor[];
   globalInterceptors?: string[];
   translators?: ResourceInfo[];
+  plugins?: PluginOptions;
   catalogSchemas?: CatalogSchemaOptions;
   onChange: (model: AssetModel) => void;
 }
@@ -43,6 +45,7 @@ const TabsContent: FC<Props> = ({
   interceptors,
   globalInterceptors,
   translators,
+  plugins,
   catalogSchemas,
   onChange,
 }) => {
@@ -69,6 +72,7 @@ const TabsContent: FC<Props> = ({
           <ModelAssetProperties
             asset={resource}
             translators={translators}
+            plugins={plugins}
             catalogSchemas={catalogSchemas}
             onChange={onChangeResource}
           />
