@@ -28,7 +28,13 @@ import {
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
-import { ChartConfig, ChartType, QueryResultView, QuerySourceProblem } from '@/src/models/analytics/query-builder';
+import {
+  ChartConfig,
+  ChartLegendPosition,
+  ChartType,
+  QueryResultView,
+  QuerySourceProblem,
+} from '@/src/models/analytics/query-builder';
 import { ReadFailure } from '@/src/models/server-action';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope, SavedQueryTimeMode } from '@/src/models/analytics/saved-query';
 import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
@@ -99,9 +105,17 @@ vi.mock('@/src/components/Analytics/QueryBuilder/Result/ResultArea', () => ({
       <span>
         chart: {chartConfig.type}/{chartConfig.xField ?? 'none'}
       </span>
+      <span>legend: {chartConfig.legend?.position ?? 'none'}</span>
       <button onClick={() => onChangeView(QueryResultView.Chart)}>use chart view</button>
       <button onClick={() => onChangeChartConfig({ type: ChartType.Pie, xField: 'project_id', yFields: ['count'] })}>
         change axes
+      </button>
+      <button
+        onClick={() =>
+          onChangeChartConfig({ ...chartConfig, legend: { isVisible: true, position: ChartLegendPosition.Right } })
+        }
+      >
+        move legend
       </button>
     </div>
   ),
@@ -414,6 +428,21 @@ describe('QueryBuilder — a stored saved query', () => {
     expect(saveButton()).toBeInTheDocument();
   });
 
+  test('reports unsaved changes when the chart legend is moved', async () => {
+    const user = userEvent.setup();
+    renderPage(
+      savedQuery({
+        result_view: QueryResultView.Chart,
+        chart: { type: ChartType.Bar, x_field: 'project_id', y_field: ['count'] },
+      }),
+    );
+
+    expect(saveButton()).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'move legend' }));
+
+    expect(saveButton()).toBeInTheDocument();
+  });
+
   test('saves the edited query and re-reads it', async () => {
     const user = userEvent.setup();
     renderPage();
@@ -527,6 +556,24 @@ describe('QueryBuilder — a stored saved query', () => {
     await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
 
     expect(await screen.findByText(`chart: ${ChartType.Line}/project_id`)).toBeInTheDocument();
+  });
+
+  test('keeps the legend settings across a later run that resets the axes', async () => {
+    const user = userEvent.setup();
+    renderPage(
+      savedQuery({
+        result_view: QueryResultView.Chart,
+        chart: { type: ChartType.Line, x_field: 'project_id', y_field: ['count'] },
+      }),
+    );
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+    expect(await screen.findByText(`chart: ${ChartType.Line}/project_id`)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'move legend' }));
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+
+    expect(await screen.findByText(`chart: ${ChartType.Bar}/none`)).toBeInTheDocument();
+    expect(screen.getByText(`legend: ${ChartLegendPosition.Right}`)).toBeInTheDocument();
   });
 
   test('offers no Save or Edit on a common query to a caller who cannot write it', async () => {

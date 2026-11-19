@@ -8,11 +8,12 @@ import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { IconChartBar, IconDownload, IconTable } from '@tabler/icons-react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { ResultGridRow } from '@/src/components/Analytics/QueryBuilder/Result/models';
+import { ResultGridRow, ScorecardTrendSource } from '@/src/components/Analytics/QueryBuilder/Result/models';
 import ResultChart from '@/src/components/Analytics/QueryBuilder/Result/ResultChart';
 import { getValueClassColumn } from '@/src/components/Analytics/QueryBuilder/Result/result-column-format';
 import ResultValueCell from '@/src/components/Analytics/QueryBuilder/Result/ResultValueCell';
 import { useRowsRestricted } from '@/src/components/Analytics/QueryBuilder/Result/use-rows-restricted';
+import { getScorecardColumns } from '@/src/components/Analytics/QueryBuilder/utils/chart-types';
 import { getResultColumns, getResultTotal } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { EXPORT_ROW_LIMIT } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey, QueryChipsI18nKey } from '@/src/constants/i18n';
@@ -39,6 +40,7 @@ interface Props {
   isExporting?: boolean;
   onExportCsv?: () => void;
   actions?: ReactNode;
+  trendSource?: ScorecardTrendSource;
 }
 
 const getRowId = ({ data }: GetRowIdParams<ResultGridRow>): string => String(data.index);
@@ -54,6 +56,7 @@ const ResultArea: FC<Props> = ({
   isExporting = false,
   onExportCsv,
   actions,
+  trendSource,
 }) => {
   const t = useI18n();
   const exportHintId = useId();
@@ -74,7 +77,10 @@ const ResultArea: FC<Props> = ({
   const isRowsRestricted = useRowsRestricted(meta?.source, !!result && !rows.length && !isRunning);
 
   const chartAvailable =
-    !!meta && rows.length > 0 && meta.dimensionColumns.length > 0 && meta.aggregateColumns.length > 0;
+    !!meta &&
+    rows.length > 0 &&
+    ((meta.dimensionColumns.length > 0 && meta.aggregateColumns.length > 0) ||
+      getScorecardColumns(rows, meta).length > 0);
 
   const chartUnavailableKey = (): QueryBuilderI18nKey => {
     if (!rows.length) return QueryBuilderI18nKey.ChartNoRows;
@@ -160,7 +166,13 @@ const ResultArea: FC<Props> = ({
           <NoDataContent title={t(QueryBuilderI18nKey.ResultsEmptyDescription)} />
         ) : isChartView ? (
           chartAvailable && meta ? (
-            <ResultChart result={result} meta={meta} config={chartConfig} onChangeConfig={onChangeChartConfig} />
+            <ResultChart
+              result={result}
+              meta={meta}
+              config={chartConfig}
+              onChangeConfig={onChangeChartConfig}
+              trendSource={trendSource}
+            />
           ) : (
             <NoDataContent title={t(chartUnavailableKey())} />
           )

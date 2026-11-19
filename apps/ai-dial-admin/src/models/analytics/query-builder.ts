@@ -287,12 +287,26 @@ export enum ChartType {
   Line = 'line',
   Pie = 'pie',
   Scatter = 'scatter',
+  Scorecard = 'scorecard',
+}
+
+export enum ChartLegendPosition {
+  Above = 'above',
+  Right = 'right',
+  Below = 'below',
+  Left = 'left',
+}
+
+export interface ChartLegendConfig {
+  isVisible: boolean;
+  position: ChartLegendPosition;
 }
 
 export interface ChartConfig {
   type: ChartType;
   xField: string | null;
   yFields: string[] | null;
+  legend?: ChartLegendConfig;
 }
 
 export interface ResolvedChartAxes {
@@ -329,6 +343,7 @@ export interface ChartBuildContext {
   otherLabel: string;
   emptyLabel: string;
   columnLabels: Record<string, string>;
+  splitField?: string | null;
 }
 
 // How a result cell renders its value. Resolved from the executed query, not from the live builder

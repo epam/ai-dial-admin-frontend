@@ -12,6 +12,8 @@ import {
 import {
   ChartColumnSource,
   ChartConfig,
+  ChartLegendConfig,
+  ChartLegendPosition,
   ChartSlotDescriptor,
   ChartType,
   CompactSelectOptionDescriptor,
@@ -155,7 +157,14 @@ export const IMPLICIT_COUNT_ALIAS = 'Count';
 
 export const CHART_TYPE_OPTIONS: SelectOption[] = toOptions(Object.values(ChartType));
 
-export const DEFAULT_CHART_CONFIG: ChartConfig = { type: ChartType.Bar, xField: null, yFields: null };
+export const DEFAULT_CHART_LEGEND: ChartLegendConfig = { isVisible: true, position: ChartLegendPosition.Below };
+
+export const DEFAULT_CHART_CONFIG: ChartConfig = {
+  type: ChartType.Bar,
+  xField: null,
+  yFields: null,
+  legend: DEFAULT_CHART_LEGEND,
+};
 
 export const PIE_MAX_SLICES = 10;
 
@@ -181,7 +190,7 @@ export const CHART_SLOT_DESCRIPTORS: Record<ChartType, ChartSlotDescriptor> = {
     xSource: ChartColumnSource.Dimensions,
     ySource: ChartColumnSource.Aggregates,
     isMultiY: false,
-    xLabelKey: QueryBuilderI18nKey.ChartCategory,
+    xLabelKey: QueryBuilderI18nKey.ChartSlices,
     yLabelKey: QueryBuilderI18nKey.ChartValue,
   },
   [ChartType.Scatter]: {
@@ -189,6 +198,13 @@ export const CHART_SLOT_DESCRIPTORS: Record<ChartType, ChartSlotDescriptor> = {
     ySource: ChartColumnSource.Numeric,
     isMultiY: false,
     ...AXIS_SLOTS,
+  },
+  [ChartType.Scorecard]: {
+    xSource: ChartColumnSource.Numeric,
+    ySource: ChartColumnSource.Numeric,
+    isMultiY: false,
+    xLabelKey: QueryBuilderI18nKey.ChartValue,
+    yLabelKey: QueryBuilderI18nKey.ChartValue,
   },
 };
 
