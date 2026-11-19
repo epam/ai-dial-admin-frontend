@@ -64,7 +64,7 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
     const reportFailure = (failure?: ServerActionResponse) => {
       showNotification(
         getErrorNotification(
-          failure?.errorHeader ?? t(AnalyticsPipelinesI18nKey.PipelinesLoadFailed),
+          t(AnalyticsPipelinesI18nKey.PipelinesLoadFailed),
           failure?.errorMessage,
           failure?.requestId,
         ),
@@ -89,10 +89,8 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
   }, [showNotification, t]);
 
   const notifyFailed = useCallback(
-    (errorHeader?: string, errorMessage?: string, requestId?: string) =>
-      showNotification(
-        getErrorNotification(errorHeader || t(AnalyticsPipelinesI18nKey.ActionFailed), errorMessage, requestId),
-      ),
+    (errorMessage?: string, requestId?: string) =>
+      showNotification(getErrorNotification(t(AnalyticsPipelinesI18nKey.ActionFailed), errorMessage, requestId)),
     [showNotification, t],
   );
 
@@ -107,7 +105,7 @@ const PipelinesView: FC<Props> = ({ initialPipelines, loadFailure }) => {
       showNotification(getSuccessNotification(t(AnalyticsPipelinesI18nKey.Deleted)));
       void reload();
     } else {
-      notifyFailed(res.errorHeader, res.errorMessage, res.requestId);
+      notifyFailed(res.errorMessage, res.requestId);
     }
   };
 

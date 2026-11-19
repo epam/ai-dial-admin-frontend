@@ -1,19 +1,25 @@
 import { describe, expect, test } from 'vitest';
 
-import { PrivilegeMark, RoleSelection, RowsCellKind } from '@/src/components/Analytics/Tables/access/models';
 import {
-  applyAccessResult,
+  ColumnsMode,
+  EntryDraft,
+  PrivilegeMark,
+  RoleSelection,
+  RowsCellKind,
+  RowsMode,
+} from '@/src/components/Analytics/Tables/access/models';
+import {
+  buildEntry,
   buildRoleRows,
-  emptyAccess,
   hasAnyPrivilege,
+  isColumnsStepOffered,
+  isEntryEmpty,
   isGetHeld,
+  isOpenToEveryone,
   isRowsStepOffered,
   isSensitiveStepOffered,
-  normalizeAccess,
-  planAccessSave,
-  planRoleRemoval,
   roleLabel,
-  selectionFromAccess,
+  selectionFromEntry,
   summarizeFilter,
 } from '@/src/components/Analytics/Tables/access/utils';
 import {
@@ -23,9 +29,19 @@ import {
   QueryOperator,
   QueryValueType,
 } from '@/src/models/analytics/query';
-import { TableAccess } from '@/src/models/analytics/table';
+import {
+  IneffectiveGrant,
+  IneffectiveGrantReason,
+  TableAccessEntry,
+  TableGrantKey,
+} from '@/src/models/analytics/table';
 
-const access = (over: Partial<TableAccess> = {}): TableAccess => ({ ...emptyAccess(), ...over });
+const entry = (privileges: TableGrantKey[], over: Partial<TableAccessEntry> = {}): TableAccessEntry => ({
+  privileges,
+  rows: null,
+  columns: null,
+  ...over,
+});
 
 const selection = (over: Partial<RoleSelection> = {}): RoleSelection => ({
   get: false,
@@ -33,6 +49,23 @@ const selection = (over: Partial<RoleSelection> = {}): RoleSelection => ({
   write: false,
   modify: false,
   sensitive: false,
+  ...over,
+});
+
+const draft = (over: Partial<EntryDraft> = {}): EntryDraft => ({
+  selection: selection(),
+  rowsMode: RowsMode.All,
+  filter: null,
+  columnsMode: ColumnsMode.All,
+  columns: [],
+  ...over,
+});
+
+const warning = (role: string, message: string, over: Partial<IneffectiveGrant> = {}): IneffectiveGrant => ({
+  key: TableGrantKey.Read,
+  role,
+  reason: IneffectiveGrantReason.AlreadyGlobal,
+  message,
   ...over,
 });
 
@@ -48,14 +81,21 @@ const eq = (name: string, v: string | null): QueryFilterNode => ({
 });
 
 describe('buildRoleRows', () => {
-  test('lists one row per role named by any grant list, sorted by name', () => {
-    const rows = buildRoleRows(access({ write: ['ingest-bot'], read: ['Team-x'], sensitive: ['analysts'] }), {});
+  test('lists one row per role entry, sorted by name', () => {
+    const rows = buildRoleRows(
+      {
+        'ingest-bot': entry([TableGrantKey.Write]),
+        'Team-x': entry([TableGrantKey.Read]),
+        analysts: entry([TableGrantKey.Sensitive]),
+      },
+      [],
+    );
 
     expect(rows.map((row) => row.role)).toEqual(['analysts', 'ingest-bot', 'Team-x']);
   });
 
   test('marks a stored privilege as stored and get as implied by read', () => {
-    const [row] = buildRoleRows(access({ read: ['team-x'] }), {});
+    const [row] = buildRoleRows({ 'team-x': entry([TableGrantKey.Read]) }, []);
 
     expect(row.marks).toEqual({
       get: PrivilegeMark.Implied,
@@ -66,19 +106,19 @@ describe('buildRoleRows', () => {
   });
 
   test('marks get as implied by modify', () => {
-    const [row] = buildRoleRows(access({ modify: ['editors'] }), {});
+    const [row] = buildRoleRows({ editors: entry([TableGrantKey.Modify]) }, []);
 
     expect(row.marks.get).toBe(PrivilegeMark.Implied);
   });
 
   test('keeps a stored get as stored even when read also implies it', () => {
-    const [row] = buildRoleRows(access({ get: ['team-x'], read: ['team-x'] }), {});
+    const [row] = buildRoleRows({ 'team-x': entry([TableGrantKey.Get, TableGrantKey.Read]) }, []);
 
     expect(row.marks.get).toBe(PrivilegeMark.Stored);
   });
 
   test('does not imply read, write or modify from anything', () => {
-    const [row] = buildRoleRows(access({ get: ['browsers'] }), {});
+    const [row] = buildRoleRows({ browsers: entry([TableGrantKey.Get]) }, []);
 
     expect(row.marks).toEqual({
       get: PrivilegeMark.Stored,
@@ -88,79 +128,92 @@ describe('buildRoleRows', () => {
     });
   });
 
-  test('flags a role in the sensitive list', () => {
-    const rows = buildRoleRows(access({ read: ['pii'], sensitive: ['pii'] }), {});
+  test('flags a role whose entry holds the clearance', () => {
+    const [row] = buildRoleRows({ pii: entry([TableGrantKey.Read, TableGrantKey.Sensitive]) }, []);
 
-    expect(rows[0].isSensitive).toBe(true);
+    expect(row.isSensitive).toBe(true);
   });
 
-  test('reads all rows for a role that holds read and has no policy', () => {
-    const [row] = buildRoleRows(access({ read: ['pii'] }), {});
+  test('reads all rows for a role that holds read and has no row limit', () => {
+    const [row] = buildRoleRows({ pii: entry([TableGrantKey.Read]) }, []);
 
     expect(row.rowsKind).toBe(RowsCellKind.All);
     expect(row.filter).toBeUndefined();
   });
 
-  test('cannot read rows for a role without read and without a policy', () => {
-    const [row] = buildRoleRows(access({ write: ['ingest-bot'] }), {});
+  test('cannot read rows for a role without read', () => {
+    const [row] = buildRoleRows({ 'ingest-bot': entry([TableGrantKey.Write]) }, []);
 
     expect(row.rowsKind).toBe(RowsCellKind.None);
   });
 
-  test('shows the policy filter for a role that has one', () => {
+  test('shows the row limit of a role that holds read', () => {
     const filter = eq('project_id', 'X-PRJ-1');
-    const [row] = buildRoleRows(access({ read: ['team-x'] }), { 'team-x': { filter } });
+    const [row] = buildRoleRows({ 'team-x': entry([TableGrantKey.Read], { rows: { filter } }) }, []);
 
     expect(row.rowsKind).toBe(RowsCellKind.Policy);
     expect(row.filter).toBe(filter);
   });
 
-  test('lists a role that has only a policy, with every mark neutral and the policy kept', () => {
-    const policy = { filter: eq('a', 'b') };
-    const [row] = buildRoleRows(access(), { lonely: policy });
+  test('lists a role that holds only a row limit, with every mark neutral and the limit kept', () => {
+    const filter = eq('a', 'b');
+    const [row] = buildRoleRows({ lonely: entry([], { rows: { filter } }) }, []);
 
     expect(row.role).toBe('lonely');
     expect(Object.values(row.marks).every((mark) => mark === PrivilegeMark.None)).toBe(true);
     expect(row.rowsKind).toBe(RowsCellKind.None);
-    expect(row.filter).toBe(policy.filter);
+    expect(row.filter).toBe(filter);
   });
 
-  test('keeps the policy of a role that lost Read, as a role that cannot read rows', () => {
-    const policy = { filter: eq('a', 'b') };
-    const [row] = buildRoleRows(access({ modify: ['analysts'] }), { analysts: policy });
+  test('keeps the row limit of a role that lost Read, as a role that cannot read rows', () => {
+    const filter = eq('a', 'b');
+    const [row] = buildRoleRows({ analysts: entry([TableGrantKey.Modify], { rows: { filter } }) }, []);
 
     expect(row.rowsKind).toBe(RowsCellKind.None);
-    expect(row.filter).toBe(policy.filter);
+    expect(row.filter).toBe(filter);
   });
 
-  test('returns no rows for an empty table', () => {
-    expect(buildRoleRows(access(), {})).toEqual([]);
+  test('carries the column limit of a role and null for a role without one', () => {
+    const rows = buildRoleRows(
+      {
+        limited: entry([TableGrantKey.Read], { columns: ['region', 'project_id'] }),
+        open: entry([TableGrantKey.Read]),
+      },
+      [],
+    );
+
+    expect(rows.map((row) => row.columns)).toEqual([['region', 'project_id'], null]);
+  });
+
+  test('gives each role the messages of its own ineffective grants only', () => {
+    const rows = buildRoleRows({ '*': entry([TableGrantKey.Read]), 'team-x': entry([TableGrantKey.Read]) }, [
+      warning('*', 'everyone reads all rows', { reason: IneffectiveGrantReason.EveryoneReadsAllRows }),
+      warning('team-x', 'already global'),
+      warning('team-x', 'lifts column policies', { reason: IneffectiveGrantReason.LiftsColumnPolicies }),
+      warning('absent', 'not listed'),
+    ]);
+
+    expect(rows.map((row) => [row.role, row.warnings])).toEqual([
+      ['*', ['everyone reads all rows']],
+      ['team-x', ['already global', 'lifts column policies']],
+    ]);
+  });
+
+  test('returns no rows for a table with no entries', () => {
+    expect(buildRoleRows({}, [])).toEqual([]);
   });
 });
 
-describe('normalizeAccess', () => {
-  test('fills every missing list with an empty array', () => {
-    expect(normalizeAccess({ write: ['w'] })).toEqual(access({ write: ['w'] }));
-  });
-
-  test('turns a missing response into empty lists', () => {
-    expect(normalizeAccess(undefined)).toEqual(emptyAccess());
-    expect(normalizeAccess(null)).toEqual(emptyAccess());
-  });
-});
-
-describe('selectionFromAccess', () => {
-  test('reads the role membership of each list', () => {
-    const lists = access({ get: ['r'], read: ['r'], sensitive: ['r'], write: ['other'] });
-
-    expect(selectionFromAccess(lists, 'r')).toEqual(
-      selection({ get: true, read: true, sensitive: true, write: false, modify: false }),
+describe('selectionFromEntry', () => {
+  test('reads each privilege the entry holds', () => {
+    expect(selectionFromEntry(entry([TableGrantKey.Get, TableGrantKey.Read, TableGrantKey.Sensitive]))).toEqual(
+      selection({ get: true, read: true, sensitive: true }),
     );
   });
 
-  test('is empty for a new role', () => {
-    expect(selectionFromAccess(access({ read: ['r'] }))).toEqual(selection());
-    expect(selectionFromAccess(access({ read: ['r'] }), '')).toEqual(selection());
+  test('is empty for a role with no entry', () => {
+    expect(selectionFromEntry()).toEqual(selection());
+    expect(selectionFromEntry(undefined)).toEqual(selection());
   });
 });
 
@@ -173,15 +226,31 @@ describe('selection rules', () => {
   });
 
   test('offers the sensitive step only beside a verb that shows the table', () => {
-    expect(isSensitiveStepOffered(selection())).toBe(false);
-    expect(isSensitiveStepOffered(selection({ write: true }))).toBe(false);
-    expect(isSensitiveStepOffered(selection({ get: true }))).toBe(true);
-    expect(isSensitiveStepOffered(selection({ modify: true }))).toBe(true);
+    expect(isSensitiveStepOffered(selection(), false)).toBe(false);
+    expect(isSensitiveStepOffered(selection({ write: true }), false)).toBe(false);
+    expect(isSensitiveStepOffered(selection({ get: true }), false)).toBe(true);
+    expect(isSensitiveStepOffered(selection({ modify: true }), false)).toBe(true);
   });
 
   test('offers the rows step only for read', () => {
-    expect(isRowsStepOffered(selection({ get: true, write: true, modify: true }))).toBe(false);
-    expect(isRowsStepOffered(selection({ read: true }))).toBe(true);
+    expect(isRowsStepOffered(selection({ get: true, write: true, modify: true }), false)).toBe(false);
+    expect(isRowsStepOffered(selection({ read: true }), false)).toBe(true);
+  });
+
+  test('offers the columns step beside get, read or modify, and never for write alone', () => {
+    expect(isColumnsStepOffered(selection({ get: true }), false)).toBe(true);
+    expect(isColumnsStepOffered(selection({ read: true }), false)).toBe(true);
+    expect(isColumnsStepOffered(selection({ modify: true }), false)).toBe(true);
+    expect(isColumnsStepOffered(selection({ write: true }), false)).toBe(false);
+    expect(isColumnsStepOffered(selection(), false)).toBe(false);
+  });
+
+  test('offers none of the sensitive, rows and columns steps on an enrichment table', () => {
+    const held = selection({ get: true, read: true, modify: true });
+
+    expect(isSensitiveStepOffered(held, true)).toBe(false);
+    expect(isRowsStepOffered(held, true)).toBe(false);
+    expect(isColumnsStepOffered(held, true)).toBe(false);
   });
 
   test('has a privilege when anything is held, the clearance included', () => {
@@ -191,65 +260,123 @@ describe('selection rules', () => {
   });
 });
 
-describe('planAccessSave', () => {
-  test('adds the role to a list it joins, keeping every other grantee', () => {
-    const plan = planAccessSave(access({ read: ['team-x', 'pii'] }), 'team-z', selection({ read: true }));
+describe('buildEntry', () => {
+  const filter = eq('project_id', 'X-PRJ-1');
 
-    expect(plan).toEqual({ read: ['team-x', 'pii', 'team-z'] });
+  test('lists the chosen privileges and never stores a get that read only implies', () => {
+    const built = buildEntry(undefined, draft({ selection: selection({ read: true, sensitive: true }) }), false);
+
+    expect(built).toEqual({ privileges: [TableGrantKey.Read, TableGrantKey.Sensitive], rows: null, columns: null });
   });
 
-  test('sends only the keys whose membership changed', () => {
-    const plan = planAccessSave(access({ read: ['team-x'], write: ['team-x'] }), 'team-x', selection({ read: true }));
+  test('sends the row limit and the column limit chosen in their steps', () => {
+    const built = buildEntry(
+      undefined,
+      draft({
+        selection: selection({ read: true }),
+        rowsMode: RowsMode.Some,
+        filter,
+        columnsMode: ColumnsMode.Some,
+        columns: ['region'],
+      }),
+      false,
+    );
 
-    expect(plan).toEqual({ write: [] });
+    expect(built).toEqual({ privileges: [TableGrantKey.Read], rows: { filter }, columns: ['region'] });
   });
 
-  test('removes the role from a list it leaves without touching other members', () => {
-    const plan = planAccessSave(access({ write: ['a', 'team-x', 'b'] }), 'team-x', selection());
+  test('sends null rows and columns for All rows and All columns, dropping what was stored', () => {
+    const stored = entry([TableGrantKey.Read], { rows: { filter }, columns: ['region'] });
 
-    expect(plan).toEqual({ write: ['a', 'b'] });
+    expect(buildEntry(stored, draft({ selection: selection({ read: true }) }), false)).toEqual(
+      entry([TableGrantKey.Read]),
+    );
   });
 
-  test('sends nothing when the selection matches what is stored', () => {
-    const plan = planAccessSave(access({ read: ['team-x'] }), 'team-x', selection({ read: true }));
+  test('sends null rows for Only some rows with no filter built', () => {
+    const built = buildEntry(
+      undefined,
+      draft({ selection: selection({ read: true }), rowsMode: RowsMode.Some }),
+      false,
+    );
 
-    expect(plan).toEqual({});
+    expect(built.rows).toBeNull();
   });
 
-  test('does not store get when read only implies it', () => {
-    const plan = planAccessSave(access(), 'team-x', selection({ read: true }));
+  test('keeps the stored rows while the row step is hidden', () => {
+    const stored = entry([TableGrantKey.Read], { rows: { filter } });
+    const built = buildEntry(stored, draft({ selection: selection({ modify: true }) }), false);
 
-    expect(plan).toEqual({ read: ['team-x'] });
+    expect(built).toEqual({ privileges: [TableGrantKey.Modify], rows: { filter }, columns: null });
   });
 
-  test('stores the clearance in its own list', () => {
-    const plan = planAccessSave(access({ read: ['team-x'] }), 'team-x', selection({ read: true, sensitive: true }));
+  test('keeps the stored columns while the column step is hidden', () => {
+    const stored = entry([TableGrantKey.Read], { columns: ['region'] });
+    const built = buildEntry(
+      stored,
+      draft({ selection: selection({ write: true }), columnsMode: ColumnsMode.Some, columns: ['other'] }),
+      false,
+    );
 
-    expect(plan).toEqual({ sensitive: ['team-x'] });
+    expect(built).toEqual({ privileges: [TableGrantKey.Write], rows: null, columns: ['region'] });
+  });
+
+  test('sends null rows and columns for a new role whose steps are hidden', () => {
+    expect(buildEntry(undefined, draft({ selection: selection({ write: true }) }), false)).toEqual(
+      entry([TableGrantKey.Write]),
+    );
+  });
+
+  test('keeps a column name the table no longer has', () => {
+    const built = buildEntry(
+      entry([TableGrantKey.Read], { columns: ['region', 'dropped_column'] }),
+      draft({
+        selection: selection({ read: true }),
+        columnsMode: ColumnsMode.Some,
+        columns: ['region', 'dropped_column'],
+      }),
+      false,
+    );
+
+    expect(built.columns).toEqual(['region', 'dropped_column']);
+  });
+
+  test('holds only write and modify with null rows and columns on an enrichment table', () => {
+    const stored = entry([TableGrantKey.Read], { rows: { filter }, columns: ['region'] });
+    const built = buildEntry(
+      stored,
+      draft({
+        selection: selection({ get: true, read: true, sensitive: true, write: true, modify: true }),
+        rowsMode: RowsMode.Some,
+        filter,
+        columnsMode: ColumnsMode.Some,
+        columns: ['region'],
+      }),
+      true,
+    );
+
+    expect(built).toEqual({ privileges: [TableGrantKey.Write, TableGrantKey.Modify], rows: null, columns: null });
   });
 });
 
-describe('planRoleRemoval', () => {
-  test('returns only the lists that name the role, each without it', () => {
-    const plan = planRoleRemoval(access({ read: ['team-x', 'other'], write: ['team-x'], modify: ['other'] }), 'team-x');
-
-    expect(plan).toEqual({ read: ['other'], write: [] });
+describe('isOpenToEveryone', () => {
+  test('is true for an entry that holds read with no row limit', () => {
+    expect(isOpenToEveryone(entry([TableGrantKey.Read]))).toBe(true);
   });
 
-  test('returns nothing for a role no list names', () => {
-    expect(planRoleRemoval(access({ read: ['other'] }), 'team-x')).toEqual({});
+  test('is false for a read confined by a row limit, an entry without read and a missing entry', () => {
+    expect(isOpenToEveryone(entry([TableGrantKey.Read], { rows: { filter: eq('a', 'b') } }))).toBe(false);
+    expect(isOpenToEveryone(entry([TableGrantKey.Get]))).toBe(false);
+    expect(isOpenToEveryone()).toBe(false);
   });
 });
 
-describe('applyAccessResult', () => {
-  test('replaces the lists the answer carries and keeps the rest', () => {
-    const merged = applyAccessResult(access({ read: ['a'], write: ['b'] }), { read: ['a', 'c'] });
-
-    expect(merged).toEqual(access({ read: ['a', 'c'], write: ['b'] }));
-  });
-
-  test('ignores lists the answer omits', () => {
-    expect(applyAccessResult(access({ read: ['a'] }), {})).toEqual(access({ read: ['a'] }));
+describe('isEntryEmpty', () => {
+  test('is true only when no privilege, row limit or column limit is left', () => {
+    expect(isEntryEmpty(entry([]))).toBe(true);
+    expect(isEntryEmpty(entry([TableGrantKey.Get]))).toBe(false);
+    expect(isEntryEmpty(entry([], { rows: { filter: eq('a', 'b') } }))).toBe(false);
+    expect(isEntryEmpty(entry([], { columns: ['region'] }))).toBe(false);
   });
 });
 
@@ -318,13 +445,5 @@ describe('roleLabel', () => {
   test('labels the everyone grantee and leaves a provider role as its name', () => {
     expect(roleLabel('*', 'Everyone')).toBe('Everyone');
     expect(roleLabel('team-x', 'Everyone')).toBe('team-x');
-  });
-});
-
-describe('planAccessSave — everyone', () => {
-  test('adds the literal grantee to the read list beside its members', () => {
-    expect(planAccessSave(access({ read: ['team-x'] }), '*', selection({ read: true }))).toEqual({
-      read: ['team-x', '*'],
-    });
   });
 });

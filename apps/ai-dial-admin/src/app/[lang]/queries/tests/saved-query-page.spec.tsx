@@ -13,6 +13,7 @@ import QueryPageShell from '@/src/components/Analytics/QueryBuilder/SourcePanel/
 import Page403 from '@/src/components/Page403/Page403';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryMode, QueryPageType, StructuredQuery } from '@/src/models/analytics/query';
+import { QuerySourceProblem } from '@/src/models/analytics/query-builder';
 import { SavedQuery, SavedQueryScope, SavedQueryTimeMode } from '@/src/models/analytics/saved-query';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 
@@ -139,6 +140,30 @@ describe('saved query page', () => {
     expect(builder.type).toBe(QueryBuilder);
     expect(builder.props.translatedSql).toBeNull();
     expect(builder.props.translationFailure).toEqual({});
+  });
+
+  test('reports no source problem when the table and its schema are read', async () => {
+    const builder = await renderBuilder();
+
+    expect(builder.props.sourceProblem).toBeNull();
+  });
+
+  test('reports an unavailable table without reading its schema', async () => {
+    vi.mocked(getEntities).mockResolvedValue({ success: true, response: [{ name: 'dial_usage_log' }] });
+
+    const builder = await renderBuilder();
+
+    expect(builder.props.sourceProblem).toBe(QuerySourceProblem.Unavailable);
+    expect(getEntitySchema).not.toHaveBeenCalled();
+  });
+
+  test('reports a schema read failure for a table that is listed', async () => {
+    vi.mocked(getEntitySchema).mockResolvedValue({ success: false, status: 500 });
+
+    const builder = await renderBuilder();
+
+    expect(builder.props.sourceProblem).toBe(QuerySourceProblem.SchemaFailed);
+    expect(builder.props.initialFields).toEqual([]);
   });
 
   test('does not translate a query stored as SQL', async () => {

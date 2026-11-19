@@ -207,12 +207,18 @@ folders as rows or offer to delete a folder.
 
 The system SHALL render the config.json tab as a flat grid with a name column and an open-in-new-tab row action,
 and SHALL offer no create, import, export, delete, duplicate, rename, move or selection-mutation action. A row SHALL
-open the existing config-file detail route per `config-file-entity-views`.
+open the existing config-file detail route per `config-file-entity-views`. Its empty state SHALL show the title only,
+with no description naming a create or import action, since none exists on this tab.
 
 #### Scenario: Only name and open are offered
 
 - **WHEN** a user opens the row action menu on a config.json row
 - **THEN** only open-in-new-tab is offered
+
+#### Scenario: Empty config.json tab names no create action
+
+- **WHEN** a user opens the config.json tab and Core lists no entities
+- **THEN** the empty state shows its title and no description
 
 ### Requirement: The entity picker offers the same tabs
 
@@ -223,7 +229,10 @@ entities, never grouping folders. The picker SHALL report each selection with it
 Platform tab and the config.json tab SHALL count as the same selection, because both store the bare name. The picker
 SHALL support a multi-selection mode (role limits: Add applications) and a single-selection mode (alias target), and
 in single-selection mode a selection on one tab SHALL replace any selection on another tab and the picker SHALL report
-at most one entity.
+at most one entity. In the Platform and config.json grids of the picker a row's name SHALL be plain text, not a link,
+with the selection control (in single-selection mode a radio inside the name cell and no separate selection column; in multi-selection mode a checkbox column), and an empty
+grid SHALL show its title only, since nothing can be created from a picker. The Public tree in the picker SHALL show
+the breadcrumb trail above the grid and SHALL be padded from the top of the popup although it has no heading.
 
 #### Scenario: Picker shows the three sources
 
@@ -254,3 +263,18 @@ at most one entity.
 
 - **WHEN** an admin opens Add applications on a role after this change
 - **THEN** several entities can still be selected across tabs and applying reports all of them
+
+#### Scenario: Picker grid names are not links
+
+- **WHEN** an admin opens the Platform or config.json tab of the Model target picker
+- **THEN** each row shows its name as plain text with a radio button, and clicking the name selects the row instead of opening the entity
+
+#### Scenario: Public tab shows breadcrumbs
+
+- **WHEN** an admin opens the Public tab of an entity picker and enters a folder
+- **THEN** the breadcrumb trail of the folder is shown above the grid and the tree is not flush against the top edge
+
+#### Scenario: Picker empty grid offers no create hint
+
+- **WHEN** an admin opens a picker tab whose source lists no entities
+- **THEN** the empty state shows its title and no description

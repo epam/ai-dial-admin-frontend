@@ -1,72 +1,69 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  deleteRowPolicy,
-  getRowPolicies,
-  getTableAccess,
-  putRowPolicy,
-  updateTableAccess,
-} from '@/src/app/[lang]/tables/actions';
-import { AccessStatus, RoleRow, RoleSelection } from '@/src/components/Analytics/Tables/access/models';
-import {
-  applyAccessResult,
-  buildRoleRows,
-  emptyAccess,
-  normalizeAccess,
-  planAccessSave,
-  planRoleRemoval,
-} from '@/src/components/Analytics/Tables/access/utils';
+import { deleteTableAccessEntry, getTableAccess, putTableAccessEntry } from '@/src/app/[lang]/tables/actions';
+import { AccessChangeOutcome, AccessStatus, RoleRow } from '@/src/components/Analytics/Tables/access/models';
+import { buildRoleRows, isEntryEmpty } from '@/src/components/Analytics/Tables/access/utils';
 import { AnalyticsTableAccessI18nKey, AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { QueryFilterNode } from '@/src/models/analytics/query';
-import { RowPolicies, TableAccess, TableAccessUpdateResult } from '@/src/models/analytics/table';
+import {
+  IneffectiveGrant,
+  TableAccessConfig,
+  TableAccessEntry,
+  TableAccessEntryResult,
+} from '@/src/models/analytics/table';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getErrorNotification } from '@/src/utils/notification';
 
 const FORBIDDEN = 403;
+const ACCESS_CONFLICT = 'access_conflict';
 
-export interface RowPolicyResult {
-  isOk: boolean;
+export interface SaveEntryResult {
+  outcome: AccessChangeOutcome;
+  result?: TableAccessEntryResult;
   errorMessage?: string;
 }
 
 export interface TableAccessState {
   status: AccessStatus;
   rows: RoleRow[];
-  access: TableAccess;
-  policies: RowPolicies;
-  // Offered only once both reads resolved and neither was forbidden: a tab that appears and vanishes is worse
+  roles: Record<string, TableAccessEntry>;
+  warnings: IneffectiveGrant[];
+  // Offered only once the read resolved and was not forbidden: a tab that appears and vanishes is worse
   // than one that arrives late.
   isTabOffered: boolean;
-  // The service merges per key, so a key sent replaces that whole list: a stale copy would drop another
-  // admin's grant. Reads the lists again right before a change.
-  readFreshAccess: () => Promise<TableAccess | null>;
-  // `result` is absent when nothing changed and no request was made.
-  saveGrants: (role: string, selection: RoleSelection) => Promise<{ isOk: boolean; result?: TableAccessUpdateResult }>;
-  // A null filter removes the role's policy, and only when it has one. A refusal's message is returned: it
-  // names the field the service objected to.
-  saveRowPolicy: (role: string, filter: QueryFilterNode | null) => Promise<RowPolicyResult>;
-  removeRole: (role: string) => Promise<boolean>;
+  reload: () => Promise<TableAccessConfig | null>;
+  saveEntry: (role: string, entry: TableAccessEntry) => Promise<SaveEntryResult>;
+  removeRole: (role: string) => Promise<AccessChangeOutcome>;
 }
 
-// Read with the view, because the tab's presence depends on them. A 403 removes the tab without
-// a notification: a viewer who cannot manage grants has nothing to be told.
+const EMPTY_ROLES: Record<string, TableAccessEntry> = {};
+const NO_WARNINGS: IneffectiveGrant[] = [];
+
+// Read with the view, because the tab's presence depends on it. A 403 removes the tab without
+// a notification: a viewer who cannot manage access has nothing to be told.
 export const useTableAccess = (name: string, isEnabled: boolean): TableAccessState => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
   const [status, setStatus] = useState<AccessStatus>(AccessStatus.Loading);
-  const [access, setAccess] = useState<TableAccess>(emptyAccess);
-  const [policies, setPolicies] = useState<RowPolicies>({});
+  const [roles, setRoles] = useState<Record<string, TableAccessEntry>>(EMPTY_ROLES);
+  const [warnings, setWarnings] = useState<IneffectiveGrant[]>(NO_WARNINGS);
+  const generation = useRef(0);
 
   const notifyError = useCallback(
-    (res: ServerActionResponse, fallback: string) =>
-      showNotification(getErrorNotification(res.errorHeader || fallback, res.errorMessage, res.requestId)),
+    (res: ServerActionResponse, title: string) =>
+      showNotification(getErrorNotification(title, res.errorMessage, res.requestId)),
     [showNotification],
   );
+
+  const applyConfig = useCallback((config?: TableAccessConfig) => {
+    generation.current = config?.generation ?? 0;
+    setRoles(config?.roles ?? EMPTY_ROLES);
+    setWarnings(config?.ineffective_grants ?? NO_WARNINGS);
+  }, []);
 
   useEffect(() => {
     if (!isEnabled) return;
@@ -74,24 +71,25 @@ export const useTableAccess = (name: string, isEnabled: boolean): TableAccessSta
     let isActive = true;
     setStatus(AccessStatus.Loading);
 
-    void Promise.all([getTableAccess(name), getRowPolicies(name)]).then(([accessRes, policiesRes]) => {
+    const load = async () => {
+      const res = await getTableAccess(name);
       if (!isActive) return;
 
-      if (accessRes.status === FORBIDDEN || policiesRes.status === FORBIDDEN) {
+      if (res.status === FORBIDDEN) {
         setStatus(AccessStatus.Forbidden);
         return;
       }
-      if (!accessRes.success) notifyError(accessRes, t(AnalyticsTablesI18nKey.AccessLoadFailed));
-      if (!policiesRes.success) notifyError(policiesRes, t(AnalyticsTableAccessI18nKey.RowPoliciesLoadFailed));
-      if (!accessRes.success || !policiesRes.success) {
+      if (!res.success) {
+        notifyError(res, t(AnalyticsTablesI18nKey.AccessLoadFailed));
         setStatus(AccessStatus.Failed);
         return;
       }
 
-      setAccess(normalizeAccess(accessRes.response));
-      setPolicies(policiesRes.response?.policies ?? {});
+      applyConfig(res.response);
       setStatus(AccessStatus.Ready);
-    });
+    };
+
+    void load();
 
     return () => {
       isActive = false;
@@ -100,89 +98,75 @@ export const useTableAccess = (name: string, isEnabled: boolean): TableAccessSta
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, isEnabled]);
 
-  const rows = useMemo(() => buildRoleRows(access, policies), [access, policies]);
+  const rows = useMemo(() => buildRoleRows(roles, warnings), [roles, warnings]);
 
-  const readFreshAccess = useCallback(async (): Promise<TableAccess | null> => {
+  const reload = useCallback(async (): Promise<TableAccessConfig | null> => {
     const res = await getTableAccess(name);
-    if (!res.success) {
+    if (!res.success || !res.response) {
       notifyError(res, t(AnalyticsTablesI18nKey.AccessLoadFailed));
       return null;
     }
 
-    const fresh = normalizeAccess(res.response);
-    setAccess(fresh);
+    applyConfig(res.response);
 
-    return fresh;
-  }, [name, notifyError, t]);
+    return res.response;
+  }, [name, notifyError, applyConfig, t]);
 
-  const saveGrants = useCallback(
-    async (role: string, selection: RoleSelection) => {
-      const fresh = await readFreshAccess();
-      if (!fresh) return { isOk: false };
-
-      const plan = planAccessSave(fresh, role, selection);
-      if (!Object.keys(plan).length) return { isOk: true };
-
-      const res = await updateTableAccess(name, plan);
+  const saveEntry = useCallback(
+    async (role: string, entry: TableAccessEntry): Promise<SaveEntryResult> => {
+      const res = await putTableAccessEntry(name, role, { ...entry, generation: generation.current });
       if (!res.success) {
+        if (res.errorHeader === ACCESS_CONFLICT) return { outcome: AccessChangeOutcome.Conflict };
+
         notifyError(res, t(AnalyticsTableAccessI18nKey.SaveFailed));
-        return { isOk: false };
+
+        return { outcome: AccessChangeOutcome.Failed, errorMessage: res.errorMessage };
       }
 
-      setAccess(applyAccessResult(fresh, res.response ?? plan));
-
-      return { isOk: true, result: res.response };
-    },
-    [name, notifyError, readFreshAccess, t],
-  );
-
-  const saveRowPolicy = useCallback(
-    async (role: string, filter: QueryFilterNode | null): Promise<RowPolicyResult> => {
-      if (!filter && !policies[role]) return { isOk: true };
-
-      const res = filter ? await putRowPolicy(name, role, { filter }) : await deleteRowPolicy(name, role);
-      if (!res.success) {
-        notifyError(res, t(AnalyticsTableAccessI18nKey.RowLimitSaveFailed));
-        return { isOk: false, errorMessage: res.errorMessage };
+      const stored = res.response;
+      if (stored) {
+        generation.current = stored.generation;
+        setRoles(({ [role]: _replaced, ...rest }) =>
+          isEntryEmpty(stored)
+            ? rest
+            : { ...rest, [role]: { privileges: stored.privileges, rows: stored.rows, columns: stored.columns } },
+        );
       }
+      await reload();
 
-      if (filter) setPolicies((prev) => ({ ...prev, [role]: res.response ?? { filter } }));
-      else setPolicies(({ [role]: _removed, ...rest }) => rest);
-
-      return { isOk: true };
+      return { outcome: AccessChangeOutcome.Done, result: res.response };
     },
-    [name, notifyError, policies, t],
+    [name, notifyError, reload, t],
   );
 
   const removeRole = useCallback(
-    async (role: string): Promise<boolean> => {
-      const fresh = await readFreshAccess();
-      if (!fresh) return false;
+    async (role: string): Promise<AccessChangeOutcome> => {
+      const res = await deleteTableAccessEntry(name, role, generation.current);
+      if (!res.success) {
+        notifyError(res, t(AnalyticsTableAccessI18nKey.RemoveFailed));
+        if (res.errorHeader !== ACCESS_CONFLICT) return AccessChangeOutcome.Failed;
 
-      const plan = planRoleRemoval(fresh, role);
-      if (Object.keys(plan).length) {
-        const res = await updateTableAccess(name, plan);
-        if (!res.success) {
-          notifyError(res, t(AnalyticsTableAccessI18nKey.RemoveFailed));
-          return false;
-        }
-        setAccess(applyAccessResult(fresh, res.response ?? plan));
+        await reload();
+
+        return AccessChangeOutcome.Conflict;
       }
 
-      return (await saveRowPolicy(role, null)).isOk;
+      setRoles(({ [role]: _removed, ...rest }) => rest);
+      await reload();
+
+      return AccessChangeOutcome.Done;
     },
-    [name, notifyError, readFreshAccess, saveRowPolicy, t],
+    [name, notifyError, reload, t],
   );
 
   return {
     status,
     rows,
-    access,
-    policies,
+    roles,
+    warnings,
     isTabOffered: isEnabled && (status === AccessStatus.Ready || status === AccessStatus.Failed),
-    readFreshAccess,
-    saveGrants,
-    saveRowPolicy,
+    reload,
+    saveEntry,
     removeRole,
   };
 };

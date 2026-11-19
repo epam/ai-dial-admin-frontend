@@ -2081,7 +2081,8 @@ nothing — three distinct facts, and rendering any two identically hides an out
 entitlement behind an empty result.
 
 **A failed read SHALL be reported by notification**, under *An Analytics read failure is reported by
-notification, in the service's own words*, carrying the service's own header, message and request id. A
+notification, in the service's own words*, titled with this app's own string and carrying the service's
+message and request id. A
 withheld body and a hop that recorded nothing are states of the record and SHALL stay stated in place, with
 no notification: neither is a failure this console suffered.
 

@@ -9,7 +9,7 @@ import {
   getAnalyticsImportRows,
   isAnalyticsImportBlocked,
 } from '@/src/components/ImportConfig/ConfigurationPreview/analytics-import.utils';
-import { ImportI18nKey } from '@/src/constants/i18n';
+import { ExportI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
@@ -58,7 +58,9 @@ const AnalyticsImportPreview: FC<Props> = ({
         const message = isUnreachableResponse(res)
           ? tRef.current(ImportI18nKey.AnalyticsPreviewFailed)
           : res.errorMessage;
-        showNotificationRef.current(getErrorNotification(res.errorHeader, message, res.requestId));
+        showNotificationRef.current(
+          getErrorNotification(tRef.current(ExportI18nKey.PreviewUnavailable), message, res.requestId),
+        );
       }
     };
 

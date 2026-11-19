@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from 'react';
 
 import { usePipelineForm } from '@/src/components/Analytics/Pipelines/Common/use-pipeline-form';
-import { Pipeline, TransformType } from '@/src/models/analytics/pipeline';
+import { Pipeline, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PipelineDraft, TransformDraft } from '@/src/models/analytics/pipeline-ui';
 import { hasDuplicateOutputName } from '@/src/utils/analytics/transform-dto';
 
@@ -46,6 +46,10 @@ export const useEnrichForm = (params: Params = {}) => {
   // is declared, and refuses a value above 1 rather than reading it as a percentage.
   const sampleFraction = draft.advanced?.sample_fraction;
   const isSampleFractionValid = sampleFraction == null || (sampleFraction > 0 && sampleFraction <= 1);
+  const inputTokenBudget = draft.advanced?.input_token_budget;
+  const isInputTokenBudgetValid =
+    inputTokenBudget == null || (Number.isInteger(inputTokenBudget) && inputTokenBudget >= 0);
+  const hasInputTokenBudgetError = draft.trigger?.kind === TriggerKind.Group && !isInputTokenBudgetValid;
   const hasDuplicateOutput = hasDuplicateOutputName(transform);
 
   return {
@@ -53,8 +57,10 @@ export const useEnrichForm = (params: Params = {}) => {
     transform,
     onTransformChange,
     isSampleFractionValid,
+    isInputTokenBudgetValid,
     hasDuplicateOutputName: hasDuplicateOutput,
-    hasFieldErrors: base.hasSharedFieldErrors || !isSampleFractionValid || hasDuplicateOutput,
+    hasFieldErrors:
+      base.hasSharedFieldErrors || !isSampleFractionValid || hasInputTokenBudgetError || hasDuplicateOutput,
     isVariablesReady: Boolean(base.readSource) && !base.isSourceEntityPending && !base.hasSourceEntityError,
     isTransformReady: base.isTargetResolved,
   };

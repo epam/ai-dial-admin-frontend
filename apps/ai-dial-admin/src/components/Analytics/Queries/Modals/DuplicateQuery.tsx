@@ -13,7 +13,7 @@ import { QueryMetadataForm } from '@/src/components/Analytics/Queries/models';
 import { useSourcePanelTabSelect } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
 import { SourcePanelTab } from '@/src/components/Analytics/QueryBuilder/SourcePanel/models';
 import { describeSavedQueryError } from '@/src/components/Analytics/QueryBuilder/utils/saved-query-error';
-import { ButtonsI18nKey, ErrorI18nKey, QueriesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, QueriesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
@@ -29,6 +29,8 @@ interface Props {
   onClose: () => void;
   buildRequest: (meta: QueryMetadataForm) => SavedQueryRequest;
   onCreated?: (created: SavedQuery) => void;
+  header: string;
+  submitLabel: string;
 }
 
 // Deliberately not the shared `getClonedEntityName`, which returns the name untouched once it contains
@@ -47,7 +49,7 @@ const formFromQuery = (query: SavedQuery | undefined, isFullAdmin: boolean): Que
   scope: query && isFullAdmin ? query.scope : SavedQueryScope.Personal,
 });
 
-const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated }) => {
+const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated, header, submitLabel }) => {
   const t = useI18n();
   const router = useRouter();
   const { isFullAdmin } = useAppContext();
@@ -68,7 +70,7 @@ const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated }) 
     } catch {
       // A transport failure carries no envelope to branch on; without this the submit stayed disabled
       // with nothing reported.
-      showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(QueriesI18nKey.ErrorGeneric)));
+      showNotification(getErrorNotification(t(QueriesI18nKey.SaveFailed), t(QueriesI18nKey.ErrorGeneric)));
       return;
     } finally {
       setIsSaving(false);
@@ -78,7 +80,7 @@ const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated }) 
       const descriptor = describeSavedQueryError(res);
       showNotification(
         getErrorNotification(
-          res.errorHeader,
+          t(QueriesI18nKey.SaveFailed),
           descriptor.isServerMessageShown ? res.errorMessage : t(descriptor.hintKey),
           res.requestId,
         ),
@@ -107,13 +109,13 @@ const DuplicateQuery: FC<Props> = ({ query, onClose, buildRequest, onCreated }) 
   return (
     <Popup
       open
-      header={t(QueriesI18nKey.SaveQueryAs)}
+      header={header}
       portalId="DuplicateQueryModal"
       size={PopupSize.Md}
       onClose={onClose}
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
-        submitLabel: t(ButtonsI18nKey.Save),
+        submitLabel,
         isSubmitDisabled: !isValid || !form.name.trim() || isSaving,
         onCancel: onClose,
         onSubmit: onSubmit,

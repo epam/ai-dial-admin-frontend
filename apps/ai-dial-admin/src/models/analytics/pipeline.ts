@@ -81,6 +81,7 @@ export interface PipelineAdvanced {
   rows_per_call?: number;
   rate_rpm?: number;
   sample_fraction?: number;
+  input_token_budget?: number;
 }
 
 /** Derived by the service from the transform's outputs and the target's columns; never sent back. */

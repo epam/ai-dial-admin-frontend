@@ -1,5 +1,8 @@
+import { encodeCorePath } from '@/src/server/publications/path';
+
 import {
   DEPLOYMENT_SPAN_ATTRIBUTE,
+  DEPLOYMENT_URL_SPAN_ATTRIBUTE,
   ERROR_SPAN_SELECTOR,
   GRAFANA_DATASOURCE_TYPE,
   GRAFANA_EXPLORE_PATH,
@@ -17,8 +20,12 @@ const escapeRegex = (value: string): string => value.replace(/[\\.*+?^${}()|[\]]
 
 const escapeTraceQlString = (value: string): string => value.replace(/[\\"]/g, '\\$&');
 
-/** The path sits in a regex inside a TraceQL string, so the regex layer is escaped first and the string layer second. */
-const escapeDeploymentPath = (path: string): string => escapeTraceQlString(escapeRegex(path));
+/**
+ * Core reports the path percent-encoded per segment (`Code%20Apps%20ALS`), so it is encoded the same way before it
+ * is matched. The path sits in a regex inside a TraceQL string, so the regex layer is escaped next and the string
+ * layer last.
+ */
+const escapeDeploymentPath = (path: string): string => escapeTraceQlString(escapeRegex(encodeCorePath(path)));
 
 const buildExploreUrl = ({ baseUrl, datasourceUid, orgId }: GrafanaConfig, query: string): string => {
   const panes = {
@@ -49,7 +56,10 @@ const buildExploreUrl = ({ baseUrl, datasourceUid, orgId }: GrafanaConfig, query
  * `path` is the application's Core path (`public/<name>__<version>` or `platform/<name>`).
  */
 export const buildApplicationTracesUrls = (config: GrafanaConfig, path: string): GrafanaTraceLinks => {
-  const allTracesQuery = `{ ${DEPLOYMENT_SPAN_ATTRIBUTE} =~ ".*${escapeDeploymentPath(path)}" }`;
+  const escapedPath = escapeDeploymentPath(path);
+  const allTracesQuery =
+    `{ ${DEPLOYMENT_SPAN_ATTRIBUTE} =~ ".*${escapedPath}"` +
+    ` || ${DEPLOYMENT_URL_SPAN_ATTRIBUTE} =~ ".*/deployments/(applications/)?${escapedPath}/.*" }`;
 
   return {
     allTracesUrl: buildExploreUrl(config, allTracesQuery),

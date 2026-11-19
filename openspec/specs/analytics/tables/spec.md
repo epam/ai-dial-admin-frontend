@@ -414,7 +414,7 @@ Every delete-table confirmation dialog — the catalog list's row delete action 
 
 The catalog and detail views SHALL reflect the table's server-provided `system` flag. System-owned tables are seeded server-side and reject every modifying request (`409 table_is_system`), so the UI SHALL NOT offer modify actions for them: in the catalog the row's delete action SHALL be hidden and a System indicator SHALL be shown; in the detail view the delete-table / write-rows / add-columns actions and the per-column edit/drop actions and inline rename SHALL be suppressed, replaced by a read-only indicator. System tables SHALL remain fully viewable and navigable, including their column display names and descriptions.
 
-The **read-side** controls are the exception, because the service accepts read grants and row policies on a system table, which carries the shared data a policy most often narrows: a `FULL_ADMIN` SHALL still be offered the Access tab on an `ACTIVE` system table, where **Get**, **Read**, the sensitive clearance and row limits are editable and **Write** and **Modify** are locked with the reason (see "Role drawer edits one role's access and row limit").
+The **read-side** controls are the exception, because the service accepts read grants and row policies on a system table, which carries the shared data a policy most often narrows: a user who can manage access SHALL still be offered the Access tab on an `ACTIVE` system table, where **Get**, **Read**, the sensitive clearance, row limits and column limits are editable and **Write** and **Modify** are locked with the reason (see "Role drawer edits one role's entry").
 
 #### Scenario: System table in the catalog
 
@@ -442,35 +442,44 @@ The system SHALL expose, on `AppContext`, the capability inputs for Analytics ta
 `adminAccess` `FULL`), the existing `isReadOnlyAdmin`, and `isEnableAuth`. The `AnalyticsTable` model SHALL
 carry an optional
 `permissions` object supplied by the data-access service, with the boolean flags `get`, `read`,
-`sensitive`, `write`, `modify` and `rows_restricted`: the calling identity's effective per-table privileges
-and whether a row policy confines it. A hook `useAnalyticsTablePermissions(table?)` (`src/hooks/`) SHALL
+`sensitive`, `write`, `modify`, `grant`, `rows_restricted` and `columns_restricted`: the calling identity's
+effective per-table privileges, whether it may manage the table's access, and whether a row policy or a column
+policy confines it. A hook `useAnalyticsTablePermissions(table?)` (`src/hooks/`) SHALL
 derive:
 
 - `canCreate` SHALL equal `isFullAdmin`.
 - `canDelete` SHALL equal `isFullAdmin && !table.system`.
-- `canManageRoles` SHALL equal `isFullAdmin`, including on a system table, because the read-side grants and row policies of a system table are manageable.
+- `canManageRoles` SHALL equal `table.permissions.grant` when present, otherwise `!isEnableAuth`. The service reports `grant` for a system table and for an enrichment as for any table, because both accept access entries.
 - `canWrite` SHALL equal `table.permissions.write` when present, otherwise `!isEnableAuth`.
 - `canModify` SHALL equal `table.permissions.modify` when present, otherwise `!isEnableAuth`.
 - `canChangeSensitive` SHALL equal `canModify && table.permissions.sensitive` when `sensitive` is present, otherwise `!isEnableAuth`.
 - `isRowsRestricted` SHALL equal `table.permissions.rows_restricted` when present, otherwise `false`.
+- `isColumnsRestricted` SHALL equal `table.permissions.columns_restricted` when present, otherwise `false`.
 
 #### Scenario: Full admin can act on a non-system table
 
 - **WHEN** authentication is enabled, Core reports `adminAccess` `FULL`, and a non-system table reports
-  `permissions {write:true, modify:true, sensitive:true}`
+  `permissions {write:true, modify:true, sensitive:true, grant:true}`
 - **THEN** `canCreate`, `canDelete`, `canManageRoles`, `canWrite`, `canModify`, and `canChangeSensitive` are all `true`
 
 #### Scenario: Per-table write without modify
 
-- **WHEN** a table reports `permissions {write:true, modify:false}` and the caller is not a full admin
+- **WHEN** a table reports `permissions {write:true, modify:false, grant:false}` and the caller is not a full admin
 - **THEN** `canWrite` is `true`, `canModify` is `false`, and `canCreate`/`canDelete`/`canManageRoles`
   are `false`
 
+#### Scenario: Managing access follows the service, not the admin role
+
+- **WHEN** the caller is a full admin and a table reports `permissions {grant:false}`
+- **THEN** `canManageRoles` is `false`
+- **AND WHEN** the caller is not a full admin and a table reports `permissions {grant:true}`
+- **THEN** `canManageRoles` is `true`
+
 #### Scenario: System table exposes no edits, even for a full admin
 
-- **WHEN** a system table reports `permissions {write:false, modify:false}` (as the backend does for
-  every caller) and the caller is a full admin
-- **THEN** `canWrite`, `canModify`, and `canDelete` are `false`, and `canManageRoles` stays `true` so the read-side grants remain manageable
+- **WHEN** a system table reports `permissions {write:false, modify:false, grant:true}` (as the backend does for
+  a caller who may manage access) and the caller is a full admin
+- **THEN** `canWrite`, `canModify`, and `canDelete` are `false`, and `canManageRoles` stays `true` so the read-side access remains manageable
 
 #### Scenario: Modify without the clearance cannot change sensitivity
 
@@ -480,7 +489,7 @@ derive:
 #### Scenario: Missing permissions default safely
 
 - **WHEN** a table omits `permissions` and authentication is enabled
-- **THEN** `canWrite`, `canModify`, and `canChangeSensitive` are `false` and `isRowsRestricted` is `false`; **AND WHEN** authentication is disabled the first three are `true` and `isRowsRestricted` stays `false`
+- **THEN** `canWrite`, `canModify`, `canChangeSensitive` and `canManageRoles` are `false` and `isRowsRestricted` and `isColumnsRestricted` are `false`; **AND WHEN** authentication is disabled the first four are `true` and the two restriction flags stay `false`
 
 ### Requirement: Tables catalog gates catalog-level actions to full admins
 
@@ -1604,7 +1613,7 @@ While the JSON editor is the active surface, the header **Save** action SHALL se
 1. `updateTable` (`PUT /v1/tables/{name}`, `UpdateTableDto` — `description`, `tag_order`; merge-patch semantics, so an absent member leaves the stored value unchanged and `tag_order: []` clears it);
 2. `defineTableSchema` (`POST /v1/tables/{name}/schema`), which defines the schema and materializes the table.
 
-The schema request SHALL be sent only if the metadata request succeeded. On success the view SHALL refresh from the server, showing the table `ACTIVE` with its live column surface, and SHALL raise the same success notification the column-form save already raises. On either failure the service's error SHALL be surfaced as-is — its error header, message and request id — with no client-side interpretation, and the view SHALL remain on the draft surface with the author's document intact so it can be corrected and submitted again. Re-submitting SHALL send both requests again, which is safe because the metadata request is a merge-patch.
+The schema request SHALL be sent only if the metadata request succeeded. On success the view SHALL refresh from the server, showing the table `ACTIVE` with its live column surface, and SHALL raise the same success notification the column-form save already raises. On either failure the service's error SHALL be surfaced as-is — its message and request id, under this app's own title for the failed action — with no client-side interpretation, and the view SHALL remain on the draft surface with the author's document intact so it can be corrected and submitted again. Re-submitting SHALL send both requests again, which is safe because the metadata request is a merge-patch.
 
 #### Scenario: A successful save sends the metadata update before the schema
 
@@ -1839,7 +1848,7 @@ content under a horizontal tab strip, built from the design system's 2.0 tabs co
 **Audit** alone. `Properties` SHALL be the selected tab when the view is first opened. The selected tab is
 held by the view, as the other entity views' tabs are, and is not part of the URL.
 
-The view header — the table name, the lifecycle status badge, the Rows restricted badge, the kind tag, the
+The view header — the table name, the lifecycle status badge, the Rows restricted and Columns restricted badges, the kind tag, the
 system tag, the description row, and the whole header action row (Delete table, Add columns, Add rows,
 Connect, and the draft **Save** action) — SHALL render **above** the tab strip and SHALL be otherwise unchanged
 by this reorganization: the same controls, in the same order, under the same permission and status
@@ -1854,7 +1863,7 @@ be the same content, in the same order, as before this change.
 The Audit tab SHALL be offered **only** on a table whose `status` is `ACTIVE`. On a table at any other
 status — `PENDING` (Draft), `FAILED`, or a table whose status the backend does not report — the detail
 view SHALL render no tab strip and no Audit or Access tab, SHALL render the Properties content directly, and
-SHALL issue no request to the analytics activity feed or to the access and row-policy endpoints. A table that
+SHALL issue no request to the analytics activity feed or to the access endpoint. A table that
 has not been materialized has no audit history for the tab to show: it has no columns, and the analytics
 activity feed returns zero activities for its name, so the tab could only ever be empty. On an `ACTIVE`
 table the Audit tab SHALL require no permission beyond the one that already allows reading the table, and
@@ -1863,7 +1872,7 @@ SHALL NOT consult the per-table `write` / `modify` permissions.
 The tab strip SHALL therefore be rendered only when `featureFlags.analyticsEnabled` is true **and**
 the table's status is `ACTIVE`. With analytics disabled the detail view SHALL render the Properties
 content directly, with no tab strip and no Audit or Access tab, and SHALL issue no request to the analytics
-activity feed or to the access and row-policy endpoints — the same rendering as the non-`ACTIVE` case above.
+activity feed or to the access endpoint — the same rendering as the non-`ACTIVE` case above.
 The route itself is not guarded —
 `/tables/{name}` renders whenever it is reached, today and after this change; hiding the Analytics
 menu group is not a route guard, so a bookmarked or pasted link still opens this view and the tab
@@ -1886,9 +1895,9 @@ the route is a separate concern about the whole tables feature and is out of sco
 
 #### Scenario: A viewer who cannot manage access sees two tabs
 
-- **GIVEN** a table whose `status` is `ACTIVE` and a user who is not `FULL_ADMIN`
+- **GIVEN** a table whose `status` is `ACTIVE` and which reports `permissions.grant = false`
 - **WHEN** the detail view renders
-- **THEN** the strip shows `Properties` and `Audit` only, and no request is made to the access or row-policy endpoints
+- **THEN** the strip shows `Properties` and `Audit` only, and no request is made to the access endpoint
 
 #### Scenario: Audit tab is hidden on a draft table
 
@@ -1897,7 +1906,7 @@ the route is a separate concern about the whole tables feature and is out of sco
 - **THEN** no tab strip and no `Audit` or `Access` tab are rendered
 - **AND** the schema-metadata summary and the draft schema editor are shown directly, as they are
   before this change
-- **AND** no request is issued to the analytics activity feed or to the access and row-policy endpoints
+- **AND** no request is issued to the analytics activity feed or to the access endpoint
 
 #### Scenario: Audit tab needs no permission beyond reading the table
 
@@ -1913,152 +1922,78 @@ the route is a separate concern about the whole tables feature and is out of sco
 - **WHEN** the user reaches `/tables/{name}` by a direct link
 - **THEN** no tab strip and no `Audit` or `Access` tab are rendered
 - **AND** the schema-metadata summary and the columns grid or draft schema editor are shown directly
-- **AND** no request is issued to the analytics activity feed or to the access and row-policy endpoints
+- **AND** no request is issued to the analytics activity feed or to the access endpoint
 
 ### Requirement: Access tab lists a table's roles
 
-The table detail view SHALL offer an **Access** tab to a user for whom `canManageRoles` is true, on a table that has an `ACTIVE` status (see "Table detail view is organized into Properties, Access and Audit tabs"). Its content SHALL be backed by `GET /v1/tables/{name}/access` and `GET /v1/tables/{name}/row-policies` of the data-access service, requested together when the detail view of such a table loads, so the tab's presence is known before the tab is opened.
+The table detail view SHALL offer an **Access** tab to a user for whom `canManageRoles` is true, on a table that has an `ACTIVE` status (see "Table detail view is organized into Properties, Access and Audit tabs"). Its content SHALL be backed by one request, `GET /v1/tables/{name}/access` of the data-access service, issued when the detail view of such a table loads. The request SHALL NOT be issued for a table that reports `permissions.grant` as false.
 
-The tab SHALL NOT be offered when the access read answers `403` — the service requires `TABLE_GRANT` for it, which `FULL_ADMIN` normally carries but an operator may configure away — and that answer SHALL produce no notification, because a user who cannot manage grants has nothing to be told. Any other failure of either request SHALL surface an error notification, SHALL leave the tab offered with an empty roles table, and SHALL keep **Add role** and every row action disabled until a reload succeeds.
+The tab SHALL NOT be offered when the access read nevertheless answers `403`, and that answer SHALL produce no notification, because a user who cannot manage access has nothing to be told. Any other failure of the request SHALL surface an error notification carrying the service's message and request id, SHALL leave the tab offered with an empty roles table, and SHALL keep **Add role** and every row action disabled until a reload succeeds.
 
-The tab SHALL render a roles table with one row per such role, sorted by role name, with these columns:
+The tab SHALL render a roles table with one row per entry in the response's `roles`, sorted by role name, with these columns:
 
-- **Role**: the role name, with a sensitive indicator when the role is in the `sensitive` list.
-- **Get**, **Read**, **Write**, **Modify**: a mark per privilege. A privilege the role holds through its own stored list SHALL show a full mark. A privilege the role holds only by implication — `get` through `read` or `modify` — SHALL show a lighter mark, and a stored list SHALL NOT be reported as expanded by that implication. A privilege the role does not hold SHALL show a neutral placeholder.
-- **Rows**: the role's row limit rendered as a readable condition summary when the role has a row policy and holds `read`; otherwise **All rows** when the role holds `read`; otherwise **Cannot read rows**. A role that has a row policy but does not hold `read` SHALL show **Cannot read rows** followed by a muted note that the filter is kept, naming the condition summary, because the policy stays stored and applies to the role by whatever path it reads the table, while this table's own grants give it no read scope.
+- **Role**: the role name, with a sensitive indicator when the entry's `privileges` hold `sensitive`, and a warning indicator when the service reports a warning for the role (see "Access warnings are shown whenever the tab is loaded").
+- **Get**, **Read**, **Write**, **Modify**: a mark per privilege. A privilege the entry's `privileges` hold SHALL show a full mark. A privilege the role holds only by implication — `get` through `read` or `modify` — SHALL show a lighter mark, and a stored entry SHALL NOT be reported as expanded by that implication. A privilege the role does not hold SHALL show a neutral placeholder.
+- **Rows**: the role's row limit rendered as a readable condition summary when the entry has `rows` and holds `read`; otherwise **All rows** when the entry holds `read`; otherwise **Cannot read rows**. An entry that has `rows` but does not hold `read` SHALL show **Cannot read rows** followed by a muted note that the filter is kept, naming the condition summary, because the limit stays stored and applies to the role by whatever path it reads the table, while this table's own entry gives it no read scope.
+- **Columns**: the role's column limit, as "Column limit of a role" states.
 
-A role that has a row policy and no grant SHALL be listed, with every privilege mark neutral and its kept row limit shown in the Rows column. The roles table SHALL offer a role-name search and two filters, **Can read** and **Rows limited**, applied on the client to the loaded rows. Selecting a row SHALL open the role drawer on that role (see "Role drawer edits one role's access and row limit"); **Add role** SHALL open it on a new role.
+An entry that holds no privilege and a row or column limit SHALL be listed, with every privilege mark neutral and its kept limit shown. The roles table SHALL offer a role-name search and two filters, **Can read** and **Rows limited**, applied on the client to the loaded rows. Selecting a row SHALL open the role drawer on that role (see "Role drawer edits one role's entry"); **Add role** SHALL open it on a new role.
 
 Every row SHALL be operable by keyboard, and a row's mark cells SHALL carry an accessible name stating the privilege and whether it is stored or implied.
 
 #### Scenario: A table's roles are listed with their grants
 
-- **GIVEN** a table whose `read` list names `team-x` and whose `write` list names `ingest-bot`
-- **WHEN** a `FULL_ADMIN` opens its Access tab
+- **GIVEN** a table whose access holds an entry for `team-x` with `read` and an entry for `ingest-bot` with `write`
+- **WHEN** a user who can manage access opens its Access tab
 - **THEN** one row is shown for each role, sorted by name
 - **AND** `team-x` shows a lighter **Get** mark and a full **Read** mark, and `ingest-bot` shows a full **Write** mark
 
 #### Scenario: The stored list is not shown as expanded
 
-- **GIVEN** a table whose `read` list names `team-x` and whose `get` list is empty
+- **GIVEN** an entry for `team-x` whose `privileges` hold `read` and not `get`
 - **WHEN** the tab renders
 - **THEN** the **Get** mark of `team-x` is the lighter, implied mark, not the full one
 
 #### Scenario: Rows column states what each role reads
 
-- **GIVEN** `team-x` holds `read` and has a row policy, `pii-analysts` holds `read` and has none, and `ingest-bot` holds only `write`
+- **GIVEN** `team-x` holds `read` and has a row limit, `pii-analysts` holds `read` and has none, and `ingest-bot` holds only `write`
 - **WHEN** the tab renders
 - **THEN** `team-x` shows its condition summary, `pii-analysts` shows **All rows**, and `ingest-bot` shows **Cannot read rows**
 
 #### Scenario: A row policy kept after Read is removed is marked as kept
 
-- **GIVEN** `analysts` holds `modify` only and still has a stored row policy
+- **GIVEN** the entry of `analysts` holds `modify` only and still has `rows`
 - **WHEN** the tab renders
 - **THEN** the Rows column of `analysts` shows **Cannot read rows** followed by a muted note that the filter is kept with its condition summary
 - **AND** the **Rows limited** filter still lists `analysts`
 
 #### Scenario: A role with only a row policy is listed
 
-- **GIVEN** a role that has a row policy and appears in no grant list
+- **GIVEN** an entry that has `rows` and an empty `privileges`
 - **WHEN** the tab renders
 - **THEN** the role is listed with every privilege mark neutral
 - **AND** its Rows column shows **Cannot read rows** with the kept filter noted
 
-#### Scenario: The tab is hidden when the access read is forbidden
+#### Scenario: One request loads the tab
 
-- **GIVEN** a `FULL_ADMIN` whose `GET /access` answers `403`
-- **WHEN** the detail view of an `ACTIVE` table loads
-- **THEN** no Access tab is offered and no notification is shown
+- **WHEN** the detail view of an `ACTIVE` table loads for a user who can manage access
+- **THEN** one `GET /v1/tables/{name}/access` is sent and no other access request
 
 #### Scenario: Another failure is surfaced and keeps the tab
 
 - **WHEN** the access read fails with a status other than `403`
 - **THEN** an error notification is shown, the Access tab is offered with an empty roles table, and **Add role** is disabled
 
+#### Scenario: The tab is hidden when the access read is forbidden
+
+- **GIVEN** a table that reports `permissions.grant = true` whose `GET /access` answers `403`
+- **WHEN** the detail view of an `ACTIVE` table loads
+- **THEN** no Access tab is offered and no notification is shown
+
 #### Scenario: Filters narrow the loaded rows
 
 - **WHEN** the user selects **Can read**
 - **THEN** only the roles that hold `read` remain listed, without a new request
-
-### Requirement: Role drawer edits one role's access and row limit
-
-The Access tab SHALL edit a role in a **drawer** that opens over the right edge of the page, keeps the roles table visible, and closes with its close control, with Escape, and with **Cancel**. The drawer SHALL hold the following steps in order, each addressable by a numbered heading:
-
-1. **Role**: for a new role, a single-choice picker over the role catalog described in "Role catalog for the drawer", offering only roles that have no entry on the table; for an existing role, the role's name, read-only. A role that already has an entry is edited by selecting its row.
-2. **What it can do**: shown only once a role is chosen (always, for an existing role); four selectable cards — **Get**, **Read**, **Write**, **Modify**. **Get** SHALL show as held, with the note that it comes from **Read** or **Modify**, while either is selected, and SHALL then be neither separately togglable nor stored by this save unless it was already stored.
-3. **Sensitive columns**: a switch that grants the sensitive clearance, naming the table's sensitive columns. A note beneath it SHALL state that the clearance belongs to the role and covers everything it can do on this table. This step SHALL be offered only while **Get**, **Read** or **Modify** is held, stored or implied, because the clearance authorizes nothing by itself.
-4. **Which rows can it read?**: **All rows** or **Only some rows**. This step SHALL be offered only while **Read** is selected. **Only some rows** reveals the row-limit editor (see "Row-limit editor"). A note in this step SHALL state that the limit also applies to SQL, CSV export and Flight SQL.
-
-On a `system` table, **Write** and **Modify** SHALL be locked and unselected, with the reason that the service feeds system tables so they cannot be written to or changed, and that read access and row limits work as on any table. Steps 3 and 4 SHALL work as on any other table.
-
-The footer SHALL offer the actions **Cancel** and **Save role**.
-
-**Save role** SHALL be disabled until the role is chosen and at least one privilege is held or a row limit is set, and while a request is in flight. It SHALL change the role's membership in each of the five grant lists and nothing else: the drawer SHALL read the table's lists again immediately before saving, add or remove only this role in each list whose membership for it changed, and send only the keys that changed through `PUT /v1/tables/{name}/access`, which merges by key. The roles of every other grantee in every list SHALL be preserved. The row policy SHALL then be saved by a second request (see "Row-limit editor").
-
-A successful save SHALL show a success notification, update the roles table from the service's response, and close the drawer, unless the response reports grants that change nothing (see "Drawer reports grants that change nothing"). A save that fails SHALL show an error notification carrying the service's message and request id, SHALL leave the drawer open with the user's input intact, and SHALL change nothing in the roles table.
-
-Turning **Read** off SHALL leave the role's existing row policy untouched: that policy still narrows the role if it reads the table by another path, and removing it would widen the role's access.
-
-#### Scenario: Adding a role grants Read and implies Get
-
-- **WHEN** the user chooses **Add role**, picks `team-z`, selects **Read**, and saves
-- **THEN** `PUT /access` is sent with a `read` list that contains `team-z` and every previous member
-- **AND** the roles table shows `team-z` with a full **Read** mark and an implied **Get** mark
-
-#### Scenario: Other roles' membership is preserved
-
-- **GIVEN** the `read` list contains `team-x` and `pii-analysts`
-- **WHEN** the user grants **Write** to `ingest-bot` and saves
-- **THEN** only the `write` key is sent, and the `read` list is not sent
-
-#### Scenario: The lists are read again before they are changed
-
-- **GIVEN** another admin added `analysts` to the `read` list after this view loaded
-- **WHEN** the user grants `team-z` **Read** and saves
-- **THEN** the `read` list sent contains `analysts` as well as `team-z`
-
-#### Scenario: Nothing below the role is shown until a role is chosen
-
-- **WHEN** the drawer opens on a new role and no role is chosen
-- **THEN** only the **Role** step is shown, with no privilege cards
-- **AND WHEN** a role is chosen
-- **THEN** the **What it can do** step appears
-
-#### Scenario: Sensitive is offered only with a verb
-
-- **WHEN** no privilege is selected
-- **THEN** the **Sensitive columns** step is not offered
-- **AND WHEN** **Modify** is selected
-- **THEN** the step is offered
-
-#### Scenario: The row step is offered only for Read
-
-- **WHEN** only **Write** is selected
-- **THEN** the **Which rows can it read?** step is not offered
-- **AND WHEN** **Read** is selected
-- **THEN** it is offered with **All rows** chosen for a role that has no row policy
-
-#### Scenario: A system table locks Write and Modify
-
-- **WHEN** the drawer is opened on a `system` table
-- **THEN** **Write** and **Modify** are locked with the stated reason, and **Read**, the sensitive switch and the row step behave as on any table
-
-#### Scenario: Turning Read off keeps the row policy
-
-- **GIVEN** a role with a row policy
-- **WHEN** the user deselects **Read** and saves
-- **THEN** no request to the row-policies endpoint is sent
-
-#### Scenario: A failed save keeps the drawer open
-
-- **WHEN** `PUT /access` fails
-- **THEN** an error notification shows the service's message and request id
-- **AND** the drawer stays open with the selections unchanged and the roles table unchanged
-
-#### Scenario: The drawer closes with Escape
-
-- **WHEN** the drawer is open and the user presses Escape
-- **THEN** it closes without sending a request
 
 ### Requirement: Role catalog for the drawer
 
@@ -2102,104 +2037,25 @@ While the catalog is being fetched the picker SHALL show a loading state. A fail
 - **WHEN** the user opens **Add role**
 - **THEN** `team-x` is not offered in the picker
 
-### Requirement: Row-limit editor
-
-When the user chooses **Only some rows**, the drawer SHALL show a row-limit editor that builds a predicate over the table's own columns. The editor SHALL be the filter-condition editor of the Query Builder's Filter section, shared rather than duplicated, and SHALL show the same condition and group controls, operators, value inputs and operator rules for the same column types. It SHALL NOT depend on a Query Builder's state: its columns SHALL be the table's stored columns — sensitive columns included, whatever the viewer sees — and it SHALL offer no function operand, no parameter and no aggregate, because the service refuses a row-policy filter that uses them. A column the table does not store, including a dotted enrichment field, SHALL NOT be offered.
-
-The editor SHALL also offer a **JSON** view of the same predicate in the service's stable filter serialization — the one the Query Builder's JSON view uses — and a predicate that nests deeper than the visual editor can hold SHALL open in the JSON view with a note saying why, without changing it. Editing the predicate in either view SHALL keep the other in step when the predicate is representable visually.
-
-Saving a role with **Only some rows** SHALL send `PUT /v1/tables/{name}/row-policies/{role}` with the body `{"filter": …}`. Saving with **All rows** for a role that has a row policy SHALL send `DELETE /v1/tables/{name}/row-policies/{role}`; a `404` answer to that delete SHALL be treated as success, because it means the policy is already gone. Saving with **All rows** for a role that has no row policy SHALL send nothing to that endpoint. **Only some rows** with an empty predicate SHALL NOT be savable. A visual predicate holding a condition that names no column, a condition compared with a blank literal value (other than an explicit null comparison), an **is one of** condition with no non-blank item, or a nested group with no members, SHALL NOT be savable either, and the editor SHALL say so: serialization skips such an element, so what would be stored is wider than what the editor shows. An invalid JSON predicate SHALL NOT be sent, and leaving the JSON view for text that is not a filter (an empty or blank document is an empty predicate, not such text) SHALL keep the JSON view with a message of its own, distinct from the one for a predicate that is too deep.
-
-The two requests of **Save role** are independent. When the grants save succeeds and the row-policy request fails, the drawer SHALL stay open, the roles table SHALL show the saved grants, an error notification SHALL carry the service's message — which names the offending field for a `422` — and the footer's action SHALL become **Save row limit**, which repeats only the row-policy request. The note on screen SHALL state exactly what was saved. A predicate the service rejects for a field the user can see in JSON SHALL have that field highlighted there when the service names it.
-
-#### Scenario: A row limit is saved with the grants
-
-- **WHEN** the user selects **Read**, chooses **Only some rows**, builds `project_id is one of Z-PRJ-3, Z-PRJ-4`, and saves
-- **THEN** `PUT /access` is sent, then `PUT /row-policies/{role}` with a `filter` for that predicate
-
-#### Scenario: Switching to All rows removes the limit
-
-- **GIVEN** a role with a row policy
-- **WHEN** the user chooses **All rows** and saves
-- **THEN** `DELETE /row-policies/{role}` is sent
-- **AND** a `404` answer does not produce an error notification
-
-#### Scenario: All rows on a role without a policy sends nothing
-
-- **GIVEN** a role without a row policy
-- **WHEN** the user keeps **All rows** and saves
-- **THEN** no request to the row-policies endpoint is sent
-
-#### Scenario: A rejected row limit keeps the saved grants
-
-- **GIVEN** the grants save succeeds and the row-policy request answers `422` naming `region`
-- **THEN** an error notification shows the service's message
-- **AND** the drawer stays open, the roles table shows the saved grants, and the footer action reads **Save row limit**
-- **AND WHEN** the user fixes the predicate and chooses **Save row limit**
-- **THEN** only the row-policy request is sent again
-
-#### Scenario: A deeply nested predicate opens as JSON
-
-- **GIVEN** a role whose stored predicate nests deeper than the visual editor holds
-- **WHEN** the drawer opens on it
-- **THEN** the row-limit editor shows the JSON view with a note that the predicate is too deep for the visual editor, and the predicate is unchanged
-
-#### Scenario: Only the table's own columns are offered
-
-- **WHEN** the user adds a condition
-- **THEN** the column picker lists the table's stored columns, including a sensitive column, and no dotted enrichment field
-
-#### Scenario: Function operands are not offered
-
-- **WHEN** the user edits a condition in the row-limit editor
-- **THEN** no function operand is offered for either side
-
-#### Scenario: An unfinished condition keeps the limit from being saved
-
-- **GIVEN** one condition on `project_id` is filled and a second condition has no column chosen
-- **THEN** the editor says an unfinished condition is not stored, and **Save role** is disabled
-
-#### Scenario: A condition with a blank value cannot be saved
-
-- **GIVEN** a condition on `status` with the operator **Equals** and an empty value
-- **THEN** the editor says an unfinished condition is not stored, and **Save role** is disabled
-- **AND WHEN** the user fills the value
-- **THEN** **Save role** is enabled
-
-#### Scenario: An explicit null comparison is complete
-
-- **WHEN** the user compares a column with null instead of typing a value
-- **THEN** the condition is complete and **Save role** is enabled
-
-#### Scenario: An empty JSON document returns to the visual view
-
-- **WHEN** no condition was added, the user switches to the JSON view, and then back to the visual view
-- **THEN** the visual view returns with no conditions and no message, and the empty document is not treated as invalid JSON
-
-#### Scenario: Text that is not a filter keeps the JSON view with its own message
-
-- **WHEN** the JSON text is not a filter and the user switches to the visual view
-- **THEN** the JSON view stays, with a message that the JSON is not a valid filter, not the too-deep message
-
-#### Scenario: An empty predicate cannot be saved
-
-- **WHEN** **Only some rows** is chosen and no condition has been added
-- **THEN** **Save role** is disabled
-
 ### Requirement: Drawer reports grants that change nothing
 
-When `PUT /access` answers with `ineffective_grants`, the drawer SHALL stay open after the save, SHALL render one in-drawer banner entry per reported grant, using the entry's `message` verbatim, with the entries for `get`, `read`, `write` and `modify` stacked together in one group under the privilege cards, in one layout whichever privilege they name, and SHALL change its primary action from **Save role** to **Done**. A banner is for a grant that was stored and has no effect — it is not an error and SHALL NOT be shown as a notification. An entry whose `key` is `sensitive` SHALL mark the sensitive step.
+When the response to `PUT /access` carries `ineffective_grants`, the drawer SHALL stay open after the save, SHALL render one in-drawer banner entry per reported item, using the item's `message` verbatim, with the entries for `get`, `read`, `write` and `modify` stacked together in one group under the privilege cards, in one layout whichever privilege they name, and SHALL change its primary action from **Save role** to **Done**. A banner is for an entry that was stored — it is not an error and SHALL NOT be shown as a notification. An item whose `key` is `sensitive` SHALL mark the sensitive step. The drawer SHALL render an item whatever its `reason`, so a reason the service adds later needs no change here.
 
-The row limit of a role whose grant changed nothing SHALL still be saved and shown, because a row policy applies to its role whatever path the role reads the table by.
+The row and column limits of a role whose grant changed nothing are stored with the entry and SHALL be shown, because a limit applies to its role whatever path the role reads the table by.
 
-An error response to `PUT /access` — a `403`, a `404`, a `409 table_is_system` or a `422`, including `sensitive_grant_widens` — SHALL be an error notification carrying the service's message and request id, and SHALL NOT be shown as a banner.
+An error response to `PUT /access` — a `403`, a `404`, a `409 table_is_system`, a `409 enrichment_follows_source` or a `422` — SHALL be an error notification carrying the service's message and request id, and SHALL NOT be shown as a banner. The two `409` answers of "A role changed by someone else is not overwritten" are handled as stated there.
 
 #### Scenario: A grant the service reports as redundant shows a banner
 
 - **GIVEN** the service answers with `ineffective_grants` of reason `already_global` for the `read` key
-- **THEN** the drawer stays open and a banner with the entry's `message` appears in the group of banners under the privilege cards, not inside the **Read** card
+- **THEN** the drawer stays open and a banner with the item's `message` appears in the group of banners under the privilege cards, not inside the **Read** card
 - **AND** the primary action reads **Done**
 - **AND** no notification is shown for it
+
+#### Scenario: The lifted-policies message is a banner
+
+- **GIVEN** the save of `*` answers with `ineffective_grants` of reasons `lifts_row_policies` and `everyone_reads_all_rows` for the `read` key
+- **THEN** the drawer stays open, a warning banner shows each item's `message`, and the primary action reads **Done**
 
 #### Scenario: Done closes the drawer
 
@@ -2208,44 +2064,49 @@ An error response to `PUT /access` — a `403`, a `404`, a `409 table_is_system`
 
 #### Scenario: A refusal is a notification
 
-- **WHEN** `PUT /access` answers `422` with the code `sensitive_grant_widens`
+- **WHEN** `PUT /access` answers `422`
 - **THEN** an error notification shows the service's message and request id
 - **AND** the drawer stays open, nothing is saved, and no banner is shown for it
 
 #### Scenario: A row limit is still saved beside a banner
 
-- **GIVEN** the save reports a redundant grant and the role has a row limit
-- **THEN** the row-policy request is sent and the roles table shows the limit
+- **GIVEN** the save reports a redundant grant and the entry carries a row limit
+- **THEN** the limit was stored by the same request and the roles table shows it
 
 ### Requirement: Remove a role from a table
 
-The roles table SHALL offer **Remove role** on each row, which opens a confirmation dialog titled with the role name. The dialog SHALL list what will be removed: the table, the role's privileges (**Read (with Get)** where Get is implied), and its row limit when it has one, and SHALL state that both the access and the row limit are removed and that, if the role also reads every table through its privilege mapping, its users will then see every row of this table.
+The roles table SHALL offer **Remove role** on each row, which opens a confirmation dialog titled with the role name. The dialog SHALL list what will be removed: the table, the role's privileges (**Read (with Get)** where Get is implied), its row limit when it has one, and its column limit when it has one, and SHALL state that the access and the limits are removed together and that, if the role also reads every table through its privilege mapping, its users will then see every row and every column of this table.
 
-Confirming SHALL remove the role from every grant list that names it and delete its row policy when it has one: one `PUT /access` sending only the keys that named the role, and one `DELETE /row-policies/{role}`. A `404` answer to that delete SHALL be treated as success. A confirmed removal SHALL show a success notification and drop the role from the roles table. A failure of either request SHALL show an error notification and SHALL leave the roles table reflecting only what was actually removed.
+Confirming SHALL send one request, `DELETE /v1/tables/{name}/access` with the role as the `role` query value and the `generation` the tab last received. A `404` answer SHALL be treated as success, because it means the entry is already gone. A confirmed removal SHALL show a success notification and drop the role from the roles table. A failure SHALL show an error notification carrying the service's message and request id and SHALL leave the roles table unchanged.
 
 #### Scenario: The dialog names what is removed
 
-- **GIVEN** `team-x` holds `read` and has a row limit
+- **GIVEN** `team-x` holds `read`, has a row limit and a column limit
 - **WHEN** the user selects **Remove role** on its row
-- **THEN** the dialog names `team-x`, the table, **Read (with Get)** and the row limit
-- **AND** it warns that the users of the role may then see every row
+- **THEN** the dialog names `team-x`, the table, **Read (with Get)**, the row limit and the column limit
+- **AND** it warns that the users of the role may then see every row and every column
 
 #### Scenario: Confirming removes grants and policy
 
 - **WHEN** the user confirms
-- **THEN** a `PUT /access` carrying only the changed keys without `team-x` is sent and `DELETE /row-policies/team-x` is sent
+- **THEN** one `DELETE /access?role=team-x` is sent, carrying the generation
 - **AND** the role disappears from the roles table
+
+#### Scenario: An entry that is already gone counts as removed
+
+- **WHEN** the delete answers `404`
+- **THEN** no error notification is shown and the role disappears from the roles table
+
+#### Scenario: A role without a row limit sends no policy delete
+
+- **GIVEN** a role that has no row limit
+- **WHEN** the user confirms its removal
+- **THEN** the one `DELETE /access?role=` request is the only request sent
 
 #### Scenario: Cancelling changes nothing
 
 - **WHEN** the user cancels the dialog
 - **THEN** no request is sent
-
-#### Scenario: A role without a row limit sends no policy delete
-
-- **GIVEN** a role that has no row policy
-- **WHEN** the user confirms its removal
-- **THEN** no request to the row-policies endpoint is sent
 
 ### Requirement: Rows restricted badge
 
@@ -2266,8 +2127,8 @@ The badge SHALL be shown to every viewer the service reports confined, whether o
 
 #### Scenario: The policy is not revealed
 
-- **WHEN** a non-admin user views a table that reports `rows_restricted = true`
-- **THEN** no request is made to the row-policies endpoint and no predicate is displayed
+- **WHEN** a user who cannot manage access views a table that reports `rows_restricted = true`
+- **THEN** no request is made to the access endpoint and no predicate is displayed
 
 ### Requirement: Changing a column's sensitivity is locked without the clearance
 
@@ -3072,4 +2933,535 @@ The detail page of an `ACTIVE` **source** table SHALL determine which of its col
 - **WHEN** the tables listing, or the definition of an enrichment it names, cannot be read while the detail page of an `ACTIVE` source table renders
 - **THEN** no column is locked on account of an enrichment
 - **AND** the page still renders and the other restrictions apply as before
+
+### Requirement: Everyone grantee on the Access tab
+
+The Access tab SHALL treat the role `*` of the analytics-data-access-service as the **Everyone** grantee, which stands for every authenticated caller. Wherever a role name is displayed — the roles table, the drawer's role step, the remove dialog, the warnings and the notifications — `*` SHALL be shown as **Everyone (all authenticated users)** and never as a role name, and SHALL be distinguishable from a provider role by more than its text. In every request and in every comparison with the service's responses (the `roles` of `GET /v1/tables/{name}/access`, the `role` query value, `ineffective_grants`) it SHALL remain the literal string `*`.
+
+For a new role, the role picker SHALL offer **Everyone** as its first option, ahead of the catalog roles, with a description saying that it covers every authenticated caller, whenever the table has no entry for `*`. The option SHALL NOT depend on the role catalog: it SHALL be offered while the catalog is loading and when the catalog failed to load. The roles table's role-name search SHALL find the Everyone row by its displayed label.
+
+For the Everyone grantee the **Write** and **Modify** cards SHALL be locked and unselected, with the reason that everyone can be given read-side access only. **Get**, **Read**, the sensitive switch, the row step and the column step SHALL behave as for any role. A refusal the service still returns for an entry of `*` SHALL be an error notification carrying the service's message and request id.
+
+#### Scenario: Everyone is offered ahead of the catalog roles
+
+- **GIVEN** a table that has no entry for `*`
+- **WHEN** the user opens **Add role** and opens the role picker
+- **THEN** the first option reads **Everyone (all authenticated users)** with its description, followed by the catalog roles
+
+#### Scenario: Everyone is offered when the catalog failed
+
+- **GIVEN** the role catalog failed to load
+- **WHEN** the user opens the role picker for a new role
+- **THEN** **Everyone (all authenticated users)** is offered
+
+#### Scenario: Everyone is not offered twice
+
+- **GIVEN** the table has an entry for `*`
+- **WHEN** the user opens **Add role**
+- **THEN** the picker does not offer **Everyone**
+
+#### Scenario: The roles table labels the grantee
+
+- **GIVEN** the table has an entry for `*` that holds `read`
+- **WHEN** the Access tab renders
+- **THEN** that row's role reads **Everyone (all authenticated users)**, not `*`
+- **AND** searching the roles table for `everyone` keeps the row listed
+
+#### Scenario: Write and Modify are locked for Everyone
+
+- **WHEN** the drawer is open on the Everyone grantee
+- **THEN** **Write** and **Modify** are locked and unselected with the stated reason
+- **AND** **Get**, **Read** and the sensitive switch are selectable
+
+#### Scenario: The entry is sent for the literal grantee
+
+- **WHEN** the user picks **Everyone**, selects **Read**, sets a row limit and saves
+- **THEN** one `PUT /v1/tables/{name}/access` is sent whose `role` query value decodes to `*` and whose body holds `read` and the row limit
+
+### Requirement: Everyone reading every row is warned about and confirmed
+
+While the drawer is open on the Everyone grantee with **Read** selected and **All rows** chosen, the row step SHALL show a warning, before anything is saved, stating that every authenticated caller will read every row of the table and that the row limits of every other role on the table will stop applying. The warning SHALL disappear once **Only some rows** is chosen or **Read** is deselected.
+
+Choosing **Save role** in that state SHALL send nothing and SHALL first open a confirmation dialog that repeats the consequence and offers three ways on: **Set a row limit**, which closes the dialog, chooses **Only some rows** in the drawer and sends nothing; **Grant to everyone**, which sends the entry; and cancelling, which closes the dialog with the drawer unchanged and sends nothing. The save SHALL NOT be forbidden: the service accepts the entry, and a table read in full by everyone is a legitimate configuration. The confirmation SHALL NOT be asked when the stored entry of `*` already holds `read` with no row limit, because that save does not create the state.
+
+The row limit and the grant of Everyone are stored by the one request that stores the entry, so no moment exists in which a row limit chosen for Everyone is not yet in force.
+
+#### Scenario: The warning appears before saving
+
+- **GIVEN** the drawer is open on **Everyone**
+- **WHEN** the user selects **Read** and keeps **All rows**
+- **THEN** the row step warns that every authenticated caller will read every row and that other roles' row limits will stop applying
+
+#### Scenario: A row limit removes the warning
+
+- **GIVEN** the warning is shown
+- **WHEN** the user chooses **Only some rows**
+- **THEN** the warning is no longer shown
+
+#### Scenario: The warning is not shown for a provider role
+
+- **WHEN** the drawer is open on a role other than **Everyone** with **Read** and **All rows**
+- **THEN** no such warning is shown and saving asks for no confirmation
+
+#### Scenario: Saving asks before opening the table to everyone
+
+- **GIVEN** the drawer is open on **Everyone** with **Read** and **All rows**, and the table has no entry for `*`
+- **WHEN** the user chooses **Save role**
+- **THEN** a confirmation dialog opens and no request is sent
+- **AND WHEN** the user chooses **Grant to everyone**
+- **THEN** the entry is sent
+
+#### Scenario: The dialog leads to a row limit instead
+
+- **GIVEN** the confirmation dialog is open
+- **WHEN** the user chooses **Set a row limit**
+- **THEN** the dialog closes, the drawer shows **Only some rows** with the row-limit editor, and no request was sent
+
+#### Scenario: Cancelling the confirmation sends nothing
+
+- **GIVEN** the confirmation dialog is open
+- **WHEN** the user cancels it
+- **THEN** the drawer is as it was and no request was sent
+
+#### Scenario: An entry already open to everyone is saved without the question
+
+- **GIVEN** the stored entry of `*` holds `read` with no row limit
+- **WHEN** the user turns the sensitive switch on and chooses **Save role**
+- **THEN** the entry is sent without a confirmation dialog
+
+### Requirement: Caller value operand in the row-limit editor
+
+The row-limit editor SHALL let a condition compare a column with a **caller value** instead of a literal: the reading caller's user hash (`caller.user_hash`) or the reading caller's project (`caller.project`). In the visual view the compared value SHALL offer a choice between **Value** and **Caller value**, and **Caller value** SHALL reveal a picker of the two values, each with a description saying which callers have it and that a caller without it reads no rows.
+
+**Caller value** SHALL be offered only while the condition's operator is **Equals** or **Not equals** and its column is of the `string` type. Changing the operator or the column to one outside that rule SHALL return the compared value to an empty literal. A condition set to **Caller value** with no value picked SHALL count as unfinished and SHALL keep the limit from being saved.
+
+A caller-value condition SHALL be serialized as a predicate whose arguments are the column and `{"type":"param","name":"<caller value>"}`. A stored predicate holding a caller value SHALL open in the visual view when the rest of it is representable, with the column shown first whichever side the service stored the caller value on, and SHALL be editable in the JSON view like any other.
+
+The roles table's Rows column and the kept-filter note SHALL summarize such a condition with the caller value's name, for example `project_id = caller.project`.
+
+The editor SHALL NOT judge parameter names typed in the JSON view: a predicate the service refuses — another parameter name, or a caller value outside an equality on a string column — SHALL be reported with the service's message as described in "Row limit of a role".
+
+The Query Builder's Filter section, which shares the condition editor, SHALL NOT offer **Caller value**.
+
+#### Scenario: A caller value is offered for an equality on a string column
+
+- **GIVEN** a condition on a `string` column with the operator **Equals**
+- **WHEN** the user opens the compared-value kind choice
+- **THEN** **Value** and **Caller value** are offered
+- **AND WHEN** the user chooses **Caller value**
+- **THEN** a picker offers the caller's user hash and the caller's project
+
+#### Scenario: A caller value is not offered for another operator or type
+
+- **WHEN** the condition's operator is **Contains**, or its column is not of the `string` type
+- **THEN** **Caller value** is not offered
+
+#### Scenario: Leaving the rule returns the condition to a literal
+
+- **GIVEN** a condition compared with the caller's project
+- **WHEN** the user changes the operator to **is one of**
+- **THEN** the compared value is an empty literal and the condition counts as unfinished
+
+#### Scenario: A caller-value limit is saved as a parameter
+
+- **WHEN** the user builds `project_id` **Equals** the caller's project and saves
+- **THEN** the entry sent carries `rows` with a `filter` whose `eq` arguments are the field `project_id` and `{"type":"param","name":"caller.project"}`
+
+#### Scenario: A caller value with nothing picked cannot be saved
+
+- **GIVEN** a condition set to **Caller value** with no value picked
+- **THEN** the editor says an unfinished condition is not stored, and **Save role** is disabled
+
+#### Scenario: A stored caller-value policy is listed and opens visually
+
+- **GIVEN** a role whose stored row limit compares `user_hash` with `caller.user_hash`
+- **WHEN** the Access tab renders
+- **THEN** the role's Rows column reads `user_hash = caller.user_hash`
+- **AND WHEN** the user opens the role
+- **THEN** the row-limit editor shows the condition in the visual view with **Caller value** chosen
+
+#### Scenario: A refused parameter is reported with the service's message
+
+- **GIVEN** the JSON view holds a predicate with a parameter the service does not accept
+- **WHEN** the user saves and the request answers `422`
+- **THEN** an error notification shows the service's message
+
+#### Scenario: The Query Builder does not offer a caller value
+
+- **WHEN** the user edits a condition in the Query Builder's Filter section
+- **THEN** no **Caller value** choice is offered
+
+### Requirement: Column limit of a role
+
+The role drawer SHALL let a role be limited to some of the table's columns, as the step **Which columns can it see?** with the choices **All columns** and **Only some columns**. The step SHALL be offered only while **Get**, **Read** or **Modify** is held, stored or implied, because a column limit narrows what a role sees of a table it can already see. **All columns** SHALL be chosen for a role whose entry has no column limit.
+
+**Only some columns** SHALL reveal a searchable multiple-choice picker of column names. It SHALL offer the table's own stored columns, a sensitive column marked as such, and, on a table that has enrichments, the columns of each enrichment named `<enrichment>.<column>` and labelled with the enrichment they belong to. A note in the step SHALL state that a sensitive column also needs the sensitive clearance, and that the limit applies on every query surface.
+
+A column limit is stored in the role's entry as `columns`: the list of chosen names for **Only some columns**, and `null` for **All columns**. **Only some columns** with no column chosen SHALL NOT be savable, because the service refuses an empty list. A name the stored entry holds that the picker does not know SHALL stay chosen and SHALL be sent back unchanged, so a save made after changing another step never drops it. While the step is not offered, the stored column limit SHALL be sent back unchanged: it still narrows the role by whatever path it sees the table.
+
+When the columns of an enrichment cannot be read, the step SHALL say so beside the picker, and the picker SHALL still offer the table's own columns and the names the entry already holds. A refusal by the service — an unknown column name, `409 column_in_column_policy` — SHALL be an error notification carrying the service's message and request id, with the drawer open and the input intact.
+
+The roles table SHALL state each role's column limit in a **Columns** column: **All columns** for an entry with none, otherwise the number of columns the entry lists followed by their names, the full text reachable from the cell when it does not fit.
+
+#### Scenario: The step is offered with a verb that shows the table
+
+- **WHEN** only **Write** is selected
+- **THEN** the **Which columns can it see?** step is not offered
+- **AND WHEN** **Get** is selected
+- **THEN** it is offered with **All columns** chosen for a role that has no column limit
+
+#### Scenario: A column limit is saved with the entry
+
+- **WHEN** the user selects **Read**, chooses **Only some columns**, picks `model` and `project_id`, and saves
+- **THEN** the entry sent carries `columns` with those two names
+- **AND** the roles table shows the role with **2 columns** and the two names
+
+#### Scenario: All columns removes the limit
+
+- **GIVEN** a role whose entry lists columns
+- **WHEN** the user chooses **All columns** and saves
+- **THEN** the entry sent carries `columns` as `null`, and the roles table shows **All columns**
+
+#### Scenario: An empty choice cannot be saved
+
+- **WHEN** **Only some columns** is chosen and no column is picked
+- **THEN** **Save role** is disabled
+
+#### Scenario: Enrichment columns are offered under their enrichment
+
+- **GIVEN** a source table with an enrichment `payload` that stores the column `request_body`
+- **WHEN** the user opens the column picker
+- **THEN** `payload.request_body` is offered, labelled as a column of `payload`, beside the table's own columns
+
+#### Scenario: A stored name the picker does not know is kept
+
+- **GIVEN** a role whose entry lists a column name the picker does not offer
+- **WHEN** the user changes only the sensitive switch and saves
+- **THEN** the entry sent still lists that name
+
+#### Scenario: A limit is kept while its step is hidden
+
+- **GIVEN** a role whose entry lists columns and holds `read` only
+- **WHEN** the user deselects **Read**, selects **Write**, and saves
+- **THEN** the entry sent carries the same `columns`
+
+#### Scenario: A refused column is reported with the service's message
+
+- **WHEN** the request answers `422` naming a column
+- **THEN** an error notification shows the service's message and request id, and the drawer stays open with the choice intact
+
+### Requirement: A role changed by someone else is not overwritten
+
+Every request that changes an entry SHALL carry the access `generation` the tab last received — from `GET /v1/tables/{name}/access` or from the response to its own last save — as `generation` in the body of a `PUT` and as the `generation` query value of a `DELETE`.
+
+When a save answers `409 access_conflict`, nothing was stored and the role was changed since the tab read it. The drawer SHALL stay open, SHALL state in an error banner that the role was changed by someone else since it was opened, SHALL disable **Save role**, and SHALL offer **Reload role**. **Reload role** SHALL read the table's access again and reset every step of the drawer to the role's stored entry, or to an entry with nothing granted when the role no longer has one, after which **Save role** works again. The user's unsaved input is discarded by the reload and not before it. A removal that answers `409 access_conflict` SHALL show an error notification carrying the service's message, close the dialog, read the access again, and leave the role listed as it is now stored.
+
+When a save or a removal answers `409 table_busy`, an error notification SHALL carry the service's message, the drawer or dialog SHALL stay as it was with its action still offered, and repeating the action SHALL send the same request again.
+
+A change made by someone else to another role SHALL NOT keep this role from being saved.
+
+#### Scenario: A save carries the generation that was read
+
+- **GIVEN** the access read answered `generation` 7
+- **WHEN** the user saves a role
+- **THEN** the request body carries `generation` 7
+- **AND WHEN** the response carries `generation` 8 and the user saves another role without reloading
+- **THEN** that request does not answer a conflict because of the first save
+
+#### Scenario: A conflicting save is not repeated blindly
+
+- **WHEN** a save answers `409 access_conflict`
+- **THEN** the drawer stays open with an error banner saying the role was changed by someone else, **Save role** is disabled, and **Reload role** is offered
+- **AND** the roles table is unchanged
+
+#### Scenario: Reload role shows what is stored
+
+- **GIVEN** the conflict banner is shown
+- **WHEN** the user chooses **Reload role**
+- **THEN** the access is read again, the drawer's steps show the role's stored entry, the banner is gone, and **Save role** is enabled once something is changed
+
+#### Scenario: A busy table can be retried
+
+- **WHEN** a save answers `409 table_busy`
+- **THEN** an error notification shows the service's message, the drawer stays open with the input intact, and **Save role** is still offered
+
+#### Scenario: A conflicting removal keeps the role
+
+- **WHEN** a removal answers `409 access_conflict`
+- **THEN** an error notification shows the service's message, the dialog closes, and the roles table shows the role as it is now stored
+
+### Requirement: Access warnings are shown whenever the tab is loaded
+
+The Access tab SHALL show the warnings the service reports in `ineffective_grants` of `GET /v1/tables/{name}/access` on every load, and not only after a save. It SHALL show each item's `message` verbatim and SHALL NOT decide by itself whether a configuration deserves a warning.
+
+Items whose `role` is `*` SHALL be shown as a warning banner above the roles table, one entry per item in the order the service returned them, because they concern every caller of the table. Items of any other role SHALL be shown on that role's row: a warning indicator in the Role cell whose accessible name carries the messages, which are also shown on hover. A table whose read reports no item SHALL show neither.
+
+After a successful save or removal the tab SHALL read the access again, so that a warning which depends on another role's entry appears or disappears without a page reload.
+
+#### Scenario: A table open to everyone carries a standing warning
+
+- **GIVEN** the access read reports an item for `*` with the reason `everyone_reads_all_rows`
+- **WHEN** the Access tab is opened, and again after the page is reloaded
+- **THEN** a warning banner above the roles table shows that item's `message`
+
+#### Scenario: Several warnings of Everyone are listed together
+
+- **GIVEN** the read reports `lifts_row_policies` and `everyone_reads_all_rows` for `*`
+- **THEN** the banner shows both messages, in the order returned
+
+#### Scenario: A provider role's warning is shown on its row
+
+- **GIVEN** the read reports an item for `team-x` with the reason `already_global`
+- **THEN** the row of `team-x` shows a warning indicator whose message is that item's `message`
+- **AND** no banner is shown above the roles table for it
+
+#### Scenario: A warning caused by another role appears after a save
+
+- **GIVEN** `*` holds `read` with no row limit and no other role has a row limit
+- **WHEN** the user saves a row limit for `team-x`
+- **THEN** the access is read again and the banner shows the `lifts_row_policies` message the read now reports
+
+#### Scenario: No warning, no banner
+
+- **WHEN** the read reports an empty `ineffective_grants`
+- **THEN** no banner and no row indicator is shown
+
+### Requirement: An enrichment table's read access is set on its source
+
+On a table of the enrichment type the Access tab SHALL state, above the roles table, that who can read the enrichment, which rows and which columns is decided by its source table's access, naming the source and linking to its detail page.
+
+The role drawer on an enrichment SHALL offer **Write** and **Modify** only: **Get** and **Read** SHALL be locked and unselected with the reason that read access comes from the source table, and the sensitive, row and column steps SHALL NOT be offered. An entry saved for an enrichment SHALL carry no privilege other than `write` and `modify`, and `rows` and `columns` as `null`. The system-table lock of **Write** and **Modify** SHALL apply to a system enrichment as to any system table.
+
+In the roles table of an enrichment the Rows and Columns cells SHALL read **Set on source** for every role.
+
+A `409 enrichment_follows_source` the service still returns SHALL be an error notification carrying the service's message and request id.
+
+#### Scenario: The tab points at the source
+
+- **WHEN** the Access tab of an enrichment whose source is `usage` is opened
+- **THEN** a note says that read access, rows and columns are set on `usage`, with a link to that table
+
+#### Scenario: Only Write and Modify can be granted
+
+- **WHEN** the drawer is opened on an enrichment
+- **THEN** **Get** and **Read** are locked with the stated reason, **Write** and **Modify** are selectable, and no sensitive, row or column step is shown
+
+#### Scenario: The entry sent holds nothing the source decides
+
+- **WHEN** the user grants **Modify** to a role on an enrichment and saves
+- **THEN** the entry sent holds `modify` only, with `rows` and `columns` `null`
+
+#### Scenario: The roles table does not state rows or columns
+
+- **WHEN** the roles table of an enrichment renders
+- **THEN** every row's Rows and Columns cells read **Set on source**
+
+### Requirement: Columns restricted badge
+
+A table whose `permissions.columns_restricted` is true SHALL show a **Columns restricted** badge on the table detail header beside the status badge, and in the Tables catalog row beside the table name, next to the **Rows restricted** badge when both apply. The detail header badge SHALL carry a tooltip stating that a column limit hides some of the table's columns from the user on every query surface. The hidden columns SHALL NOT be named or requested for this user. A table whose `columns_restricted` is false or missing SHALL show no such badge.
+
+The badge SHALL be shown to every viewer the service reports restricted, whether or not the viewer can manage access.
+
+#### Scenario: A column-restricted user sees the badge
+
+- **WHEN** a table reports `permissions.columns_restricted = true`
+- **THEN** the detail header and the catalog row each show **Columns restricted**
+- **AND** hovering or focusing the header badge shows the explanation
+
+#### Scenario: Both restrictions are shown side by side
+
+- **WHEN** a table reports `rows_restricted = true` and `columns_restricted = true`
+- **THEN** both badges are shown
+
+#### Scenario: An unrestricted user sees no badge
+
+- **WHEN** a table reports `columns_restricted = false` or omits it
+- **THEN** no Columns restricted badge is shown
+
+### Requirement: Limits are stated not to carry over to derived tables
+
+While the role drawer has a row limit or a column limit chosen, it SHALL state, once, that tables which pipelines build from this table do not inherit the limit and need access entries of their own: in the column step when a column limit is chosen, otherwise in the row step. The note SHALL be general: it SHALL NOT list those tables and SHALL cause no request.
+
+#### Scenario: The note accompanies a row limit
+
+- **WHEN** the user chooses **Only some rows**
+- **THEN** the row step says that tables built from this one by pipelines need their own access entries
+
+#### Scenario: The note accompanies a column limit
+
+- **WHEN** the user chooses **Only some columns**
+- **THEN** the column step says the same
+
+#### Scenario: Both limits carry one note
+
+- **WHEN** the user chooses **Only some rows** and **Only some columns**
+- **THEN** the note is shown once, in the column step
+
+#### Scenario: No limit, no note
+
+- **WHEN** **All rows** and **All columns** are chosen
+- **THEN** the note is not shown
+
+### Requirement: Role drawer edits one role's entry
+
+The Access tab SHALL edit a role in a **drawer** that opens over the right edge of the page, keeps the roles table visible, and closes with its close control, with Escape, and with **Cancel**. The drawer SHALL hold the following steps in order, each addressable by a numbered heading:
+
+1. **Role**: for a new role, a single-choice picker over the role catalog described in "Role catalog for the drawer", offering only roles that have no entry on the table, preceded by the **Everyone** grantee while it has no entry (see "Everyone grantee on the Access tab"); for an existing role, the role's name, read-only. A role that already has an entry is edited by selecting its row.
+2. **What it can do**: shown only once a role is chosen (always, for an existing role); four selectable cards — **Get**, **Read**, **Write**, **Modify**. **Get** SHALL show as held, with the note that it comes from **Read** or **Modify**, while either is selected, and SHALL then be neither separately togglable nor stored by this save unless it was already stored.
+3. **Sensitive columns**: a switch that grants the sensitive clearance, naming the table's sensitive columns. A note beneath it SHALL state that the clearance belongs to the role and covers everything it can do on this table. This step SHALL be offered only while **Get**, **Read** or **Modify** is held, stored or implied, because the clearance authorizes nothing by itself.
+4. **Which rows can it read?**: **All rows** or **Only some rows**. This step SHALL be offered only while **Read** is selected. **Only some rows** reveals the row-limit editor (see "Row limit of a role"). A note in this step SHALL state that the limit also applies to SQL, CSV export and Flight SQL.
+5. **Which columns can it see?**: **All columns** or **Only some columns** (see "Column limit of a role"). Its heading SHALL be numbered 4 while the row step is not offered, so the visible steps are numbered without a gap.
+
+On a `system` table, **Write** and **Modify** SHALL be locked and unselected, with the reason that the service feeds system tables so they cannot be written to or changed, and that read access and limits work as on any table. Steps 3, 4 and 5 SHALL work as on any other table. An enrichment table narrows the drawer as "An enrichment table's read access is set on its source" states.
+
+The footer SHALL offer the actions **Cancel** and **Save role**.
+
+**Save role** SHALL be disabled until the role is chosen and at least one privilege is held or a row or column limit is set, and while a request is in flight. It SHALL send one request, `PUT /v1/tables/{name}/access` with the role as the URL-encoded `role` query value, whose body is the role's whole entry: the `generation` (see "A role changed by someone else is not overwritten"), the selected `privileges`, `rows` and `columns`. The privileges, the row limit and the column limit of a role are therefore stored together or not at all. No other role's entry SHALL be read for, or sent with, the save.
+
+A successful save SHALL show a success notification, update the roles table from the service's response, and close the drawer, unless the response reports grants that change nothing (see "Drawer reports grants that change nothing"). A save that fails SHALL show an error notification carrying the service's message and request id, SHALL leave the drawer open with the user's input intact, and SHALL change nothing in the roles table.
+
+Turning **Read** off SHALL leave the role's existing row limit untouched — the entry is sent with the stored `rows` — because that limit still narrows the role if it reads the table by another path, and removing it would widen the role's access.
+
+#### Scenario: Adding a role grants Read and implies Get
+
+- **WHEN** the user chooses **Add role**, picks `team-z`, selects **Read**, and saves
+- **THEN** one `PUT /access?role=team-z` is sent whose `privileges` hold `read` and not `get`
+- **AND** the roles table shows `team-z` with a full **Read** mark and an implied **Get** mark
+
+#### Scenario: Only the edited role is sent
+
+- **GIVEN** the table has entries for `team-x` and `pii-analysts`
+- **WHEN** the user grants **Write** to `ingest-bot` and saves
+- **THEN** the only request names `ingest-bot`, and the access is not read before it
+
+#### Scenario: A role name is sent as an encoded query value
+
+- **WHEN** the user saves the role `/analytics/viewers`
+- **THEN** the request's `role` query value is `%2Fanalytics%2Fviewers`
+
+#### Scenario: The whole entry is stored by one request
+
+- **WHEN** the user selects **Read**, sets a row limit and a column limit, and saves
+- **THEN** one request carries `privileges`, `rows` and `columns`
+- **AND WHEN** it fails
+- **THEN** the roles table shows none of the three as changed
+
+#### Scenario: Nothing below the role is shown until a role is chosen
+
+- **WHEN** the drawer opens on a new role and no role is chosen
+- **THEN** only the **Role** step is shown, with no privilege cards
+- **AND WHEN** a role is chosen
+- **THEN** the **What it can do** step appears
+
+#### Scenario: Sensitive is offered only with a verb
+
+- **WHEN** no privilege is selected
+- **THEN** the **Sensitive columns** step is not offered
+- **AND WHEN** **Modify** is selected
+- **THEN** the step is offered
+
+#### Scenario: The row step is offered only for Read
+
+- **WHEN** only **Write** is selected
+- **THEN** the **Which rows can it read?** step is not offered
+- **AND WHEN** **Read** is selected
+- **THEN** it is offered with **All rows** chosen for a role that has no row limit
+
+#### Scenario: A system table locks Write and Modify
+
+- **WHEN** the drawer is opened on a `system` table
+- **THEN** **Write** and **Modify** are locked with the stated reason, and **Read**, the sensitive switch, the row step and the column step behave as on any table
+
+#### Scenario: Turning Read off keeps the row limit
+
+- **GIVEN** a role with a row limit
+- **WHEN** the user deselects **Read**, selects **Modify**, and saves
+- **THEN** the entry sent carries the stored `rows` unchanged
+
+#### Scenario: A failed save keeps the drawer open
+
+- **WHEN** `PUT /access` fails
+- **THEN** an error notification shows the service's message and request id
+- **AND** the drawer stays open with the selections unchanged and the roles table unchanged
+
+#### Scenario: The drawer closes with Escape
+
+- **WHEN** the drawer is open and the user presses Escape
+- **THEN** it closes without sending a request
+
+### Requirement: Row limit of a role
+
+When the user chooses **Only some rows**, the drawer SHALL show a row-limit editor that builds a predicate over the table's own columns. The editor SHALL be the filter-condition editor of the Query Builder's Filter section, shared rather than duplicated, and SHALL show the same condition and group controls, operators, value inputs and operator rules for the same column types. It SHALL NOT depend on a Query Builder's state: its columns SHALL be the table's stored columns — sensitive columns included, whatever the viewer sees — and it SHALL offer no function operand, no aggregate, and no parameter other than the caller values of "Caller value operand in the row-limit editor", because the service refuses a row limit that uses them. A column the table does not store, including a dotted enrichment field, SHALL NOT be offered.
+
+The editor SHALL also offer a **JSON** view of the same predicate in the service's stable filter serialization — the one the Query Builder's JSON view uses — and a predicate that nests deeper than the visual editor can hold SHALL open in the JSON view with a note saying why, without changing it. Editing the predicate in either view SHALL keep the other in step when the predicate is representable visually.
+
+The row limit is stored in the role's entry as `rows`: `{"filter": …}` for **Only some rows**, and `null` for **All rows**. **Only some rows** with an empty predicate SHALL NOT be savable. A visual predicate holding a condition that names no column, a condition compared with a blank literal value (other than an explicit null comparison), an **is one of** condition with no non-blank item, or a nested group with no members, SHALL NOT be savable either, and the editor SHALL say so: serialization skips such an element, so what would be stored is wider than what the editor shows. An invalid JSON predicate SHALL NOT be sent, and leaving the JSON view for text that is not a filter (an empty or blank document is an empty predicate, not such text) SHALL keep the JSON view with a message of its own, distinct from the one for a predicate that is too deep.
+
+A predicate the service refuses SHALL store nothing of the entry: the drawer SHALL stay open with the input intact and **Save role** still offered, and an error notification SHALL carry the service's message — which names the offending field for a `422`. A predicate the service rejects for a field the user can see in JSON SHALL have that field highlighted there when the service names it.
+
+#### Scenario: A row limit is saved with the grants
+
+- **WHEN** the user selects **Read**, chooses **Only some rows**, builds `project_id is one of Z-PRJ-3, Z-PRJ-4`, and saves
+- **THEN** one `PUT /access` is sent whose `rows` carries a `filter` for that predicate
+
+#### Scenario: Switching to All rows removes the limit
+
+- **GIVEN** a role with a row limit
+- **WHEN** the user chooses **All rows** and saves
+- **THEN** the entry sent carries `rows` as `null`
+
+#### Scenario: A rejected row limit stores nothing
+
+- **GIVEN** the save answers `422` naming `region`
+- **THEN** an error notification shows the service's message
+- **AND** the drawer stays open, the roles table is unchanged, and the footer action still reads **Save role**
+- **AND** `region` is highlighted in the JSON view
+
+#### Scenario: A deeply nested predicate opens as JSON
+
+- **GIVEN** a role whose stored predicate nests deeper than the visual editor holds
+- **WHEN** the drawer opens on it
+- **THEN** the row-limit editor shows the JSON view with a note that the predicate is too deep for the visual editor, and the predicate is unchanged
+
+#### Scenario: Only the table's own columns are offered
+
+- **WHEN** the user adds a condition
+- **THEN** the column picker lists the table's stored columns, including a sensitive column, and no dotted enrichment field
+
+#### Scenario: Function operands are not offered
+
+- **WHEN** the user edits a condition in the row-limit editor
+- **THEN** no function operand is offered for either side
+
+#### Scenario: An unfinished condition keeps the limit from being saved
+
+- **GIVEN** one condition on `project_id` is filled and a second condition has no column chosen
+- **THEN** the editor says an unfinished condition is not stored, and **Save role** is disabled
+
+#### Scenario: A condition with a blank value cannot be saved
+
+- **GIVEN** a condition on `status` with the operator **Equals** and an empty value
+- **THEN** the editor says an unfinished condition is not stored, and **Save role** is disabled
+- **AND WHEN** the user fills the value
+- **THEN** **Save role** is enabled
+
+#### Scenario: An explicit null comparison is complete
+
+- **WHEN** the user compares a column with null instead of typing a value
+- **THEN** the condition is complete and **Save role** is enabled
+
+#### Scenario: An empty JSON document returns to the visual view
+
+- **WHEN** no condition was added, the user switches to the JSON view, and then back to the visual view
+- **THEN** the visual view returns with no conditions and no message, and the empty document is not treated as invalid JSON
+
+#### Scenario: Text that is not a filter keeps the JSON view with its own message
+
+- **WHEN** the JSON text is not a filter and the user switches to the visual view
+- **THEN** the JSON view stays, with a message that the JSON is not a valid filter, not the too-deep message
+
+#### Scenario: An empty predicate cannot be saved
+
+- **WHEN** **Only some rows** is chosen and no condition has been added
+- **THEN** **Save role** is disabled
 

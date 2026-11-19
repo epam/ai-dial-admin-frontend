@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { previewAnalyticsImportConfig } from '@/src/app/[lang]/import-config/actions';
 import AnalyticsImportPreview from '@/src/components/ImportConfig/ConfigurationPreview/AnalyticsImportPreview';
-import { ImportI18nKey } from '@/src/constants/i18n';
+import { ExportI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { CatalogImportPreview, CatalogImportResult } from '@/src/models/analytics/catalog-import';
 import { CatalogImportAction, CatalogImportOutcome, CatalogResolutionPolicy } from '@/src/types/analytics/import';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -111,7 +111,7 @@ describe('AnalyticsImportPreview', () => {
     vi.mocked(previewAnalyticsImportConfig).mockResolvedValue({
       success: false,
       status: 422,
-      errorHeader: 'catalog_bundle_version_unsupported',
+      errorHeader: ExportI18nKey.PreviewUnavailable,
       errorMessage: 'format_version 2 is not supported',
       requestId: 'r-3',
     });
@@ -119,7 +119,7 @@ describe('AnalyticsImportPreview', () => {
 
     await vi.waitFor(() =>
       expect(getErrorNotification).toHaveBeenCalledWith(
-        'catalog_bundle_version_unsupported',
+        ExportI18nKey.PreviewUnavailable,
         'format_version 2 is not supported',
         'r-3',
       ),
@@ -132,7 +132,11 @@ describe('AnalyticsImportPreview', () => {
     renderPreview();
 
     await vi.waitFor(() =>
-      expect(getErrorNotification).toHaveBeenCalledWith(undefined, ImportI18nKey.AnalyticsPreviewFailed, undefined),
+      expect(getErrorNotification).toHaveBeenCalledWith(
+        ExportI18nKey.PreviewUnavailable,
+        ImportI18nKey.AnalyticsPreviewFailed,
+        undefined,
+      ),
     );
   });
 

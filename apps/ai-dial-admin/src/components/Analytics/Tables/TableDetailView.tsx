@@ -43,12 +43,12 @@ import {
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
 import AccessTab from '@/src/components/Analytics/Tables/access/AccessTab';
 import { useTableAccess } from '@/src/components/Analytics/Tables/access/use-table-access';
-import RowsRestrictedBadge from '@/src/components/Analytics/Tables/RowsRestrictedBadge';
+import RestrictedBadge from '@/src/components/Analytics/Tables/RestrictedBadge';
 import TableAudit from '@/src/components/Analytics/Tables/TableAudit';
 import TableProperties from '@/src/components/Analytics/Tables/TableProperties';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
 import { TABLE_TYPE_LABEL } from '@/src/components/Analytics/Tables/constants';
-import { KeyedEnrichments } from '@/src/components/Analytics/Tables/models';
+import { KeyedEnrichments, RestrictionKind } from '@/src/components/Analytics/Tables/models';
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
 import {
   buildRowsTemplate,
@@ -130,6 +130,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const [editColumn, setEditColumn] = useState<AnalyticsTableColumn | null>(null);
   const [sourceTable, setSourceTable] = useState<AnalyticsTable | null>(null);
   const [keyedEnrichments, setKeyedEnrichments] = useState<KeyedEnrichments>({});
+  const [enrichments, setEnrichments] = useState<AnalyticsTable[]>([]);
+  const [hasEnrichmentsFailed, setHasEnrichmentsFailed] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [draftDocument, setDraftDocument] = useState<DraftTableDocument | null>(null);
 
@@ -142,7 +144,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const isActive = table.status === TableStatus.Active;
   // While an ACTIVE table's definition is shown as JSON, the header offers only copying it and leaving the view.
   const isJsonViewOnly = isActive && isEditorEnabled;
-  const { canDelete, canWrite, canModify, canManageRoles, canChangeSensitive, isRowsRestricted } =
+  const { canDelete, canWrite, canModify, canManageRoles, canChangeSensitive, isRowsRestricted, isColumnsRestricted } =
     useAnalyticsTablePermissions(table);
   // Read with the view: the tab's presence depends on it.
   const access = useTableAccess(name, canManageRoles && isActive && featureFlags.analyticsEnabled);
@@ -181,6 +183,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   useEffect(() => {
     if (table.type !== AnalyticsTableType.Source || table.status !== TableStatus.Active) {
       setKeyedEnrichments({});
+      setEnrichments([]);
+      setHasEnrichmentsFailed(false);
       return;
     }
     let cancelled = false;
@@ -192,15 +196,17 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
           .map((candidate) => candidate.name);
         const definitions = await Promise.all(names.map((enrichment) => getTable(enrichment)));
         if (!cancelled) {
-          setKeyedEnrichments(
-            getKeyedEnrichments(
-              name,
-              definitions.flatMap((read) => (read?.response ? [read.response] : [])),
-            ),
-          );
+          const read = definitions.flatMap((definition) => (definition?.response ? [definition.response] : []));
+          setKeyedEnrichments(getKeyedEnrichments(name, read));
+          setEnrichments(read);
+          setHasEnrichmentsFailed(!listing?.success || read.length < names.length);
         }
       } catch {
-        if (!cancelled) setKeyedEnrichments({});
+        if (!cancelled) {
+          setKeyedEnrichments({});
+          setEnrichments([]);
+          setHasEnrichmentsFailed(true);
+        }
       }
     })();
     return () => {
@@ -225,13 +231,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
 
   const notifyFailed = useCallback(
     (res: ServerActionResponse) =>
-      showNotification(
-        getErrorNotification(
-          res.errorHeader || t(AnalyticsTablesI18nKey.ActionFailed),
-          res.errorMessage,
-          res.requestId,
-        ),
-      ),
+      showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.ActionFailed), res.errorMessage, res.requestId)),
     [showNotification, t],
   );
 
@@ -338,7 +338,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       const others = columns.filter((c) => c.name !== from).map((c) => c.name);
       const error = getAnalyticsIdentifierError(target, others, t);
       if (error) {
-        showNotification(getErrorNotification(error.text));
+        showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.RenameFailed), error.text));
         void reload();
         return;
       }
@@ -500,7 +500,15 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
       {selectedTab === EntityViewTab.Properties && properties}
       {selectedTab === EntityViewTab.Access && (
         <div className="flex min-h-0 flex-1 flex-col">
-          <AccessTab tableName={name} columns={columns} isSystem={isSystem} access={access} />
+          <AccessTab
+            tableName={name}
+            columns={columns}
+            isSystem={isSystem}
+            sourceTable={table.type === AnalyticsTableType.Enrichment ? (table.source_table ?? '') : undefined}
+            enrichments={enrichments}
+            hasEnrichmentsFailed={hasEnrichmentsFailed}
+            access={access}
+          />
         </div>
       )}
       {selectedTab === EntityViewTab.Audit && (
@@ -526,7 +534,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
           <div className="flex min-w-0 items-center gap-2">
             <h1 className="dial-h1-text truncate">{name}</h1>
             <TableStatusBadge status={table.status} />
-            {isRowsRestricted && <RowsRestrictedBadge hasTooltip />}
+            {isRowsRestricted && <RestrictedBadge kind={RestrictionKind.Rows} hasTooltip />}
+            {isColumnsRestricted && <RestrictedBadge kind={RestrictionKind.Columns} hasTooltip />}
             <IdentityTag label={t(TABLE_TYPE_LABEL[table.type])} />
             {isSystem && <IdentityTag label={t(AnalyticsTablesI18nKey.SystemReadOnly)} />}
           </div>

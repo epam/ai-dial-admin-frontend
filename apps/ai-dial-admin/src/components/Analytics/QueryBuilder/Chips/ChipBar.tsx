@@ -25,9 +25,10 @@ import { FilterNodeKind, FilterPredicateNode } from '@/src/models/analytics/quer
 
 interface Props {
   period: PeriodControl | null;
+  isReadOnly?: boolean;
 }
 
-const ChipBar: FC<Props> = ({ period }) => {
+const ChipBar: FC<Props> = ({ period, isReadOnly = false }) => {
   const t = useI18n();
   const { state } = useQueryBuilder();
 
@@ -40,6 +41,7 @@ const ChipBar: FC<Props> = ({ period }) => {
     <div role="group" aria-label={t(QueryChipsI18nKey.Bar)} className="flex flex-wrap items-center gap-2">
       {period && (
         <PopupChip
+          isReadOnly={isReadOnly}
           prefix={`${t(QueryChipsI18nKey.Period)}:`}
           label={periodChipLabel(period.timePeriod, period.isCustom, period.timeRange, t)}
           widthClassName="w-[600px]"
@@ -47,6 +49,7 @@ const ChipBar: FC<Props> = ({ period }) => {
         />
       )}
       <PopupChip
+        isReadOnly={isReadOnly}
         prefix={`${t(QueryBuilderI18nKey.Limit)}:`}
         label={t(QueryChipsI18nKey.LimitRows, { count: String(state.page.limit) })}
         renderPanel={(panel) => <LimitPanel {...panel} />}
@@ -55,6 +58,7 @@ const ChipBar: FC<Props> = ({ period }) => {
         const { condition, value } = filterChipParts(predicate, state.fields, t);
         return (
           <PopupChip
+            isReadOnly={isReadOnly}
             key={predicate.id}
             prefix={value ? condition : void 0}
             label={value || condition}
@@ -64,6 +68,7 @@ const ChipBar: FC<Props> = ({ period }) => {
       })}
       {isAggregate && (
         <PopupChip
+          isReadOnly={isReadOnly}
           prefix={`${t(QueryBuilderI18nKey.Aggregate)}:`}
           label={aggregateChipLabel(state, t)}
           renderPanel={(panel) => <AggregatePanel {...panel} />}
@@ -71,6 +76,7 @@ const ChipBar: FC<Props> = ({ period }) => {
       )}
       {!isAggregate && state.select.length > 0 && (
         <PopupChip
+          isReadOnly={isReadOnly}
           prefix={`${t(QueryChipsI18nKey.ShowColumns)}:`}
           label={t(QueryChipsI18nKey.ColumnsCount, { count: String(state.select.length) })}
           renderPanel={(panel) => <ColumnsPanel {...panel} />}
@@ -78,13 +84,14 @@ const ChipBar: FC<Props> = ({ period }) => {
       )}
       {state.sort.map((row) => (
         <PopupChip
+          isReadOnly={isReadOnly}
           key={row.id}
           prefix={`${t(QueryBuilderI18nKey.Sort)}:`}
           label={sortChipLabel(row, state.fields, t)}
           renderPanel={(panel) => <SortPanel {...panel} row={row} />}
         />
       ))}
-      <AddChip />
+      {!isReadOnly && <AddChip />}
     </div>
   );
 };

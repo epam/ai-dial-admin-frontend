@@ -98,11 +98,7 @@ const SessionValueFilter: FC<Props> = ({ model, onModelChange, colDef, context }
         setFailureMessage(resolved.errorMessage ?? null);
         setState(SessionValuesState.LoadFailed);
         showNotification(
-          getErrorNotification(
-            resolved.errorHeader ?? t(SessionsTraceI18nKey.ValuesLoadFailed),
-            resolved.errorMessage,
-            resolved.requestId,
-          ),
+          getErrorNotification(t(SessionsTraceI18nKey.ValuesLoadFailed), resolved.errorMessage, resolved.requestId),
         );
         return;
       }

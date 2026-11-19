@@ -73,26 +73,34 @@ tolerated) followed by `/explore`, with `schemaVersion=1`, a URL-encoded `panes`
 The panes document SHALL contain a single TraceQL query on the configured datasource, grouped per trace, and
 a time range of the last 24 hours (`now-24h` to `now`).
 
-The "All traces" query SHALL select spans whose `dial.deployment` span attribute matches the application's
-path as a suffix: `{ span.dial.deployment =~ ".*<path>" }`. The "Errors only" query SHALL select the
-error-status spans that are descendants of those spans:
-`{ span.dial.deployment =~ ".*<path>" } >> { status = error }`.
+The "All traces" query SHALL select spans that identify the application in either of two ways: the
+`dial.deployment` span attribute matches the application's path as a suffix, or the span's `http.url` is a
+request to that application's deployment URL. Core sets `dial.deployment` only on `rate_limit.check` spans, so
+an application that never gets a rate-limit check would otherwise match nothing, while its own request span
+always carries the URL:
+`{ span.dial.deployment =~ ".*<path>" || span.http.url =~ ".*/deployments/(applications/)?<path>/.*" }`.
+The "Errors only" query SHALL select the error-status spans that are descendants of those spans:
+`{ <the same selector> } >> { status = error }`.
 
 #### Scenario: All-traces URL
 - **WHEN** the "All traces" option's URL is built for the application at path `public/ahQuickApp__1.0.0`
 - **THEN** its URL starts with the normalized traces URL followed by `/explore?`, carries `schemaVersion=1`
   and the configured `orgId`, and its decoded panes document holds one query on the configured datasource
   uid with `tableType` `traces`, the range `now-24h` to `now`, and the TraceQL
-  `{ span.dial.deployment =~ ".*public/ahQuickApp__1\\.0\\.0" }`
+  `{ span.dial.deployment =~ ".*public/ahQuickApp__1\\.0\\.0" || span.http.url =~ ".*/deployments/(applications/)?public/ahQuickApp__1\\.0\\.0/.*" }`
 
 #### Scenario: Errors-only URL
 - **WHEN** the "Errors only" option's URL is built for the same application
-- **THEN** its URL is identical to the all-traces URL except that the TraceQL is
-  `{ span.dial.deployment =~ ".*public/ahQuickApp__1\\.0\\.0" } >> { status = error }`
+- **THEN** its URL is identical to the all-traces URL except that the TraceQL is the all-traces selector
+  followed by `>> { status = error }`
 
 #### Scenario: Traces URL with or without trailing slash
 - **WHEN** the traces URL is `https://grafana.example.com/` or `https://grafana.example.com`
 - **THEN** both produce URLs starting `https://grafana.example.com/explore?` with no doubled slash
+
+#### Scenario: Application without a rate-limit check span
+- **WHEN** an application's calls produce no `rate_limit.check` span, so no span carries its `dial.deployment`
+- **THEN** the query still selects the application's Core request span through its `http.url`
 
 #### Scenario: Panes encoded exactly once
 - **WHEN** a URL is built for an application
@@ -124,12 +132,14 @@ default. A non-numeric or non-positive organization id SHALL fall back to `1` ra
 - **THEN** the URL carries `orgId=1` and the page still renders
 
 ### Requirement: Application path is the match value and is escaped
-The value matched against `dial.deployment` SHALL be the application's Core path: bucket-qualified, with the
-`__version` suffix for a versioned public application (`public/ahQuickApp__1.0.0`), and `platform/<name>` for
-a platform application. It SHALL NOT be the display name, the display version or the bare name. Because the
-path is used inside a regular expression that sits inside a TraceQL string literal, regular-expression
-metacharacters SHALL be escaped first and the result then escaped for the string literal (backslash and double
-quote), so that any path yields a well-formed query that matches that path literally.
+The value matched against `dial.deployment` and `http.url` SHALL be the application's Core path: bucket-qualified,
+with the `__version` suffix for a versioned public application (`public/ahQuickApp__1.0.0`), and
+`platform/<name>` for a platform application. It SHALL NOT be the display name, the display version or the bare
+name. Core reports the path percent-encoded one segment at a time (`public/QA/Code%20Apps%20ALS/app__1.0.0`),
+so the path SHALL be percent-encoded per segment first. Because it is then used inside a regular expression that
+sits inside a TraceQL string literal, regular-expression metacharacters SHALL be escaped next and the result
+then escaped for the string literal (backslash and double quote), so that any path yields a well-formed query
+that matches that path literally.
 
 #### Scenario: Path taken from identity, not display name
 - **WHEN** an application at path `public/ahQuickApp__1.0.0` has display name `Quick App`
@@ -139,22 +149,28 @@ quote), so that any path yields a well-formed query that matches that path liter
 - **WHEN** a platform application is named `chat-hub`
 - **THEN** the query matches `platform/chat-hub`
 
+#### Scenario: Spaces in folder or name
+- **WHEN** a path is `public/QA/Code Apps ALS/msh-oauth-resource-app__1.0.0`
+- **THEN** the query matches `public/QA/Code%20Apps%20ALS/msh-oauth-resource-app__1.0.0`, the form Core
+  records, and the `/` separators stay unencoded
+
 #### Scenario: Version dots are literal
 - **WHEN** a path contains `1.0.0`
 - **THEN** each dot is escaped in the regular expression so it matches only a dot
 
 #### Scenario: Regular-expression metacharacters in a path
 - **WHEN** a path contains characters such as `(`, `+` or `[`
-- **THEN** they are escaped and the query matches that path literally
+- **THEN** they are percent-encoded where encoding applies (`+`, `[`, `]`) and regex-escaped otherwise
+  (`(`, `)`), and the query matches that path literally
 
 #### Scenario: Quote in path
 - **WHEN** a path contains a double quote
-- **THEN** the quote is escaped in the TraceQL string and the decoded panes document remains valid JSON
+- **THEN** it is percent-encoded (`%22`), so the TraceQL string and the decoded panes document remain valid
 
 #### Scenario: Backslash in path
 - **WHEN** a path contains a backslash
-- **THEN** it is escaped for both the regular expression and the string literal, and the decoded panes
-  document remains valid JSON
+- **THEN** it is percent-encoded (`%5C`), so no stray backslash reaches the regular expression and the decoded
+  panes document remains valid
 
 ### Requirement: Accessible dropdown control
 The dropdown button SHALL be a button named by its visible label, and its two options SHALL be menu items

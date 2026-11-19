@@ -26,7 +26,8 @@ import { useIngestFailuresCount } from '@/src/components/Analytics/Tables/Ingest
 import { findRunningTableBackfill } from '@/src/components/Analytics/Tables/Backfill/use-table-backfill-runs';
 import CreateTablePopup from '@/src/components/Analytics/Tables/CreateTablePopup';
 import EditTableMetadataPopup from '@/src/components/Analytics/Tables/EditTableMetadataPopup';
-import RowsRestrictedBadge from '@/src/components/Analytics/Tables/RowsRestrictedBadge';
+import RestrictedBadge from '@/src/components/Analytics/Tables/RestrictedBadge';
+import { RestrictionKind } from '@/src/components/Analytics/Tables/models';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
 import { TABLE_TYPE_LABEL } from '@/src/components/Analytics/Tables/constants';
 import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
@@ -89,11 +90,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
       return;
     }
     showNotification(
-      getErrorNotification(
-        read.errorHeader ?? t(AnalyticsTablesI18nKey.TablesLoadFailed),
-        read.errorMessage,
-        read.requestId,
-      ),
+      getErrorNotification(t(AnalyticsTablesI18nKey.TablesLoadFailed), read.errorMessage, read.requestId),
     );
   }, [showNotification, t]);
 
@@ -148,13 +145,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
       showNotification(getSuccessNotification(t(AnalyticsTablesI18nKey.Deleted)));
       void reload();
     } else {
-      showNotification(
-        getErrorNotification(
-          res.errorHeader || t(AnalyticsTablesI18nKey.ActionFailed),
-          res.errorMessage,
-          res.requestId,
-        ),
-      );
+      showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.ActionFailed), res.errorMessage, res.requestId));
     }
   };
 
@@ -174,13 +165,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
       setEditTarget(null);
       void reload();
     } else {
-      showNotification(
-        getErrorNotification(
-          res.errorHeader || t(AnalyticsTablesI18nKey.ActionFailed),
-          res.errorMessage,
-          res.requestId,
-        ),
-      );
+      showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.ActionFailed), res.errorMessage, res.requestId));
     }
   };
 
@@ -216,7 +201,8 @@ const TablesView: FC<Props> = ({ initialTables }) => {
               <EntityLinkCell href={tableDetailHref(data.name)}>
                 <EllipsisTooltip className="dial-small-text" text={data.name} />
               </EntityLinkCell>
-              {data.permissions?.rows_restricted && <RowsRestrictedBadge />}
+              {data.permissions?.rows_restricted && <RestrictedBadge kind={RestrictionKind.Rows} />}
+              {data.permissions?.columns_restricted && <RestrictedBadge kind={RestrictionKind.Columns} />}
             </span>
           ),
       },

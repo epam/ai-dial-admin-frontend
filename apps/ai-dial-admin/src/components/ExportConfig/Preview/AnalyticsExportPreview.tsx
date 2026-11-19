@@ -8,7 +8,7 @@ import {
   getAnalyticsPreviewTabs,
 } from '@/src/components/ExportConfig/analytics-utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, ExportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
@@ -26,6 +26,7 @@ const AnalyticsExportPreview: FC<Props> = ({ request, onPreviewResult }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
+  const tRef = useRef(t);
   const onPreviewResultRef = useRef(onPreviewResult);
   const getReqRef = useRef(useProtectedRequest());
 
@@ -46,7 +47,9 @@ const AnalyticsExportPreview: FC<Props> = ({ request, onPreviewResult }) => {
         setRows(getAnalyticsPreviewRows(res.response));
         onPreviewResultRef.current(true);
       } else {
-        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        showNotificationRef.current(
+          getErrorNotification(tRef.current(ExportI18nKey.PreviewUnavailable), res.errorMessage, res.requestId),
+        );
         onPreviewResultRef.current(false);
       }
     };

@@ -737,7 +737,7 @@ describe('HopInspector — absence and entitlement', () => {
     await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Upstream unavailable',
+          title: 'SessionsTrace.InspectorLoadFailed',
           description: 'hop body read timed out',
           requestId: 'trace-1',
         }),
@@ -745,7 +745,7 @@ describe('HopInspector — absence and entitlement', () => {
     );
   });
 
-  test('a failed read falls back to its own title when the service supplied no header', async () => {
+  test('a failed read without a header is reported under its own title', async () => {
     getSessionHopRequest.mockResolvedValue({ success: false, status: 500, response: undefined });
     renderInspector();
 

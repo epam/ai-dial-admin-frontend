@@ -19,6 +19,21 @@ describe('getAliasPresentAsOptions', () => {
   test('offers a model target model or application, never toolset', () => {
     expect(getAliasPresentAsOptions(AliasTargetType.Model)).toEqual([AliasPresentAs.Model, AliasPresentAs.Application]);
   });
+
+  test('offers a router target router, model or application, never toolset', () => {
+    expect(getAliasPresentAsOptions(AliasTargetType.Router)).toEqual([
+      AliasPresentAs.Router,
+      AliasPresentAs.Model,
+      AliasPresentAs.Application,
+    ]);
+  });
+
+  test.each([AliasTargetType.Model, AliasTargetType.Application, AliasTargetType.Toolset])(
+    'never offers the router presentation to a %s target',
+    (type) => {
+      expect(getAliasPresentAsOptions(type)).not.toContain(AliasPresentAs.Router);
+    },
+  );
 });
 
 describe('getAliasDefaultPresentAs', () => {
@@ -26,6 +41,7 @@ describe('getAliasDefaultPresentAs', () => {
     [AliasTargetType.Model, AliasPresentAs.Model],
     [AliasTargetType.Application, AliasPresentAs.Application],
     [AliasTargetType.Toolset, AliasPresentAs.Toolset],
+    [AliasTargetType.Router, AliasPresentAs.Router],
   ])('is the own type of a %s target', (type, expected) => {
     expect(getAliasDefaultPresentAs(type)).toBe(expected);
   });
@@ -42,6 +58,12 @@ describe('toStoredPresentAs', () => {
 
   test('drops a choice the target type does not allow instead of sending it to Core', () => {
     expect(toStoredPresentAs(AliasTargetType.Toolset, AliasPresentAs.Model)).toBeUndefined();
+  });
+
+  test('writes a router target shown as a model, and drops the router presentation from a model target', () => {
+    expect(toStoredPresentAs(AliasTargetType.Router, AliasPresentAs.Model)).toBe(AliasPresentAs.Model);
+    expect(toStoredPresentAs(AliasTargetType.Router, AliasPresentAs.Router)).toBeUndefined();
+    expect(toStoredPresentAs(AliasTargetType.Model, AliasPresentAs.Router)).toBeUndefined();
   });
 
   test('writes nothing when nothing was chosen', () => {
