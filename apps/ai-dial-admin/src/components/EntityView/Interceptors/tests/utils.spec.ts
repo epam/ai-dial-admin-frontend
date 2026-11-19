@@ -3,7 +3,28 @@ import { describe, expect, test } from 'vitest';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialInterceptorResource } from '@/src/models/dial/resource';
 import { AssetInterceptorOrigin } from '../models';
-import { hasAssetInterceptorOrigin, mergeInterceptorOrigins, withAssetSourceColumn } from '../utils';
+import {
+  getInterceptorsGridData,
+  hasAssetInterceptorOrigin,
+  mergeInterceptorOrigins,
+  withAssetSourceColumn,
+} from '../utils';
+
+describe('getInterceptorsGridData', () => {
+  const known = [{ name: 'a', displayName: 'A' }];
+
+  test('drops names it cannot resolve by default', () => {
+    expect(getInterceptorsGridData(known, ['a', 'b'])).toEqual(known);
+  });
+
+  test('keeps unresolved names as name-only rows when asked', () => {
+    expect(getInterceptorsGridData(known, ['b', 'a'], true)).toEqual([{ name: 'b' }, known[0]]);
+  });
+
+  test('lists every stored name when the caller has no interceptor list', () => {
+    expect(getInterceptorsGridData([], ['a', 'b'], true)).toEqual([{ name: 'a' }, { name: 'b' }]);
+  });
+});
 
 describe('mergeInterceptorOrigins', () => {
   // Asset rows come from the Core listing, whose identity (`path`/`folderId`) is flat — a shape
