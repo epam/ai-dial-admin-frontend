@@ -2,9 +2,10 @@
 
 import { FC, useId, useMemo } from 'react';
 
-import { ElementSize, GhostButton, GhostIconButton, Input, Select } from '@epam/ai-dial-ui-kit';
-import { IconPlus, IconTrashX } from '@tabler/icons-react';
+import { ElementSize, GhostButton, Input, Select } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { TIME_BUCKET_I18N } from '@/src/components/Analytics/QueryBuilder/Chips/constants';
 import { AggregateChipForm, TimeBucketChoice } from '@/src/components/Analytics/QueryBuilder/Chips/models';
 import {
@@ -132,10 +133,9 @@ const AggregateForm: FC<Props> = ({ form, fields, functions, onChange }) => {
               onChange={(value) => onChange({ ...form, secondaryGroupBy: value as string })}
             />
           </div>
-          <GhostIconButton
+          <RemoveButton
             size={ElementSize.Standard}
             aria-label={t(QueryChipsI18nKey.RemoveSecondaryGrouping)}
-            icon={<IconTrashX size={18} className="text-error" aria-hidden />}
             onClick={() => onChange({ ...form, secondaryGroupBy: null })}
           />
         </div>

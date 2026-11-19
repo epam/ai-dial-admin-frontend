@@ -1,8 +1,7 @@
 'use client';
 
 import { FC, useEffect, useRef, useState } from 'react';
-import { GhostButton, GhostIconButton, Input, Select } from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
+import { GhostButton, Input, Select } from '@epam/ai-dial-ui-kit';
 import {
   createGroupKeyRow,
   getTruncUnits,
@@ -10,8 +9,8 @@ import {
   toGroupKeyRows,
   toGroupKeys,
 } from '@/src/components/Analytics/Pipelines/Aggregate/group-keys';
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { GroupKey } from '@/src/models/analytics/pipeline';
 import { GroupKeyKind, GroupKeyRow } from '@/src/models/analytics/pipeline-ui';
@@ -96,9 +95,8 @@ const GroupKeysEditor: FC<Props> = ({ groupKeys, fields, onChange }) => {
                 value={row.as ?? ''}
                 onChange={(v) => updateRow(row.id, { as: v ?? '' })}
               />
-              <GhostIconButton
+              <RemoveButton
                 className="mb-1 shrink-0"
-                icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
                 aria-label={t(ButtonsI18nKey.Delete)}
                 onClick={() => commit(rows.filter((candidate) => candidate.id !== row.id))}
               />

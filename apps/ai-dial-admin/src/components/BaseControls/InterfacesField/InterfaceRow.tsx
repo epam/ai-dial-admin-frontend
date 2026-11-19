@@ -14,7 +14,7 @@ import {
 import OverridePathsField from '@/src/components/BaseControls/InterfacesField/OverridePathsField';
 import TranslatorField from '@/src/components/BaseControls/InterfacesField/TranslatorField';
 import KeyValueGrid from '@/src/components/Common/KeyValueGrid/KeyValueGrid';
-import { ButtonsI18nKey, EntityFieldsI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DeploymentInterfaceType, InterfaceMode, TranslatorReference } from '@/src/models/dial/interfaces';
@@ -185,7 +185,7 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
             />
           )}
         </div>
-        {!disabled && <RemoveButton aria-label={t(ButtonsI18nKey.Delete)} onClick={onDelete} />}
+        {!disabled && <RemoveButton onClick={onDelete} />}
       </div>
 
       {isAsset && (

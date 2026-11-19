@@ -1,10 +1,11 @@
-import { ButtonAppearance, DangerButton, OutlinedButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconBlocks, IconPlayerPause, IconPlus, IconTrashX } from '@tabler/icons-react';
+import { OutlinedButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
+import { IconBlocks, IconPlayerPause, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { createContainer, createImage, deleteImage, installImage, stopBuild } from '@/src/app/actions/deployments';
 import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
 import { getVersionsPerName } from '@/src/components/Assets/utils';
@@ -282,11 +283,9 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
                     onClick={onOpenCreteNewVersionModal}
                   />
                 </div>
-                <DangerButton
+                <RemoveButton
                   className={buttonsClassNames}
                   label={t(ButtonsI18nKey.Delete)}
-                  appearance={ButtonAppearance.Outlined}
-                  iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenDeleteModal}
                 />
                 {image.buildStatus === IMAGE_STATUS.BUILDING && (

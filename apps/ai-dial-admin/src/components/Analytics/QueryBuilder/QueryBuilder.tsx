@@ -16,9 +16,10 @@ import {
   Button,
 } from '@epam/ai-dial-ui-kit';
 import type { DropdownItem, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
-import { IconCopy, IconPencilMinus, IconPlayerPlay, IconTable, IconTrashX } from '@tabler/icons-react';
+import { IconCopy, IconPencilMinus, IconPlayerPlay, IconTable } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { getEntitySchema, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/queries/actions';
 import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
@@ -559,12 +560,7 @@ const QueryBuilder: FC<Props> = ({
   const renderSavedActions = () => (
     <>
       {savedQueryPage.isWritable && (
-        <GhostButton
-          className="text-error"
-          label={t(ButtonsI18nKey.Delete)}
-          iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-          onClick={savedQueryPage.onOpenDelete}
-        />
+        <RemoveButton label={t(ButtonsI18nKey.Delete)} onClick={savedQueryPage.onOpenDelete} />
       )}
       {savedQueryPage.isWritable && (
         <GhostButton

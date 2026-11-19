@@ -41,7 +41,7 @@ const Notification: FC<NotificationConfig> = ({ type, title, description, reques
   const body = hasBody ? (
     <div className="flex flex-col items-start gap-4">
       {description || requestId ? (
-        <div className="flex flex-col gap-1 max-h-40 overflow-y-auto whitespace-pre-wrap">
+        <div className="flex flex-col gap-1 min-w-0 max-w-full max-h-40 overflow-y-auto whitespace-pre-wrap break-words">
           {description ? <span>{description}</span> : null}
           {requestId ? <span className="text-secondary">{t(BasicI18nKey.RequestId, { id: requestId })}</span> : null}
         </div>
