@@ -1,12 +1,15 @@
 import { render, screen, waitForElementToBeRemoved } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { SuiteType } from '@/src/models/evaluation/test-suite';
+import { ApplicationRoute } from '@/src/types/routes';
 import DeploymentExternalLink from '../DeploymentExternalLink';
 
 const getDeploymentByIdMock = vi.fn();
 const getModelMock = vi.fn();
+const getPlatformApplicationMock = vi.fn();
 const onOpenInNewTabMock = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
@@ -15,6 +18,10 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 
 vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
   getModel: (...args: unknown[]) => getModelMock(...args),
+}));
+
+vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
+  getPlatformApplication: (...args: unknown[]) => getPlatformApplicationMock(...args),
 }));
 
 vi.mock('@/src/utils/open-in-new-tab', () => ({
@@ -37,6 +44,8 @@ describe('DeploymentExternalLink', () => {
     getDeploymentByIdMock.mockReset();
     getModelMock.mockReset();
     getModelMock.mockResolvedValue(null);
+    getPlatformApplicationMock.mockReset();
+    getPlatformApplicationMock.mockResolvedValue(null);
     onOpenInNewTabMock.mockReset();
   });
 
@@ -92,7 +101,7 @@ describe('DeploymentExternalLink', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  test('skips by-id lookup when type is stored', () => {
+  test('skips by-id lookup when type is stored', async () => {
     render(
       <DeploymentExternalLink
         suiteContext={{
@@ -101,8 +110,31 @@ describe('DeploymentExternalLink', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Open deployment' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Open deployment' })).toBeInTheDocument();
     expect(getDeploymentByIdMock).not.toHaveBeenCalled();
+  });
+
+  test('opens a platform application when the platform resource exists', async () => {
+    getPlatformApplicationMock.mockResolvedValue({ response: { name: 'world-economy-v2-hybrid' } });
+    const user = userEvent.setup();
+
+    render(
+      <DeploymentExternalLink
+        suiteContext={{
+          deploymentRef: {
+            id: 'world-economy-v2-hybrid',
+            name: 'StatGPT',
+            type: DeploymentType.Application,
+          },
+        }}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Open deployment' }));
+
+    expect(onOpenInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.AssetsApplications, {
+      name: 'world-economy-v2-hybrid',
+    });
   });
 
   test('skips by-id lookup for MCP suites', () => {
