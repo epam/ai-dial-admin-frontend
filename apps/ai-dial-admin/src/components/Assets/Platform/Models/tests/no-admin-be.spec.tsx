@@ -10,10 +10,6 @@ import { DialModelResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import ModelAssetProperties from '../Properties';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 vi.mock('@/src/app/[lang]/models/actions', () => ({
   getModelsTopics: vi.fn(() => Promise.resolve({ success: true, response: ['catalogue-topic'] })),
   getModelsTokenizers: vi.fn(() => Promise.resolve({ success: true, response: [{ id: 'cl100k_base' }] })),

@@ -18,10 +18,7 @@ const getTestSuiteMock = vi.fn();
 const getMetricLatestVersionMock = vi.fn();
 const { replace: routerReplaceMock } = navigationMock.router;
 
-vi.mock('@/src/context/AppContext', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/src/context/AppContext')>();
-  return actual;
-});
+vi.unmock('@/src/context/AppContext');
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   getRun: (...args: unknown[]) => getRunMock(...args),

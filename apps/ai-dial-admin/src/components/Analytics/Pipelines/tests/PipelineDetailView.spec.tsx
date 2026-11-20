@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { navigationMock } from '@/test-mocks/navigation';
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -15,10 +16,7 @@ import { CreatePipelineDto } from '@/src/models/analytics/pipeline';
 vi.mock('@/src/app/[lang]/pipelines/actions');
 
 const { refresh, push } = navigationMock.router;
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 const enrichment: AnalyticsTable = {
   name: 'turn_feedback',

@@ -1,3 +1,5 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { notificationMock } from '@/test-mocks/notification';
 import { navigationMock } from '@/test-mocks/navigation';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -31,20 +33,17 @@ vi.mock('@/src/app/[lang]/pipelines/actions');
 const backfillSidebar = vi.hoisted(() => ({ showSidebar: vi.fn(), closeSidebar: vi.fn() }));
 
 const { refresh } = navigationMock.router;
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 // Every runtime affordance turns on full-admin rights, so the context is a spy here rather than the
 // shared frozen value.
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     featureFlags: { analyticsEnabled: true },
     isFullAdmin: true,
     sidebar: backfillSidebar,
-  })),
-}));
+  }));
+});
 
 const asFullAdmin = (isFullAdmin: boolean) =>
   vi.mocked(useAppContext).mockReturnValue({

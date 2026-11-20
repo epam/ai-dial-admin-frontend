@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ColDef } from 'ag-grid-community';
@@ -5,15 +6,10 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ActionMenuOperationI18nKey, EntitiesI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import AssetRoles from '../AssetRoles';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
 
 let capturedRowData: unknown;
 let capturedColumnDefs: { field?: string }[] | undefined;
@@ -256,7 +252,7 @@ describe('AssetRoles', () => {
   });
 
   test('a read-only admin can open granted roles without mutation controls', async () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     const user = userEvent.setup();
     const onChange = vi.fn();
     const open = vi.spyOn(window, 'open').mockImplementation(() => null);
@@ -279,6 +275,6 @@ describe('AssetRoles', () => {
     ).not.toBeInTheDocument();
     expect(onChange).not.toHaveBeenCalled();
     open.mockRestore();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 });

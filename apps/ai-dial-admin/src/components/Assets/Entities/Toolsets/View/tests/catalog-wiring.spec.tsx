@@ -13,10 +13,6 @@ vi.mock('@/src/app/[lang]/platform-catalog-schemas/actions', async (importOrigin
   getCatalogSchemaById: vi.fn().mockResolvedValue({ success: true, response: {} }),
 }));
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 interface FieldProps {
   schemaId?: string;
   options?: CatalogSchemaOption[];

@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -11,9 +12,9 @@ vi.mock('@/src/app/[lang]/pipelines/actions');
 
 // The shared mock returns one frozen context value; this hook's whole point is what it does on either
 // side of the full-admin line, so the context is re-mocked here as a spy.
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => ({ featureFlags: {}, isFullAdmin: true })),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: {}, isFullAdmin: true }));
+});
 
 const read = vi.mocked(getPausedPipelines);
 const readCache = vi.mocked(getRunnerPipelines);

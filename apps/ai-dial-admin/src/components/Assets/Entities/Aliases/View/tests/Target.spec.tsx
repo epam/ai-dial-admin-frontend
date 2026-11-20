@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -6,9 +7,6 @@ import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { AliasPresentAs, DialAliasResource } from '@/src/models/dial/alias';
 import AliasTargetTab from '../Target';
 
-const readOnly = vi.hoisted(() => ({ value: false }));
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => readOnly.value }));
 vi.mock('@/src/components/Common/KeyValueGrid/KeyValueGrid', () => ({
   default: ({
     label,
@@ -65,7 +63,7 @@ describe('AliasTargetTab', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    readOnly.value = false;
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 
   test('hands the target and presentation to the target field', () => {
@@ -131,7 +129,7 @@ describe('AliasTargetTab', () => {
   });
 
   test('tells the target field it is read-only for a read-only admin', () => {
-    readOnly.value = true;
+    appContextMock.set({ isReadOnlyAdmin: true });
 
     render(<AliasTargetTab asset={alias} onChange={onChange} />);
 

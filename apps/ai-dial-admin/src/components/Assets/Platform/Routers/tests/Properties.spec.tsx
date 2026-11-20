@@ -8,10 +8,6 @@ import { DialRouterResource } from '@/src/models/dial/resource';
 import { RouterMode } from '@/src/models/dial/router';
 import RouterAssetProperties from '../Properties';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
   return {

@@ -44,6 +44,11 @@ const BANNED = {
   'a computed delete from process.env': 'delete process.env[key];',
   'a second mock of next/navigation': "vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));",
   'a second mock of SaveValidationContext': "vi.mock('@/src/context/SaveValidationContext');",
+  'a second mock of AppContext': "vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => ({}) }));",
+  'a second mock of NotificationContext':
+    "vi.mock('@/src/context/NotificationContext', () => ({ useNotification: () => ({ showNotification }) }));",
+  'a mock of the read-only admin hook':
+    "vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => true }));",
 };
 
 const ALLOWED = {
@@ -66,6 +71,7 @@ const ALLOWED = {
     "Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });",
   'a mock of an uncontrolled module': "vi.mock('@/src/app/[lang]/pipelines/actions');",
   'unmocking a controlled module': "vi.unmock('@/src/context/SaveValidationContext');",
+  'steering a controller': 'appContextMock.set({ isReadOnlyAdmin: true });',
   'reading process.env': "const name = process.env.APP_NAME ?? 'DIAL';",
 };
 

@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -19,15 +20,15 @@ import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table
 vi.mock('@/src/app/[lang]/pipelines/actions');
 const backfillSidebar = vi.hoisted(() => ({ showSidebar: vi.fn(), closeSidebar: vi.fn() }));
 const context = { analyticsEnabled: true, isFullAdmin: true };
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     isFullAdmin: context.isFullAdmin,
     isReadOnlyAdmin: !context.isFullAdmin,
     isEnableAuth: true,
     featureFlags: { analyticsEnabled: context.analyticsEnabled },
     sidebar: backfillSidebar,
-  }),
-}));
+  }));
+});
 
 vi.mock('@/src/components/Analytics/Pipelines/PipelineAudit', () => ({ default: () => <div>pipeline-audit</div> }));
 

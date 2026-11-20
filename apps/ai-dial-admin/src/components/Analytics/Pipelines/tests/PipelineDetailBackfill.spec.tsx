@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -32,17 +33,13 @@ import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table
 vi.mock('@/src/app/[lang]/pipelines/actions');
 const backfillSidebar = vi.hoisted(() => ({ showSidebar: vi.fn(), closeSidebar: vi.fn() }));
 
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn(), removeNotification: vi.fn() }),
-}));
-
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     featureFlags: { analyticsEnabled: true },
     isFullAdmin: true,
     sidebar: backfillSidebar,
-  })),
-}));
+  }));
+});
 
 const asFullAdmin = (isFullAdmin: boolean) =>
   vi.mocked(useAppContext).mockReturnValue({

@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { act, render, screen, waitFor } from '@testing-library/react';
@@ -50,12 +51,12 @@ let mockSidebar = {
   toggleIsMenuClosed: mockToggleIsMenuClosed,
 };
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     sidebar: mockSidebar,
     toggleSidebar: mockToggleSidebar,
-  }),
-}));
+  }));
+});
 
 // Mock the child components
 vi.mock('@/src/components/TestSuites/View/TabsContent', () => ({

@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -6,11 +7,6 @@ import { MAIN_MENU_ID } from '@/src/constants/main-layout';
 import { useTheme } from '@/src/context/ThemeContext';
 import { navigationMock } from '@/test-mocks/navigation';
 import Header from './Header';
-
-const isReadOnlyAdminMock = vi.fn(() => false);
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => isReadOnlyAdminMock(),
-}));
 
 vi.mock('next-auth/react', () => ({
   useSession: vi.fn(() => {
@@ -24,7 +20,7 @@ describe('Header', () => {
 
   beforeEach(() => {
     navigationMock.setPathname('/en/models');
-    isReadOnlyAdminMock.mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     vi.mocked(useTheme).mockReturnValue({ currentTheme: 'dark' } as ReturnType<typeof useTheme>);
   });
 
@@ -34,13 +30,13 @@ describe('Header', () => {
   });
 
   test('renders read-only badge for read-only admin', () => {
-    isReadOnlyAdminMock.mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderHeader();
     expect(screen.getByText(ReadOnlyI18nKey.BadgeLabel)).toBeInTheDocument();
   });
 
   test('reads the read-only explanation with the badge, without making it a control', () => {
-    isReadOnlyAdminMock.mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderHeader();
     expect(screen.getByText(ReadOnlyI18nKey.Description)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: ReadOnlyI18nKey.BadgeLabel })).toBeNull();

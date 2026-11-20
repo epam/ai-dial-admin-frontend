@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { ButtonsI18nKey, EntitiesI18nKey, GrafanaLinksI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { GrafanaTraceLinks } from '@/src/utils/grafana/models';
@@ -23,9 +24,9 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', async (importOriginal) =
 }));
 
 const setEntityReadOnly = vi.fn();
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ setEntityReadOnly, featureFlags: {}, isUnitMode: false, canWriteAt: () => true }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ setEntityReadOnly, featureFlags: {}, isUnitMode: false, canWriteAt: () => true }));
+});
 
 /**
  * Matches `Assets/Entities/Apps/tests/View.spec.tsx`'s scope: a render smoke test, not deep interaction

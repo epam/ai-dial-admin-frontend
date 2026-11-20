@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -6,15 +7,10 @@ import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { ButtonsI18nKey, ExportRunI18nKey } from '@/src/constants/i18n';
 
 const mockExportRunPreview = vi.fn();
-const mockShowNotification = vi.fn().mockReturnValue('notification-id');
-const mockRemoveNotification = vi.fn();
+const { showNotification: mockShowNotification, removeNotification: mockRemoveNotification } = notificationMock;
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   exportRunPreview: (...args: unknown[]) => mockExportRunPreview(...args),
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: mockShowNotification, removeNotification: mockRemoveNotification }),
 }));
 
 const PREVIEW_DATA: unknown[][] = [
@@ -28,6 +24,7 @@ const waitForExportEnabled = () =>
 describe('ExportRunModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockShowNotification.mockReturnValue('notification-id');
     fetchMock.resetMocks();
     mockExportRunPreview.mockResolvedValue(PREVIEW_DATA);
     mockShowNotification.mockReturnValue('notification-id');

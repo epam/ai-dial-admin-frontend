@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { act, renderHook } from '@testing-library/react';
 
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
@@ -8,8 +9,8 @@ import { useDetailMode } from '../use-detail-mode';
 const mockShowSidebar = vi.fn();
 const mockCloseSidebar = vi.fn();
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     sidebar: {
       show: false,
       content: null,
@@ -18,8 +19,8 @@ vi.mock('@/src/context/AppContext', () => ({
     },
     featureFlags: { deploymentsEnabled: true },
     isReadOnlyAdmin: false,
-  }),
-}));
+  }));
+});
 
 vi.mock('@/src/components/Runs/View/RowDetails/ExecutionRowDetailPanel', () => ({
   default: () => null,

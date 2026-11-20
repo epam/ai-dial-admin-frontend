@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -11,11 +12,6 @@ import {
   ToolsetAuthType,
 } from '@/src/models/dial/resource';
 import ResourceMultiAuth from '../ResourceMultiAuth';
-
-let isReadOnlyAdmin = false;
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => isReadOnlyAdmin,
-}));
 
 const baseAsset = {
   path: 'public/my-app',
@@ -36,7 +32,7 @@ describe('ResourceMultiAuth', () => {
   const user = userEvent.setup();
 
   beforeEach(() => {
-    isReadOnlyAdmin = false;
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 
   test('adding a service with an ID that already exists shows an error and disables Apply', async () => {
@@ -240,7 +236,7 @@ describe('ResourceMultiAuth', () => {
   });
 
   test('a read-only admin sees the approval state but no consent action', () => {
-    isReadOnlyAdmin = true;
+    appContextMock.set({ isReadOnlyAdmin: true });
     const asset = assetWithService({
       auth_settings: {
         authentication_type: ToolsetAuthType.DIAL_NATIVE,
@@ -255,7 +251,7 @@ describe('ResourceMultiAuth', () => {
   });
 
   test('a read-only admin sees no Grant consent action on a not-approved service', () => {
-    isReadOnlyAdmin = true;
+    appContextMock.set({ isReadOnlyAdmin: true });
     const asset = assetWithService({
       auth_settings: {
         authentication_type: ToolsetAuthType.DIAL_NATIVE,

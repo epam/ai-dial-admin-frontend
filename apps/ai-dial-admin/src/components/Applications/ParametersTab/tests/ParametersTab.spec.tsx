@@ -1,8 +1,8 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import ParametersTab from '../ParametersTab';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplication } from '@/src/models/dial/application';
 import { AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import { ApplicationSourceType } from '@/src/models/dial/application';
@@ -31,15 +31,11 @@ vi.mock('@/src/components/FrameRenderer/FrameRenderer', () => ({
   default: ({ iframeUrl }: { iframeUrl: string }) => <p>{iframeUrl}</p>,
 }));
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 import { getResolvedRunnerSchema, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 
 afterEach(() => {
   vi.unstubAllEnvs();
-  vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+  appContextMock.set({ isReadOnlyAdmin: false });
 });
 
 describe('Applications - ApplicationParametersTab', () => {
@@ -160,7 +156,7 @@ describe('ParametersTab — router', () => {
   });
 
   test('offers no UI view to a read-only admin', async () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderRouterTab(
       { applicationTypeSchemaId: 'router-type', editorUrl: routerUi },
       { schemes: typedRouterSchemes as never[] },

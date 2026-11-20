@@ -5,8 +5,6 @@ import { ResourceDependenciesI18nKey } from '@/src/constants/i18n';
 import { ResourceAccess } from '@/src/models/dial/resource-dependency';
 import DependenciesGrid from '../DependenciesGrid';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn(() => false) }));
-
 describe('DependenciesGrid — real grid', () => {
   test('renders the column headers and a row for each dependency', async () => {
     render(

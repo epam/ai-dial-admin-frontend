@@ -1,3 +1,5 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { notificationMock } from '@/test-mocks/notification';
 import { saveValidationMock } from '@/test-mocks/save-validation';
 import { JSONEditorError } from '@/src/types/editor';
 import { render, screen, within } from '@testing-library/react';
@@ -11,25 +13,20 @@ import { Pipeline, TriggerKind, PipelineKind, TransformType } from '@/src/models
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
 const mocks = vi.hoisted(() => ({
-  showNotification: vi.fn(() => 'notification-id'),
   isFullAdmin: { value: true },
   sidebar: { showSidebar: vi.fn(), closeSidebar: vi.fn() },
   editorProps: { current: {} as Record<string, unknown> },
 }));
 
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: mocks.showNotification, removeNotification: vi.fn() }),
-}));
-
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     isFullAdmin: mocks.isFullAdmin.value,
     isReadOnlyAdmin: !mocks.isFullAdmin.value,
     isEnableAuth: true,
     featureFlags: {},
     sidebar: mocks.sidebar,
-  }),
-}));
+  }));
+});
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,6 +73,7 @@ const confirmDiscard = async (user: ReturnType<typeof userEvent.setup>) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  notificationMock.showNotification.mockReturnValue('notification-id');
   vi.mocked(listPipelineBackfills).mockResolvedValue({ success: true, response: [] });
   mocks.isFullAdmin.value = true;
   mocks.editorProps.current = {};
@@ -201,7 +199,7 @@ describe('PipelineDetailView — saving from the JSON editor', () => {
     await enableEditor(user);
     await user.click(saveButton() as HTMLElement);
 
-    expect(mocks.showNotification).toHaveBeenCalledTimes(2);
+    expect(notificationMock.showNotification).toHaveBeenCalledTimes(2);
   });
 
   test('the fields shape check does not disable Save while the editor is on', async () => {

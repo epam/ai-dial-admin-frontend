@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ReactNode } from 'react';
@@ -114,8 +115,8 @@ vi.mock('@/public/images/icons/grafana.svg', () => ({
 
 const mockCloseSidebar = vi.fn();
 const mockToggleSidebar = vi.fn();
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     sidebar: {
       show: false,
       content: null,
@@ -126,8 +127,8 @@ vi.mock('@/src/context/AppContext', () => ({
     },
     sidebarOpen: false,
     toggleSidebar: mockToggleSidebar,
-  }),
-}));
+  }));
+});
 
 const mcpSuite: TestSuite = {
   id: 'suite-mcp',

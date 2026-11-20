@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { navigationMock } from '@/test-mocks/navigation';
 import { saveValidationMock } from '@/test-mocks/save-validation';
 import { act, render, screen, within } from '@testing-library/react';
@@ -25,10 +26,7 @@ import {
 } from '@/src/models/system-properties';
 
 const { refresh: routerRefresh } = navigationMock.router;
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 vi.mock('@/src/app/[lang]/system-properties/actions');
 

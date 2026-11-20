@@ -9,7 +9,8 @@ import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
 const RULE = '.claude/rules/testing.md';
 const GLOBAL_OBJECTS = '/^(global|globalThis|window|navigator|localStorage|sessionStorage)$/';
-const CONTROLLED_MODULES = '/^(next\\/navigation|@\\/src\\/context\\/SaveValidationContext)$/';
+const CONTROLLED_MODULES =
+  '/^(next\\/navigation|@\\/src\\/context\\/(SaveValidationContext|AppContext|NotificationContext))$/';
 
 const BANNED_SYNTAX = [
   {
@@ -55,7 +56,13 @@ const BANNED_SYNTAX = [
   {
     // These modules have a controller in apps/ai-dial-admin/test-mocks; a second mock would shadow it.
     selector: `CallExpression[callee.object.name='vi'][callee.property.name=/^(mock|doMock)$/][arguments.0.value=${CONTROLLED_MODULES}]`,
-    message: `This module is mocked once in test-setup.tsx through a controller in test-mocks/. Configure it with that controller (navigationMock, saveValidationMock) instead of mocking it again (${RULE} §10).`,
+    message: `This module is mocked once in test-setup.tsx through a controller in test-mocks/. Configure it with that controller (appContextMock, navigationMock, notificationMock, saveValidationMock) instead of mocking it again (${RULE} §10).`,
+  },
+  {
+    // The hook only reads AppContext, which already has a controller.
+    selector:
+      "CallExpression[callee.object.name='vi'][callee.property.name=/^(mock|doMock)$/][arguments.0.value='@/src/hooks/use-is-read-only-admin']",
+    message: `useIsReadOnlyAdmin reads AppContext; set the state with appContextMock.set({ isReadOnlyAdmin: true }) instead of mocking the hook (${RULE} §10).`,
   },
 ];
 

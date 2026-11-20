@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { saveValidationMock } from '@/test-mocks/save-validation';
 import { JSONEditorError } from '@/src/types/editor';
 import { render, screen, within } from '@testing-library/react';
@@ -11,9 +12,9 @@ import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: { analyticsEnabled: true } }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: { analyticsEnabled: true } }));
+});
 
 const permissions = vi.hoisted(() => ({
   value: {

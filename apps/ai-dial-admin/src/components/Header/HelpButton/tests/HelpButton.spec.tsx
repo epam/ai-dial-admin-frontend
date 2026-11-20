@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { usePathname } from 'next/navigation';
@@ -9,9 +10,9 @@ import { HeaderI18nKey } from '@/src/constants/i18n';
 import { HelpTopicProvider, useHelpRoute } from '@/src/context/HelpTopicContext';
 import { ApplicationRoute } from '@/src/types/routes';
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: {} }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: {} }));
+});
 
 const DOC_LINK = 'https://docs.test/';
 

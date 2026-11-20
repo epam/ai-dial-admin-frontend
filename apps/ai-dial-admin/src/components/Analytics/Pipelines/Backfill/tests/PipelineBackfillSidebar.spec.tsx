@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -21,10 +22,7 @@ import {
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
 
-const showNotification = vi.hoisted(() => vi.fn());
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 // The picker is the kit's; here it stands in as a text field holding a `yyyy-MM-dd` day, so a test can set a date.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {

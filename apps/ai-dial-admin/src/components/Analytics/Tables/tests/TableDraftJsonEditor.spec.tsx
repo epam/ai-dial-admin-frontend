@@ -1,3 +1,5 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { notificationMock } from '@/test-mocks/notification';
 import { saveValidationMock } from '@/test-mocks/save-validation';
 import { JSONEditorError } from '@/src/types/editor';
 import { render, screen, within } from '@testing-library/react';
@@ -17,17 +19,9 @@ import {
 } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
-const mocks = vi.hoisted(() => ({
-  showNotification: vi.fn(() => 'notification-id'),
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: mocks.showNotification, removeNotification: vi.fn() }),
-}));
-
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: { analyticsEnabled: true } }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: { analyticsEnabled: true } }));
+});
 
 vi.mock('@/src/hooks/use-analytics-table-permissions', () => ({
   useAnalyticsTablePermissions: () => ({
@@ -117,6 +111,7 @@ const save = (user: ReturnType<typeof userEvent.setup>) => user.click(saveButton
 
 beforeEach(() => {
   vi.clearAllMocks();
+  notificationMock.showNotification.mockReturnValue('notification-id');
   vi.mocked(getTable).mockResolvedValue({ success: false, status: 500 });
   vi.mocked(getTables).mockResolvedValue({ success: true, response: [] });
   vi.mocked(updateTable).mockResolvedValue({ success: true });
@@ -312,7 +307,7 @@ describe('TableDetailView — saving the draft document', () => {
     await write(user, { ...documentOf(), description: 'Edited in the editor.' });
     await save(user);
 
-    expect(mocks.showNotification).toHaveBeenCalledWith(
+    expect(notificationMock.showNotification).toHaveBeenCalledWith(
       expect.objectContaining({ title: AnalyticsTablesI18nKey.TableActive }),
     );
     expect(await screen.findByText('columns-grid')).toBeInTheDocument();
@@ -334,7 +329,7 @@ describe('TableDetailView — saving the draft document', () => {
     await save(user);
 
     expect(defineTableSchema).not.toHaveBeenCalled();
-    expect(mocks.showNotification).toHaveBeenCalledWith(
+    expect(notificationMock.showNotification).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'AnalyticsTables.ActionFailed',
         description: 'tag_order references an unknown tag',
@@ -356,7 +351,7 @@ describe('TableDetailView — saving the draft document', () => {
     await write(user, { ...documentOf(), description: 'Second attempt.' });
     await save(user);
 
-    expect(mocks.showNotification).toHaveBeenCalledWith(
+    expect(notificationMock.showNotification).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'AnalyticsTables.ActionFailed' }),
     );
     expect(documentOf()).toMatchObject({ description: 'Second attempt.' });
@@ -384,7 +379,7 @@ describe('TableDetailView — a document that does not parse', () => {
 
     expect(updateTable).not.toHaveBeenCalled();
     expect(defineTableSchema).not.toHaveBeenCalled();
-    expect(mocks.showNotification).toHaveBeenCalledTimes(2);
+    expect(notificationMock.showNotification).toHaveBeenCalledTimes(2);
     expect(saveValidationMock.dispatch).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'SET_JSON_EDITOR_NOTIFICATIONS' }),
     );

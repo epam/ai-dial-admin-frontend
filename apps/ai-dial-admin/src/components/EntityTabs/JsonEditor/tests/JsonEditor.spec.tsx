@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { saveValidationMock } from '@/test-mocks/save-validation';
 import { render, screen } from '@testing-library/react';
 import { useEffect, useId } from 'react';
@@ -25,16 +26,6 @@ vi.mock('@/src/components/Common/JsonEditorBase/JsonEditorBase', () => ({
     capturedOnValidates.push(onValidateJSON);
     return <div role="application" aria-label="json-editor-base" />;
   },
-}));
-
-// Overrides the global test-setup mock so `removeNotification` is a stable reference the unmount
-// cleanup cases can assert on.
-const mocks = vi.hoisted(() => ({
-  removeNotification: vi.fn(),
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn(), removeNotification: mocks.removeNotification }),
 }));
 
 const lastDispatchedEditorId = () =>
@@ -279,8 +270,8 @@ describe('JSONEditor', () => {
 
       unmountA();
 
-      expect(mocks.removeNotification).toHaveBeenCalledWith('notif-a');
-      expect(mocks.removeNotification).not.toHaveBeenCalledWith('notif-b');
+      expect(notificationMock.removeNotification).toHaveBeenCalledWith('notif-a');
+      expect(notificationMock.removeNotification).not.toHaveBeenCalledWith('notif-b');
 
       const setNotifications = saveValidationMock.dispatch.mock.calls
         .map(([action]) => action as { type: string; errors?: JsonEditorOwnedNotification[] })
