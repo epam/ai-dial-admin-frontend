@@ -2,6 +2,7 @@
 
 import { FC } from 'react';
 
+import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 export interface ChartLegendEntry {
@@ -31,7 +32,7 @@ const ChartLegend: FC<Props> = ({ entries, onPreviewSeries, onToggleSeries, pinn
           {entry.color && (
             <span aria-hidden className="size-2.5 shrink-0 rounded-xs" style={{ backgroundColor: entry.color }} />
           )}
-          <span className="min-w-0 truncate text-secondary">{entry.label}</span>
+          <EllipsisTooltip text={entry.label} className="text-secondary" />
           {entry.value && <span className="shrink-0 tabular-nums text-primary">{entry.value}</span>}
         </>
       );

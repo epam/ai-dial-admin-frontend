@@ -134,13 +134,21 @@ describe('resolveDraftTable', () => {
     expect(resolveDraftTable(entities, 'ratings')).toBe('ratings');
   });
 
-  test('falls back to the first table for an unknown or absent name', () => {
+  test('falls back to the first table for an unknown or absent name without the usage log', () => {
     expect(resolveDraftTable(entities, 'gone')).toBe('usage');
     expect(resolveDraftTable(entities)).toBe('usage');
   });
 
   test('returns an empty name when there are no tables', () => {
     expect(resolveDraftTable([], 'usage')).toBe('');
+  });
+
+  test('defaults to the usage log when it is queryable and no known table is requested', () => {
+    const withUsageLog = [...entities, { name: 'dial_usage_log' }];
+
+    expect(resolveDraftTable(withUsageLog)).toBe('dial_usage_log');
+    expect(resolveDraftTable(withUsageLog, 'gone')).toBe('dial_usage_log');
+    expect(resolveDraftTable(withUsageLog, 'ratings')).toBe('ratings');
   });
 });
 

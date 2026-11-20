@@ -287,12 +287,26 @@ export enum ChartType {
   Line = 'line',
   Pie = 'pie',
   Scatter = 'scatter',
+  Scorecard = 'scorecard',
+}
+
+export enum ChartLegendPosition {
+  Above = 'above',
+  Right = 'right',
+  Below = 'below',
+  Left = 'left',
+}
+
+export interface ChartLegendConfig {
+  isVisible: boolean;
+  position: ChartLegendPosition;
 }
 
 export interface ChartConfig {
   type: ChartType;
   xField: string | null;
   yFields: string[] | null;
+  legend?: ChartLegendConfig;
 }
 
 export interface ResolvedChartAxes {
@@ -321,14 +335,15 @@ export interface ChartSlotDescriptor {
 }
 
 // Result-derived context buildChartOptions needs beyond the two slot fields: pie localizes its
-// "Other" bucket, a category with no value gets a visible name instead of a blank label, scatter labels points by the row's dimension values, and axis titles/tooltips
-// show columns by their display label (see ExecutedQueryMeta.columnLabels).
+// "Other" bucket, scatter labels points by the row's dimension values, a split chart takes its series
+// from `splitField`, and axis titles/tooltips show columns by their display label (see
+// ExecutedQueryMeta.columnLabels).
 export interface ChartBuildContext {
   colors: ChartColors;
   dimensionColumns: string[];
   otherLabel: string;
-  emptyLabel: string;
   columnLabels: Record<string, string>;
+  splitField?: string | null;
 }
 
 // How a result cell renders its value. Resolved from the executed query, not from the live builder
