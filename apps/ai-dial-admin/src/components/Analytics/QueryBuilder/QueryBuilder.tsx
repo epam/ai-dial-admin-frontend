@@ -107,8 +107,6 @@ interface Props {
 }
 
 const AI_PANEL_STORAGE_KEY = 'query-builder-ai-panel-open';
-const SOURCE_ICON_NAME = 'source.csv';
-
 const COPY_HEADER_I18N: Record<QueryCopyMode, QueriesI18nKey> = {
   [QueryCopyMode.SaveDraft]: QueriesI18nKey.SaveAsQuery,
   [QueryCopyMode.Duplicate]: QueriesI18nKey.DuplicateQuery,
@@ -655,6 +653,10 @@ const QueryBuilder: FC<Props> = ({
     );
   };
 
+  const sourceName = savedQueryPage.savedQuery
+    ? state.entityName || savedQueryPrimarySource(savedQueryPage.savedQuery)
+    : '';
+
   const isAddToDashboardShown =
     featureFlags.analyticsCustomDashboardsEnabled && !!savedQueryPage.savedQuery && !savedQueryPage.isDirty;
 
@@ -668,8 +670,14 @@ const QueryBuilder: FC<Props> = ({
             subtitle={
               savedQueryPage.savedQuery && (
                 <span className="flex items-center gap-2 text-secondary dial-small-text">
-                  <FileIcon type={DialItemType.File} name={SOURCE_ICON_NAME} size={DIAL_ICON_SIZE.SM} decorative />
-                  {state.entityName || savedQueryPrimarySource(savedQueryPage.savedQuery)}
+                  <FileIcon
+                    type={DialItemType.File}
+                    name={sourceName}
+                    fileExtension="csv"
+                    size={DIAL_ICON_SIZE.SM}
+                    decorative
+                  />
+                  {sourceName}
                   {shownSourceProblem && <SourceProblemIcon problem={shownSourceProblem} />}
                 </span>
               )
