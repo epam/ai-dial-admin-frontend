@@ -23,7 +23,6 @@ vi.mock('@/src/app/[lang]/dashboards/custom-actions');
 vi.mock('@/src/components/Analytics/CustomDashboards/Switcher/DashboardSwitcher', () => ({ default: vi.fn() }));
 vi.mock('@/src/server/analytics/usage-caller-source');
 
-
 const forbidden = () => isAnalyticsForbidden as unknown as ReturnType<typeof vi.fn>;
 
 const renderPage = async () => (await Page()) as { type: unknown; props: Record<string, unknown> };
