@@ -11,10 +11,6 @@ import { SavedQuery, SavedQueryRequest, SavedQueryScope, SavedQueryTimeMode } fr
 
 vi.mock('@/src/app/[lang]/queries/actions');
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
-}));
-
 const mockShowNotification = vi.fn();
 vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification: mockShowNotification, removeNotification: vi.fn() }),

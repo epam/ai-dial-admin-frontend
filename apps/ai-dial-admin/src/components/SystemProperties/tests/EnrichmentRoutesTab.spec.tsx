@@ -17,8 +17,6 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { EnrichmentRoute } from '@/src/models/analytics/enrichment-routes';
 import { DialApplication } from '@/src/models/dial/application';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 vi.mock('@/src/app/[lang]/system-properties/actions');
 vi.mock('@/src/app/[lang]/applications/actions');
 

@@ -19,8 +19,6 @@ vi.mock('../TabsContent', () => ({
   },
 }));
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 let capturedHeader: any;
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
   default: (props: any) => {

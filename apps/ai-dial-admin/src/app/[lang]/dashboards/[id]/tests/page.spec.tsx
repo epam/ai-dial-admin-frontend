@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import Page from '@/src/app/[lang]/dashboards/[id]/page';
@@ -13,11 +14,6 @@ vi.mock('@/src/components/Page403/Page403', () => ({ default: vi.fn() }));
 vi.mock('@/src/app/[lang]/dashboards/custom-actions');
 vi.mock('@/src/server/analytics/analytics-access');
 vi.mock('@/src/utils/env/get-custom-dashboards-toggle');
-
-const notFound = vi.fn(() => {
-  throw new Error('NEXT_NOT_FOUND');
-});
-vi.mock('next/navigation', () => ({ notFound: () => notFound() }));
 
 const resolved: ResolvedDashboard = {
   dashboard: {

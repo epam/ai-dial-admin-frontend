@@ -1,3 +1,4 @@
+import { navigationMock } from '@/test-mocks/navigation';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ReactNode } from 'react';
@@ -48,12 +49,7 @@ vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
 
 vi.mock('@/src/app/[lang]/queries/actions');
 
-const mockPush = vi.fn();
-const mockRefresh = vi.fn();
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush, refresh: mockRefresh }),
-}));
-
+const { push: mockPush, refresh: mockRefresh } = navigationMock.router;
 const mockShowNotification = vi.fn();
 vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification: mockShowNotification, removeNotification: vi.fn() }),

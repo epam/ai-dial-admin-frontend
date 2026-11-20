@@ -38,6 +38,7 @@ export default defineConfig(() => ({
     globals: true,
     environment: 'jsdom',
     isolate: false,
+    sequence: { shuffle: { files: true, tests: false } },
     setupFiles: ['./test-reset.ts', './test-setup.tsx'],
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: [...configDefaults.exclude, '**/.next/**', '*.config.{ts,js}'],

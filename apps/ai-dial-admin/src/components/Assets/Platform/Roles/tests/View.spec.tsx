@@ -26,8 +26,6 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
 
 vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 const setEntityReadOnly = vi.fn();
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({ setEntityReadOnly }),

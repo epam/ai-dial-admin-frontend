@@ -35,8 +35,6 @@ vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   updateTestCases: vi.fn(),
 }));
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
-
 const dataset = (visibility: DatasetVisibility): Dataset => ({
   id: 'ds-1',
   name: 'ds',

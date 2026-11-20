@@ -10,8 +10,6 @@ import { AnalyticsPipelinesI18nKey, ButtonsI18nKey, EntitiesI18nKey } from '@/sr
 import { Pipeline, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
-
 const mocks = vi.hoisted(() => ({
   showNotification: vi.fn(() => 'notification-id'),
   isFullAdmin: { value: true },

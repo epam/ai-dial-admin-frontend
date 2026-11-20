@@ -8,6 +8,7 @@ import { cleanup, configure } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { afterEach, beforeEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
+import { navigationMock } from '@/test-mocks/navigation';
 import { saveValidationMock } from '@/test-mocks/save-validation';
 import { EditorMockProps } from './test-models';
 
@@ -40,14 +41,7 @@ vi.mock('next-auth/react', () => ({
 
 // ------------------ Next.js hooks ------------------
 vi.mock('next/headers', () => ({ headers: vi.fn(), cookies: vi.fn() }));
-vi.mock('next/navigation', () => ({
-  notFound: vi.fn(() => {
-    throw new Error('NEXT_NOT_FOUND');
-  }),
-  useRouter: vi.fn(),
-  usePathname: vi.fn(),
-  useSearchParams: vi.fn(() => new URLSearchParams()),
-}));
+vi.mock('next/navigation', async () => (await import('@/test-mocks/navigation')).navigationModule);
 
 // ------------------ Contexts ------------------
 const createFnContext = () => vi.fn();
@@ -281,6 +275,14 @@ if (typeof Document.prototype.queryCommandSupported !== 'function') {
   });
 }
 
+// ------------------ Blob URLs (absent in jsdom), so specs can vi.spyOn them ------------------
+if (typeof URL.createObjectURL !== 'function') {
+  URL.createObjectURL = () => '';
+}
+if (typeof URL.revokeObjectURL !== 'function') {
+  URL.revokeObjectURL = () => {};
+}
+
 // ------------------ Stub document.elementFromPoint (absent in jsdom, used by ui-kit Dropdown) ------------------
 if (typeof document.elementFromPoint !== 'function') {
   document.elementFromPoint = () => null;
@@ -348,6 +350,7 @@ vi.mock('@epam/ai-dial-visualizer-connector', () => ({
 
 // ------------------ Reset mock controllers before each test ------------------
 beforeEach(() => {
+  navigationMock.reset();
   saveValidationMock.reset();
 });
 

@@ -11,8 +11,6 @@ import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({ featureFlags: { analyticsEnabled: true } }),
 }));

@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import DashboardRedirect from '@/src/app/[lang]/dashboard/page';
@@ -22,11 +23,6 @@ vi.mock('@/src/app/[lang]/dashboards/custom-actions');
 vi.mock('@/src/components/Analytics/CustomDashboards/Switcher/DashboardSwitcher', () => ({ default: vi.fn() }));
 vi.mock('@/src/server/analytics/usage-caller-source');
 
-const notFound = vi.fn(() => {
-  throw new Error('NEXT_NOT_FOUND');
-});
-const redirect = vi.fn();
-vi.mock('next/navigation', () => ({ notFound: () => notFound(), redirect: (path: string) => redirect(path) }));
 
 const forbidden = () => isAnalyticsForbidden as unknown as ReturnType<typeof vi.fn>;
 
@@ -43,18 +39,19 @@ const ENV_KEYS = [
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(redirect).mockImplementation(() => undefined as never);
   forbidden().mockResolvedValue(false);
   // The full run inherits the developer's environment, so a flag the case does not set must start unset.
-  ENV_KEYS.forEach((key) => delete process.env[key]);
+  ENV_KEYS.forEach((key) => vi.stubEnv(key, undefined));
 });
 
 afterEach(() => {
-  ENV_KEYS.forEach((key) => delete process.env[key]);
+  ENV_KEYS.forEach((key) => vi.stubEnv(key, undefined));
 });
 
 const enableAnalytics = () => {
-  process.env.ANALYTICS_ENABLED = 'true';
-  process.env.ANALYTICS_USAGE_ENABLED = 'true';
+  vi.stubEnv('ANALYTICS_ENABLED', 'true');
+  vi.stubEnv('ANALYTICS_USAGE_ENABLED', 'true');
 };
 
 describe('dashboards page', () => {
@@ -67,7 +64,7 @@ describe('dashboards page', () => {
 
   test('hands the analytics page a switcher over the custom dashboards while they are on', async () => {
     enableAnalytics();
-    process.env.ANALYTICS_CUSTOM_DASHBOARDS_ENABLED = 'true';
+    vi.stubEnv('ANALYTICS_CUSTOM_DASHBOARDS_ENABLED', 'true');
     const dashboards = [
       {
         id: 'd1',
@@ -95,7 +92,7 @@ describe('dashboards page', () => {
 
   test('renders the analytics page when both analytics flags are on', async () => {
     enableAnalytics();
-    process.env.DIAL_ADMIN_API_URL = 'http://admin';
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin');
 
     expect((await renderPage()).type).toBe(UsageDashboard);
   });
@@ -115,9 +112,9 @@ describe('dashboards page', () => {
   });
 
   test('falls back to the telemetry dashboard when the usage flag is off', async () => {
-    process.env.ANALYTICS_ENABLED = 'true';
-    process.env.DIAL_ADMIN_API_URL = 'http://admin';
-    process.env.GRAFANA_LINK = 'http://grafana';
+    vi.stubEnv('ANALYTICS_ENABLED', 'true');
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin');
+    vi.stubEnv('GRAFANA_LINK', 'http://grafana');
 
     const page = await renderPage();
 
@@ -127,28 +124,28 @@ describe('dashboards page', () => {
   });
 
   test('falls back to the telemetry dashboard when the analytics flag is off', async () => {
-    process.env.ANALYTICS_USAGE_ENABLED = 'true';
-    process.env.DIAL_ADMIN_API_URL = 'http://admin';
+    vi.stubEnv('ANALYTICS_USAGE_ENABLED', 'true');
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin');
 
     expect((await renderPage()).type).toBe(DashboardView);
   });
 
   test('answers as not found when the telemetry dashboard is disabled', async () => {
-    process.env.DIAL_ADMIN_API_URL = 'http://admin';
-    process.env.DISABLE_MENU_ITEMS = 'catalog dashboard';
+    vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin');
+    vi.stubEnv('DISABLE_MENU_ITEMS', 'catalog dashboard');
 
     await expect(renderPage()).rejects.toThrow('NEXT_NOT_FOUND');
   });
 
   test('still renders the analytics page when the telemetry dashboard is disabled', async () => {
     enableAnalytics();
-    process.env.DISABLE_MENU_ITEMS = 'dashboard';
+    vi.stubEnv('DISABLE_MENU_ITEMS', 'dashboard');
 
     expect((await renderPage()).type).toBe(UsageDashboard);
   });
 
   test('answers as not found when neither page can render', async () => {
-    process.env.ANALYTICS_USAGE_ENABLED = 'true';
+    vi.stubEnv('ANALYTICS_USAGE_ENABLED', 'true');
 
     await expect(renderPage()).rejects.toThrow('NEXT_NOT_FOUND');
   });

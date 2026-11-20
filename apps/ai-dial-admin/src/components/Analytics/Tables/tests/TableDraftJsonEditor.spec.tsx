@@ -17,8 +17,6 @@ import {
 } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
 const mocks = vi.hoisted(() => ({
   showNotification: vi.fn(() => 'notification-id'),
 }));

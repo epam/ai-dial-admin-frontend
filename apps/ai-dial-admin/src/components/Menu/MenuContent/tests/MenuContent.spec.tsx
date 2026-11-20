@@ -3,13 +3,13 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { UnitNamespace } from '@/src/models/user-access';
+import { navigationMock } from '@/test-mocks/navigation';
 
 import MenuContent from '../MenuContent';
 
-const currentPath = { value: '/en/home' };
-vi.mock('next/navigation', () => ({
-  usePathname: () => currentPath.value,
-}));
+beforeEach(() => {
+  navigationMock.setPathname('/en/home');
+});
 
 const adminApiEnabled = { value: true };
 const fullAdmin = { value: true };
@@ -62,12 +62,8 @@ describe('MenuContent — footer pages', () => {
     adminApiEnabled.value = true;
   });
 
-  afterEach(() => {
-    currentPath.value = '/en/home';
-  });
-
   test('marks the footer page the user is on as the current page', () => {
-    currentPath.value = '/en/import-config';
+    navigationMock.setPathname('/en/import-config');
     renderMenu(true);
 
     expect(screen.getByRole('link', { name: MenuI18nKey.ImportConfig })).toHaveAttribute('aria-current', 'page');
