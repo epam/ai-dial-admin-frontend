@@ -4,21 +4,7 @@
 `CoreUtilityApi`'s direct-to-Core deployment listing/lookup and user-identity read (`id` and `email`
 only; roles and access come from `user-org-units-access`). Created as part of migrating `UtilityApi`'s admin-backend proxy endpoints
 to DIAL Core directly, alongside the global-settings singleton now owned by `SettingsApi`.
-
 ## Requirements
-
-### Requirement: Deployment listing and lookup read DIAL Core directly
-The system SHALL provide a server-side client (`CoreUtilityApi`) that lists deployments and checks a single deployment by name against DIAL Core (`GET /v1/deployments` and `GET /v1/deployments/{name}`), authenticated with the caller's JWT through the existing Core client pipeline, instead of the admin backend's proxy of the same routes.
-
-#### Scenario: Deployment listing goes to Core, not the admin backend
-- **WHEN** all deployments are requested
-- **THEN** the request goes to `DIAL_CORE_API_URL`, never to the admin-backend host
-
-#### Scenario: A single deployment is checked by name with a GET, not a HEAD
-- **WHEN** a caller checks whether a deployment name already exists
-- **THEN** the client issues a `GET` request to Core's deployment-by-name route, because Core registers only `GET` for that route and a `HEAD` request would 404 unconditionally
-- **AND** a 404 response resolves to `null`, matching the existing "name is unique" contract
-
 ### Requirement: A caller's own identity read comes from DIAL Core
 The system SHALL read the caller's own identity only from DIAL Core's `GET /v1/user/info` through
 `CoreUtilityApi.getUserInfo`, whatever `DIAL_ADMIN_API_URL` is. The returned `UserInfo` SHALL carry `id`
@@ -35,11 +21,11 @@ identity endpoint and the `getUserInfo` picker in `src/app/api/api.ts` SHALL NOT
 - **AND** the result has no `roles` field
 
 ### Requirement: The global-settings singleton has one owner
-The system SHALL expose reads and writes of DIAL Core's global-settings singleton (`v1/settings/platform/global`) — the unconditional read used by `getGlobalInterceptors`, and the etag-conditional read/write the System Properties page uses — from a single client (`SettingsApi`), sharing one URL constant. No other client SHALL address this resource.
+The system SHALL expose reads and writes of DIAL Core's global-settings singleton (`v1/settings/platform/global`) — the unconditional read used by `getGlobalInterceptors`, and the etag-conditional read/write the System Properties page uses — from a single client (`SettingsApi`), which reaches Core through the SDK. No other client SHALL address this resource.
 
 #### Scenario: System properties are read and written through SettingsApi
 - **WHEN** the System Properties page reads or updates global settings
-- **THEN** the request goes through `SettingsApi`, conditional on the given etag (`If-None-Match` for reads, `If-Match` for writes)
+- **THEN** the request goes through `SettingsApi`, conditional on the given etag (`If-None-Match` for reads with a real etag and none for `DEFAULT_ETAG`, `If-Match` for writes)
 
 #### Scenario: The unconditional read used for global interceptors is unaffected
 - **WHEN** `getGlobalInterceptors` reads the global-settings blob
@@ -67,3 +53,28 @@ The System Properties page's interceptor picker SHALL read from the same Core-di
 #### Scenario: Failed read
 - **WHEN** a caller-scoped read fails
 - **THEN** that picker is empty and the warning is raised, and the other pickers still load
+
+### Requirement: Deployment lookups read DIAL Core directly
+The system SHALL provide a server-side client (`CoreUtilityApi`) that looks up a single deployment against DIAL Core (`GET /v1/deployments/{name}`), through the SDK and authenticated with the caller's JWT, instead of the admin backend's proxy of the same route. It SHALL NOT list deployments. A lookup SHALL resolve to the deployment Core returns, which is not admin's evaluation-service deployment shape. There SHALL be two lookups, by the kind of input: checking a name a user typed SHALL percent-encode it segment by segment, so reserved characters in it stay part of the name while `/` remains a path separator; looking up an id Core issued SHALL send the id unchanged, because it is already encoded.
+
+#### Scenario: A single deployment is checked by name with a GET, not a HEAD
+- **WHEN** a caller checks whether a deployment name already exists
+- **THEN** the client issues a `GET` request to Core's deployment-by-name route on `DIAL_CORE_API_URL`, because Core registers only `GET` for that route and a `HEAD` request would 404 unconditionally
+- **AND** a 404 response resolves to `null`, matching the existing "name is unique" contract
+
+#### Scenario: A forbidden lookup is not treated as unique
+- **WHEN** Core answers the lookup with 403
+- **THEN** the client resolves to `undefined`, not `null`, so the name is not reported as free
+
+#### Scenario: Reserved characters stay part of a typed name
+- **WHEN** a caller checks a name containing `?`, `#`, `%` or a space
+- **THEN** the request path carries that name percent-encoded as one segment, with no query string or fragment introduced and no character encoded twice
+
+#### Scenario: A slash in a typed name is not encoded
+- **WHEN** a caller checks the name `a/b`
+- **THEN** the request path is `/v1/deployments/a/b`
+
+#### Scenario: A Core-issued id is sent as is
+- **WHEN** a caller looks up the id `applications/bucket/My%20App`
+- **THEN** the request path is `/v1/deployments/applications/bucket/My%20App`, not `My%2520App`
+

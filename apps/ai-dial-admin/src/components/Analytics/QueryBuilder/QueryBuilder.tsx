@@ -16,15 +16,17 @@ import {
   Button,
 } from '@epam/ai-dial-ui-kit';
 import type { DropdownItem, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
-import { IconCopy, IconPencilMinus, IconPlayerPlay, IconTable, IconTrashX } from '@tabler/icons-react';
+import { IconCopy, IconPencilMinus, IconPlayerPlay, IconTable } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { getEntitySchema, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/queries/actions';
 import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import AiPanel from '@/src/components/Analytics/QueryBuilder/Ai/AiPanel';
 import AiSidePanel from '@/src/components/Analytics/QueryBuilder/Ai/AiSidePanel';
 import { useAiConversation } from '@/src/components/Analytics/QueryBuilder/Ai/use-ai-conversation';
+import { ProposedQueryStatus } from '@/src/components/Analytics/QueryBuilder/Ai/models';
 import AddToDashboardButton from '@/src/components/Analytics/CustomDashboards/AddToDashboard/AddToDashboardButton';
 import ChipBar from '@/src/components/Analytics/QueryBuilder/Chips/ChipBar';
 import { PeriodControl } from '@/src/components/Analytics/QueryBuilder/Chips/models';
@@ -32,7 +34,7 @@ import BuilderArea from '@/src/components/Analytics/QueryBuilder/Layout/BuilderA
 import QueryHeader from '@/src/components/Analytics/QueryBuilder/Layout/QueryHeader';
 import SourceProblemIcon from '@/src/components/Analytics/QueryBuilder/Layout/SourceProblemIcon';
 import DeleteQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DeleteQueryPopup';
-import DiscardQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DiscardQueryPopup';
+import SwitchToBuilderPopup from '@/src/components/Analytics/QueryBuilder/Modals/SwitchToBuilderPopup';
 import ResetQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/ResetQueryPopup';
 import {
   useSourcePanelUnsavedWork,
@@ -179,6 +181,7 @@ const QueryBuilder: FC<Props> = ({
   const [aiLoading, setAiLoading] = useState(false);
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
   const [aiLoadedMessageIndex, setAiLoadedMessageIndex] = useState<number | null>(null);
+  const [aiMessageStatuses, setAiMessageStatuses] = useState<Record<number, ProposedQueryStatus>>({});
   const aiConversation = useAiConversation();
   const timeFilter = useTimeFilter();
 
@@ -267,6 +270,19 @@ const QueryBuilder: FC<Props> = ({
   ];
 
   const sqlEdited = !!sqlText.trim() && sqlText !== lastGeneratedSql.current;
+  const queryFingerprint = useMemo(
+    () =>
+      sqlEdited
+        ? `sql:${sqlText}`
+        : JSON.stringify({ query: buildQuery(state), period: boundPeriod ?? getCurrentTimeRange() }),
+    [sqlEdited, sqlText, state, boundPeriod, getCurrentTimeRange],
+  );
+  const [ranFingerprint, setRanFingerprint] = useState<string | null>(null);
+  useEffect(() => {
+    setRanFingerprint(result ? queryFingerprint : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result]);
+  const isQueryChanged = !!result && ranFingerprint !== null && ranFingerprint !== queryFingerprint;
 
   const resolveFieldsForEntity = async (entityName: string): Promise<AnalyticsEntityField[]> => {
     if (!entityName || entityName === state.entityName) return state.fields;
@@ -379,6 +395,9 @@ const QueryBuilder: FC<Props> = ({
     if (sqlError) setSqlError(null);
   };
 
+  const onDismissAiMessage = (index: number) =>
+    setAiMessageStatuses((statuses) => ({ ...statuses, [index]: ProposedQueryStatus.Dismissed }));
+
   // Clicking a chat message's Run both loads the query (translate → hydrate, or fall back to raw SQL —
   // same path the old generate-time auto-load used) and immediately executes it. Building the request
   // from `hydrateBuilderFromQuery`'s return value (not the `state` closure) picks up both the hydrated
@@ -430,6 +449,7 @@ const QueryBuilder: FC<Props> = ({
       setResult(response);
       setResultMeta(buildExecutedMeta(request, response, runFields, runEntityName, translated));
       setLastRequest(request);
+      setAiMessageStatuses((statuses) => ({ ...statuses, [index]: ProposedQueryStatus.Applied }));
     } else {
       showNotification(getErrorNotification(t(QueryBuilderI18nKey.RunFailed), runRes.error, runRes.requestId));
     }
@@ -559,12 +579,7 @@ const QueryBuilder: FC<Props> = ({
   const renderSavedActions = () => (
     <>
       {savedQueryPage.isWritable && (
-        <GhostButton
-          className="text-error"
-          label={t(ButtonsI18nKey.Delete)}
-          iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-          onClick={savedQueryPage.onOpenDelete}
-        />
+        <RemoveButton label={t(ButtonsI18nKey.Delete)} onClick={savedQueryPage.onOpenDelete} />
       )}
       {savedQueryPage.isWritable && (
         <GhostButton
@@ -715,6 +730,7 @@ const QueryBuilder: FC<Props> = ({
                 result={result}
                 meta={resultMeta}
                 isRunning={isRunning}
+                isQueryChanged={isQueryChanged}
                 view={resultView}
                 onChangeView={setResultView}
                 chartConfig={chartConfig}
@@ -735,6 +751,8 @@ const QueryBuilder: FC<Props> = ({
               conversation={aiConversation}
               onRunMessage={onRunAiMessage}
               loadedMessageIndex={aiLoadedMessageIndex}
+              messageStatuses={aiMessageStatuses}
+              onDismissMessage={onDismissAiMessage}
               runInFlight={aiLoading || isRunning}
             />
           </AiSidePanel>
@@ -778,7 +796,9 @@ const QueryBuilder: FC<Props> = ({
 
       {isResetOpen && <ResetQueryPopup onConfirm={onConfirmReset} onCancel={() => setIsResetOpen(false)} />}
 
-      {pendingView !== null && <DiscardQueryPopup onConfirm={onConfirmDiscard} onCancel={() => setPendingView(null)} />}
+      {pendingView !== null && (
+        <SwitchToBuilderPopup onConfirm={onConfirmDiscard} onCancel={() => setPendingView(null)} />
+      )}
     </QueryBuilderContext.Provider>
   );
 };

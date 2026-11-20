@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as actions from '@/src/app/[lang]/datasets/actions';
 import { CONTENT_FIT_COLUMN_IDS, VALIDITY_STATUS_COLUMN_ID } from '@/src/components/TestSuites/utils/columns';
-import { BasicI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, DatasetsI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import * as AppContext from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
@@ -98,12 +98,13 @@ vi.mock('@/src/components/TestSuites/utils/columns', async (importOriginal) => (
 }));
 
 vi.mock('@/src/components/TestSuites/TestCases/Header', () => ({
-  default: ({ selectedTestSuiteId, testCaseCount }: any) => {
+  default: ({ selectedTestSuiteId, datasetTag, testCaseCount }: any) => {
     capturedTestCaseCount = testCaseCount;
     return (
       <div>
         <div>Header Buttons</div>
         <div>Test Suite ID: {selectedTestSuiteId}</div>
+        {datasetTag}
       </div>
     );
   },
@@ -416,6 +417,19 @@ describe('TestCasesList — header and included-only filter', () => {
     expect(toolbar.getByRole('button', { name: TestSuitesI18nKey.OpenDataset })).toBeInTheDocument();
     expect(toolbar.getByRole('button', { name: TestSuitesI18nKey.DetachFromDataset })).toBeInTheDocument();
     expect(toolbar.getByRole('button', { name: TestSuitesI18nKey.ChangeDataset })).toBeInTheDocument();
+    expect(screen.queryByText(DatasetsI18nKey.VisibilityPrivate)).toBeNull();
+  });
+
+  test('shows the private tag for a private dataset', async () => {
+    render(
+      <TestCasesList
+        selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1' }}
+        onChange={mockOnChange}
+        dataset={{ id: 'ds-1', name: 'CaseCollection_Eta', visibility: DatasetVisibility.PRIVATE }}
+      />,
+    );
+
+    expect(await screen.findByText(DatasetsI18nKey.VisibilityPrivate)).toBeInTheDocument();
   });
 
   test('renders included-only switch addon', async () => {

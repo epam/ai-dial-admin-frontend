@@ -1,17 +1,10 @@
 'use client';
 
-import {
-  ButtonAppearance,
-  DIAL_ICON_SIZE,
-  GhostIconButton,
-  Input,
-  PrimaryButton,
-  Select,
-  TagInput,
-} from '@epam/ai-dial-ui-kit';
-import { IconPlus, IconTrashX } from '@tabler/icons-react';
+import { ButtonAppearance, Input, PrimaryButton, Select, TagInput } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback } from 'react';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { SUBJECT_FUNCTION_OPTIONS } from '@/src/components/Assets/Platform/PolicySubjects/constants';
 import { ErrorI18nKey, PolicySubjectsI18nKey, StatusBadgeI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -111,11 +104,7 @@ const SubjectRulesEditor: FC<Props> = ({ rules, onChange }) => {
           {!isReadOnlyAdmin && (
             // Offset by the label height so the button lines up with the controls, not their labels.
             <div className="shrink-0 pt-6">
-              <GhostIconButton
-                icon={<IconTrashX size={DIAL_ICON_SIZE.SM} className="text-error" aria-hidden />}
-                aria-label={t(PolicySubjectsI18nKey.RemoveRule)}
-                onClick={() => onRemoveRule(index)}
-              />
+              <RemoveButton aria-label={t(PolicySubjectsI18nKey.RemoveRule)} onClick={() => onRemoveRule(index)} />
             </div>
           )}
         </div>

@@ -11,14 +11,57 @@ const JSON_HEADERS = { 'content-type': 'application/json' };
 
 /** Exposes the protected adapters over two real SDK operations. */
 class TestCoreApi extends CoreApi {
-  action(token: Token) {
-    return this.sdkAction(token, (init) => this.sdk.getUserInfo(init));
+  action(token: Token | undefined, headers?: Record<string, string>) {
+    return this.sdkAction(token, (init) => this.sdk.getUserInfo(init), headers);
   }
 
-  value(token: Token) {
-    return this.sdkGet(token, (init) => this.sdk.getUserBucket(init));
+  value(token: Token | undefined, headers?: Record<string, string>) {
+    return this.sdkGet(token, (init) => this.sdk.getUserBucket(init), headers);
   }
 }
+
+const sentHeaders = (): Headers => {
+  const [, init] = fetch.mock.calls[0] as [Request, RequestInit];
+  return new Headers(init.headers);
+};
+
+describe.each([
+  ['sdkAction', (api: TestCoreApi) => api.action.bind(api)],
+  ['sdkGet', (api: TestCoreApi) => api.value.bind(api)],
+])('CoreApi.%s extra headers', (_, adapter) => {
+  const call = adapter(new TestCoreApi({ host: CORE_TEST_URL }));
+
+  beforeEach(() => {
+    fetch.resetMocks();
+    fetch.mockResponseOnce('{}', { headers: JSON_HEADERS });
+  });
+
+  test('sends an extra header alongside the caller token', async () => {
+    await call(TOKEN_MOCK, { 'If-None-Match': '"abc"' });
+
+    expect(sentHeaders().get('authorization')).toBe('Bearer access_token_mock');
+    expect(sentHeaders().get('If-None-Match')).toBe('"abc"');
+  });
+
+  test('keeps exactly the caller authorization when an extra header names it in another casing', async () => {
+    await call(TOKEN_MOCK, { Authorization: 'Bearer someone_else' });
+
+    expect(sentHeaders().get('authorization')).toBe('Bearer access_token_mock');
+  });
+
+  test('does not send an extra authorization header when the caller has no token', async () => {
+    await call(undefined, { authorization: 'Bearer someone_else' });
+
+    expect(sentHeaders().has('authorization')).toBe(false);
+  });
+
+  test('sends no conditional header the method did not set', async () => {
+    await call(TOKEN_MOCK);
+
+    expect(sentHeaders().has('If-Match')).toBe(false);
+    expect(sentHeaders().has('If-None-Match')).toBe(false);
+  });
+});
 
 describe('CoreApi.sdkAction', () => {
   const api = new TestCoreApi({ host: CORE_TEST_URL });

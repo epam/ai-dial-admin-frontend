@@ -3,16 +3,14 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonAppearance, DangerButton } from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import {
-  BASE_BUTTON_ICON_PROPS,
   SELECT_ENTITY_HEADER_CLASS,
   SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS,
   SELECT_ENTITY_MOBILE_HEADER_CLASS,
@@ -112,13 +110,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
           <div className="flex flex-row items-center w-full gap-x-4">
             {!isEditorEnabled && (
               <div className="flex-1 flex flex-row gap-x-4 justify-center">
-                <DangerButton
-                  className={buttonsClassName}
-                  label={t(ButtonsI18nKey.Delete)}
-                  appearance={ButtonAppearance.Outlined}
-                  iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-                  onClick={onOpenModal}
-                />
+                <RemoveButton className={buttonsClassName} label={t(ButtonsI18nKey.Delete)} onClick={onOpenModal} />
                 {children}
               </div>
             )}

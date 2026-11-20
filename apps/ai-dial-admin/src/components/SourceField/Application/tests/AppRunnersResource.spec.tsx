@@ -44,6 +44,11 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {label}
     </button>
   ),
+  GhostIconButton: ({ 'aria-label': ariaLabel, onClick, icon }: any) => (
+    <button type="button" aria-label={ariaLabel} onClick={onClick}>
+      {icon}
+    </button>
+  ),
   Spinner: () => <span role="status" />,
 }));
 

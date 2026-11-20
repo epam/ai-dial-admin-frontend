@@ -36,8 +36,9 @@ vi.mock('@/src/components/Common/FileManager/utils', () => ({
 // Stand-in for the library: exposes the selection and path callbacks the component hands it.
 vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@epam/ai-dial-react-file-manager')>()),
-  DialFileManager: ({ handleSelectionClick, onPathChange, rootItem }: any) => (
+  DialFileManager: ({ handleSelectionClick, onPathChange, rootItem, defaultSelectedPaths }: any) => (
     <div>
+      <span data-testid="default-selected">{[...(defaultSelectedPaths ?? [])].join(',')}</span>
       {rootItem && <span>{rootItem.label}</span>}
       <button
         onClick={() => handleSelectionClick([{ nodeType: 'item', path: 'public/team/my-skill', id: 'unused-id' }])}
@@ -157,6 +158,23 @@ describe('EntitySelectManager', () => {
 
     expect(mockFolder.fetchFiles).toHaveBeenCalledWith('public/');
     expect(mockFolder.fetchFolderHierarchy).not.toHaveBeenCalled();
+  });
+
+  test('withholds the initial selection until the stored file is in the tree', () => {
+    mockFolder.files = [];
+    const { rerender } = renderManager({ value: 'public/team/my-skill' });
+
+    expect(screen.getByTestId('default-selected')).toHaveTextContent('');
+
+    mockFolder.files = [
+      {
+        path: 'public/',
+        items: [{ path: 'public/team/', items: [{ path: 'public/team/my-skill' }] }],
+      },
+    ];
+    rerender(<EntitySelectManager entityType={EntitySelectType.Skill} value="public/team/my-skill" isModalOpen />);
+
+    expect(screen.getByTestId('default-selected')).toHaveTextContent('public/team/my-skill');
   });
 
   test('loads the hierarchy down to the current value when opened with one', () => {

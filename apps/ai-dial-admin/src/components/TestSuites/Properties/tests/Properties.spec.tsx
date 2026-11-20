@@ -12,7 +12,6 @@ import TestSuiteProperties from '../Properties';
 
 const getDeploymentByIdMock = vi.fn();
 const getDeploymentsMock = vi.fn();
-const getAllDeploymentsMock = vi.fn();
 const getModelMock = vi.fn();
 const onOpenInNewTabMock = vi.fn();
 const onChangeMock = vi.fn();
@@ -24,10 +23,6 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 
 vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
   getModel: (...args: unknown[]) => getModelMock(...args),
-}));
-
-vi.mock('@/src/app/[lang]/conversations/actions', () => ({
-  getAllDeployments: (...args: unknown[]) => getAllDeploymentsMock(...args),
 }));
 
 vi.mock('@/src/utils/open-in-new-tab', async (importOriginal) => {
@@ -79,7 +74,6 @@ describe('TestSuiteProperties', () => {
   beforeEach(() => {
     getDeploymentByIdMock.mockReset();
     getDeploymentsMock.mockReset();
-    getAllDeploymentsMock.mockReset();
     getModelMock.mockReset();
     getModelMock.mockResolvedValue(null);
     onOpenInNewTabMock.mockReset();
@@ -107,7 +101,6 @@ describe('TestSuiteProperties', () => {
 
     expect(onOpenInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.Applications, { name: 'app-1' });
     expect(getDeploymentsMock).not.toHaveBeenCalled();
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
     expect(getDeploymentByIdMock).not.toHaveBeenCalled();
   });
 
@@ -136,7 +129,6 @@ describe('TestSuiteProperties', () => {
     expect(getDeploymentByIdMock).toHaveBeenCalledWith('gpt-4');
     expect(onOpenInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.Models, { name: 'gpt-4' });
     expect(getDeploymentsMock).not.toHaveBeenCalled();
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
 
   test('Open for Catalog model uses PlatformModels when platform resource exists', async () => {
@@ -177,7 +169,6 @@ describe('TestSuiteProperties', () => {
     expect(getDeploymentByIdMock).toHaveBeenCalledWith('missing');
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Open })).not.toBeInTheDocument();
     expect(getDeploymentsMock).not.toHaveBeenCalled();
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
 
   test('does not fetch deployments in modal mode', () => {
@@ -194,7 +185,6 @@ describe('TestSuiteProperties', () => {
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Open })).not.toBeInTheDocument();
     expect(getDeploymentByIdMock).not.toHaveBeenCalled();
     expect(getDeploymentsMock).not.toHaveBeenCalled();
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
 
   test('finishing the target picker without a target change preserves a hand-edited model', async () => {
@@ -238,7 +228,6 @@ describe('TestSuiteProperties', () => {
     });
     expect(getDeploymentByIdMock).not.toHaveBeenCalled();
     expect(getDeploymentsMock).not.toHaveBeenCalled();
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
 
   test('displays and opens a platform route without a deployment lookup', async () => {
@@ -261,6 +250,5 @@ describe('TestSuiteProperties', () => {
     expect(onOpenInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.PlatformRoutes, { name: 'search-route' });
     expect(getDeploymentByIdMock).not.toHaveBeenCalled();
     expect(getDeploymentsMock).not.toHaveBeenCalled();
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
 });

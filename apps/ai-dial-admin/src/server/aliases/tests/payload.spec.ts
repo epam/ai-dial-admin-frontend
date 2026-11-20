@@ -14,6 +14,7 @@ describe('Server :: aliases :: toAliasPayload', () => {
       target: { path: 'models/gpt' },
       presentAs: AliasPresentAs.Application,
       userRoles: ['default-user'],
+      defaultHeaders: { 'X-Team': 'a' },
       displayName: 'Assistant',
       description: 'General purpose',
       _metadata: {
@@ -28,6 +29,7 @@ describe('Server :: aliases :: toAliasPayload', () => {
       target: { path: 'models/gpt' },
       presentAs: AliasPresentAs.Application,
       userRoles: ['default-user'],
+      defaultHeaders: { 'X-Team': 'a' },
       displayName: 'Assistant',
       description: 'General purpose',
     });

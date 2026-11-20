@@ -483,7 +483,7 @@ The system SHALL derive an asset runner's default `applicationProperties` from D
 - **AND** an entity runner opens under `/application-runners/`
 
 ### Requirement: Interceptors tab options are sourced from DIAL Core
-The system SHALL render the app-runner Interceptors tab using the existing shared interceptors component, populating the selectable interceptors from DIAL Core as the union of its two populations, and storing the selection in the runner's `dial:applicationTypeInterceptors` field.
+The system SHALL render the app-runner Interceptors tab using the existing shared interceptors component, populating the selectable interceptors from DIAL Core as the union of its two populations, and storing the selection in the runner's `dial:applicationTypeInterceptors` field. Adding interceptors SHALL retain only the first occurrence of each reference, preserving their order.
 
 #### Scenario: Selectable interceptors come from Core, both populations
 - **WHEN** the app-runner detail page loads

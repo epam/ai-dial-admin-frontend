@@ -1040,8 +1040,8 @@ describe('QueryBuilder — a stored saved query', () => {
 
       await screen.findByLabelText('sql-editor');
       await user.click(viewRadio('QueryBuilder.ViewForm'));
-      expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+      expect(await screen.findByText('QueryBuilder.SwitchToBuilderHeader')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'QueryBuilder.StayInSql' }));
 
       await user.click(screen.getByRole('button', { name: 'use chart view' }));
       await saveInPlace(user);
@@ -1083,7 +1083,7 @@ describe('QueryBuilder — a stored saved query', () => {
       await screen.findByLabelText('sql-editor');
       await user.click(viewRadio('QueryBuilder.ViewForm'));
 
-      expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+      expect(await screen.findByText('QueryBuilder.SwitchToBuilderHeader')).toBeInTheDocument();
       expect(screen.getByLabelText('sql-editor')).toHaveValue(formatSql(STORED_SQL));
     });
 
@@ -1095,7 +1095,7 @@ describe('QueryBuilder — a stored saved query', () => {
       await screen.findByLabelText('sql-editor');
       await user.click(viewRadio('QueryBuilder.ViewForm'));
 
-      expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+      expect(await screen.findByText('QueryBuilder.SwitchToBuilderHeader')).toBeInTheDocument();
     });
 
     test('a successful save keeps the result on screen', async () => {

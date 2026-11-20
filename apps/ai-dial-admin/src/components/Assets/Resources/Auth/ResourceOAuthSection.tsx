@@ -174,7 +174,7 @@ const ResourceOAuthSection: FC<Props> = ({ disabled, authSettings, onChange }) =
             onChange?.({
               ...(authSettings || {}),
               code_challenge_method: (code_challenge_method === BasicI18nKey.None
-                ? ''
+                ? undefined
                 : code_challenge_method) as ToolsetCodeChallengeMethod,
               code_challenge: authSettings?.code_challenge,
               code_verifier: authSettings?.code_verifier,

@@ -254,6 +254,11 @@ export interface DialModelResource extends CoreDeploymentResource {
   endpoint?: string;
   responsesEndpoint?: string;
   interceptors?: string[];
+  provider?: string;
+  /** `YYYY-MM-DD`, informational; Core neither validates nor enforces it. */
+  deprecationDate?: string;
+  /** `YYYY-MM-DD`, informational; Core neither validates nor enforces it. */
+  endOfService?: string;
 }
 
 /**
@@ -557,7 +562,7 @@ export interface DialToolsetResourceAuthSettings {
 export enum TokenEndpointAuthMethod {
   CLIENT_SECRET_POST = 'client_secret_post',
   CLIENT_SECRET_BASIC = 'client_secret_basic',
-  CLIENT_SECRET_NONE = 'client_secret_none',
+  CLIENT_SECRET_NONE = 'none',
 }
 
 export enum ToolsetCodeChallengeMethod {

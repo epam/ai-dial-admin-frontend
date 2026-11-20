@@ -8,13 +8,7 @@ import SubjectKindIcon from '@/src/components/FoldersStorage/SubjectKindIcon';
 import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { OrgUnitSubject, SubjectKind } from '@/src/models/dial/org-unit';
-import {
-  buildSubject,
-  isValidClaimKey,
-  isValidEmail,
-  isValidHolderValue,
-  RESERVED_CLAIM_KEYS,
-} from '@/src/utils/org-units/subjects';
+import { buildSubject, isValidClaimKey, isValidEmail, isValidHolderValue } from '@/src/utils/org-units/subjects';
 
 interface Props {
   roleName: string;
@@ -41,13 +35,9 @@ const AddHolderForm: FC<Props> = ({ roleName, onAdd }) => {
   const isEmail = kind === SubjectKind.PERSON;
   const isClaim = kind === SubjectKind.CLAIM;
   const isValueValid = isEmail ? isValidEmail(value) : isValidHolderValue(value);
-  const isKeyTouched = claimKey.length > 0;
   const isKeyValid = isValidClaimKey(claimKey);
   const isValid = isEveryone || (isValueValid && (!isClaim || isKeyValid));
   const errorKey = isEmail ? FoldersI18nKey.HolderEmailInvalid : FoldersI18nKey.HolderInvalid;
-  const keyErrorKey = RESERVED_CLAIM_KEYS.includes(claimKey.trim())
-    ? FoldersI18nKey.HolderClaimKeyReserved
-    : FoldersI18nKey.HolderInvalid;
 
   const items = useMemo(() => {
     const labels: Partial<Record<SubjectKind, string>> = {
@@ -94,8 +84,6 @@ const AddHolderForm: FC<Props> = ({ roleName, onAdd }) => {
             autoComplete="one-time-code"
             placeholder={t(FoldersI18nKey.HolderClaimKey)}
             value={claimKey}
-            invalid={isKeyTouched && !isKeyValid}
-            error={isKeyTouched && !isKeyValid ? t(keyErrorKey) : undefined}
             onChange={(next) => setClaimKey(next ?? '')}
           />
         )}
@@ -108,8 +96,8 @@ const AddHolderForm: FC<Props> = ({ roleName, onAdd }) => {
             autoComplete="one-time-code"
             placeholder={PLACEHOLDER_KEYS[kind] ? t(PLACEHOLDER_KEYS[kind]) : undefined}
             value={value}
-            invalid={isTouched && !isValid}
-            error={isTouched && !isValid ? t(errorKey) : undefined}
+            invalid={!isClaim && isTouched && !isValueValid}
+            error={!isClaim && isTouched && !isValueValid ? t(errorKey) : undefined}
             onChange={(next) => setValue(next ?? '')}
           />
         )}
