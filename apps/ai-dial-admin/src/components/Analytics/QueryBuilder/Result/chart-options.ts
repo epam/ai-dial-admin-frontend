@@ -131,6 +131,33 @@ const baseOptions = (colors: ChartColors, xData: string[], yName?: string): ECha
   color: colors.accent,
 });
 
+const CATEGORY_LABEL_MAX_WIDTH = 120;
+const CATEGORY_LABEL_CHAR_WIDTH = 7;
+const CATEGORY_LABEL_ROTATE = 45;
+
+interface CategoryAxis {
+  type?: string;
+  data?: unknown[];
+  axisLabel?: Record<string, unknown>;
+}
+
+export const fitCategoryLabels = (options: EChartsOption, width: number): EChartsOption => {
+  const xAxis = options.xAxis as CategoryAxis | undefined;
+  if (!width || xAxis?.type !== 'category' || !xAxis.data?.length) return options;
+  const longest = Math.max(...xAxis.data.map((value) => String(value ?? '').length));
+  const labelWidth = Math.min(CATEGORY_LABEL_MAX_WIDTH, longest * CATEGORY_LABEL_CHAR_WIDTH);
+  const isRotated = labelWidth > width / xAxis.data.length;
+  const grid = options.grid as { bottom?: number } | undefined;
+  return {
+    ...options,
+    xAxis: {
+      ...xAxis,
+      axisLabel: { ...xAxis.axisLabel, interval: 0, rotate: isRotated ? CATEGORY_LABEL_ROTATE : 0 },
+    },
+    grid: isRotated ? { ...grid, bottom: (grid?.bottom ?? 0) + Math.round(labelWidth * Math.SQRT1_2) } : grid,
+  };
+};
+
 const seriesColor = (index: number) => CHART_SERIES_COLOR_CYCLE[index % CHART_SERIES_COLOR_CYCLE.length];
 
 const buildSplitOptions = (

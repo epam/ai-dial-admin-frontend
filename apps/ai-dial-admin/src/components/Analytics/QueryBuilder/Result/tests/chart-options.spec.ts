@@ -6,6 +6,7 @@ import {
   buildLineChartOptions,
   buildScatterChartOptions,
   buildSeriesLegend,
+  fitCategoryLabels,
   getNumericColumns,
   getStrictNumericColumns,
 } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
@@ -262,5 +263,29 @@ describe('QueryBuilder :: chart-options', () => {
       expect(scatter.yAxis.name).toBe('Total');
       expect(scatter.tooltip.formatter({ name: '', value: [10, 1] })).toBe('Total tokens: 10<br/>Total: 1');
     });
+  });
+});
+
+describe('fitCategoryLabels', () => {
+  const options = () => buildBarChartOptions(COLORS, ROWS, 'deployment', ['total']);
+
+  test('keeps every label level when the categories fit the width', () => {
+    const fitted = fitCategoryLabels(options(), 600);
+
+    expect(fitted.xAxis.axisLabel).toMatchObject({ interval: 0, rotate: 0 });
+    expect(fitted.grid.bottom).toBe(options().grid.bottom);
+  });
+
+  test('tilts the labels and makes room below when the categories are crowded', () => {
+    const fitted = fitCategoryLabels(options(), 60);
+
+    expect(fitted.xAxis.axisLabel).toMatchObject({ interval: 0, rotate: 45 });
+    expect(fitted.grid.bottom).toBeGreaterThan(options().grid.bottom);
+  });
+
+  test('leaves a chart unchanged before its width is known', () => {
+    const original = options();
+
+    expect(fitCategoryLabels(original, 0)).toBe(original);
   });
 });

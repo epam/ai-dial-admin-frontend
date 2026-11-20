@@ -39,5 +39,6 @@
 - [x] 7.2 Drop the "(no value)" category label from the Query Builder chart, the dashboard widget and `buildShareFigure`, so a blank category stays unlabelled
 - [x] 7.3 Draw the bar/line Y selector as a single-value select in `Result/ResultChart.tsx` when only one aggregate column is available
 - [x] 7.4 Offer only the scorecard for a one-row result with no category column (including an untranslated SQL run whose columns are all numeric), and draw the first offered type when the held type is not offered, in `utils/chart-types.ts` and `Result/ResultChart.tsx`
-- [x] 7.5 Drop the pie's outside labels and leader lines, and bound the legend above/below the chart to two scrolling rows with truncated entries in `Result/chart-options.ts` and `Result/SeriesChart.tsx`
+- [x] 7.5 Drop the pie's outside labels and leader lines, and size the legend by its entries up to two fifths of the chart area on every side, with truncated entries, in `Result/chart-options.ts` and `Result/SeriesChart.tsx`
 - [x] 7.6 Start the chart formatting panel collapsed until the user opens it (`Result/use-chart-panel-open.ts`)
+- [x] 7.7 Label every category on the X axis and tilt the labels when they do not fit the chart's width (`fitCategoryLabels` in `Result/chart-options.ts`, measured in `Result/SeriesChart.tsx`)

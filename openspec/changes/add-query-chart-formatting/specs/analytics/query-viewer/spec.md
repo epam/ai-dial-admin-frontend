@@ -10,7 +10,7 @@ For a **SQL run**, the executed SQL SHALL be translated to the structured DSL th
 
 When the backend rejects the translation — the SQL view accepts constructs the DSL cannot express, so this is an expected outcome and SHALL NOT fail the run or discard the result — the run SHALL still be charted, with its columns classified from the returned rows instead: every returned column SHALL be offered as a dimension, since without the query's semantics the client cannot tell which column is a dimension, and only columns whose every value is a number SHALL be offered as an aggregate. A column that is numeric but semantically a dimension (a time bucket returned as an epoch number, a numeric code) will consequently appear in both selectors; the user's pick decides. Such a run SHALL NOT be reported as an aggregate-mode run.
 
-For **bar** and **line**, the selectors SHALL be labeled X axis and Y axis: X over the executed query's group-by/bucket columns, Y over its aggregate columns (including the count column when present); defaults SHALL be the first dimension and the first aggregate. The Y selector SHALL accept several aggregate columns when the result has more than one, and SHALL be a single-value select when it has only one; each picked column SHALL render as its own series against the one X axis, in the order picked, each in a distinct colour taken from the shared chart palette. With two or more series the chart SHALL offer a legend naming each series (see "The chart legend follows the chart configuration") and an axis tooltip whose header is the hovered X value and which lists every series' value at it, and bars sharing an X value SHALL stand side by side rather than stack; with one series the chart SHALL look as a single-series chart does, with the Y axis titled by that column and no legend. When the result has a second dimension column, its values SHALL form the series instead (see "A second dimension splits the chart into series"). Removing every Y pick SHALL leave the chart with no valid pick. When every X value is numeric or date-like, the chart SHALL order the points along the X axis by that natural order (chronological/numeric ascending) regardless of the query's row order; mixed or plain-text X values keep row order. Long X-axis labels SHALL be truncated to a fixed label width with the full value available in the tooltip.
+For **bar** and **line**, the selectors SHALL be labeled X axis and Y axis: X over the executed query's group-by/bucket columns, Y over its aggregate columns (including the count column when present); defaults SHALL be the first dimension and the first aggregate. The Y selector SHALL accept several aggregate columns when the result has more than one, and SHALL be a single-value select when it has only one; each picked column SHALL render as its own series against the one X axis, in the order picked, each in a distinct colour taken from the shared chart palette. With two or more series the chart SHALL offer a legend naming each series (see "The chart legend follows the chart configuration") and an axis tooltip whose header is the hovered X value and which lists every series' value at it, and bars sharing an X value SHALL stand side by side rather than stack; with one series the chart SHALL look as a single-series chart does, with the Y axis titled by that column and no legend. When the result has a second dimension column, its values SHALL form the series instead (see "A second dimension splits the chart into series"). Removing every Y pick SHALL leave the chart with no valid pick. When every X value is numeric or date-like, the chart SHALL order the points along the X axis by that natural order (chronological/numeric ascending) regardless of the query's row order; mixed or plain-text X values keep row order. Long X-axis labels SHALL be truncated to a fixed label width with the full value available in the tooltip. Every category SHALL carry its label; when the labels do not fit side by side at the chart's current width they SHALL be tilted, and the chart SHALL make room for them below the axis.
 
 For **pie**, the same two selectors SHALL be labeled Slices (group-by/bucket columns) and Value (aggregate columns). The chart SHALL draw a full pie — no hole and no centre total — with nothing written beside it: each slice is named by the legend, and its category and value are in the hover tooltip. It SHALL show at most the top 10 categories by value as slices; any remaining categories SHALL be merged into a single "Other" slice.
 
@@ -251,9 +251,11 @@ of the chart configuration a saved query stores (see `analytics/saved-queries`);
 the legend SHALL be on and below the chart. The settings SHALL survive later runs and chart-type changes.
 Turning the legend off SHALL NOT hide a series.
 
-A legend above or below the chart SHALL take at most two rows and scroll when it has more entries; a legend
-beside the chart SHALL keep a fixed width and scroll when it is taller than the chart. A long entry SHALL be
-truncated on screen while its accessible name stays the full value.
+A legend SHALL take the room its entries need and give the rest to the chart, up to two fifths of the
+chart area: beside the chart it SHALL be as wide as its widest entry, one entry per line; above or below it
+SHALL wrap its entries into as many rows as they need. Only a legend that would exceed that share SHALL
+scroll. Left and right SHALL lay out alike, as SHALL above and below. A long entry SHALL be truncated on
+screen while its accessible name stays the full value.
 
 #### Scenario: The legend moves to the chosen side
 
@@ -262,8 +264,8 @@ truncated on screen while its accessible name stays the full value.
 
 #### Scenario: A long legend stays compact
 
-- **WHEN** a pie legend below the chart has more entries than fit in two rows
-- **THEN** the legend stays two rows high and scrolls, and the chart keeps the rest of the height
+- **WHEN** a pie legend with eleven entries is placed below or beside the chart
+- **THEN** every entry is shown without scrolling and the chart takes the remaining room
 
 #### Scenario: The legend can be turned off
 
