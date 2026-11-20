@@ -165,3 +165,19 @@ export interface DeploymentPeriodCosts {
   current: DeploymentCosts;
   previous: DeploymentCosts;
 }
+
+/** Body for `POST /api/v1/analytics/test-suites/pass-rate`. */
+export interface SuitePassRateRequest {
+  suiteIds: string[];
+}
+
+/**
+ * Summary from `POST /api/v1/analytics/test-suites/pass-rate`.
+ * Rates are 0–1; a missing rate is omitted by the API and mapped to null here.
+ */
+export interface SuitePassRateResponse {
+  passRate?: number | null;
+  previousPassRate?: number | null;
+  suiteCount: number;
+  previousSuiteCount: number;
+}
