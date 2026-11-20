@@ -20,9 +20,6 @@ let value = createDefaultValue();
 
 export const saveValidationMock = {
   dispatch,
-  get value() {
-    return value;
-  },
   set(overrides: Partial<SaveValidationValue>) {
     value = { ...value, ...overrides };
   },
