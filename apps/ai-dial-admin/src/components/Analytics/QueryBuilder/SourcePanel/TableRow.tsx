@@ -33,7 +33,7 @@ const TableRow: FC<Props> = ({ table, isCurrent }) => {
     <li>
       <div
         className={classNames(
-          'flex min-h-8 items-center rounded px-3 hover:bg-accent-primary-alpha focus-within:bg-accent-primary-alpha',
+          'flex min-h-8 items-center rounded-lg px-3 hover:bg-accent-primary-alpha focus-within:bg-accent-primary-alpha',
           isCurrent && 'bg-accent-primary-alpha',
         )}
       >

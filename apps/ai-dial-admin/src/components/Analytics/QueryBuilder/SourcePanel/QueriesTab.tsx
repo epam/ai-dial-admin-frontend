@@ -8,7 +8,7 @@ import QueryRow from '@/src/components/Analytics/QueryBuilder/SourcePanel/QueryR
 import QueryTagGroup from '@/src/components/Analytics/QueryBuilder/SourcePanel/QueryTagGroup';
 import ScopeFilter from '@/src/components/Analytics/QueryBuilder/SourcePanel/ScopeFilter';
 import { useSourcePanel } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
-import { SourcePanelTab } from '@/src/components/Analytics/QueryBuilder/SourcePanel/models';
+import { QueryRowIndent, SourcePanelTab } from '@/src/components/Analytics/QueryBuilder/SourcePanel/models';
 import { usePreservedScroll } from '@/src/components/Analytics/QueryBuilder/SourcePanel/use-preserved-scroll';
 import {
   filterSavedQueries,
@@ -55,14 +55,19 @@ const QueriesTab: FC<Props> = ({ currentQueryId }) => {
       ) : (
         <ul
           ref={scroll.ref}
-          className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto"
+          className="-mr-6 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto pr-6"
           onScroll={scroll.onScroll}
         >
           {tree.groups.map((group) => (
             <QueryTagGroup key={group.tag} group={group} currentQueryId={currentQueryId} />
           ))}
           {tree.untagged.map((query) => (
-            <QueryRow key={query.id} query={query} isCurrent={query.id === currentQueryId} />
+            <QueryRow
+              key={query.id}
+              query={query}
+              isCurrent={query.id === currentQueryId}
+              indent={tree.groups.length ? QueryRowIndent.BesideGroups : QueryRowIndent.Root}
+            />
           ))}
         </ul>
       )}
