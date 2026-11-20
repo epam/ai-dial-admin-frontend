@@ -77,10 +77,16 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
       ? t(TestSuitesI18nKey.AllTestCasesCount, { count: totalRuns })
       : t(TestSuitesI18nKey.SelectedTestCasesCount, { selected: validRuns, total: totalRuns });
 
-  const isConcurrencyInvalid =
-    !concurrency ||
-    +concurrency < MIN_CONCURRENCY ||
-    (maxConcurrencyLevel != null && +concurrency > maxConcurrencyLevel);
+  const isConcurrencyAboveMax =
+    maxConcurrencyLevel != null && concurrency != null && concurrency !== '' && +concurrency > maxConcurrencyLevel;
+  const isConcurrencyInvalid = !concurrency || +concurrency < MIN_CONCURRENCY || isConcurrencyAboveMax;
+  const concurrencyCaption =
+    maxConcurrencyLevel != null
+      ? t(TestSuitesI18nKey.ParallelTestCasesMaximum, { max: maxConcurrencyLevel })
+      : undefined;
+  const concurrencyError = isConcurrencyAboveMax
+    ? t(TestSuitesI18nKey.ParallelTestCasesAboveMaximum, { max: maxConcurrencyLevel })
+    : undefined;
 
   const onSubmit = useCallback(() => {
     if (isSubmittingRef.current) {
@@ -131,6 +137,8 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
               onChange={setConcurrency}
               min={MIN_CONCURRENCY}
               max={maxConcurrencyLevel}
+              caption={concurrencyCaption}
+              error={concurrencyError}
               decreaseAriaLabel={t(TestSuitesI18nKey.DecreaseParallelTestCases)}
               increaseAriaLabel={t(TestSuitesI18nKey.IncreaseParallelTestCases)}
             />
