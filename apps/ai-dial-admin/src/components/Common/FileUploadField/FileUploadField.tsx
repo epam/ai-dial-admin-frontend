@@ -2,18 +2,11 @@
 
 import { ChangeEvent, DragEvent, FC, useCallback, useRef, useState } from 'react';
 
-import {
-  EllipsisTooltip,
-  ErrorText,
-  FileDropzone,
-  GhostButton,
-  GhostIconButton,
-  Label,
-  NeutralButton,
-} from '@epam/ai-dial-ui-kit';
-import { IconPlus, IconTrashX } from '@tabler/icons-react';
+import { EllipsisTooltip, ErrorText, FileDropzone, GhostButton, Label } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { FileUploadError, FileUploadFieldProps } from '@/src/components/Common/FileUploadField/models';
 import { getAccept, isTotalSizeExceeded, validateFiles } from '@/src/components/Common/FileUploadField/utils';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
@@ -137,13 +130,7 @@ const FileUploadField: FC<FileUploadFieldProps> = ({
             <Label label={label} htmlFor={elementId} />
             {multiple && (
               <div className="flex flex-row items-center gap-x-2">
-                {deleteAllButtonLabel && (
-                  <NeutralButton
-                    label={deleteAllButtonLabel}
-                    iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
-                    onClick={onDeleteAll}
-                  />
-                )}
+                {deleteAllButtonLabel && <RemoveButton label={deleteAllButtonLabel} onClick={onDeleteAll} />}
                 {canAdd && (
                   <GhostButton
                     label={addButtonLabel}
@@ -189,8 +176,7 @@ const FileUploadField: FC<FileUploadFieldProps> = ({
                   >
                     {iconBeforeInput ?? dynamicIcon?.(file.name)}
                     <EllipsisTooltip className="flex-1 min-w-0 dial-tiny-text" text={file.name} />
-                    <GhostIconButton
-                      icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
+                    <RemoveButton
                       aria-label={`${t(ButtonsI18nKey.Delete)}: ${file.name}`}
                       onClick={() => onRemoveFile(file.name)}
                     />

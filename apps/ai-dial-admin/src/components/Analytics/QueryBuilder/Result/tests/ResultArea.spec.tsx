@@ -135,7 +135,24 @@ const renderArea = (overrides: Partial<AreaProps> = {}) => {
 describe('QueryBuilder :: ResultArea', () => {
   test('shows the pre-run empty state', () => {
     renderArea();
-    expect(screen.getByText('QueryBuilder.ResultsEmptyDescription')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.ResultsReadyTitle')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.ResultsReadyDescription')).toBeInTheDocument();
+  });
+
+  test('says the query changed instead of the row count when the shown result is out of date', () => {
+    renderArea({ result: AGG_RESULT, meta: AGG_META, isQueryChanged: true });
+
+    expect(screen.getByRole('status')).toHaveTextContent(/^QueryBuilder.ResultsQueryChanged$/);
+    expect(screen.getByText('grid rows: 2')).toBeInTheDocument();
+  });
+
+  test.each([
+    ['dims an out-of-date result', true, true],
+    ['leaves a current result at full strength', false, false],
+  ])('%s', (_case, isQueryChanged, isDimmed) => {
+    renderArea({ result: AGG_RESULT, meta: AGG_META, isQueryChanged });
+
+    expect(!!screen.getByText('grid rows: 2').closest('.opacity-60')).toBe(isDimmed);
   });
 
   test('reports the returned rows out of the total and renders the grid for a result', () => {
@@ -426,6 +443,7 @@ describe('QueryBuilder :: ResultArea :: access hint', () => {
 
     expect(screen.getByText('QueryBuilder.NoRows')).toBeInTheDocument();
     expect(screen.queryByText('QueryBuilder.NoRowsForAccess')).not.toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.NoRowsDescription')).toBeInTheDocument();
   });
 
   test('asks nothing for a SQL run, which names no source', async () => {

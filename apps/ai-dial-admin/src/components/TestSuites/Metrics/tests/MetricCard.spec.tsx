@@ -19,6 +19,14 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   ElementSize: { Standard: 'standard' },
 }));
 
+vi.mock('@/src/components/Common/RemoveButton/RemoveButton', () => ({
+  default: ({ label, onClick }: { label: string; onClick?: () => void }) => (
+    <button type="button" onClick={onClick}>
+      {label}
+    </button>
+  ),
+}));
+
 vi.mock('@/src/components/Common/ContentWithLinks/ContentWithLinks', () => ({
   default: ({ text }: { text: string }) => <span>{text}</span>,
 }));

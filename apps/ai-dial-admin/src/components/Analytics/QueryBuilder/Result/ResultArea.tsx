@@ -6,7 +6,9 @@ import { ColDef, GetRowIdParams } from 'ag-grid-community';
 import { Spinner, NoDataContent, SegmentedControl, GhostButton } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { IconChartBar, IconDownload, IconTable } from '@tabler/icons-react';
+import classNames from 'classnames';
 
+import ReadyToRunIllustration from '@/public/images/query-ready-to-run.svg';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ResultGridRow, ScorecardTrendSource } from '@/src/components/Analytics/QueryBuilder/Result/models';
 import ResultChart from '@/src/components/Analytics/QueryBuilder/Result/ResultChart';
@@ -31,6 +33,7 @@ interface Props {
   result: StructuredQueryResult | null;
   meta: ExecutedQueryMeta | null;
   isRunning: boolean;
+  isQueryChanged?: boolean;
   // Controlled by the orchestrator: both are members of a saved query's payload, so they have to be
   // readable at save time and restorable when a stored query opens.
   view: QueryResultView;
@@ -49,6 +52,7 @@ const ResultArea: FC<Props> = ({
   result,
   meta,
   isRunning,
+  isQueryChanged = false,
   view,
   onChangeView,
   chartConfig,
@@ -126,7 +130,7 @@ const ResultArea: FC<Props> = ({
         />
         {hasResult && (
           <span role="status" className="text-secondary dial-small-text">
-            {resultCount}
+            {isQueryChanged ? t(QueryBuilderI18nKey.ResultsQueryChanged) : resultCount}
           </span>
         )}
         <div className="ml-auto flex items-center gap-3">
@@ -159,11 +163,20 @@ const ResultArea: FC<Props> = ({
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div
+        className={classNames(
+          'flex min-h-0 flex-1 flex-col transition-opacity',
+          isQueryChanged && !isRunning && 'opacity-60',
+        )}
+      >
         {isRunning ? (
           <Spinner size={40} fullWidth />
         ) : !hasResult ? (
-          <NoDataContent title={t(QueryBuilderI18nKey.ResultsEmptyDescription)} />
+          <NoDataContent
+            icon={<ReadyToRunIllustration />}
+            title={t(QueryBuilderI18nKey.ResultsReadyTitle)}
+            description={t(QueryBuilderI18nKey.ResultsReadyDescription)}
+          />
         ) : isChartView ? (
           chartAvailable && meta ? (
             <ResultChart
@@ -179,7 +192,9 @@ const ResultArea: FC<Props> = ({
         ) : !rows.length ? (
           <NoDataContent
             title={t(QueryBuilderI18nKey.NoRows)}
-            description={isRowsRestricted ? t(QueryBuilderI18nKey.NoRowsForAccess) : undefined}
+            description={t(
+              isRowsRestricted ? QueryBuilderI18nKey.NoRowsForAccess : QueryBuilderI18nKey.NoRowsDescription,
+            )}
           />
         ) : (
           <div className="min-h-0 flex-1">

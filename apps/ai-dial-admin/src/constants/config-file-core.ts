@@ -56,4 +56,5 @@ export const METADATA_RESOURCE_TYPE: Partial<Record<ConfigFileEntityType, Resour
   [ConfigFileEntityType.Interceptors]: ResourceType.INTERCEPTOR,
   [ConfigFileEntityType.Roles]: ResourceType.ROLE,
   [ConfigFileEntityType.Models]: ResourceType.MODEL,
+  [ConfigFileEntityType.Plugins]: ResourceType.PLUGIN,
 };

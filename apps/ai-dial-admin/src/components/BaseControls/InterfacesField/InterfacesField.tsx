@@ -12,6 +12,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DeploymentInterfaceType, InterfaceFieldVariant } from '@/src/models/dial/interfaces';
 import { DialUpstreamInterface } from '@/src/models/dial/model';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import InterfaceEndpointRow from './InterfaceEndpointRow';
@@ -32,6 +33,8 @@ interface Props<V extends InterfaceValue> {
   // Available platform Translator assets for the translator-mode picker — isAsset surfaces only.
   // Metadata-only (list, not content) — the picker only needs each translator's name.
   translators?: ResourceInfo[];
+  isPluginEnabled?: boolean;
+  plugins?: PluginOptions;
   // The entity-level base URL an interface's empty base_url falls back to; passed through to each
   // row, which makes its own value optional. Absent on surfaces with no such field.
   entityBaseUrl?: string;
@@ -64,6 +67,8 @@ const InterfacesField = <V extends InterfaceValue>({
   disabled,
   className,
   translators,
+  isPluginEnabled,
+  plugins,
   entityBaseUrl,
   upstreamBaseUrl,
   isTranslatorDisabled,
@@ -170,6 +175,8 @@ const InterfacesField = <V extends InterfaceValue>({
                 onDelete={() => onDeleteType(type)}
                 isAsset={isAsset}
                 translators={translators}
+                isPluginEnabled={isPluginEnabled}
+                plugins={plugins}
                 entityBaseUrl={entityBaseUrl}
                 isTranslatorDisabled={isTranslatorDisabled}
                 view={view}

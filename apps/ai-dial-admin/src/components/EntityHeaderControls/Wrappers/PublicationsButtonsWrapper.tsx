@@ -6,18 +6,17 @@ import { createPortal } from 'react-dom';
 
 import {
   NotificationVariant,
-  ButtonAppearance,
   Notification,
   NotificationType,
   ConfirmationPopup,
-  DangerButton,
   OutlinedButton,
   PrimaryButton,
   Textarea,
 } from '@epam/ai-dial-ui-kit';
-import { IconCircleX, IconTrashX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
+import { IconCircleX, IconWorldOff, IconWorldShare } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { approvePublication, declinePublication, deletePublication } from '@/src/app/actions/publications';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import { DECLINE_REASON_MAX_LENGTH, DECLINE_REASON_MIN_LENGTH } from '@/src/components/EntityHeaderControls/constants';
@@ -248,12 +247,10 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             {!isEditorEnabled && (
               <div className="flex-1 flex flex-row gap-x-4 justify-center">
                 <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-                  <DangerButton
+                  <RemoveButton
                     className={buttonsClassName}
                     label={t(ButtonsI18nKey.Delete)}
-                    appearance={ButtonAppearance.Outlined}
                     onClick={() => setIsOpenDeleteModal(true)}
-                    iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   />
                   {!isOnlyDeleteAvailable && (
                     <>

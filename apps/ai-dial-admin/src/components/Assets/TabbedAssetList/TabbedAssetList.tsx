@@ -22,6 +22,7 @@ import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetSource } from '@/src/models/dial/asset-source';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
@@ -40,6 +41,7 @@ interface Props {
   /** For the application create form on the Platform tab. */
   runners?: DialApplicationScheme[];
   translators?: ResourceInfo[];
+  plugins?: PluginOptions;
   isUnsafeImportEnabled?: boolean;
 }
 
@@ -54,7 +56,7 @@ const TAB_LABEL_KEYS: Record<AssetSource, AssetTabsI18nKey> = {
  * a tab row for the sources that exist, and the active source's body. Public is the file manager on the single
  * `public/` root; Platform and config.json are flat grids.
  */
-const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImportEnabled }) => {
+const TabbedAssetList: FC<Props> = ({ view, runners, translators, plugins, isUnsafeImportEnabled }) => {
   const t = useI18n();
   const router = useRouter();
   const pathname = usePathname();
@@ -187,6 +189,7 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
             bucket={activeSource === AssetSource.Public ? AssetSource.Public : AssetSource.Platform}
             runners={runners}
             translators={translators}
+            plugins={plugins}
             onClose={onCloseCreate}
           />
         </SaveValidationContextProvider>
