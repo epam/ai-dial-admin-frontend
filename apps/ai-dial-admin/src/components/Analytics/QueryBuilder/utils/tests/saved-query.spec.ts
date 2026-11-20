@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   deriveSavedQueryEditor,
+  readChartLegend,
   readChartYFields,
   toMetadataReplaceRequest,
   savedQueryPrimarySource,
@@ -25,7 +26,12 @@ import {
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
-import { ChartType, QueryBuilderState, QueryResultView } from '@/src/models/analytics/query-builder';
+import {
+  ChartLegendPosition,
+  ChartType,
+  QueryBuilderState,
+  QueryResultView,
+} from '@/src/models/analytics/query-builder';
 import {
   SavedQuery,
   SavedQueryCaptureInput,
@@ -223,8 +229,29 @@ describe('toSavedQueryRequest', () => {
     const asChart = toSavedQueryRequest(baseCapture({ resultView: QueryResultView.Chart, chartConfig }));
     const asTable = toSavedQueryRequest(baseCapture({ resultView: QueryResultView.Table, chartConfig }));
 
-    expect(asChart.chart).toEqual({ type: ChartType.Bar, x_field: 'project', y_field: ['count'] });
+    expect(asChart.chart).toEqual({
+      type: ChartType.Bar,
+      x_field: 'project',
+      y_field: ['count'],
+      legend: { visible: true, position: ChartLegendPosition.Below },
+    });
     expect('chart' in asTable).toBeFalsy();
+  });
+
+  test('writes the chart legend settings', () => {
+    const request = toSavedQueryRequest(
+      baseCapture({
+        resultView: QueryResultView.Chart,
+        chartConfig: {
+          type: ChartType.Line,
+          xField: 'day',
+          yFields: ['count'],
+          legend: { isVisible: false, position: ChartLegendPosition.Right },
+        },
+      }),
+    );
+
+    expect(request.chart?.legend).toEqual({ visible: false, position: ChartLegendPosition.Right });
   });
 
   test('passes an unpicked chart axis through as null', () => {
@@ -235,7 +262,12 @@ describe('toSavedQueryRequest', () => {
       }),
     );
 
-    expect(request.chart).toEqual({ type: ChartType.Pie, x_field: null, y_field: null });
+    expect(request.chart).toEqual({
+      type: ChartType.Pie,
+      x_field: null,
+      y_field: null,
+      legend: { visible: true, position: ChartLegendPosition.Below },
+    });
   });
 
   test('sends the fallback body in place of the builder state', () => {
@@ -433,7 +465,12 @@ describe('toBuilderRestore', () => {
     });
 
     expect(result.resultView).toBe(QueryResultView.Chart);
-    expect(result.chartConfig).toEqual({ type: ChartType.Line, xField: 'project', yFields: ['count'] });
+    expect(result.chartConfig).toEqual({
+      type: ChartType.Line,
+      xField: 'project',
+      yFields: ['count'],
+      legend: { isVisible: true, position: ChartLegendPosition.Below },
+    });
   });
 
   test('restores a stored multi-column chart in its stored order', () => {
@@ -444,6 +481,16 @@ describe('toBuilderRestore', () => {
     });
 
     expect(result.chartConfig?.yFields).toEqual(['returning', 'fresh']);
+  });
+
+  test('restores the stored legend settings', () => {
+    const result = restore({
+      query: { entity: 'a', mode: QueryMode.Row },
+      result_view: QueryResultView.Chart,
+      chart: { type: ChartType.Bar, x_field: 'p', y_field: ['c'], legend: { visible: false, position: 'left' } },
+    });
+
+    expect(result.chartConfig?.legend).toEqual({ isVisible: false, position: ChartLegendPosition.Left });
   });
 
   test('leaves the chart configuration absent when the stored query has none', () => {
@@ -502,6 +549,23 @@ describe('toBuilderRestore', () => {
 
   test('leaves the toolbar alone when no time intent was stored', () => {
     expect(restore().time).toEqual({ action: SavedQueryTimeAction.Leave });
+  });
+});
+
+describe('readChartLegend', () => {
+  test('defaults a chart stored before legend settings to a visible legend below', () => {
+    expect(readChartLegend(undefined)).toEqual({ isVisible: true, position: ChartLegendPosition.Below });
+  });
+
+  test('reads a stored legend', () => {
+    expect(readChartLegend({ visible: false, position: 'above' })).toEqual({
+      isVisible: false,
+      position: ChartLegendPosition.Above,
+    });
+  });
+
+  test('falls back per member for an unknown position or a missing visibility', () => {
+    expect(readChartLegend({ position: 'top' })).toEqual({ isVisible: true, position: ChartLegendPosition.Below });
   });
 });
 

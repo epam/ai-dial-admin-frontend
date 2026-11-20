@@ -1,45 +1,63 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC, useId, useMemo } from 'react';
 
-import classNames from 'classnames';
-import { NoDataContent, SegmentedControl, Select } from '@epam/ai-dial-ui-kit';
-import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
+import { NoDataContent } from '@epam/ai-dial-ui-kit';
 
-import { buildChartOptions } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
+import { useQuerySparkline } from '@/src/components/Analytics/Common/use-query-sparkline';
+import ChartFormattingPanel from '@/src/components/Analytics/QueryBuilder/Result/ChartFormattingPanel';
+import { buildChartOptions, buildPieOptions } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
+import { ChartSlotView, ScorecardTrendSource } from '@/src/components/Analytics/QueryBuilder/Result/models';
+import ResultScorecard from '@/src/components/Analytics/QueryBuilder/Result/ResultScorecard';
 import SeriesChart from '@/src/components/Analytics/QueryBuilder/Result/SeriesChart';
-import DonutFigure from '@/src/components/Analytics/Usage/Charts/DonutFigure';
-import { DONUT_LEGEND_ROWS_PER_COLUMN, DONUT_SIZE } from '@/src/components/Analytics/Usage/constants';
-import { formatChartNumber } from '@/src/components/Analytics/Usage/utils/chart-options';
-import { buildShareFigure } from '@/src/components/Analytics/Usage/utils/share-figure';
-import { keepValidYFields, resolveYFields } from '@/src/components/Analytics/QueryBuilder/utils/chart-fields';
+import { useChartPanelOpen } from '@/src/components/Analytics/QueryBuilder/Result/use-chart-panel-open';
 import {
-  getAvailableChartTypes,
+  keepValidYFields,
+  resolveChartSplit,
+  resolveYFields,
+} from '@/src/components/Analytics/QueryBuilder/utils/chart-fields';
+import {
   getChartNumericColumns,
+  getQueryChartTypes,
+  getScorecardColumns,
+  hasChartSplit,
 } from '@/src/components/Analytics/QueryBuilder/utils/chart-types';
-import { CHART_SLOT_DESCRIPTORS, CHART_TYPE_OPTIONS, PIE_MAX_SLICES } from '@/src/constants/analytics/query-builder';
+import { buildShareFigure } from '@/src/components/Analytics/Usage/utils/share-figure';
+import { CHART_SLOT_DESCRIPTORS, DEFAULT_CHART_LEGEND, PIE_MAX_SLICES } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useChartColors } from '@/src/hooks/use-chart-colors';
 import { useI18n } from '@/src/locales/client';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
-import { ChartColumnSource, ChartConfig, ChartType, ExecutedQueryMeta } from '@/src/models/analytics/query-builder';
+import {
+  ChartColumnSource,
+  ChartConfig,
+  ChartLegendConfig,
+  ChartType,
+  ExecutedQueryMeta,
+} from '@/src/models/analytics/query-builder';
 
 interface Props {
   result: StructuredQueryResult;
   meta: ExecutedQueryMeta;
   config: ChartConfig;
   onChangeConfig: (config: ChartConfig) => void;
+  trendSource?: ScorecardTrendSource;
 }
 
-const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
+const SPLIT_TYPES = [ChartType.Bar, ChartType.Line, ChartType.Scatter];
+
+const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig, trendSource }) => {
   const t = useI18n();
   const colors = useChartColors();
+  const xSlotId = useId();
+  const ySlotId = useId();
+  const [isPanelOpen, onTogglePanel] = useChartPanelOpen();
 
-  // Deduplicated: a SQL run the backend could not translate offers every column as a dimension, so
-  // its numeric columns are in both lists — counting them twice would offer scatter a single column
-  // to plot against itself.
-  const numericColumns = useMemo(() => getChartNumericColumns(result.rows, meta), [result.rows, meta]);
-  const availableTypes = useMemo(() => getAvailableChartTypes(result.rows, meta), [result.rows, meta]);
+  const rows = result.rows;
+  const numericColumns = useMemo(() => getChartNumericColumns(rows, meta), [rows, meta]);
+  const scorecardColumns = useMemo(() => getScorecardColumns(rows, meta), [rows, meta]);
+  const availableTypes = useMemo(() => getQueryChartTypes(rows, meta), [rows, meta]);
+  const isSplitResult = hasChartSplit(meta);
 
   const columnsFor = (source: ChartColumnSource): string[] => {
     if (source === ChartColumnSource.Dimensions) return meta.dimensionColumns;
@@ -47,119 +65,110 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
     return numericColumns;
   };
 
-  const descriptor = CHART_SLOT_DESCRIPTORS[config.type];
-  const xOptions = columnsFor(descriptor.xSource);
-  const yOptions = columnsFor(descriptor.ySource);
-
-  // Config fields are null until the user picks — defaults are the slot's first valid column
-  // (for Y, the first column not already on X, so a fresh scatter gets two distinct axes).
-  const xField = config.xField ?? xOptions[0] ?? null;
-  const yFields = useMemo(
-    () => resolveYFields(config.yFields, yOptions, xField, descriptor.isMultiY),
-    [config.yFields, yOptions, xField, descriptor.isMultiY],
-  );
-
-  const typeOptions: SegmentedControlItem<ChartType>[] = CHART_TYPE_OPTIONS.filter(
-    (o) => o.value === config.type || availableTypes.includes(o.value as ChartType),
-  ).map((o) => ({ value: o.value as ChartType, label: o.label }));
-
-  // Switching type keeps a pick that is valid for the new type's slot; an invalid pick falls back
-  // to null, which re-derives that slot's default on render.
-  const onChangeType = (type: ChartType) => {
-    const next = CHART_SLOT_DESCRIPTORS[type];
-    const keepIfValid = (field: string | null, options: string[]) => (field && options.includes(field) ? field : null);
-    onChangeConfig({
-      type,
-      xField: keepIfValid(config.xField, columnsFor(next.xSource)),
-      yFields: keepValidYFields(config.yFields, columnsFor(next.ySource), next.isMultiY),
-    });
+  const slotColumns = (type: ChartType): { x: string[]; y: string[] } => {
+    if (type === ChartType.Scorecard) return { x: [], y: scorecardColumns };
+    if (type === ChartType.Scatter && isSplitResult) return { x: meta.dimensionColumns, y: meta.aggregateColumns };
+    const descriptor = CHART_SLOT_DESCRIPTORS[type];
+    return { x: columnsFor(descriptor.xSource), y: columnsFor(descriptor.ySource) };
   };
 
-  const labelFor = (column: string): string => meta.columnLabels[column] ?? column;
+  const type = availableTypes.includes(config.type) ? config.type : (availableTypes[0] ?? config.type);
+  const descriptor = CHART_SLOT_DESCRIPTORS[type];
+  const isScorecard = type === ChartType.Scorecard;
+  const isPie = type === ChartType.Pie;
+  const { x: xOptions, y: yOptions } = slotColumns(type);
 
-  const onChangeYFields = (value: string | string[]) =>
-    onChangeConfig({ ...config, yFields: Array.isArray(value) ? value : [value] });
-
-  const isPie = config.type === ChartType.Pie;
+  const xField = isScorecard ? null : (config.xField ?? xOptions[0] ?? null);
+  const splitField =
+    isSplitResult && SPLIT_TYPES.includes(type) ? resolveChartSplit(meta.dimensionColumns, xField) : null;
+  const isMultiY = descriptor.isMultiY && !splitField && yOptions.length > 1;
+  const yFields = useMemo(
+    () => resolveYFields(config.yFields, yOptions, xField, isMultiY),
+    [config.yFields, yOptions, xField, isMultiY],
+  );
   const [valueField] = yFields;
+  const legend = config.legend ?? DEFAULT_CHART_LEGEND;
 
-  const share = useMemo(
-    () =>
-      isPie && xField && valueField
-        ? buildShareFigure(colors, result.rows, xField, valueField, {
-            otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
-            sliceCount: PIE_MAX_SLICES,
-            emptyLabel: t(QueryBuilderI18nKey.ChartEmptyCategory),
-          })
-        : null,
-    [isPie, colors, result.rows, xField, valueField, t],
-  );
+  const onChangeType = (type: ChartType) => {
+    const next = slotColumns(type);
+    const keepIfValid = (field: string | null, options: string[]) => (field && options.includes(field) ? field : null);
+    onChangeConfig({
+      ...config,
+      type,
+      xField: keepIfValid(config.xField, next.x),
+      yFields: keepValidYFields(config.yFields, next.y, CHART_SLOT_DESCRIPTORS[type].isMultiY),
+    });
+  };
+  const onChangeLegend = (next: ChartLegendConfig) => onChangeConfig({ ...config, legend: next });
 
-  const options = useMemo(
-    () =>
-      !isPie && xField && yFields.length
-        ? buildChartOptions(config.type, result.rows, xField, yFields, {
-            colors,
-            dimensionColumns: meta.dimensionColumns,
-            otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
-            emptyLabel: t(QueryBuilderI18nKey.ChartEmptyCategory),
-            columnLabels: meta.columnLabels,
-          })
-        : null,
-    [isPie, config.type, result.rows, xField, yFields, meta.dimensionColumns, meta.columnLabels, t, colors],
-  );
+  const labelFor = (column: string): string => meta.columnLabels[column] ?? column;
+  const toOptions = (columns: string[]) => columns.map((column) => ({ value: column, label: labelFor(column) }));
+  const ySlot: ChartSlotView = {
+    id: ySlotId,
+    label: t(descriptor.yLabelKey),
+    options: toOptions(yOptions),
+    value: isMultiY ? yFields : yFields[0],
+    isMultiple: isMultiY,
+    onChange: (value) => onChangeConfig({ ...config, yFields: Array.isArray(value) ? value : [value] }),
+  };
+  const xSlot: ChartSlotView = {
+    id: xSlotId,
+    label: t(descriptor.xLabelKey),
+    options: toOptions(xOptions),
+    value: xField ?? undefined,
+    isMultiple: false,
+    onChange: (value) => onChangeConfig({ ...config, xField: value as string }),
+  };
+  const scorecardSlots = scorecardColumns.length > 1 ? [ySlot] : [];
+  const slots = isScorecard ? scorecardSlots : [xSlot, ySlot];
 
-  if (!xField || !yOptions.length) {
+  const options = useMemo(() => {
+    if (isScorecard || !xField || !valueField) return null;
+    if (isPie) {
+      const share = buildShareFigure(colors, rows, xField, valueField, {
+        otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
+        sliceCount: PIE_MAX_SLICES,
+      });
+      return buildPieOptions(colors, share.slices);
+    }
+    return buildChartOptions(type, rows, xField, yFields, {
+      colors,
+      dimensionColumns: meta.dimensionColumns,
+      otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
+      columnLabels: meta.columnLabels,
+      splitField,
+    });
+  }, [isScorecard, isPie, xField, valueField, colors, rows, yFields, type, meta, splitField, t]);
+
+  const trend = useQuerySparkline({
+    query: trendSource?.query ?? null,
+    timeField: trendSource?.timeField ?? null,
+    column: valueField ?? '',
+    range: trendSource?.range ?? { startDate: new Date(0), endDate: new Date(0) },
+    isEnabled: isScorecard && !!trendSource,
+  });
+
+  const renderFigure = () => {
+    if (isScorecard && valueField) {
+      return <ResultScorecard label={labelFor(valueField)} value={rows[0]?.[valueField]} points={trend} />;
+    }
+    if (options) return <SeriesChart option={options} legendConfig={legend} />;
     return <NoDataContent title={t(QueryBuilderI18nKey.ChartNoAxisSelection)} />;
-  }
+  };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <SegmentedControl
-          aria-label={t(QueryBuilderI18nKey.ChartTypeSwitcher)}
-          items={typeOptions}
-          value={config.type}
-          onChange={onChangeType}
-        />
-        <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
-          <div className="w-[200px]">
-            <Select
-              prefix={`${t(descriptor.xLabelKey)}: `}
-              ariaLabel={t(descriptor.xLabelKey)}
-              options={xOptions.map((c) => ({ value: c, label: labelFor(c) }))}
-              value={xField ?? undefined}
-              onChange={(v) => onChangeConfig({ ...config, xField: v as string })}
-            />
-          </div>
-          <div className={classNames(descriptor.isMultiY ? 'w-[280px]' : 'w-[200px]')}>
-            <Select
-              prefix={`${t(descriptor.yLabelKey)}: `}
-              ariaLabel={t(descriptor.yLabelKey)}
-              options={yOptions.map((c) => ({ value: c, label: labelFor(c) }))}
-              multiple={descriptor.isMultiY}
-              collapseTagOverflow={descriptor.isMultiY}
-              value={descriptor.isMultiY ? yFields : yFields[0]}
-              onChange={onChangeYFields}
-            />
-          </div>
-        </div>
-      </div>
-      <div className="min-h-0 flex-1">
-        {share && (
-          <div className="flex size-full flex-col justify-center overflow-auto">
-            <DonutFigure
-              slices={share.slices}
-              centerValue={formatChartNumber(share.total)}
-              centerCaption={labelFor(valueField)}
-              size={DONUT_SIZE}
-              legendRowsPerColumn={DONUT_LEGEND_ROWS_PER_COLUMN}
-            />
-          </div>
-        )}
-        {options && <SeriesChart option={options} />}
-        {!share && !options && <NoDataContent title={t(QueryBuilderI18nKey.ChartNoAxisSelection)} />}
-      </div>
+    <div className="flex min-h-0 flex-1 overflow-hidden rounded border border-tertiary">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col p-4">{renderFigure()}</div>
+      <ChartFormattingPanel
+        isOpen={isPanelOpen}
+        onToggle={onTogglePanel}
+        type={type}
+        types={availableTypes}
+        onChangeType={onChangeType}
+        slots={slots}
+        legend={isScorecard ? undefined : legend}
+        onChangeLegend={onChangeLegend}
+      />
     </div>
   );
 };

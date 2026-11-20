@@ -17,3 +17,6 @@ export const keepValidYFields = (yFields: string[] | null, yOptions: string[], i
   if (!valid.length) return null;
   return isMultiY ? valid : valid.slice(0, 1);
 };
+
+export const resolveChartSplit = (dimensionColumns: string[], xField: string | null): string | null =>
+  xField ? (dimensionColumns.find((column) => column !== xField) ?? null) : null;
