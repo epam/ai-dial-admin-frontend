@@ -223,6 +223,7 @@ const QueryBuilder: FC<Props> = ({
       timeField: timestampField ?? null,
       range: getCurrentTimeRange(),
     }),
+    // The range is captured when a run lands, so the trend matches the shown number until the next run.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [lastRequest, timestampField],
   );
