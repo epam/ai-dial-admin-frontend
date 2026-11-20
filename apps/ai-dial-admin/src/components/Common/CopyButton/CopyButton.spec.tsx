@@ -2,11 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import CopyButton from './CopyButton';
 
-Object.assign(navigator, {
-  clipboard: {
-    writeText: vi.fn(),
-  },
-});
+Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn() }, configurable: true });
 
 describe('Common components :: CopyButton', () => {
   test('Should render button with icon and be accessible by role', () => {
