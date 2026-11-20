@@ -957,6 +957,35 @@ describe('QueryBuilder :: SQL view Run', () => {
     expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartYAxis/ })).toBeInTheDocument();
   });
 
+  test('keeps the legend settings across a re-run whose axes come from the new result', async () => {
+    const user = userEvent.setup();
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: AGG_ROWS } } as never);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+
+    renderBuilder();
+    await runSql(user, 'SELECT deployment, count(*) AS total FROM dial_usage_log GROUP BY deployment');
+    await screen.findByText('grid rows: 2');
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
+    await user.click(await screen.findByRole('combobox', { name: /^QueryBuilder.ChartLegendPosition/ }));
+    await user.click(await screen.findByRole('option', { name: 'QueryBuilder.ChartLegendRight' }));
+
+    runSqlMock.mockResolvedValue({
+      isSuccess: true,
+      result: {
+        rows: [
+          { model: 'a', total: 1 },
+          { model: 'b', total: 2 },
+        ],
+      },
+    } as never);
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+
+    expect(await screen.findByRole('combobox', { name: /^QueryBuilder.ChartXAxis.*model/ })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartLegendPosition/ })).toHaveAccessibleName(
+      /QueryBuilder.ChartLegendRight/,
+    );
+  });
+
   test('a rejected translation still shows the result and raises no notification', async () => {
     const user = userEvent.setup();
     runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: AGG_ROWS } } as never);
