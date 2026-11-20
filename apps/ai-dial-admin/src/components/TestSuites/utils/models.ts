@@ -80,6 +80,8 @@ export interface TryOutColumnTurnResult {
   turnIndex: number;
   columns: EvaluatedColumn[];
   responseBody?: unknown;
+  streaming?: boolean;
+  events?: unknown[];
 }
 
 export interface TryOutColumnGroupResult {

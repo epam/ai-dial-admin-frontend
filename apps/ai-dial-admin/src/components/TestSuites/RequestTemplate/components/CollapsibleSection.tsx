@@ -31,7 +31,13 @@ const CollapsibleSection: FC<PropsWithChildren<Props>> = ({
   const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
 
   return (
-    <div className={classNames('min-h-0 flex flex-col', isOpen && growOnOpen && 'flex-1')}>
+    <div
+      className={classNames(
+        'min-h-0 flex flex-col',
+        isOpen && growOnOpen && 'flex-1',
+        isOpen && !growOnOpen && 'shrink-0',
+      )}
+    >
       <div className="w-full mb-4 flex items-center gap-x-2">
         <button
           type="button"
