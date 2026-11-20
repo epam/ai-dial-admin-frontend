@@ -37,16 +37,25 @@ export const useToolsDiscovery = ({
       }
       const path = (isAsset ? (selectedEntity as AssetToolset)._metadata?.path : selectedEntity?.name) as string;
       setLoading(true);
-      getFunction(path).then((res) => {
-        if (isCancelled) return;
-        if (res.success) {
-          setTools((res.response as { tools: Tool[] }).tools || []);
-        } else {
+      const fetchEntityTools = async () => {
+        try {
+          const res = await getFunction(path);
+          if (isCancelled) return;
+          if (res.success) {
+            setTools((res.response as { tools: Tool[] }).tools || []);
+          } else {
+            setTools([]);
+            showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          }
+        } catch (error) {
+          if (isCancelled) return;
           setTools([]);
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+          showNotification(getErrorNotification(undefined, error instanceof Error ? error.message : undefined));
+        } finally {
+          if (!isCancelled) setLoading(false);
         }
-        setLoading(false);
-      });
+      };
+      void fetchEntityTools();
     }
     return () => {
       isCancelled = true;
@@ -84,22 +93,30 @@ export const useToolsDiscovery = ({
   }, [isRunnerApplication, isAsset, savedAssetPath, savedName, showNotification]);
 
   useEffect(() => {
+    let isCancelled = false;
     const fetchTools = async (id: string) => {
       setLoading(true);
-      const res = await getContainerTools(id);
-      if (!res.success) {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-      } else {
-        if (res.response) {
+      try {
+        const res = await getContainerTools(id);
+        if (isCancelled) return;
+        if (!res.success) {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+        } else if (res.response) {
           setTools((res.response as { tools: Tool[] }).tools);
         }
+      } catch (error) {
+        console.error(`Getting container tools error: ${error}`);
+      } finally {
+        if (!isCancelled) setLoading(false);
       }
-      setLoading(false);
     };
 
     if (isMcpToolset && containerId) {
-      fetchTools(containerId).catch((error) => console.error(`Getting container tools error: ${error}`));
+      void fetchTools(containerId);
     }
+    return () => {
+      isCancelled = true;
+    };
   }, [isMcpToolset, containerId, showNotification]);
 
   return { tools, isLoading };

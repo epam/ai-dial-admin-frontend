@@ -2,6 +2,7 @@ import { FC } from 'react';
 
 import { PrimaryButton, Switch } from '@epam/ai-dial-ui-kit';
 import { IconPencilMinus } from '@tabler/icons-react';
+import { isEqual } from 'lodash';
 
 import Search from '@/src/components/Common/Search/Search';
 import { TOOL_FILTERS_CONFIGURATION } from '@/src/components/Tools/constants';
@@ -11,7 +12,6 @@ import { ToolFilter } from '@/src/components/Tools/type';
 import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { isEqual } from 'lodash';
 
 interface Props {
   toolsCount: number;
