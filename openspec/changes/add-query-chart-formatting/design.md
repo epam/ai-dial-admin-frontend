@@ -84,7 +84,7 @@ its keyboard access, which `ChartLegend` already provides.
 
 `buildPieOptions` produces a `pie` series with radius `[0, '70%']`, outside labels with leader lines
 (`labelLine`), and an item tooltip with the value. Slices come from the existing `buildShareFigure`
-bucketing so the top-10-plus-Other rule and the empty-category label are unchanged. The Usage `DonutFigure`
+bucketing so the top-10-plus-Other rule is unchanged; a blank category stays unlabelled. The Usage `DonutFigure`
 stays for the Usage pages and is no longer imported by the Query Builder.
 
 ### 5. Scorecard reuses the dashboard sparkline

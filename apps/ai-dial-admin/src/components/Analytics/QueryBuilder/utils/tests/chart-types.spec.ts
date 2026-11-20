@@ -84,4 +84,21 @@ describe('getQueryChartTypes', () => {
     expect(getQueryChartTypes([{ cost: 1 }, { cost: 2 }], meta)).not.toContain(ChartType.Scorecard);
     expect(getScorecardColumns([{ cost: 'n/a' }], meta)).toEqual([]);
   });
+
+  test('offers only the scorecard for an untranslated one-row run whose columns are all numeric', () => {
+    const meta = { dimensionColumns: ['n'], aggregateColumns: ['n'], mode: QueryMode.Row };
+
+    expect(getQueryChartTypes([{ n: 42 }], meta)).toEqual([ChartType.Scorecard]);
+  });
+
+  test('keeps the category charts for a one-row result that has a category column', () => {
+    const meta = aggregate({ dimensionColumns: ['deployment'], aggregateColumns: ['n'] });
+
+    expect(getQueryChartTypes([{ deployment: 'gpt', n: 42 }], meta)).toEqual([
+      ChartType.Bar,
+      ChartType.Line,
+      ChartType.Pie,
+      ChartType.Scorecard,
+    ]);
+  });
 });

@@ -28,8 +28,11 @@ export const getScorecardColumns = (rows: ResultRows, meta: ChartColumnsMeta): s
   rows.length === 1 ? getStrictNumericColumns(rows, meta.aggregateColumns) : [];
 
 export const getQueryChartTypes = (rows: ResultRows, meta: ChartSplitMeta): ChartType[] => {
+  const scorecardColumns = getScorecardColumns(rows, meta);
+  const hasCategory = meta.dimensionColumns.some((column) => !scorecardColumns.includes(column));
+  if (scorecardColumns.length && !hasCategory) return [ChartType.Scorecard];
   const types = getAvailableChartTypes(rows, meta);
   if (hasChartSplit(meta) && !types.includes(ChartType.Scatter)) types.push(ChartType.Scatter);
-  if (getScorecardColumns(rows, meta).length) types.push(ChartType.Scorecard);
+  if (scorecardColumns.length) types.push(ChartType.Scorecard);
   return types;
 };

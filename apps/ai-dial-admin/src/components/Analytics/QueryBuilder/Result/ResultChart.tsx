@@ -72,14 +72,15 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig, trendSou
     return { x: columnsFor(descriptor.xSource), y: columnsFor(descriptor.ySource) };
   };
 
-  const descriptor = CHART_SLOT_DESCRIPTORS[config.type];
-  const isScorecard = config.type === ChartType.Scorecard;
-  const isPie = config.type === ChartType.Pie;
-  const { x: xOptions, y: yOptions } = slotColumns(config.type);
+  const type = availableTypes.includes(config.type) ? config.type : (availableTypes[0] ?? config.type);
+  const descriptor = CHART_SLOT_DESCRIPTORS[type];
+  const isScorecard = type === ChartType.Scorecard;
+  const isPie = type === ChartType.Pie;
+  const { x: xOptions, y: yOptions } = slotColumns(type);
 
   const xField = isScorecard ? null : (config.xField ?? xOptions[0] ?? null);
   const splitField =
-    isSplitResult && SPLIT_TYPES.includes(config.type) ? resolveChartSplit(meta.dimensionColumns, xField) : null;
+    isSplitResult && SPLIT_TYPES.includes(type) ? resolveChartSplit(meta.dimensionColumns, xField) : null;
   const isMultiY = descriptor.isMultiY && !splitField && yOptions.length > 1;
   const yFields = useMemo(
     () => resolveYFields(config.yFields, yOptions, xField, isMultiY),
@@ -130,14 +131,14 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig, trendSou
       });
       return buildPieOptions(colors, share.slices);
     }
-    return buildChartOptions(config.type, rows, xField, yFields, {
+    return buildChartOptions(type, rows, xField, yFields, {
       colors,
       dimensionColumns: meta.dimensionColumns,
       otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
       columnLabels: meta.columnLabels,
       splitField,
     });
-  }, [isScorecard, isPie, xField, valueField, colors, rows, yFields, config.type, meta, splitField, t]);
+  }, [isScorecard, isPie, xField, valueField, colors, rows, yFields, type, meta, splitField, t]);
 
   const trend = useQuerySparkline({
     query: trendSource?.query ?? null,
@@ -161,7 +162,7 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig, trendSou
       <ChartFormattingPanel
         isOpen={isPanelOpen}
         onToggle={onTogglePanel}
-        type={config.type}
+        type={type}
         types={availableTypes}
         onChangeType={onChangeType}
         slots={slots}

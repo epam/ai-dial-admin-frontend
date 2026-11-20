@@ -38,3 +38,4 @@
 - [x] 7.1 Make `resolveDraftTable` (`SourcePanel/utils/source-panel.ts`) fall back to `dial_usage_log` before the first queryable table, with unit tests for both fallbacks
 - [x] 7.2 Drop the "(no value)" category label from the Query Builder chart, the dashboard widget and `buildShareFigure`, so a blank category stays unlabelled
 - [x] 7.3 Draw the bar/line Y selector as a single-value select in `Result/ResultChart.tsx` when only one aggregate column is available
+- [x] 7.4 Offer only the scorecard for a one-row result with no category column (including an untranslated SQL run whose columns are all numeric), and draw the first offered type when the held type is not offered, in `utils/chart-types.ts` and `Result/ResultChart.tsx`

@@ -203,8 +203,8 @@ exactly one column, and switching to a split from several Y picks SHALL keep the
 
 A split chart SHALL show at most the 10 split values with the largest total of the Y column as series; the
 remaining values SHALL be merged into a single "Other" series. An X value with no row for a series SHALL
-leave a gap in that series rather than a zero. A blank split value SHALL be named with the chart's empty
-category label. The series SHALL be ordered by that total, largest first. The tooltip SHALL be an axis
+leave a gap in that series rather than a zero. A blank split value, like a blank category on any chart, SHALL
+be left unlabelled. The series SHALL be ordered by that total, largest first. The tooltip SHALL be an axis
 tooltip whose header is the hovered X value and which lists every series' value at it.
 
 For scatter, a split SHALL plot the X column as categories and one point per row, coloured by its series;
@@ -223,7 +223,7 @@ without a split, scatter keeps plotting two numeric columns against each other.
 
 #### Scenario: A split chart takes one Y column
 
-- **WHEN** a line chart had two Y columns picked and the result gains a second dimension column
+- **WHEN** a saved line chart stores two Y columns and the result it is opened on has a second dimension column
 - **THEN** the Y selector holds only the first of the two columns and the series come from the second dimension
 
 #### Scenario: A long tail of split values becomes Other
@@ -272,7 +272,9 @@ The scorecard type SHALL be offered when the shown result has exactly one row an
 column whose value is a number. It SHALL show the value column's label, the value as a large number formatted as
 the chart's other numbers are, and beneath it a trend line. Its Data section SHALL offer a Value selector
 only when more than one such column could be shown; otherwise it shows only the chart type. A result of
-one row with no dimension column SHALL be chartable as a scorecard only.
+one row with no dimension column SHALL be chartable as a scorecard only; a SQL run the service cannot
+translate counts as such a result when every column it returns is numeric. When the chart type held by
+the page is not offered for the shown result, the chart SHALL show the first type that is.
 
 The trend line SHALL be drawn from a separate run of the same structured query over the same time range,
 grouped by the time bucket the custom dashboards' single-value widget uses for that range, and SHALL show
@@ -297,6 +299,11 @@ result does.
 
 - **WHEN** the trend run fails
 - **THEN** the scorecard shows the number with no trend line and no notification appears
+
+#### Scenario: A one-row SQL total opens as a scorecard
+
+- **WHEN** a SQL run returns one row whose only column is a number and the user switches to the chart view
+- **THEN** the chart shows a scorecard and the type control offers no other type
 
 #### Scenario: Scorecard is offered only for a single row
 

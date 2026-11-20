@@ -289,6 +289,17 @@ describe('QueryBuilder :: ResultChart', () => {
 
       expect(await offeredTypes(user)).toContain('Scorecard');
     });
+
+    test('shows a one-row result with no category as a scorecard even when the configuration says bar', () => {
+      renderChart({ type: ChartType.Bar, xField: null, yFields: null }, ONE_ROW, {
+        ...ONE_ROW_META,
+        dimensionColumns: ['cost'],
+      });
+
+      expect(screen.getByText('1,754')).toBeInTheDocument();
+      expect(typeSelect()).toHaveAccessibleName(/Scorecard/);
+      expect(screen.queryByRole('combobox', { name: /^QueryBuilder.ChartXAxis/ })).toBeNull();
+    });
   });
 
   describe('formatting panel', () => {
