@@ -99,13 +99,13 @@ describe('buildPieOptions', () => {
     { id: 'writing', label: 'writing', value: 6, isOther: false, valueLabel: '6', shareLabel: null, color: '#222' },
   ];
 
-  test('draws a full pie with outside labels and leader lines', () => {
+  test('draws a full pie with no labels beside it', () => {
     const [series] = buildPieOptions(COLORS, slices).series;
 
     expect(series.type).toBe('pie');
     expect(series.radius[0]).toBe('0%');
-    expect(series.label.show).toBe(true);
-    expect(series.labelLine.show).toBe(true);
+    expect(series.label.show).toBe(false);
+    expect(series.labelLine.show).toBe(false);
     expect(series.data).toEqual([
       { name: 'coding', value: 94, itemStyle: { color: '#111' } },
       { name: 'writing', value: 6, itemStyle: { color: '#222' } },

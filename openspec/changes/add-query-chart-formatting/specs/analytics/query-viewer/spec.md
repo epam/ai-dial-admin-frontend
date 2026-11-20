@@ -12,7 +12,7 @@ When the backend rejects the translation — the SQL view accepts constructs the
 
 For **bar** and **line**, the selectors SHALL be labeled X axis and Y axis: X over the executed query's group-by/bucket columns, Y over its aggregate columns (including the count column when present); defaults SHALL be the first dimension and the first aggregate. The Y selector SHALL accept several aggregate columns when the result has more than one, and SHALL be a single-value select when it has only one; each picked column SHALL render as its own series against the one X axis, in the order picked, each in a distinct colour taken from the shared chart palette. With two or more series the chart SHALL offer a legend naming each series (see "The chart legend follows the chart configuration") and an axis tooltip whose header is the hovered X value and which lists every series' value at it, and bars sharing an X value SHALL stand side by side rather than stack; with one series the chart SHALL look as a single-series chart does, with the Y axis titled by that column and no legend. When the result has a second dimension column, its values SHALL form the series instead (see "A second dimension splits the chart into series"). Removing every Y pick SHALL leave the chart with no valid pick. When every X value is numeric or date-like, the chart SHALL order the points along the X axis by that natural order (chronological/numeric ascending) regardless of the query's row order; mixed or plain-text X values keep row order. Long X-axis labels SHALL be truncated to a fixed label width with the full value available in the tooltip.
 
-For **pie**, the same two selectors SHALL be labeled Slices (group-by/bucket columns) and Value (aggregate columns). The chart SHALL draw a full pie — no hole and no centre total — whose slices are each labelled with their category outside the pie, joined to it by a leader line, with the slice's value in the hover tooltip. It SHALL show at most the top 10 categories by value as slices; any remaining categories SHALL be merged into a single "Other" slice.
+For **pie**, the same two selectors SHALL be labeled Slices (group-by/bucket columns) and Value (aggregate columns). The chart SHALL draw a full pie — no hole and no centre total — with nothing written beside it: each slice is named by the legend, and its category and value are in the hover tooltip. It SHALL show at most the top 10 categories by value as slices; any remaining categories SHALL be merged into a single "Other" slice.
 
 For **scatter**, both selectors SHALL be labeled X axis and Y axis and SHALL offer the result's numeric columns — the group-by/bucket and aggregate columns whose every value is numeric or date-like, each counted once even where a run's dimension and aggregate lists overlap. Each result row (one group) SHALL render as one point, with the row's dimension values available in the point tooltip; scatter SHALL NOT re-order rows. The scatter type SHALL be offered only when the result has at least two numeric columns, or when a second dimension splits it into series (see "A second dimension splits the chart into series"); otherwise it is hidden from the chart-type control.
 
@@ -41,7 +41,7 @@ Each reason the Chart view has nothing to render SHALL have its own hint text na
 #### Scenario: Pie labels its slices
 
 - **WHEN** the user selects the pie type
-- **THEN** the chart draws a full pie with each slice's category written beside it and joined by a leader line
+- **THEN** the chart draws a full pie with no label or leader line beside it, and the legend names each slice
 - **AND** no total is shown in the middle of the chart
 
 #### Scenario: Pie buckets the long tail into Other
@@ -167,7 +167,7 @@ activating it SHALL open the panel, and the chart SHALL take the freed width. Th
 which region it controls and its expanded state. A collapsed panel SHALL remove its controls from the tab
 order. Whether the panel is open SHALL be remembered in the browser across pages and reloads, applied after
 mount so the server render and the first client render agree, and SHALL NOT be part of a saved query. The
-panel SHALL start open.
+panel SHALL start collapsed until the user opens it.
 
 #### Scenario: The panel holds the chart configuration
 
@@ -185,6 +185,11 @@ panel SHALL start open.
 - **WHEN** the user collapses the Chart formatting panel
 - **THEN** the panel becomes a narrow vertical control and the chart takes the freed width
 - **AND** the panel's selectors are no longer reachable with the keyboard
+
+#### Scenario: The panel starts collapsed
+
+- **WHEN** the user opens the chart view in a browser that has never opened the panel
+- **THEN** the panel is collapsed to its rail and the chart takes the full width
 
 #### Scenario: The panel state is remembered
 
@@ -246,10 +251,19 @@ of the chart configuration a saved query stores (see `analytics/saved-queries`);
 the legend SHALL be on and below the chart. The settings SHALL survive later runs and chart-type changes.
 Turning the legend off SHALL NOT hide a series.
 
+A legend above or below the chart SHALL take at most two rows and scroll when it has more entries; a legend
+beside the chart SHALL keep a fixed width and scroll when it is taller than the chart. A long entry SHALL be
+truncated on screen while its accessible name stays the full value.
+
 #### Scenario: The legend moves to the chosen side
 
 - **WHEN** a split line chart is shown and the user sets the legend position to Right
 - **THEN** the legend is drawn to the right of the chart
+
+#### Scenario: A long legend stays compact
+
+- **WHEN** a pie legend below the chart has more entries than fit in two rows
+- **THEN** the legend stays two rows high and scrolls, and the chart keeps the rest of the height
 
 #### Scenario: The legend can be turned off
 

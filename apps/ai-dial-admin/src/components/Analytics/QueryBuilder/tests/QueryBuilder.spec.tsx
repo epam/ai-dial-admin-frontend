@@ -145,6 +145,7 @@ const renderBuilder = (props?: Partial<Parameters<typeof QueryBuilder>[0]>) =>
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
+  localStorage.setItem('query-builder-chart-panel-open', 'true');
 });
 
 describe('QueryBuilder', () => {

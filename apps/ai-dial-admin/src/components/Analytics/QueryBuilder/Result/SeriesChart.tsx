@@ -74,7 +74,9 @@ const SeriesChart: FC<Props> = ({ option, ariaLabel, legendConfig = DEFAULT_CHAR
           pinnedSeriesIndex={pinnedSeriesIndex}
           className={classNames(
             'shrink-0',
-            isSide ? 'w-40 flex-col flex-nowrap items-start self-center overflow-y-auto' : 'justify-center',
+            isSide
+              ? 'w-40 flex-col flex-nowrap items-start self-center overflow-y-auto'
+              : 'max-h-12 justify-center overflow-y-auto [&>li]:max-w-60',
           )}
         />
       )}

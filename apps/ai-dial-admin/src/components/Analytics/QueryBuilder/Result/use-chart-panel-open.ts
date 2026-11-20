@@ -7,10 +7,10 @@ import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storag
 const CHART_PANEL_STORAGE_KEY = 'query-builder-chart-panel-open';
 
 export const useChartPanelOpen = (): [boolean, (isOpen: boolean) => void] => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    setIsOpen(getFromLocalStorage(CHART_PANEL_STORAGE_KEY) !== 'false');
+    setIsOpen(getFromLocalStorage(CHART_PANEL_STORAGE_KEY) === 'true');
   }, []);
 
   const onToggle = useCallback((next: boolean) => {

@@ -49,6 +49,8 @@ const offeredTypes = async (user: ReturnType<typeof userEvent.setup>) => {
 };
 
 describe('QueryBuilder :: ResultChart', () => {
+  beforeEach(() => localStorage.setItem('query-builder-chart-panel-open', 'true'));
+
   test('bar labels the selectors as axes with dimension/aggregate defaults', () => {
     renderChart();
     expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartXAxis/ })).toHaveAccessibleName(
@@ -305,7 +307,15 @@ describe('QueryBuilder :: ResultChart', () => {
   describe('formatting panel', () => {
     beforeEach(() => localStorage.clear());
 
+    test('opens collapsed by default', async () => {
+      renderChart();
+
+      expect(await screen.findByRole('button', { name: 'QueryBuilder.ChartFormattingExpand' })).toBeInTheDocument();
+      expect(screen.queryByRole('combobox', { name: /^QueryBuilder.ChartTypeSwitcher/ })).toBeNull();
+    });
+
     test('collapses to a rail, hides its controls and remembers it', async () => {
+      localStorage.setItem('query-builder-chart-panel-open', 'true');
       const user = userEvent.setup();
       renderChart();
 

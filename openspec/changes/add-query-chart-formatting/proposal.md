@@ -19,7 +19,7 @@ value.
   No control picks the split column; it follows from the result.
 - **Legend** follows the chart's configuration — shown or hidden, at the chosen position — for every chart
   with two or more series and for pie.
-- **Pie** draws a plain pie with labelled slices and leader lines in place of the donut with a centre total.
+- **Pie** draws a plain pie named by its legend, with nothing written beside it, in place of the donut with a centre total. A legend above or below the chart takes at most two rows and scrolls.
 - **Scorecard**, a new chart type: the value's label, the value as a large formatted number, and, where the
   query allows it, a trend line of the same aggregate over the same period bucketed by time. Offered for a
   single-row result with a numeric column.

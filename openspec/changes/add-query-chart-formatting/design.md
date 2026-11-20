@@ -82,8 +82,9 @@ its keyboard access, which `ChartLegend` already provides.
 
 ### 4. Pie moves from `DonutFigure` to an ECharts pie
 
-`buildPieOptions` produces a `pie` series with radius `[0, '70%']`, outside labels with leader lines
-(`labelLine`), and an item tooltip with the value. Slices come from the existing `buildShareFigure`
+`buildPieOptions` produces a `pie` series with radius `[0, '80%']`, no labels or leader lines beside it
+(outside labels for long resource paths overlapped and crowded the pie; the legend names the slices), and
+an item tooltip with the value. Slices come from the existing `buildShareFigure`
 bucketing so the top-10-plus-Other rule is unchanged; a blank category stays unlabelled. The Usage `DonutFigure`
 stays for the Usage pages and is no longer imported by the Query Builder.
 

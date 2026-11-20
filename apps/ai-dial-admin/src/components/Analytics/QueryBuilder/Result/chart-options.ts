@@ -313,10 +313,10 @@ export const buildPieOptions = (colors: ChartColors, slices: DonutSliceView[]): 
   series: [
     {
       type: 'pie',
-      radius: ['0%', '70%'],
+      radius: ['0%', '80%'],
       data: slices.map((slice) => ({ name: slice.label, value: slice.value, itemStyle: { color: slice.color } })),
-      label: { show: true, color: colors.neutral, formatter: '{b}' },
-      labelLine: { show: true, lineStyle: { color: colors.track } },
+      label: { show: false },
+      labelLine: { show: false },
     },
   ],
 });

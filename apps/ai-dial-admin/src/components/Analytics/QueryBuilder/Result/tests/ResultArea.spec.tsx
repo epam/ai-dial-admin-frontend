@@ -3,7 +3,7 @@ import { FC, useState } from 'react';
 import { ColDef, GetRowIdParams, ValueFormatterParams, ValueGetterParams } from 'ag-grid-community';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ResultArea from '@/src/components/Analytics/QueryBuilder/Result/ResultArea';
 import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
@@ -133,6 +133,8 @@ const renderArea = (overrides: Partial<AreaProps> = {}) => {
 };
 
 describe('QueryBuilder :: ResultArea', () => {
+  beforeEach(() => localStorage.setItem('query-builder-chart-panel-open', 'true'));
+
   test('shows the pre-run empty state', () => {
     renderArea();
     expect(screen.getByText('QueryBuilder.ResultsReadyTitle')).toBeInTheDocument();
