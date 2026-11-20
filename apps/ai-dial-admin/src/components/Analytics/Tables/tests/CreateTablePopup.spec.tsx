@@ -7,8 +7,6 @@ import { AnalyticsTablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsTable, AnalyticsTableType, TableWriteMode } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
 const tables: AnalyticsTable[] = [{ name: 'events', type: AnalyticsTableType.Source }];
 
 const setup = (tableType: AnalyticsTableType = AnalyticsTableType.Source) =>

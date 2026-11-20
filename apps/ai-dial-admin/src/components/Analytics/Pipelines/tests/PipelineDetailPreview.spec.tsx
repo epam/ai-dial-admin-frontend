@@ -18,8 +18,6 @@ import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
 const backfillSidebar = vi.hoisted(() => ({ showSidebar: vi.fn(), closeSidebar: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
-
 const context = { analyticsEnabled: true, isFullAdmin: true };
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({

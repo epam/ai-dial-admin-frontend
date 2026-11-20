@@ -22,10 +22,6 @@ vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({ resourcesDefaults: {} }),
 }));
 
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ isValid: true }),
-}));
-
 vi.mock('@/src/utils/deployments/containers', () => ({
   getContainerTemplate: () => ({}),
 }));

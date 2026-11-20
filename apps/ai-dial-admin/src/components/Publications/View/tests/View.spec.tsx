@@ -7,13 +7,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import PublicationView from '../View';
 
 // Mock all dependencies
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    refresh: vi.fn(),
-  }),
-}));
-
 vi.mock('@/src/hooks/use-protected-request', () => ({
   useProtectedRequest: () => vi.fn((fn, ...args) => fn(...args)),
 }));

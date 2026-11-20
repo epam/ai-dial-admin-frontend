@@ -18,8 +18,6 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { SessionsRole, SessionsSourceSetting } from '@/src/models/analytics/sessions-source';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 vi.mock('@/src/app/[lang]/system-properties/actions');
 
 vi.mock('@/src/components/EntityView/Interceptors/GlobalInterceptors', () => ({

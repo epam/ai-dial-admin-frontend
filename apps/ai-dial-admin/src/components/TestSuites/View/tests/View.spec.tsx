@@ -3,6 +3,7 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
+import { navigationMock } from '@/test-mocks/navigation';
 import TestSuiteView from '../View';
 
 // Mock the actions
@@ -34,16 +35,7 @@ vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   updateTestCases: vi.fn(),
 }));
 
-// Mock next/navigation
-const mockRefresh = vi.fn();
-const mockRouter = {
-  refresh: mockRefresh,
-  push: vi.fn(),
-  replace: vi.fn(),
-  back: vi.fn(),
-  forward: vi.fn(),
-  prefetch: vi.fn(),
-};
+const { refresh: mockRefresh } = navigationMock.router;
 
 const mockCloseSidebar = vi.fn();
 const mockToggleSidebar = vi.fn();
@@ -63,11 +55,6 @@ vi.mock('@/src/context/AppContext', () => ({
     sidebar: mockSidebar,
     toggleSidebar: mockToggleSidebar,
   }),
-}));
-
-vi.mock('next/navigation', () => ({
-  useRouter: () => mockRouter,
-  usePathname: vi.fn(() => '/test-suites/123'),
 }));
 
 // Mock the child components
@@ -144,6 +131,7 @@ describe('TestSuiteView', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    navigationMock.setPathname('/test-suites/123');
   });
 
   test('renders TestSuiteView with initial state', () => {

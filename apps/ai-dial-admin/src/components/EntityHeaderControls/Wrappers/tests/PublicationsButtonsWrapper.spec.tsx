@@ -88,8 +88,6 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
 }));
 
 const push = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: vi.fn() }));
-
 const basePublication = (action: ActionType, folderId = 'public/'): Publication => ({
   path: 'publications/public/request-path',
   requestName: 'my-request',

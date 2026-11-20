@@ -1,15 +1,17 @@
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getFromLocalStorage, setToLocalStorage } from '../local-storage';
 
 describe('Utils :: Local Storage settings and getters', () => {
-  global.localStorage = {
-    getItem: () => 'ls-value',
-    setItem: vi.fn(),
-    clear: vi.fn(),
-    removeItem: vi.fn(),
-    key: vi.fn(),
-    length: 0,
-  };
+  beforeEach(() => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => 'ls-value',
+      setItem: vi.fn(),
+      clear: vi.fn(),
+      removeItem: vi.fn(),
+      key: vi.fn(),
+      length: 0,
+    });
+  });
 
   test('Should check empty key', () => {
     const res = getFromLocalStorage();

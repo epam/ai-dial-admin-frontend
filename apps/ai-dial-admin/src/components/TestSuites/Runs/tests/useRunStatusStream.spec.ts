@@ -41,8 +41,6 @@ class MockEventSource {
   }
 }
 
-vi.stubGlobal('EventSource', MockEventSource);
-
 const createGridApi = (rows: Run[]) => {
   const nodes = rows.map((row) => {
     const node = {
@@ -70,6 +68,7 @@ describe('useRunStatusStream', () => {
   beforeEach(() => {
     getRunsQueryMock.mockReset();
     MockEventSource.instances = [];
+    vi.stubGlobal('EventSource', MockEventSource);
   });
 
   test('opens the status stream with the given test suite id', () => {

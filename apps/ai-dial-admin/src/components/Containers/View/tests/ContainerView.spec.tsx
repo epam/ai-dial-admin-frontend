@@ -41,8 +41,6 @@ class MockEventSource {
   }
 }
 
-vi.stubGlobal('EventSource', MockEventSource);
-
 vi.mock('@/src/app/actions/deployments', () => ({
   getContainer: vi.fn().mockResolvedValue({ success: true, response: undefined }),
   getContainerPods: vi.fn().mockResolvedValue([]),
@@ -85,6 +83,7 @@ describe('ContainerView events SSE', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     MockEventSource.instances = [];
+    vi.stubGlobal('EventSource', MockEventSource);
   });
 
   test('opens EventSource with the container name in the URL', () => {

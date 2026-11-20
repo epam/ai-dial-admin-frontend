@@ -1,3 +1,4 @@
+import { navigationMock } from '@/test-mocks/navigation';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -37,9 +38,7 @@ vi.mock('../TabsContent', () => ({
   ),
 }));
 
-const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
-
+const { refresh } = navigationMock.router;
 const plugin = (): DialPluginResource =>
   ({
     type: 'forward',
