@@ -255,6 +255,8 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
             type={type}
             translator={value.translator}
             translators={translators || []}
+            plugins={plugins}
+            isPluginEnabled={isPluginEnabled}
             disabled={disabled}
             onChange={onChangeTranslator}
           />

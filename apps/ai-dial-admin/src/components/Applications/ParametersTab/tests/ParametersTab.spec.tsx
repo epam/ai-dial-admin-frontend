@@ -1,5 +1,6 @@
 import { appContextMock } from '@/test-mocks/app-context';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import ParametersTab from '../ParametersTab';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
@@ -25,6 +26,33 @@ vi.mock('@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer', () => ({
   __esModule: true,
   default: ({ data }: { data: Record<string, string> }) => <div>{data.model}</div>,
 }));
+
+vi.mock('@/src/components/Applications/ParametersTab/TableView', async () => {
+  const { default: StringEditorInput } = await import('@/src/components/Common/StringEditorInput/StringEditorInput');
+  return {
+    default: ({
+      applicationProperties,
+      onChangeProperties,
+      disabled,
+    }: {
+      applicationProperties: Record<string, unknown>;
+      onChangeProperties: (properties: Record<string, unknown>) => void;
+      disabled?: boolean;
+    }) => {
+      const entries = Object.entries(applicationProperties);
+      if (!entries.length) return <div>{BasicI18nKey.NoParameters}</div>;
+      return entries.map(([key, value]) => (
+        <StringEditorInput
+          key={key}
+          label={key}
+          value={String(value)}
+          disabled={disabled}
+          onChangeValue={(next) => onChangeProperties({ ...applicationProperties, [key]: next })}
+        />
+      ));
+    },
+  };
+});
 
 vi.mock('@/src/components/FrameRenderer/FrameRenderer', () => ({
   __esModule: true,
@@ -116,6 +144,28 @@ describe('Applications - ApplicationParametersTab', () => {
 
     await vi.waitFor(() => expect(getRunner).toHaveBeenCalledWith('http%3A%2F%2Fasdqwe', '*'));
     await vi.waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://asdqwe/edited'));
+  });
+});
+
+describe('ParametersTab — property maps', () => {
+  test.each([
+    [ApplicationRoute.Applications, 'applicationProperties'],
+    [ApplicationRoute.AssetsApplications, 'application_properties'],
+  ])('updates the %s draft using %s', async (view, propertyField) => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const application = { name: 'app', [propertyField]: { prompt: 'initial', other: 'untouched' } };
+    render(<ParametersTab application={application} view={view} onChange={onChange} />);
+
+    await user.click(await screen.findByRole('button', { name: `${ButtonsI18nKey.Open} prompt` }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'prompt' }), {
+      target: { value: '  first\nsecond\n' },
+    });
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Apply }));
+    expect(onChange).toHaveBeenLastCalledWith({
+      ...application,
+      [propertyField]: { prompt: '  first\nsecond\n', other: 'untouched' },
+    });
   });
 });
 

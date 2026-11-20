@@ -31,11 +31,15 @@ describe('BaseUrlControl', () => {
     render(<Controlled onChange={onChange} />);
     expect(screen.getByRole('radiogroup', { name: 'Base URL' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: BasicI18nKey.URL })).toBeChecked();
-    expect(screen.getByRole('textbox', { name: BasicI18nKey.URL })).toBeInTheDocument();
+    const urlInput = screen.getByRole('textbox', { name: BasicI18nKey.URL }) as HTMLInputElement;
+    expect(urlInput).toBeInTheDocument();
+    expect(urlInput.labels?.[0]).toHaveClass('sr-only');
     await user.click(screen.getByRole('radio', { name: BasicI18nKey.Plugin }));
     expect(screen.getByRole('radio', { name: BasicI18nKey.Plugin })).toBeChecked();
     expect(onChange).toHaveBeenCalledWith(undefined);
-    expect(screen.getByRole('combobox', { name: BasicI18nKey.Plugin })).toBeInTheDocument();
+    const pluginSelect = screen.getByRole('combobox', { name: BasicI18nKey.Plugin }) as HTMLInputElement;
+    expect(pluginSelect).toBeInTheDocument();
+    expect(pluginSelect.labels?.[0]).toHaveClass('sr-only');
   });
 
   test('allows switching source with the keyboard', async () => {

@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
-import { PluginI18nKey } from '@/src/constants/i18n';
+import { EntityPlaceholdersI18nKey, PluginI18nKey } from '@/src/constants/i18n';
 import { DialPluginResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { saveValidationMock } from '@/test-mocks/save-validation';
@@ -54,6 +54,10 @@ describe('Plugin asset :: create form', () => {
     renderCreateForm(vi.fn());
 
     expect(screen.getAllByRole('textbox')).toHaveLength(2);
+    expect(screen.getByRole('textbox', { name: `${PluginI18nKey.Type}(required)` })).toHaveAttribute(
+      'placeholder',
+      EntityPlaceholdersI18nKey.Type,
+    );
   });
 
   test('writes the entered type and marks it valid', () => {

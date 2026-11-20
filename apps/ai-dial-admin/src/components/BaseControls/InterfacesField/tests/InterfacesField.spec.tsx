@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 const { dispatch: saveValidationDispatch } = saveValidationMock;
 
+import { hasInvalidCustomTranslatorUrl } from '@/src/components/BaseControls/InterfacesField/utils';
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import { BaseUrlInterfaceValue } from '@/src/components/BaseControls/InterfacesField/models';
 import { BasicI18nKey, EntityFieldsI18nKey, ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
@@ -16,6 +17,36 @@ import {
   InterfaceMode,
   TranslatorReference,
 } from '@/src/models/dial/interfaces';
+
+describe('hasInvalidCustomTranslatorUrl', () => {
+  const t = (key: string) => key;
+  const out = DeploymentInterfaceType.OpenAIResponses;
+
+  test.each([
+    { baseUrl: '', isInvalid: false },
+    { baseUrl: 'https://example.com', isInvalid: false },
+    { baseUrl: 'dial-plugin://example', isInvalid: false },
+    { baseUrl: 'dial-plugin://', isInvalid: true },
+    { baseUrl: 'invalid', isInvalid: true },
+  ])('validates the optional inline URL $baseUrl', ({ baseUrl, isInvalid }) => {
+    expect(
+      hasInvalidCustomTranslatorUrl({ chat: { mode: InterfaceMode.Translator, translator: { baseUrl, out } } }, t),
+    ).toBe(isInvalid);
+  });
+
+  test('ignores absent, named and passthrough translators', () => {
+    expect(hasInvalidCustomTranslatorUrl(undefined, t)).toBe(false);
+    expect(hasInvalidCustomTranslatorUrl({ chat: { mode: InterfaceMode.Translator, translator: 'name' } }, t)).toBe(
+      false,
+    );
+    expect(
+      hasInvalidCustomTranslatorUrl(
+        { chat: { mode: InterfaceMode.Passthrough, translator: { baseUrl: 'invalid', out } } },
+        t,
+      ),
+    ).toBe(false);
+  });
+});
 
 type InterfaceValue = {
   baseUrl?: string;
@@ -33,9 +64,11 @@ const ControlledInterfacesField = ({ initialInterfaces }: { initialInterfaces: R
 const ControlledAssetInterfacesField = ({
   initialInterfaces,
   translators = [],
+  plugins,
 }: {
   initialInterfaces: Record<string, InterfaceValue>;
   translators?: { name: string }[];
+  plugins?: { options: string[] };
 }) => {
   const [interfaces, setInterfaces] = useState(initialInterfaces);
   return (
@@ -44,6 +77,7 @@ const ControlledAssetInterfacesField = ({
       onChangeInterfaces={setInterfaces}
       allowedTypes={SINGLE_TYPE}
       translators={translators as any}
+      plugins={plugins}
       isAsset
     />
   );
@@ -642,6 +676,66 @@ describe('InterfacesField — asset surfaces: mode & translator', () => {
     await user.type(screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.baseUrl}`) }), 'x');
 
     expect(screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.baseUrl}`) })).toHaveValue('x');
+  });
+
+  test('selects a plugin for a custom translator when plugins are enabled', async () => {
+    const user = userEvent.setup();
+    const type = DeploymentInterfaceType.OpenAIChatCompletions;
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{
+          [type]: {
+            mode: InterfaceMode.Translator,
+            translator: { baseUrl: '', out: DeploymentInterfaceType.OpenAIResponses },
+          },
+        }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        plugins={{ options: ['example'] }}
+        isAsset
+        isPluginEnabled
+      />,
+    );
+
+    await user.click(screen.getByRole('radio', { name: BasicI18nKey.Plugin }));
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [type]: {
+        mode: InterfaceMode.Translator,
+        translator: { baseUrl: '', out: DeploymentInterfaceType.OpenAIResponses },
+      },
+    });
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: BasicI18nKey.SelectPlugin }),
+      'dial-plugin://example',
+    );
+    expect(onChangeInterfaces).toHaveBeenLastCalledWith({
+      [type]: {
+        mode: InterfaceMode.Translator,
+        translator: { baseUrl: 'dial-plugin://example', out: DeploymentInterfaceType.OpenAIResponses },
+      },
+    });
+  });
+
+  test('keeps the URL-only translator control when plugins are disabled even if options are supplied', () => {
+    const type = DeploymentInterfaceType.OpenAIChatCompletions;
+    render(
+      <InterfacesField
+        interfaces={{
+          [type]: {
+            mode: InterfaceMode.Translator,
+            translator: { baseUrl: '', out: DeploymentInterfaceType.OpenAIResponses },
+          },
+        }}
+        onChangeInterfaces={vi.fn()}
+        allowedTypes={SINGLE_TYPE}
+        plugins={{ options: ['example'] }}
+        isAsset
+      />,
+    );
+
+    expect(screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.baseUrl}`) })).toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: BasicI18nKey.Plugin })).not.toBeInTheDocument();
   });
 
   test('renders a default headers editor and Defaults/Features buttons for an asset interface', () => {

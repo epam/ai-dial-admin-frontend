@@ -143,9 +143,8 @@ const TableView: FC<Props> = ({
   );
 
   const onChangeParam = useCallback(
-    (value: string, data: ApplicationPropertyRow, _field: string, index?: number) => {
-      const allKeys = [...schemePropsRef.current.map((s) => s.key), ...orderedRowsRef.current.map((r) => r.key)];
-      const key = allKeys[index as number];
+    (value: string, data: ApplicationPropertyRow) => {
+      const key = data.key;
       if (!key) return;
 
       const props = { ...appPropsRef.current };
