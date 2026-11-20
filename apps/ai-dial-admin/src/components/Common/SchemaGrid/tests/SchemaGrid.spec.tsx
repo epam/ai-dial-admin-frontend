@@ -1,3 +1,4 @@
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -10,15 +11,8 @@ import { CATALOG_SCHEMA_META_COLUMNS } from '../constants';
 import { SchemaFieldRow, jsonSchemaToFields } from '../utils';
 import SchemaGrid from '../SchemaGrid';
 
-const dispatch = vi.fn();
+const { dispatch } = saveValidationMock;
 const gridUpdates = vi.fn<(options: GridOptions<SchemaFieldRow>) => void>();
-
-// The global mock in `test-setup.tsx` hands out a fresh `vi.fn()` per call, so the dispatch a
-// component made is unobservable through it — this spec needs its own.
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ isValid: true, dispatch, resetCounter: 0 }),
-  ValidationActionType: { SetField: 'SET_FIELD_VALIDATION', RemoveField: 'REMOVE_FIELD_VALIDATION' },
-}));
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ onGridReady }: { onGridReady: (event: GridReadyEvent) => void }) => {

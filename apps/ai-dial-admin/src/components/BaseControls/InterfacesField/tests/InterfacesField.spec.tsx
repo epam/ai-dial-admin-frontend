@@ -1,18 +1,11 @@
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import { useState } from 'react';
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-const { saveValidationDispatch } = vi.hoisted(() => ({ saveValidationDispatch: vi.fn() }));
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ dispatch: saveValidationDispatch, resetCounter: 0 }),
-  ValidationActionType: {
-    SetField: 'SET_FIELD_VALIDATION',
-    RemoveField: 'REMOVE_FIELD_VALIDATION',
-  },
-}));
+const { dispatch: saveValidationDispatch } = saveValidationMock;
 
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import { BaseUrlInterfaceValue } from '@/src/components/BaseControls/InterfacesField/models';

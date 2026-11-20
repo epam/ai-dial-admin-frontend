@@ -41,8 +41,6 @@ class MockEventSource {
   }
 }
 
-vi.stubGlobal('EventSource', MockEventSource);
-
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   NoDataContent: ({ title }: any) => <div role="status">{title}</div>,
   Tooltip: ({ tooltip, children }: any) => (
@@ -87,6 +85,7 @@ describe('PodView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     MockEventSource.instances = [];
+    vi.stubGlobal('EventSource', MockEventSource);
   });
 
   test('shows no-data placeholder when there are no logs', () => {

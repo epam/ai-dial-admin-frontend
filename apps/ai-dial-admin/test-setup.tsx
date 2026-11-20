@@ -5,9 +5,10 @@
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup, configure } from '@testing-library/react';
-import { ReactNode, useId } from 'react';
-import { afterEach, vi } from 'vitest';
+import { ReactNode } from 'react';
+import { afterEach, beforeEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import { EditorMockProps } from './test-models';
 
 // `findBy*` / `waitFor` default to 1 s, which a loaded runner misses on tests that mount a grid.
@@ -204,36 +205,9 @@ vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => appContextValue,
 }));
 
-vi.mock('@/src/context/SaveValidationContext', () => {
-  const dispatch = vi.fn();
-  const errorFields = new Map<string, boolean>();
-  return {
-    SaveValidationContextProvider: ({ children }: { children: ReactNode }) => children,
-    useSaveValidationContext: () => ({
-      isValid: true,
-      dispatch,
-      jsonErrors: [],
-      jsonErrorNotifications: [],
-      resetCounter: 0,
-      errorFields,
-    }),
-    useJsonEditorValidation: () => {
-      const editorId = useId();
-      return {
-        editorId,
-        setJsonErrors: (errors: unknown[]) => dispatch({ type: 'SET_JSON_EDITOR_VALIDATION', editorId, errors }),
-        removeEditor: () => dispatch({ type: 'REMOVE_JSON_EDITOR_VALIDATION', editorId }),
-      };
-    },
-    ValidationActionType: {
-      SetField: 'SET_FIELD_VALIDATION',
-      RemoveField: 'REMOVE_FIELD_VALIDATION',
-      SetJsonEditor: 'SET_JSON_EDITOR_VALIDATION',
-      RemoveJsonEditor: 'REMOVE_JSON_EDITOR_VALIDATION',
-      SetJsonEditorNotifications: 'SET_JSON_EDITOR_NOTIFICATIONS',
-      Reset: 'RESET',
-    },
-  };
+vi.mock('@/src/context/SaveValidationContext', async (importOriginal) => {
+  const { createSaveValidationModule } = await import('@/test-mocks/save-validation');
+  return createSaveValidationModule(await importOriginal());
 });
 
 // ------------------ Next Image ------------------
@@ -372,5 +346,16 @@ vi.mock('@epam/ai-dial-visualizer-connector', () => ({
   },
 }));
 
+// ------------------ Reset mock controllers before each test ------------------
+beforeEach(() => {
+  saveValidationMock.reset();
+});
+
 // ------------------ Cleanup after each test ------------------
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  vi.useRealTimers();
+});

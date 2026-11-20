@@ -37,7 +37,8 @@ export default defineConfig(() => ({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './test-setup.tsx',
+    isolate: false,
+    setupFiles: ['./test-reset.ts', './test-setup.tsx'],
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: [...configDefaults.exclude, '**/.next/**', '*.config.{ts,js}'],
     reporters: [new InlineReporter(), ...ciReporters],
