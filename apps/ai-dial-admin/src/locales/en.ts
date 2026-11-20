@@ -1898,6 +1898,7 @@ export default {
   },
   Toolset: {
     Tools: 'Tools',
+    SearchingTools: 'Searching tools…',
     AddTools: 'Add tools',
     UseAllTools: 'Use all available tools',
     AddedManually: 'Added manually',
@@ -1918,6 +1919,7 @@ export default {
     ResourceCaption:
       'Optional. Sent as the OAuth resource indicator (RFC 8707). When empty, the value published by the MCP server is used, if any.',
     ToolsWarning: 'Endpoint has been changed. Save changes to display auto-detected tools.',
+    SavedApplicationToolsWarning: 'Tools reflect the saved application. Save changes to update the list.',
     ApiKey: 'API Key',
     OAuth: 'OAuth',
     NoneAuth: 'Without authentication',

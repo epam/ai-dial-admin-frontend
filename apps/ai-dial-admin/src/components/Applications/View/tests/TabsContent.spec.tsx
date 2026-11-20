@@ -2,6 +2,10 @@ import { render, screen } from '@testing-library/react';
 import { useEffect, useRef } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
+import * as applicationActions from '@/src/app/[lang]/applications/actions';
+import * as assetApplicationActions from '@/src/app/[lang]/assets-applications/actions';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -72,6 +76,57 @@ const baseProps = {
   isEditorEnabled: false,
   onChangeApplication: vi.fn(),
 };
+
+describe('TabsContent — runner application tools', () => {
+  test('uses read-only tools for a schema source even when no runner matches', async () => {
+    const getAllowedTools = vi.spyOn(applicationActions, 'getAllowedTools').mockResolvedValue({
+      success: true,
+      response: { tools: [{ name: 'weather' }] },
+    });
+    const application: DialApplication = {
+      name: 'assistant',
+      source: { $type: SOURCE_TYPE.SCHEMA, applicationTypeSchemaId: 'runner' },
+    };
+    render(
+      <TabsContent
+        {...baseProps}
+        activeTab={EntityViewTab.Tools}
+        view={ApplicationRoute.Applications}
+        selectedApplication={application}
+        originalApplication={application}
+      />,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'weather' })).toBeInTheDocument();
+    expect(screen.queryByText(ToolsetI18nKey.UseAllTools)).not.toBeInTheDocument();
+    expect(getAllowedTools).toHaveBeenCalledWith('assistant');
+  });
+
+  test('recognizes the schema id on an asset application without a matched runner', async () => {
+    const getAllowedTools = vi.spyOn(assetApplicationActions, 'getAssetAllowedTools').mockResolvedValue({
+      success: true,
+      response: { tools: [{ name: 'weather' }] },
+    });
+    const application = {
+      name: 'assistant',
+      application_type_schema_id: 'runner',
+      _metadata: { path: 'public/assistant__1' },
+    } as unknown as DialApplication;
+    render(
+      <TabsContent
+        {...baseProps}
+        activeTab={EntityViewTab.Tools}
+        view={ApplicationRoute.AssetsApplications}
+        selectedApplication={application}
+        originalApplication={application}
+      />,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'weather' })).toBeInTheDocument();
+    expect(screen.queryByText(ToolsetI18nKey.UseAllTools)).not.toBeInTheDocument();
+    expect(getAllowedTools).toHaveBeenCalledWith('public/assistant__1');
+  });
+});
 
 describe('TabsContent — Roles tab', () => {
   test('renders AssetRoles for the AssetsApplications view, presenting `user_roles` as `userRoles`', () => {
