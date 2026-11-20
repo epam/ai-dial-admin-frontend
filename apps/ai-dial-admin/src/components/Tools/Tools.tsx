@@ -1,54 +1,28 @@
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
-import {
-  NotificationVariant,
-  Notification,
-  NotificationType,
-  Spinner,
-  NoDataContent,
-  PrimaryButton,
-  Switch,
-} from '@epam/ai-dial-ui-kit';
-import { isEqual } from 'lodash';
+import { Spinner } from '@epam/ai-dial-ui-kit';
 
-import { getTools } from '@/src/app/[lang]/applications/actions';
-import { getAssetTools } from '@/src/app/[lang]/assets-applications/actions';
-import { getAssetTools as getAssetToolsetTools } from '@/src/app/[lang]/assets-toolsets/actions';
-import { getTools as getToolsetTools } from '@/src/app/[lang]/toolsets/actions';
-import { getContainerTools } from '@/src/app/actions/deployments';
-import Search from '@/src/components/Common/Search/Search';
-import ToolsFilter from '@/src/components/Tools/Filter/ToolsFilter';
-import { ToolFilter } from '@/src/components/Tools/type';
-import { getAllTools, getFilteredTools } from '@/src/components/Tools/utils';
-import { ButtonsI18nKey, EntitiesI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import ManageToolsModal from '@/src/components/Tools/ManageToolsModal/ManageToolsModal';
+import { ToolsEntity } from '@/src/components/Tools/models';
+import ToolsNotifications from '@/src/components/Tools/ToolsNotifications';
+import ToolsResults from '@/src/components/Tools/ToolsResults';
+import ToolsToolbar from '@/src/components/Tools/ToolsToolbar';
+import { useToolsDiscovery } from '@/src/components/Tools/use-tools-discovery';
+import { useToolsDisplay } from '@/src/components/Tools/use-tools-display';
+import { getToolsContext } from '@/src/components/Tools/utils';
 import { useAppContext } from '@/src/context/AppContext';
-import { useNotification } from '@/src/context/NotificationContext';
-import { useI18n } from '@/src/locales/client';
-import { ApplicationMCPContainer, DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { AssetToolset } from '@/src/models/dial/deployment-asset';
-import { DialToolsetResource } from '@/src/models/dial/resource';
-import { Tool, Toolset } from '@/src/models/dial/toolset';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getErrorNotification } from '@/src/utils/notification';
-import { IconPencilMinus } from '@tabler/icons-react';
-import ManageToolsModal from './ManageToolsModal/ManageToolsModal';
-import ToolComponent from './Tool/Tool';
-
-const filtersConfiguration = [ToolFilter.AutoDetected, ToolFilter.AddedManually];
 
 interface Props {
   view?: ApplicationRoute;
   containerId?: string;
-  /**
-   * `DialToolsetResource` is named explicitly because the publications surface passes one: it types
-   * its display fields as `LocalizedText`, so it is no longer structurally a `Toolset`. Nothing here
-   * reads those fields — only `endpoint`, `name`, `path` and the allowed-tools list.
-   */
-  originalEntity?: Toolset | DialApplication | DialToolsetResource;
-  selectedEntity?: Toolset | DialApplication | DialToolsetResource;
+  originalEntity?: ToolsEntity;
+  selectedEntity?: ToolsEntity;
   isAsset?: boolean;
   isMcpToolset?: boolean;
+  isRunnerApplication?: boolean;
   disabled?: boolean;
   onChangeEntity?: (toolset: Toolset | DialApplication) => void;
   appRunner?: DialApplicationScheme;
@@ -61,308 +35,105 @@ const Tools: FC<Props> = ({
   selectedEntity,
   isAsset,
   isMcpToolset,
+  isRunnerApplication,
   disabled,
   onChangeEntity,
   appRunner,
 }) => {
-  const t = useI18n();
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
-  const { showNotification } = useNotification();
   const { sidebar } = useAppContext();
-  const [useAllTools, setUseAllTools] = useState(false);
-
-  const [loading, setLoading] = useState<boolean>(false);
-  const [tools, setTools] = useState<Tool[] | null>(null);
-  const [displayTools, setDisplayTools] = useState<Tool[] | null>(null);
-  const [search, setSearch] = useState<string>('');
-  const [selectedFilters, setSelectedFilters] = useState(filtersConfiguration);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const { isApplicationTools, isAssetToolset, isAssetApplication, isManagementVisible, toolSetName } = getToolsContext({
+    view,
+    originalEntity,
+    selectedEntity,
+    isAsset,
+    isMcpToolset,
+    isRunnerApplication,
+    disabled,
+    appRunner,
+  });
 
-  const showManagementButtons = useMemo(
-    () => !disabled && !isMcpToolset && !appRunner,
-    [disabled, isMcpToolset, appRunner],
-  );
+  const { tools, isLoading } = useToolsDiscovery({
+    originalEntity,
+    selectedEntity,
+    isRunnerApplication,
+    isAsset,
+    isMcpToolset,
+    isApplicationTools,
+    containerId,
+  });
+  const {
+    visibleTools,
+    search,
+    setSearch,
+    selectedFilters,
+    useAllTools,
+    onSelectAll,
+    onSelectFilter,
+    onUseAllToolsSwitch,
+  } = useToolsDisplay({
+    originalEntity,
+    selectedEntity,
+    tools,
+    isApplicationTools,
+    isAssetToolset,
+    isMcpToolset,
+    isRunnerApplication,
+    appRunner,
+    onChangeEntity,
+  });
 
-  const runnerTools = useMemo(() => {
-    if (!appRunner) return [];
-    return appRunner['dial:applicationTypeMcp']?.['dial:allowedTools'] || [];
-  }, [appRunner]);
-
-  const isNotSavedToolset = useMemo(() => {
-    return originalEntity?.endpoint !== selectedEntity?.endpoint;
-  }, [originalEntity, selectedEntity]);
-
-  const isApplicationTools = useMemo(() => {
-    return view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications;
-  }, [view]);
-
-  const isAssetToolset = useMemo(() => !!isAsset && !isApplicationTools, [isAsset, isApplicationTools]);
-
-  const getEntityAllowedTools = useCallback(
-    (entity?: Toolset | DialApplication | DialToolsetResource): string[] | undefined => {
-      if (isApplicationTools) {
-        return (entity as DialApplication)?.mcp?.allowedTools;
-      }
-      if (isAssetToolset) {
-        return (entity as unknown as DialToolsetResource)?.allowed_tools;
-      }
-      return (entity as Toolset)?.allowedTools;
-    },
-    [isApplicationTools, isAssetToolset],
-  );
-
-  const manualAddedTools = useMemo(() => {
-    const allowed = getEntityAllowedTools(selectedEntity) || [];
-    return allowed.reduce((acc, curr) => {
-      if (!tools?.some((tool) => tool.name === curr) && curr !== '') {
-        acc.push({
-          name: curr,
-        });
-      }
-      return acc;
-    }, [] as Tool[]);
-  }, [getEntityAllowedTools, selectedEntity, tools]);
-
-  const onSelectAll = useCallback(() => {
-    if (isEqual(filtersConfiguration, selectedFilters)) {
-      setSelectedFilters([]);
-    } else {
-      setSelectedFilters(filtersConfiguration);
-    }
-  }, [selectedFilters]);
-
-  const onSelectFilter = useCallback(
-    (value: boolean | undefined, filter: ToolFilter) => {
-      if (value) {
-        setSelectedFilters((prev) => [...prev, filter]);
-      } else {
-        setSelectedFilters((prev) => prev.filter((f) => f !== filter));
-      }
-    },
-    [setSelectedFilters],
-  );
-
-  const onOpenModal = useCallback(() => {
-    setIsModalOpen(true);
-  }, [setIsModalOpen]);
-
-  const onCloseModal = useCallback(() => {
-    setIsModalOpen(false);
-  }, [setIsModalOpen]);
-
-  const onUseAllToolsSwitch = useCallback(
-    (value: boolean) => {
-      setUseAllTools(value);
-      if (isApplicationTools) {
-        onChangeEntity?.({
-          ...(selectedEntity as DialApplication),
-          mcp: {
-            ...((selectedEntity as DialApplication)?.mcp || {}),
-            allowedTools: [],
-          } as ApplicationMCPContainer,
-        });
-      } else if (isAssetToolset) {
-        onChangeEntity?.({
-          ...(selectedEntity as Toolset),
-          allowed_tools: [],
-        } as unknown as Toolset);
-      } else {
-        onChangeEntity?.({
-          ...(selectedEntity as Toolset),
-          allowedTools: [],
-        });
-      }
-    },
-    [isApplicationTools, isAssetToolset, onChangeEntity, selectedEntity],
-  );
+  const onOpenModal = useCallback(() => setIsModalOpen(true), []);
+  const onCloseModal = useCallback(() => setIsModalOpen(false), []);
 
   useEffect(() => {
-    if (selectedEntity?.name && !isMcpToolset) {
-      let getFunction;
-      if (isApplicationTools) {
-        getFunction = isAsset ? getAssetTools : getTools;
-      } else {
-        getFunction = isAsset ? getAssetToolsetTools : getToolsetTools;
-      }
-      const path = (isAsset ? (selectedEntity as AssetToolset)._metadata?.path : selectedEntity?.name) as string;
-      setLoading(true);
-      getFunction(path).then((res) => {
-        if (res.success) {
-          setTools((res.response as { tools: Tool[] }).tools || []);
-        } else {
-          setTools([]);
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-        }
-        setLoading(false);
-      });
-    }
-  }, [isApplicationTools, isAsset, isMcpToolset, selectedEntity, showNotification]);
-
-  useEffect(() => {
-    const fetchTools = async (id: string) => {
-      setLoading(true);
-      const res = await getContainerTools(id);
-      if (!res.success) {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-      } else {
-        if (res.response) {
-          setTools((res.response as { tools: Tool[] }).tools);
-        }
-      }
-      setLoading(false);
-    };
-
-    if (isMcpToolset && containerId) {
-      fetchTools(containerId).catch((error) => console.error(`Getting container tools error: ${error}`));
-    }
-  }, [isMcpToolset, containerId, showNotification]);
-
-  useEffect(() => {
-    if (!tools?.length && !manualAddedTools?.length) {
-      setDisplayTools([]);
-      return;
-    }
-
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current);
-    }
-
-    debounceTimeout.current = setTimeout(() => {
-      const allTools = [...(tools || []), ...manualAddedTools];
-      const allowedTools = getEntityAllowedTools(selectedEntity)?.filter((toolName) => toolName !== '') || [];
-      const allToolNames = allTools.map((tool) => tool.name);
-      const filteredTools = getAllTools(useAllTools, allToolNames, !!appRunner, runnerTools, allowedTools);
-
-      if (search.length) {
-        const searchText = search.toLowerCase().trim();
-
-        setDisplayTools(
-          isMcpToolset
-            ? allTools.filter(
-                (tool) =>
-                  tool.name.toLowerCase().includes(searchText) ||
-                  tool.description?.toLowerCase().includes(searchText) ||
-                  JSON.stringify(tool.inputSchema?.properties)?.toLowerCase().includes(searchText) ||
-                  JSON.stringify(tool.annotations)?.toLowerCase().includes(searchText),
-              )
-            : getFilteredTools(
-                filteredTools,
-                useAllTools ? [...filtersConfiguration] : selectedFilters,
-                tools || [],
-              ).filter((tool) => tool.name.toLowerCase().includes(searchText) && tool.name !== ''),
-        );
-      } else {
-        setDisplayTools(
-          isMcpToolset
-            ? allTools
-            : getFilteredTools(filteredTools, useAllTools ? [...filtersConfiguration] : selectedFilters, tools || []),
-        );
-      }
-    }, 300);
-
-    return () => {
-      if (debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, tools, manualAddedTools, selectedFilters, useAllTools]);
-
-  useEffect(() => {
-    setUseAllTools(getEntityAllowedTools(originalEntity)?.length === 0);
-  }, [getEntityAllowedTools, originalEntity]);
+    if (isLoading || !isRunnerApplication) setIsSearching(false);
+  }, [isLoading, isRunnerApplication]);
 
   useEffect(() => {
     return () => sidebar.closeSidebar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (loading) {
-    return <Spinner size={40} fullWidth />;
-  }
+  if (isLoading) return <Spinner size={40} fullWidth />;
 
   return (
     <div className="flex flex-col relative h-full overflow-hidden">
-      <div className="flex flex-row items-center mb-3">
-        <h1 className="mr-4">
-          {t(ToolsetI18nKey.Tools)}
-          {`: ${displayTools?.length || 0}`}
-        </h1>
-
-        {showManagementButtons && (
-          <Switch
-            id="useAllTools"
-            labelProps={{ label: t(ToolsetI18nKey.UseAllTools) }}
-            isOn={useAllTools}
-            onChange={onUseAllToolsSwitch}
-          />
-        )}
-      </div>
-      <div className="flex flex-row items-center mb-3 gap-x-4 justify-between">
-        <div className="w-[480px]">
-          <Search onChange={setSearch} value={search} />
-        </div>
-
-        <div className="flex flex-row gap-4">
-          {!useAllTools && showManagementButtons && (
-            <div className="flex items-center gap-x-6">
-              <ToolsFilter
-                isAllSelected={isEqual(filtersConfiguration, selectedFilters)}
-                onSelectAll={onSelectAll}
-                selectedFilters={selectedFilters}
-                onSelectFilter={onSelectFilter}
-              />
-            </div>
-          )}
-          {!useAllTools && showManagementButtons && (
-            <PrimaryButton
-              label={t(ButtonsI18nKey.ManageTool)}
-              iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
-              onClick={onOpenModal}
-            />
-          )}
-        </div>
-      </div>
-
-      <div className="flex-1 min-h-0 mb-3">
-        <div className="flex flex-col gap-6 overflow-y-auto h-full">
-          {!displayTools?.length ? (
-            <div className="flex items-center justify-center h-full">
-              <NoDataContent title={t(EntitiesI18nKey.NoTools)} />
-            </div>
-          ) : (
-            <div className="flex flex-col gap-6">
-              {displayTools?.map((tool, index) => {
-                return (
-                  <ToolComponent
-                    tool={tool}
-                    key={index}
-                    disabled={disabled}
-                    isAddedManual={!tools?.some((t) => t.name === tool.name)}
-                    isMcpToolset={isMcpToolset}
-                    isAssetToolset={isAsset}
-                    containerId={containerId}
-                    toolSetName={
-                      (isAsset ? (selectedEntity as AssetToolset)?._metadata?.path : selectedEntity?.name) || ''
-                    }
-                    view={view}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {isNotSavedToolset && !disabled && (
-        <Notification
-          type={NotificationType.SectionMessage}
-          variant={NotificationVariant.Info}
-          message={t(ToolsetI18nKey.ToolsWarning)}
-        />
-      )}
-      {!useAllTools && !disabled && <span className="dial-tiny-text text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
-      {isModalOpen && (
+      <ToolsToolbar
+        toolsCount={visibleTools?.length || 0}
+        isRunnerApplication={isRunnerApplication}
+        isSearching={isSearching}
+        isManagementVisible={isManagementVisible}
+        useAllTools={useAllTools}
+        search={search}
+        selectedFilters={selectedFilters}
+        onSearchChange={setSearch}
+        onSearchPendingChange={setIsSearching}
+        onUseAllToolsSwitch={onUseAllToolsSwitch}
+        onSelectAll={onSelectAll}
+        onSelectFilter={onSelectFilter}
+        onOpenModal={onOpenModal}
+      />
+      <ToolsResults
+        tools={tools}
+        visibleTools={visibleTools}
+        isSearching={isSearching}
+        disabled={disabled}
+        isMcpToolset={isMcpToolset}
+        isAssetToolset={isRunnerApplication ? isAssetApplication : isAsset}
+        containerId={containerId}
+        toolSetName={toolSetName}
+        view={view}
+      />
+      <ToolsNotifications
+        originalEntity={originalEntity}
+        selectedEntity={selectedEntity}
+        isRunnerApplication={isRunnerApplication}
+        isUsingAllTools={useAllTools}
+        disabled={disabled}
+      />
+      {isModalOpen && !isRunnerApplication && (
         <ManageToolsModal
           isModalOpen={isModalOpen}
           onClose={onCloseModal}
