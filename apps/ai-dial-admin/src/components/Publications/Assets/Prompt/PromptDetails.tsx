@@ -1,13 +1,10 @@
 import { FC, useMemo } from 'react';
 
-import { ButtonAppearance, DangerButton } from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
-
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import PromptProperties from '@/src/components/Assets/Artifacts/Prompts/View/Properties';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 import EditableTitle from '@/src/components/Common/EditableTitle/EditableTitle';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 
@@ -25,10 +22,8 @@ const PromptHeader: FC<HeaderProps> = ({ isCollapsed, promptName, changeName, re
     <div className="flex items-center justify-between gap-4 ml-1 w-full h-[38px]">
       <EditableTitle size={3} title={promptName || ''} changeTitle={changeName} disabled={isCollapsed} />
       {!isCollapsed && (
-        <DangerButton
+        <RemoveButton
           label={t(ButtonsI18nKey.Delete)}
-          appearance={ButtonAppearance.Outlined}
-          iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
           onClick={(e) => {
             e.stopPropagation();
             remove();

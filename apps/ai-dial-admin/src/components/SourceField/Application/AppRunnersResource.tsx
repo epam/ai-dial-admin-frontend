@@ -1,12 +1,11 @@
 'use client';
 
-import { Label, OutlinedButton, SelectOption, Spinner, Select } from '@epam/ai-dial-ui-kit';
-import { IconExternalLink } from '@tabler/icons-react';
+import { GhostIconButton, Label, OutlinedButton, SelectOption, Spinner, Select } from '@epam/ai-dial-ui-kit';
+import { IconExternalLink, IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { JSONSchema7 } from 'json-schema';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
 import { PICKER_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -188,7 +187,11 @@ const AppRunnersResource: FC<Props> = ({
           />
         )}
         {isOptional && !!currentValue && !isFieldDisabled && (
-          <RemoveButton aria-label={t(ButtonsI18nKey.Clear)} onClick={onClearSelection} />
+          <GhostIconButton
+            aria-label={t(ButtonsI18nKey.Clear)}
+            icon={<IconX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+            onClick={onClearSelection}
+          />
         )}
       </div>
     </div>

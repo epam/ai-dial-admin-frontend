@@ -4,6 +4,7 @@ import { FC } from 'react';
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
 import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
+import BaseUrlControl from '@/src/components/BaseControls/BaseUrlControl/BaseUrlControl';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import IconControl from '@/src/components/BaseControls/Icon';
@@ -32,6 +33,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialModelResource, DialModelResourceType } from '@/src/models/dial/resource';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModelDeploymentId } from '@/src/utils/models/deployment-id';
@@ -41,11 +43,12 @@ import LifecycleDateField from './LifecycleDateField';
 interface Props {
   asset: DialModelResource;
   translators?: ResourceInfo[];
+  plugins?: PluginOptions;
   catalogSchemas?: CatalogSchemaOptions;
   onChange: (asset: DialModelResource) => void;
 }
 
-const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, onChange }) => {
+const ModelAssetProperties: FC<Props> = ({ asset, translators, plugins, catalogSchemas, onChange }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const showResponsesDefaults = supportsResponsesInterface(asset);
@@ -117,12 +120,15 @@ const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, o
         />
         <OverrideNameControl entity={asset} onChangeEntity={onChange} />
 
-        <EndpointControl
+        <BaseUrlControl
+          containerClassName={STANDARD_CONTROL_WIDTH}
           id="base_url"
           label={t(EntityFieldsI18nKey.baseUrl)}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          endpoint={asset.baseUrl}
+          value={asset.baseUrl}
           onChange={(baseUrl) => onChange({ ...asset, baseUrl })}
+          plugins={plugins?.options}
+          optionsError={plugins?.error}
         />
 
         <InterfacesField
@@ -130,6 +136,8 @@ const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, o
           onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
           allowedTypes={MODEL_INTERFACE_TYPES}
           translators={translators}
+          plugins={plugins}
+          isPluginEnabled
           entityBaseUrl={asset.baseUrl}
           view={ApplicationRoute.PlatformModels}
           isAsset

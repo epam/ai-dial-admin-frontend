@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { removeModel, updateModel } from '@/src/app/[lang]/platform-models/actions';
+import { isPluginUrl } from '@/src/components/BaseControls/BaseUrlControl/utils';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -15,9 +16,11 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { AssetModel } from '@/src/models/dial/deployment-asset';
+import { InterfaceMode } from '@/src/models/dial/interfaces';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -36,6 +39,7 @@ interface Props {
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
   translators?: ResourceInfo[];
+  plugins?: PluginOptions;
   catalogSchemas?: CatalogSchemaOptions;
   /** True when `originalModel` came from Core's config-file population (`config-file-entity-views`), not the admin backend. */
   isConfigFileSource?: boolean;
@@ -49,6 +53,7 @@ const ModelView: FC<Props> = ({
   globalInterceptors,
   optionWarnings,
   translators,
+  plugins,
   catalogSchemas,
   isConfigFileSource,
 }) => {
@@ -72,6 +77,14 @@ const ModelView: FC<Props> = ({
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [discardKey, setDiscardKey] = useState(0);
+
+  // Interface rows unmount outside Properties, so this invariant must outlive their field validation.
+  const hasPluginOverrideConflict = Object.values(selectedModel.interfaces ?? {}).some(
+    (value) =>
+      (value.mode ?? InterfaceMode.Passthrough) === InterfaceMode.Passthrough &&
+      isPluginUrl(value.base_url || selectedModel.baseUrl) &&
+      Object.keys(value.overridePaths ?? {}).length > 0,
+  );
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -148,6 +161,7 @@ const ModelView: FC<Props> = ({
         entity={selectedModel}
         etag={etag}
         isChanged={isChanged}
+        isSaveDisabled={hasPluginOverrideConflict}
         onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}
@@ -176,6 +190,7 @@ const ModelView: FC<Props> = ({
             interceptors={interceptors}
             globalInterceptors={globalInterceptors}
             translators={translators}
+            plugins={plugins}
             catalogSchemas={catalogSchemas}
             onChange={setSelectedModel}
           />

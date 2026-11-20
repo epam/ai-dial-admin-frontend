@@ -59,7 +59,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
       return null;
     }
 
-    return resolveDeploymentNavigationTarget(testSuite.deploymentRef, deploymentType, [], { modelRoute });
+    return resolveDeploymentNavigationTarget(testSuite.deploymentRef, deploymentType, { modelRoute });
   }, [
     deploymentType,
     isMcpSuite,

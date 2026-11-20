@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -88,12 +88,12 @@ describe('Publications :: PromptDetails', () => {
     expect(titleInput).toHaveValue('My Custom Prompt');
   });
 
-  test('renders delete button with trash icon', () => {
+  test('renders a labelled delete button with a decorative trash icon', () => {
     setup();
 
     const deleteButton = screen.getByRole('button', { name: ButtonsI18nKey.Delete });
     expect(deleteButton).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'trash-icon' })).toBeInTheDocument();
+    expect(within(deleteButton).getByRole('img', { hidden: true })).toBeInTheDocument();
   });
 
   test('calls onChange when prompt name is changed', async () => {

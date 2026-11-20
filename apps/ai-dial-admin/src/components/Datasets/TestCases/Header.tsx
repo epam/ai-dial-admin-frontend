@@ -3,16 +3,10 @@
 import { FC, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  ButtonAppearance,
-  ButtonVariant,
-  ButtonDropdown,
-  DangerButton,
-  PrimaryButton,
-  DropdownItem,
-} from '@epam/ai-dial-ui-kit';
-import { IconDownload, IconPlus, IconTrashX } from '@tabler/icons-react';
+import { ButtonAppearance, ButtonVariant, ButtonDropdown, PrimaryButton, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { IconDownload, IconPlus } from '@tabler/icons-react';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import ImportFileModal from '@/src/components/TestSuites/TestCases/Import/ImportFile';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -67,14 +61,7 @@ const DatasetTestCasesHeader: FC<Props> = ({
         onClick={onAdd}
       />
 
-      {showBatchDelete && (
-        <DangerButton
-          label={t(ButtonsI18nKey.Delete)}
-          appearance={ButtonAppearance.Outlined}
-          iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onBatchDelete}
-        />
-      )}
+      {showBatchDelete && <RemoveButton label={t(ButtonsI18nKey.Delete)} onClick={onBatchDelete} />}
 
       {isImportModalOpen &&
         createPortal(

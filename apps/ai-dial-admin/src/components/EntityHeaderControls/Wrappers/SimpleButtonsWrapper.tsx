@@ -3,10 +3,10 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonAppearance, DangerButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import AdaptiveHeaderActions from '@/src/components/EntityHeaderControls/AdaptiveHeaderActions/AdaptiveHeaderActions';
 import { AdaptiveHeaderActionsConfig } from '@/src/components/EntityHeaderControls/AdaptiveHeaderActions/models';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
@@ -144,13 +144,7 @@ const SimpleButtonsWrapper = <T extends object>({
               ) : (
                 <div className="flex-1 flex flex-row gap-x-4 justify-center">
                   {leadingActions}
-                  <DangerButton
-                    className={buttonsClassName}
-                    label={t(ButtonsI18nKey.Delete)}
-                    appearance={ButtonAppearance.Outlined}
-                    iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
-                    onClick={onOpenModal}
-                  />
+                  <RemoveButton className={buttonsClassName} label={t(ButtonsI18nKey.Delete)} onClick={onOpenModal} />
                   {children}
                 </div>
               ))}

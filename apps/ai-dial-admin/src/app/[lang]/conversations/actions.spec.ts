@@ -5,13 +5,7 @@ import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import {
-  deleteConversation,
-  deleteConversations,
-  getAllDeployments,
-  getConversation,
-  getConversations,
-} from './actions';
+import { deleteConversation, deleteConversations, getConversation, getDeployment, getConversations } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -57,14 +51,15 @@ describe('Assets conversations :: server actions', () => {
     expect(result).toBe(MERGED_RESPONSE);
   });
 
-  test('Should call getDeployments action', async () => {
-    const DEPLOYMENTS_RESPONSE_MOCK = { response: [{ reference: 'model1' }, { reference: 'model2' }] };
-    (coreUtilityApi.getAllDeployments as any).mockResolvedValue(DEPLOYMENTS_RESPONSE_MOCK);
+  test('getDeployment looks up the Core-issued id as is, not as a typed name', async () => {
+    const DEPLOYMENT = { object: 'application', id: 'applications/bucket/My%20App' };
+    (coreUtilityApi.getDeploymentById as any).mockResolvedValue(DEPLOYMENT);
 
-    const result = await getAllDeployments();
-    expect(getUserToken).toHaveBeenCalled();
-    expect(coreUtilityApi.getAllDeployments).toHaveBeenCalledWith(TOKEN_MOCK);
-    expect(result).toBe(DEPLOYMENTS_RESPONSE_MOCK);
+    const result = await getDeployment('applications/bucket/My%20App');
+
+    expect(coreUtilityApi.getDeploymentById).toHaveBeenCalledWith('applications/bucket/My%20App', TOKEN_MOCK);
+    expect(coreUtilityApi.checkDeploymentByName).not.toHaveBeenCalled();
+    expect(result).toBe(DEPLOYMENT);
   });
 
   test('deleteConversation sends the supplied etag through to the Core client', async () => {

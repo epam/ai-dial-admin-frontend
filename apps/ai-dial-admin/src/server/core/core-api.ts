@@ -10,6 +10,9 @@ import { normalizeCoreError } from './error';
 import { CoreSdkCall, CoreSdkResult } from './models';
 import { getCoreSdk } from './sdk-client';
 
+/** Lower-cased, as `getAuthorizationHeader` writes it; compared against lower-cased extra header names. */
+const AUTHORIZATION_HEADER = 'authorization';
+
 /**
  * Base client for calling DIAL Core directly (instead of the admin backend).
  *
@@ -30,12 +33,16 @@ export class CoreApi extends BaseApi {
     return getCoreSdk(this.config.host);
   }
 
-  /** SDK counterpart of `getAction` and friends: resolves to the same envelope `handleResponse` builds. */
+  /**
+   * SDK counterpart of `getAction` and friends: resolves to the same envelope `handleResponse` builds.
+   * `headers` are sent alongside the caller's `authorization`, which they can never supply or replace.
+   */
   protected async sdkAction<T extends object = object>(
     token: Token | undefined,
     call: CoreSdkCall,
+    headers?: Record<string, string>,
   ): Promise<ServerActionResponse<T>> {
-    const result = await runSdkCall(token, call);
+    const result = await runSdkCall(token, call, headers);
     if (!result) {
       return { success: false, status: 0, errorMessage: 'Request cancelled' };
     }
@@ -62,12 +69,20 @@ export class CoreApi extends BaseApi {
    * SDK counterpart of `get`: the parsed body, `undefined` on 403, `null` on any other failure or abort.
    * Typed `R | null` like `get`, which hides the 403 `undefined` behind the same cast.
    */
-  protected sdkGet<R extends object>(token: Token | undefined, call: CoreSdkCall): Promise<R | null> {
-    return this.sdkValue<R>(token, call) as Promise<R | null>;
+  protected sdkGet<R extends object>(
+    token: Token | undefined,
+    call: CoreSdkCall,
+    headers?: Record<string, string>,
+  ): Promise<R | null> {
+    return this.sdkValue<R>(token, call, headers) as Promise<R | null>;
   }
 
-  private async sdkValue<R>(token: Token | undefined, call: CoreSdkCall): Promise<R | null | undefined> {
-    const result = await runSdkCall(token, call);
+  private async sdkValue<R>(
+    token: Token | undefined,
+    call: CoreSdkCall,
+    headers?: Record<string, string>,
+  ): Promise<R | null | undefined> {
+    const result = await runSdkCall(token, call, headers);
     if (!result) {
       return null;
     }
@@ -79,6 +94,7 @@ export class CoreApi extends BaseApi {
       errorLog(`Request error Url  ${response.url}`);
       errorLog(`Request error traceparent  ${response.headers.get('traceparent')}`);
 
+      // The body of a forbidden response is not logged, matching `sendRequest`.
       if (response.status === 403) {
         return undefined;
       }
@@ -112,15 +128,31 @@ export class CoreApi extends BaseApi {
  * and is rethrown. The one timed Core call, `ProjectsCoreApi.getProjectArchiveSizes`, bypasses both paths and
  * catches its own errors; the first timeout on an adapter-backed call decides how both paths map it.
  */
-const runSdkCall = async (token: Token | undefined, call: CoreSdkCall): Promise<CoreSdkResult | null> => {
+const runSdkCall = async (
+  token: Token | undefined,
+  call: CoreSdkCall,
+  headers?: Record<string, string>,
+): Promise<CoreSdkResult | null> => {
   try {
-    return await call({ headers: getAuthorizationHeader(token), parseAs: 'text' });
+    return await call({ headers: withAuthorization(token, headers), parseAs: 'text' });
   } catch (error) {
     if ((error as Error).name === 'AbortError') {
       return null;
     }
     throw error;
   }
+};
+
+/**
+ * A method's extra headers plus the caller's own `authorization`. Any `authorization` among the extra headers is
+ * dropped whatever its casing, so a method can neither replace the caller's identity nor send one without a token.
+ */
+const withAuthorization = (token: Token | undefined, headers: Record<string, string> = {}): Record<string, string> => {
+  const extra = Object.fromEntries(
+    Object.entries(headers).filter(([name]) => name.toLowerCase() !== AUTHORIZATION_HEADER),
+  );
+
+  return { ...extra, ...getAuthorizationHeader(token) };
 };
 
 /**

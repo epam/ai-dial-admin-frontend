@@ -1,9 +1,10 @@
+import type { DeploymentData } from '@epam/ai-dial-typescript-sdk';
+
 import { ImageVersion } from '@/src/models/deployments/images';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { Deployment } from '@/src/models/evaluation/deployment';
+import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { compareVersions } from '@/src/utils/entities/versions';
 import {
-  CatalogDeploymentRecord,
   resolveCatalogDeploymentNavigation,
   resolveDeploymentNavigationTarget,
 } from '@/src/utils/deployment-navigation';
@@ -22,26 +23,27 @@ import { ImportResult } from '@/src/components/Assets/types';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 import { CoreResourceEntityMetadata } from '@/src/models/dial/resource';
 
-const isEvalDeployment = (deployment: CatalogDeploymentRecord | Deployment): deployment is Deployment =>
-  '$type' in deployment && typeof deployment.$type === 'string';
-
+/**
+ * The agent link of a conversation. `deploymentId` is the conversation's `model.id`; `deployment` is Core's
+ * lookup of it and `deploymentType` its `object`, mapped. A model link waits for `modelRoute`.
+ */
 export const getAgentLinkForConversation = (
-  deployment: CatalogDeploymentRecord | Deployment | null,
+  deploymentId: string | undefined,
+  deployment: DeploymentData | null | undefined,
+  deploymentType: DeploymentType | undefined,
   currentLocale: string,
   modelRoute?: ApplicationRoute,
 ): string => {
-  if (!deployment) {
+  if (!deployment || !deploymentId) {
     return '';
   }
 
-  const target = isEvalDeployment(deployment)
-    ? resolveDeploymentNavigationTarget(
-        { id: deployment.deploymentId, name: deployment.displayName },
-        deployment.$type,
-        [],
-        { modelRoute },
-      )
-    : resolveCatalogDeploymentNavigation(deployment);
+  const target = deploymentType
+    ? resolveDeploymentNavigationTarget({ id: deploymentId }, deploymentType, { modelRoute })
+    : resolveCatalogDeploymentNavigation(
+        { model: deployment.model, application: deployment.application, reference: deployment.reference },
+        { fallbackDisplayName: deploymentId },
+      );
 
   if (!target) {
     return '';

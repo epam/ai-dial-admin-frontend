@@ -322,5 +322,8 @@ const getResponse = <T>(type: string, res: Response) => {
     return res.text() as Promise<T>;
   }
 
+  // TODO: a failed `res.json()` has already consumed the body, so the `res.text()` fallback throws and a non-JSON
+  // 2xx body resolves to `''`, while the SDK adapters (`sdkAction` / `sdkGet`) return its raw text. Read the body
+  // once and parse it, keeping the raw text as the fallback, in a change of its own.
   return (type === 'DELETE' ? res.text() : res.json().catch(() => res.text().catch(() => ''))) as Promise<T>;
 };

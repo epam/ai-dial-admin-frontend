@@ -60,6 +60,15 @@ describe('Server actions', () => {
     expect(result).toBe(false);
   });
 
+  test('Should return false when the deployment lookup is forbidden, not report the name as free', async () => {
+    vi.stubEnv('DIAL_ADMIN_API_URL', '');
+    (coreUtilityApi.checkDeploymentByName as any).mockResolvedValue(undefined);
+
+    const result = await checkIsUniqueDeploymentName('hidden-id');
+
+    expect(result).toBe(false);
+  });
+
   test('Should return false when interceptor already exists', async () => {
     vi.stubEnv('DIAL_ADMIN_API_URL', 'http://admin-api');
     (interceptorsApi.checkInterceptorByName as any).mockResolvedValue({ status: 200 });
