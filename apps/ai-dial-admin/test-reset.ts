@@ -1,3 +1,5 @@
+import vitestPackage from 'vitest/package.json';
+
 interface EvaluatedModule {
   id: string;
   url: string;
@@ -19,7 +21,10 @@ const VITEST_RUNTIME_PATHS = [/\/vitest\/dist\//, /vitest-virtual-\w+\/dist/, /@
 const modules = (globalThis as VitestGlobals).__vitest_worker__?.evaluatedModules;
 
 if (!modules?.idToModuleMap || !modules.urlToIdModuleMap || !modules.fileToModulesMap) {
-  throw new Error('test-reset.ts: vitest internals changed; per-file module reset is unavailable');
+  throw new Error(
+    `test-reset.ts: vitest ${vitestPackage.version} no longer exposes the worker module table this file resets ` +
+      'before each test file. A vitest upgrade changed its internals; update test-reset.ts for the new version.',
+  );
 }
 
 if (typeof document !== 'undefined') {

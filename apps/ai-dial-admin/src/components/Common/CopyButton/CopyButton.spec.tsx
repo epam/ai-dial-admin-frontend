@@ -1,10 +1,12 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import CopyButton from './CopyButton';
 
-Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn() }, configurable: true });
-
 describe('Common components :: CopyButton', () => {
+  beforeEach(() => {
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn() }, configurable: true });
+  });
+
   test('Should render button with icon and be accessible by role', () => {
     render(<CopyButton valueLabel="Copy this" value="value" />);
     expect(screen.getByRole('button', { name: 'copy Copy this' })).toBeInTheDocument();
