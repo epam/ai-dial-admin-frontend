@@ -166,6 +166,10 @@ const TabsContent: FC<Props> = ({
           onChangeEntity={onChangeApplication}
           view={view}
           appRunner={appRunner}
+          isRunnerApplication={
+            selectedApplication.source?.$type === SOURCE_TYPE.SCHEMA ||
+            !!(selectedApplication as DialApplicationResource).application_type_schema_id
+          }
         />
       )}
 
