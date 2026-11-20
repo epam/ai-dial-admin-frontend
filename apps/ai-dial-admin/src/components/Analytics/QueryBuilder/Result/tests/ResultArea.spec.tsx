@@ -249,6 +249,18 @@ describe('QueryBuilder :: ResultArea', () => {
     expect(screen.getByText('QueryBuilder.ChartNoValueColumn')).toBeInTheDocument();
   });
 
+  test('chart view shows the no-value-column hint for an ungrouped total that is not a number', async () => {
+    const user = userEvent.setup();
+    renderArea({
+      result: { columns: ['latest'], rows: [{ latest: 'n/a' }] },
+      meta: { ...AGG_META, dimensionColumns: [], aggregateColumns: ['latest'] },
+    });
+
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
+
+    expect(screen.getByText('QueryBuilder.ChartNoValueColumn')).toBeInTheDocument();
+  });
+
   test('chart view shows a hint for a row-mode result', async () => {
     const user = userEvent.setup();
     renderArea({ result: AGG_RESULT, meta: ROW_META });

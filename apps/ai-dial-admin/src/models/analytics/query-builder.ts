@@ -335,8 +335,9 @@ export interface ChartSlotDescriptor {
 }
 
 // Result-derived context buildChartOptions needs beyond the two slot fields: pie localizes its
-// "Other" bucket, a category with no value gets a visible name instead of a blank label, scatter labels points by the row's dimension values, and axis titles/tooltips
-// show columns by their display label (see ExecutedQueryMeta.columnLabels).
+// "Other" bucket, scatter labels points by the row's dimension values, a split chart takes its series
+// from `splitField`, and axis titles/tooltips show columns by their display label (see
+// ExecutedQueryMeta.columnLabels).
 export interface ChartBuildContext {
   colors: ChartColors;
   dimensionColumns: string[];

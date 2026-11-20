@@ -88,7 +88,7 @@ const ResultArea: FC<Props> = ({
 
   const chartUnavailableKey = (): QueryBuilderI18nKey => {
     if (!rows.length) return QueryBuilderI18nKey.ChartNoRows;
-    if (!meta?.dimensionColumns.length) return QueryBuilderI18nKey.ChartNoDimension;
+    if (!meta?.dimensionColumns.length && !meta?.aggregateColumns.length) return QueryBuilderI18nKey.ChartNoDimension;
     return QueryBuilderI18nKey.ChartNoValueColumn;
   };
 
