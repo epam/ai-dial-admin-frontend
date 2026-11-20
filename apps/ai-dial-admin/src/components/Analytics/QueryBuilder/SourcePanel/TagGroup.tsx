@@ -29,7 +29,7 @@ const TagGroup: FC<Props> = ({ tableName, group }) => {
         type="button"
         aria-expanded={isExpanded}
         aria-controls={listId}
-        className="flex h-8 w-full items-center gap-1 rounded pl-8 pr-3 text-secondary hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha"
+        className="flex h-8 w-full items-center gap-1 rounded-lg pl-8 pr-3 text-secondary hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha"
         onClick={() => onToggleGroup(key)}
       >
         <span className="flex size-4 shrink-0 items-center justify-center">
@@ -41,7 +41,7 @@ const TagGroup: FC<Props> = ({ tableName, group }) => {
       {isExpanded && (
         <ul id={listId} className="flex flex-col gap-0.5">
           {group.fields.map((field) => (
-            <ColumnRow key={field.name} field={field} />
+            <ColumnRow key={field.name} field={field} isNested />
           ))}
         </ul>
       )}
