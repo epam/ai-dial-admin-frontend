@@ -4,6 +4,7 @@ import {
   SourceTable,
   TableColumnTree,
 } from '@/src/components/Analytics/QueryBuilder/SourcePanel/models';
+import { USAGE_LOG_ENTITY } from '@/src/constants/analytics/sessions-trace';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { AnalyticsTable } from '@/src/models/analytics/table';
@@ -69,8 +70,10 @@ export const groupColumnsByTag = (fields: AnalyticsEntityField[], tagOrder: stri
   };
 };
 
-export const resolveDraftTable = (entities: AnalyticsEntity[], requested?: string): string =>
-  entities.find((entity) => entity.name === requested)?.name ?? entities[0]?.name ?? '';
+export const resolveDraftTable = (entities: AnalyticsEntity[], requested?: string): string => {
+  const find = (name?: string) => entities.find((entity) => entity.name === name)?.name;
+  return find(requested) ?? find(USAGE_LOG_ENTITY) ?? entities[0]?.name ?? '';
+};
 
 export const getDraftHref = (locale: string): string => `/${locale}${ApplicationRoute.AnalyticsQueries}`;
 

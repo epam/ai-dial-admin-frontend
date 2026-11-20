@@ -41,6 +41,7 @@ import {
   useSourcePanelUnsavedWork,
   useSourceTableDescription,
 } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
+import { ScorecardTrendSource } from '@/src/components/Analytics/QueryBuilder/Result/models';
 import ResultArea from '@/src/components/Analytics/QueryBuilder/Result/ResultArea';
 import SqlEditor from '@/src/components/Analytics/QueryBuilder/Sql/SqlEditor';
 import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
@@ -187,7 +188,7 @@ const QueryBuilder: FC<Props> = ({
       isChartConfigKept.current = false;
       return;
     }
-    setChartConfig(DEFAULT_CHART_CONFIG);
+    setChartConfig((current) => ({ ...DEFAULT_CHART_CONFIG, legend: current.legend ?? DEFAULT_CHART_CONFIG.legend }));
   }, [result]);
 
   useEffect(() => {
@@ -213,6 +214,16 @@ const QueryBuilder: FC<Props> = ({
   const shownSourceProblem = fieldsLoaded ? null : sourceProblem;
   const timestampField = useMemo(() => findTimestampField(state.fields), [state.fields]);
   const { getCurrentTimeRange } = timeFilter;
+  const scorecardTrend = useMemo<ScorecardTrendSource>(
+    () => ({
+      query: lastRequest?.kind === QueryRequestKind.Structured ? lastRequest.query : null,
+      timeField: timestampField ?? null,
+      range: getCurrentTimeRange(),
+    }),
+    // The range is captured when a run lands, so the trend matches the shown number until the next run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [lastRequest, timestampField],
+  );
   const boundPeriod = timeFilter.isCustom ? undefined : timeFilter.timePeriod;
   const timeBoundOf = useCallback(
     (range: TimeRange, period?: string): QueryTimeBound | null =>
@@ -733,6 +744,7 @@ const QueryBuilder: FC<Props> = ({
                 onChangeChartConfig={setChartConfig}
                 isExporting={isExporting}
                 onExportCsv={onExportCsv}
+                trendSource={scorecardTrend}
                 actions={
                   isAddToDashboardShown &&
                   savedQueryPage.savedQuery && <AddToDashboardButton savedQuery={savedQueryPage.savedQuery} />
