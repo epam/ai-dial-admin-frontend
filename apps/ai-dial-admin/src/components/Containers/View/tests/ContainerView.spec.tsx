@@ -1,13 +1,8 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 
-const { showNotificationSpy } = vi.hoisted(() => ({
-  showNotificationSpy: vi.fn(),
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationSpy }),
-}));
+const { showNotification: showNotificationSpy } = notificationMock;
 
 type Listener = (event: { data?: unknown }) => void;
 

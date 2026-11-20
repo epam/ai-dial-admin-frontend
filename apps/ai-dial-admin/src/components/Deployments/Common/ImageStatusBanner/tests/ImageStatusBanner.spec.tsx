@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -17,11 +18,6 @@ vi.mock('@/src/app/actions/deployments', () => ({
   installImage: (...args: unknown[]) => installImageMock(...args),
 }));
 
-const isReadOnlyAdminMock = vi.fn(() => false);
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => isReadOnlyAdminMock(),
-}));
-
 const buildImage = (overrides: Partial<Image> = {}): Image => ({
   id: 'img-1',
   $type: IMAGE_TYPE.MCP,
@@ -38,7 +34,7 @@ const buildImage = (overrides: Partial<Image> = {}): Image => ({
 describe('ImageStatusBanner', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    isReadOnlyAdminMock.mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 
   test('renders nothing when image is undefined', () => {
@@ -69,7 +65,7 @@ describe('ImageStatusBanner', () => {
   });
 
   test('hides the install button when useIsReadOnlyAdmin returns true', () => {
-    isReadOnlyAdminMock.mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     render(<ImageStatusBanner image={buildImage()} />);
     expect(screen.queryByText(ContainersI18nKey.InstallImage)).not.toBeInTheDocument();
   });

@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -40,9 +41,9 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
 vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
 
 const setEntityReadOnly = vi.fn();
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ setEntityReadOnly }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ setEntityReadOnly }));
+});
 
 const runner = (overrides: Partial<DialAppRunnerResource> = {}): DialAppRunnerResource =>
   ({

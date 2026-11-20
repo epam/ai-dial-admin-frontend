@@ -4,10 +4,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import ResourceFeatures from '../ResourceFeatures';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => false,
-}));
-
 const mockUseAssetRunnerDetails = vi.hoisted(() => vi.fn());
 
 vi.mock('@/src/components/Assets/Platform/use-asset-runner-details', () => ({

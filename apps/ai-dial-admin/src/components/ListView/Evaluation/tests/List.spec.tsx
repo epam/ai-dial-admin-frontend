@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { navigationMock } from '@/test-mocks/navigation';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -12,11 +13,7 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import EvaluationListView from '../List';
 
 const { refresh: routerRefresh } = navigationMock.router;
-const showNotification = vi.fn();
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   cancelRun: vi.fn(),

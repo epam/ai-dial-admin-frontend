@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -15,11 +16,7 @@ vi.mock('@/src/app/[lang]/runs/actions', () => ({
 }));
 
 const openCompareRunMock = vi.fn();
-const showNotification = vi.fn();
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 vi.mock('@/src/components/Runs/Compare/useCompareRunLauncher', () => ({
   useCompareRunLauncher: () => ({

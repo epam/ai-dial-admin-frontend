@@ -1,3 +1,5 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { notificationMock } from '@/test-mocks/notification';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -45,15 +47,11 @@ vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
 vi.mock('@/src/app/[lang]/queries/actions');
 vi.mock('@/src/utils/download');
 
-const { showNotificationMock } = vi.hoisted(() => ({ showNotificationMock: vi.fn() }));
+const { showNotification: showNotificationMock } = notificationMock;
 
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
-}));
-
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => ({ featureFlags: { deploymentsEnabled: true } })),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: { deploymentsEnabled: true } }));
+});
 
 const setQueryAssistantEnabled = (enabled: boolean) =>
   vi.mocked(useAppContext).mockReturnValue({ featureFlags: { queryAssistantEnabled: enabled } } as never);

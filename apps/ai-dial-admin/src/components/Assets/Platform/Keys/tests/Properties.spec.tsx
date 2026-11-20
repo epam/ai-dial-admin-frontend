@@ -6,10 +6,6 @@ import { EntityFieldsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { DialKeyResource } from '@/src/models/dial/resource';
 import KeyAssetProperties from '../Properties';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 // AccessRestrictionField has heavy internal state; mock it to isolate Properties behaviour.
 vi.mock('@/src/components/Keys/View/Properties/AccessRestrictionField', () => ({
   default: ({ onChange }: { onChange?: (v?: string[]) => void }) => (

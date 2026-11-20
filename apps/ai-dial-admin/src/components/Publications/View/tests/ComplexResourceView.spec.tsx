@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
@@ -34,10 +35,7 @@ vi.mock('@/src/app/[lang]/skills/actions', () => ({
   removeSkillFile: vi.fn(),
 }));
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification }),
-}));
+const { showNotification } = notificationMock;
 
 vi.mock('@/src/components/EntityHeaderControls/PublicationsHeader', () => ({
   default: ({ isChanged, onSave, onDiscard, onChangeActiveTab }: any) => (

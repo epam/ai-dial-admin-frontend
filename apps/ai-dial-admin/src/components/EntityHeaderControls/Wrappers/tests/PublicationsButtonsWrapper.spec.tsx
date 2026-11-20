@@ -1,3 +1,5 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { notificationMock } from '@/test-mocks/notification';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
@@ -17,16 +19,14 @@ vi.mock('@/src/app/actions/publications', () => ({
 }));
 
 const appContext = vi.hoisted(() => ({ isUnitMode: false, userAccess: { units: [] as UserOrgUnit[] } }));
-vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => appContext }));
+beforeEach(() => {
+  appContextMock.use(() => appContext);
+});
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 vi.mock('@/src/hooks/use-is-mobile-screen', () => ({ useIsMobileScreen: () => false }));
 vi.mock('@/src/hooks/use-is-tablet-screen', () => ({ useIsOnlyTabletScreen: () => false }));
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 // The global `t()` mock drops interpolation params — override it here so the notification title/
 // description embed `entity`/`entityId`, the only way to assert which key and params were used.

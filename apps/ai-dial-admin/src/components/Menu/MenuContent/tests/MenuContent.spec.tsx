@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -14,14 +15,14 @@ beforeEach(() => {
 const adminApiEnabled = { value: true };
 const fullAdmin = { value: true };
 const unitMode = { isUnitMode: false, readable: new Set<UnitNamespace>() };
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     featureFlags: { adminApiEnabled: adminApiEnabled.value },
     isFullAdmin: fullAdmin.value,
     isUnitMode: unitMode.isUnitMode,
     canReadNamespace: (namespace: UnitNamespace) => unitMode.readable.has(namespace),
-  }),
-}));
+  }));
+});
 
 const renderMenu = (isSidebarOpen: boolean) =>
   render(<MenuContent disableMenuItems={[]} isSidebarOpen={isSidebarOpen} />);

@@ -1,7 +1,9 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getAppProcessStatus, getBeVersion, getCoreVersions } from '@/src/app/actions';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import Content from './Content';
 
 vi.mock('@/src/app/actions', () => ({
@@ -12,18 +14,18 @@ vi.mock('@/src/app/actions', () => ({
 }));
 
 const adminApiEnabled = { value: true };
-const sidebarState = { value: { show: false, position: 'right' } };
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+const sidebarState = { value: { show: false, position: SidebarPosition.Right } };
+beforeEach(() => {
+  appContextMock.use(() => ({
     sidebar: sidebarState.value,
     featureFlags: { adminApiEnabled: adminApiEnabled.value },
-  }),
-}));
+  }));
+});
 
 describe('Content', () => {
   beforeEach(() => {
     adminApiEnabled.value = true;
-    sidebarState.value = { show: false, position: 'right' };
+    sidebarState.value = { show: false, position: SidebarPosition.Right };
     vi.clearAllMocks();
   });
 
@@ -71,7 +73,7 @@ describe('Content', () => {
   });
 
   test('drops the bottom gutter while the bottom sidebar is open', () => {
-    sidebarState.value = { show: true, position: 'bottom' };
+    sidebarState.value = { show: true, position: SidebarPosition.Bottom };
     render(
       <Content>
         <div>Test Content</div>

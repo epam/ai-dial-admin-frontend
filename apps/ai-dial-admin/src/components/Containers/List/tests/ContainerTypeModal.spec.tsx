@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -9,9 +10,9 @@ import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 
 const { mockFeatureFlags } = vi.hoisted(() => ({ mockFeatureFlags: { mcpRegistryEnabled: true } }));
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: mockFeatureFlags }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: mockFeatureFlags }));
+});
 
 describe('ContainerTypeModal', () => {
   const onClose = vi.fn();

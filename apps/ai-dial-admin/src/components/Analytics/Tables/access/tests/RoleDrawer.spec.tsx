@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -21,8 +22,7 @@ import {
 } from '@/src/models/analytics/table';
 import { ConfigEntityOrigin } from '@/src/types/config-file-entity';
 
-const showNotification = vi.hoisted(() => vi.fn());
-vi.mock('@/src/context/NotificationContext', () => ({ useNotification: () => ({ showNotification }) }));
+const { showNotification } = notificationMock;
 
 vi.mock('@/src/components/Analytics/Tables/access/use-role-catalog', () => ({
   useRoleCatalog: () => ({

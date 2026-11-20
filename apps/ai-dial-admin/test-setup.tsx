@@ -8,7 +8,9 @@ import { cleanup, configure } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { afterEach, beforeEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
+import { appContextMock } from '@/test-mocks/app-context';
 import { navigationMock } from '@/test-mocks/navigation';
+import { notificationMock } from '@/test-mocks/notification';
 import { saveValidationMock } from '@/test-mocks/save-validation';
 import { EditorMockProps } from './test-models';
 
@@ -46,13 +48,10 @@ vi.mock('next/navigation', async () => (await import('@/test-mocks/navigation'))
 // ------------------ Contexts ------------------
 const createFnContext = () => vi.fn();
 
-// One instance for the whole file: the real context hands out stable functions, and many components list
-// `showNotification` in an effect's dependencies. A fresh `vi.fn()` per render re-ran those effects on every
-// render, so a component could refetch in a loop under test and its outcome depended on how fast it ran.
-vi.mock('@/src/context/NotificationContext', () => {
-  const notification = { showNotification: vi.fn(), removeNotification: vi.fn() };
-  return { useNotification: () => notification };
-});
+vi.mock(
+  '@/src/context/NotificationContext',
+  async () => (await import('@/test-mocks/notification')).notificationModule,
+);
 
 vi.mock('@/src/context/assets/FileFolderContext', () => ({
   useFileFolder: createFnContext,
@@ -168,36 +167,7 @@ vi.mock('@/src/context/OrgUnitsContext', () => {
 vi.mock('@/src/context/RuleFolderProvider', () => ({ useRuleFolder: createFnContext }));
 vi.mock('@/src/context/RuleFolderContext', () => ({ useRuleFolder: createFnContext }));
 
-import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
-import { AccessMode, AdminAccess } from '@/src/models/user-access';
-
-// Hoisted, not returned as a literal from the mock: a fresh object per call gives `featureFlags`
-// (and the context value itself) a new identity every render, so any component listing one of them
-// in a hook dependency array re-runs its effect forever and the worker dies on heap exhaustion.
-const appContextValue = {
-  sidebar: {
-    show: false,
-    content: null,
-    showSidebar: vi.fn(),
-    closeSidebar: vi.fn(),
-    position: SidebarPosition.Right,
-  },
-  featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
-  userAccess: { mode: AccessMode.FULL, adminAccess: AdminAccess.FULL, units: [] },
-  isReadOnlyAdmin: false,
-  isFullAdmin: true,
-  isUnitMode: false,
-  canReadNamespace: () => true,
-  canWriteAt: () => true,
-  isEnableAuth: false,
-  showConfigFiles: false,
-  toggleShowConfigFiles: vi.fn(),
-  setEntityReadOnly: vi.fn(),
-};
-
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => appContextValue,
-}));
+vi.mock('@/src/context/AppContext', async () => (await import('@/test-mocks/app-context')).appContextModule);
 
 vi.mock('@/src/context/SaveValidationContext', async (importOriginal) => {
   const { createSaveValidationModule } = await import('@/test-mocks/save-validation');
@@ -350,7 +320,9 @@ vi.mock('@epam/ai-dial-visualizer-connector', () => ({
 
 // ------------------ Reset mock controllers before each test ------------------
 beforeEach(() => {
+  appContextMock.reset();
   navigationMock.reset();
+  notificationMock.reset();
   saveValidationMock.reset();
 });
 

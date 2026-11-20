@@ -72,7 +72,6 @@ vi.mock('@/src/components/Common/RemoveButton/RemoveButton', () => ({
 }));
 
 vi.mock('@/src/hooks/use-is-mobile-screen', () => ({ useIsMobileScreen: () => false }));
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 
 import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import { getResolvedRunnerSchema, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';

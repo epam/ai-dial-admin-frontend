@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { navigationMock } from '@/test-mocks/navigation';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -12,11 +13,7 @@ import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 
 const { refresh: refreshMock } = navigationMock.router;
-const showNotificationMock = vi.fn();
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationMock }),
-}));
+const { showNotification: showNotificationMock } = notificationMock;
 
 const updateContainerMock = vi.fn();
 vi.mock('@/src/app/actions/deployments', () => ({

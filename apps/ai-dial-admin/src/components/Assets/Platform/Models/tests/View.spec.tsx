@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -42,12 +43,12 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
 }));
 
 const setEntityReadOnly = vi.fn();
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
     setEntityReadOnly,
-  }),
-}));
+  }));
+});
 
 const model = { name: 'model-1', path: 'model-1', folderId: '' } as AssetModel;
 

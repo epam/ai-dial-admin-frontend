@@ -1,3 +1,5 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { notificationMock } from '@/test-mocks/notification';
 import { navigationMock } from '@/test-mocks/navigation';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -56,14 +58,11 @@ vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
 vi.mock('@/src/app/[lang]/queries/actions');
 
 const { push: mockPush, refresh: mockRefresh } = navigationMock.router;
-const mockShowNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: mockShowNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification: mockShowNotification } = notificationMock;
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => ({ featureFlags: {}, isFullAdmin: true })),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: {}, isFullAdmin: true }));
+});
 
 const setFullAdmin = (isFullAdmin: boolean) =>
   vi.mocked(useAppContext).mockReturnValue({ featureFlags: {}, isFullAdmin } as never);
@@ -1008,7 +1007,7 @@ describe('QueryBuilder — a stored saved query', () => {
       );
 
       const [notification] = mockShowNotification.mock.lastCall ?? [];
-      notification.action.onClick();
+      notification?.action?.onClick();
 
       expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/^\/queries\/.*sq_new/));
     });

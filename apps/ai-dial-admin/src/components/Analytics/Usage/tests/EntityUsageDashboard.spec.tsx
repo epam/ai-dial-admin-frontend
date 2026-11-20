@@ -21,10 +21,6 @@ vi.mock('@/src/app/[lang]/dashboards/actions', () => ({
   getUsageCallerSource: () => callerSourceMock(),
 }));
 
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn(), removeNotification: vi.fn() }),
-}));
-
 // AG Grid and ECharts are the heavy children; this spec is about the dashboard's wiring.
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({ default: () => <div role="grid" /> }));
 vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({ default: () => <div role="grid" /> }));

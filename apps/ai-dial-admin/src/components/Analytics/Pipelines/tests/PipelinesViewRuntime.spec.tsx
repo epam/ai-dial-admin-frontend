@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { act, render, screen } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -11,13 +12,10 @@ import { PipelineKind, PipelineListItem, TransformType, TriggerKind } from '@/sr
 import { PauseOrigin } from '@/src/models/analytics/pipeline-runtime';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn() }),
-}));
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => ({ featureFlags: {}, isFullAdmin: true })),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: {}, isFullAdmin: true }));
+});
 
 interface MockColDef {
   colId?: string;

@@ -62,10 +62,6 @@ vi.mock('@/src/components/SourceField/Adapters/Adapters', () => ({
   default: () => <div data-testid="adapters-branch" />,
 }));
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => false,
-}));
-
 const makeApp = (overrides: Partial<DialApplication> = {}): DialApplication =>
   ({
     name: 'app-1',

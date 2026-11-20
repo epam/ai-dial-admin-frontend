@@ -160,8 +160,9 @@ one spec for that spec). Pick by who needs it, not by convenience.
   render (contexts, Next.js hooks, i18n). Add it to `test-setup.tsx`; don't copy the same `vi.mock` into a
   third spec.
 - A shared mock that specs need to steer gets a **controller** in `apps/ai-dial-admin/test-mocks/<name>.ts(x)`.
-  The controllers today are `navigationMock` (`next/navigation`) and `saveValidationMock`
-  (`SaveValidationContext`); read them before writing a new one. A controller:
+  The controllers today are `appContextMock` (`AppContext`), `navigationMock` (`next/navigation`),
+  `notificationMock` (`NotificationContext`) and `saveValidationMock` (`SaveValidationContext`); read them before
+  writing a new one. A controller:
   - keeps **one stable default** — the same router, the same context value — so an effect that lists it as a
     dependency does not loop;
   - exposes the spies and typed setters a spec needs (`navigationMock.router.push`, `setPathname(...)`,
@@ -322,13 +323,17 @@ What that cleanup cannot undo is yours to avoid:
 3. **Configure a controlled module through its controller.** Navigation: `navigationMock.router.push` is the spy,
    `navigationMock.setPathname(...)` / `setSearchParams(...)` set the location. Save validation:
    `saveValidationMock.dispatch` is the spy, `saveValidationMock.set({ isValid: false })` sets the state, and
-   `saveValidationMock.useRealContext()` switches the test to the real provider and hooks. Set either in
-   `beforeEach` or in the test: both reset before every test.
+   `saveValidationMock.useRealContext()` switches the test to the real provider and hooks. App context:
+   `appContextMock.set({ isFullAdmin: false })` for a fixed value, `appContextMock.use(() => ({ ... }))` for one
+   read on every render, `appContextMock.sidebar.showSidebar` and `setEntityReadOnly` as spies; read-only mode is
+   `appContextMock.set({ isReadOnlyAdmin: true })`, because `useIsReadOnlyAdmin` only reads the context.
+   Notifications: `notificationMock.showNotification` and `removeNotification` are the spies. Set any of them in
+   `beforeEach` or in the test: all reset before every test.
 4. **Leave nothing running.** A timer, interval or subscription a test starts must stop by the end of that test.
 
 The file order is shuffled on every run, so an order dependency fails instead of hiding. A failure that only
 appears in some orders is a leak: reproduce it with the seed the run prints
 (`npx vitest run --sequence.seed=<seed>`), then fix the spec — don't re-run until it passes.
 
-`npm run lint:specs` rejects rules 1–3: a write to a global, a write or delete on `process.env`, and a second
-`vi.mock` of a controlled module.
+`npm run lint:specs` rejects rules 1–3: a write to a global, a write or delete on `process.env`, a second
+`vi.mock` of a controlled module, and a mock of `use-is-read-only-admin`.

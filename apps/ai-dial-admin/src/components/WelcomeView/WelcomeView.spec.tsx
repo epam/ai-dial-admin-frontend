@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { MenuI18nKey, ReadOnlyI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -6,30 +7,25 @@ import WelcomeView from './WelcomeView';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { navigationMock } from '@/test-mocks/navigation';
 
-const isReadOnlyAdminMock = vi.fn(() => false);
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => isReadOnlyAdminMock(),
-}));
-
 const adminApiEnabled = { value: true };
 const fullAdmin = { value: true };
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     featureFlags: { adminApiEnabled: adminApiEnabled.value },
     isFullAdmin: fullAdmin.value,
-  }),
-}));
+  }));
+});
 
 describe('WelcomeView', () => {
   beforeEach(() => {
     vi.stubGlobal('open', vi.fn());
-    isReadOnlyAdminMock.mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     adminApiEnabled.value = true;
     fullAdmin.value = true;
   });
 
   test('renders read-only banner for read-only admin', () => {
-    isReadOnlyAdminMock.mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     fullAdmin.value = false;
     render(<WelcomeView disableMenuItems={[]} dialLink="link" docLink="link" />);
 

@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -17,12 +18,8 @@ const gridState = vi.hoisted(() => {
     updateGridOptions: vi.fn((options: Record<string, unknown>) => gridOptions.push(options)),
   };
 
-  return { api, gridOptions, isReadOnly: false };
+  return { api, gridOptions };
 });
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => gridState.isReadOnly,
-}));
 
 vi.mock('@/src/components/EntityView/AddEntitiesGrid', () => ({
   default: ({
@@ -91,7 +88,7 @@ const role = (limits: DialRoleResource['limits'] = {}): DialRoleResource => ({
 
 describe('RoleEntities', () => {
   beforeEach(() => {
-    gridState.isReadOnly = false;
+    appContextMock.set({ isReadOnlyAdmin: false });
     gridState.gridOptions.length = 0;
     gridState.api.isDestroyed.mockClear();
     gridState.api.updateGridOptions.mockClear();
@@ -206,7 +203,7 @@ describe('RoleEntities', () => {
   });
 
   test('does not offer add or remove controls to a read-only admin', () => {
-    gridState.isReadOnly = true;
+    appContextMock.set({ isReadOnlyAdmin: true });
 
     render(<RoleEntities selectedRole={role({ modelA: {} })} models={models} isSkipRefresh onChangeRole={vi.fn()} />);
 

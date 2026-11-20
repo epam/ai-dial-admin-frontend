@@ -6,8 +6,6 @@ import { DialAliasResource } from '@/src/models/dial/alias';
 import { AliasCreateStep } from '../constants';
 import AliasCreateProperties from '../CreateProperties';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
-
 // The target field has its own spec; here it only has to receive the entity's target and report a change.
 vi.mock('../TargetField', () => ({
   default: ({

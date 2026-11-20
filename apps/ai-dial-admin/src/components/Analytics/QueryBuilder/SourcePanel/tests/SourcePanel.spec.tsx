@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { navigationMock } from '@/test-mocks/navigation';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -17,10 +18,7 @@ import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query'
 
 vi.mock('@/src/app/[lang]/queries/actions');
 
-const { showNotification } = vi.hoisted(() => ({ showNotification: vi.fn() }));
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 const { push: mockPush } = navigationMock.router;
 const TABLES: SourceTable[] = [

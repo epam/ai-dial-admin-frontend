@@ -21,8 +21,6 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   withdrawAdminConsent: vi.fn(),
 }));
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn(() => false) }));
-
 vi.mock('../DependenciesGrid', () => ({
   default: ({
     dependencies,

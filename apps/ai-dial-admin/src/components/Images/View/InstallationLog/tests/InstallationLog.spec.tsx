@@ -1,14 +1,11 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 
-const { showNotificationSpy, stableT } = vi.hoisted(() => ({
-  showNotificationSpy: vi.fn(),
+const { stableT } = vi.hoisted(() => ({
   stableT: (key: string) => key,
 }));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationSpy }),
-}));
+const { showNotification: showNotificationSpy } = notificationMock;
 
 vi.mock('@/src/locales/client', () => ({
   useI18n: () => stableT,

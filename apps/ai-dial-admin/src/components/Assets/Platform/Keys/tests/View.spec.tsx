@@ -1,16 +1,12 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialKeyResource } from '@/src/models/dial/resource';
 import { navigationMock } from '@/test-mocks/navigation';
 import KeyAssetView from '../View';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
 
 vi.mock('@/src/app/[lang]/platform-keys/actions', () => ({
   updateKey: vi.fn(async () => ({ success: true })),
@@ -64,7 +60,7 @@ const renderView = (key: Partial<DialKeyResource> = {}) =>
 
 describe('KeyAssetView', () => {
   beforeEach(() => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     navigationMock.setPathname('/assets-keys');
   });
 
@@ -90,7 +86,7 @@ describe('KeyAssetView', () => {
   });
 
   test('Does not render the Rotate button for a read-only admin', () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
 
     renderView();
 
