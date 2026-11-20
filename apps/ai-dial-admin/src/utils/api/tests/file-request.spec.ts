@@ -1,7 +1,9 @@
-import { describe, test, expect, vi } from 'vitest';
+import { beforeEach, describe, test, expect, vi } from 'vitest';
 import { fileRequest } from '../file-request';
 
-global.fetch = vi.fn();
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn());
+});
 
 const url = 'https://api.example.com/upload';
 const headers = { Authorization: 'Bearer token' };

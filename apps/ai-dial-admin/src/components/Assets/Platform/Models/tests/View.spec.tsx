@@ -27,8 +27,6 @@ vi.mock('../TabsContent', () => ({
     ),
 }));
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 let capturedJsonConfiguration: any;
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
   default: ({ jsonConfiguration, isSaveDisabled, onDiscard, onChangeActiveTab }: any) => {

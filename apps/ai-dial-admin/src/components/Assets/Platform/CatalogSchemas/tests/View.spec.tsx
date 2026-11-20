@@ -38,8 +38,6 @@ vi.mock('@/src/context/AppContext', () => ({
 
 vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 const schema = (overrides: Partial<DialCatalogSchemaResource> = {}): DialCatalogSchemaResource =>
   ({
     $id: 'https://dial.epam.com/catalog_schemas/agent',

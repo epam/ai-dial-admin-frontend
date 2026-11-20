@@ -1,3 +1,4 @@
+import { navigationMock } from '@/test-mocks/navigation';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -15,11 +16,7 @@ const executeStructuredQueryMock = vi.fn();
 const getMetricSnapshotsMock = vi.fn();
 const getTestSuiteMock = vi.fn();
 const getMetricLatestVersionMock = vi.fn();
-const routerReplaceMock = vi.fn();
-
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: routerReplaceMock }),
-}));
+const { replace: routerReplaceMock } = navigationMock.router;
 
 vi.mock('@/src/context/AppContext', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/src/context/AppContext')>();

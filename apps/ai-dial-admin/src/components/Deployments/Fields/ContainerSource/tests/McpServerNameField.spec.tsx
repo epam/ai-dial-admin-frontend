@@ -1,3 +1,4 @@
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -7,15 +8,7 @@ import { MCP_REGISTRY_PAGE_SIZE } from '@/src/constants/deployments/mcp-registry
 import { ValidationActionType } from '@/src/context/SaveValidationContext';
 import { ApplicationRoute } from '@/src/types/routes';
 
-const mockDispatch = vi.fn();
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ dispatch: mockDispatch, resetCounter: 0 }),
-  ValidationActionType: {
-    SetField: 'SET_FIELD_VALIDATION',
-    RemoveField: 'REMOVE_FIELD_VALIDATION',
-  },
-}));
+const { dispatch: mockDispatch } = saveValidationMock;
 
 const noopFetch = vi.fn(() => Promise.resolve({ success: true, response: { servers: [] } } as never));
 

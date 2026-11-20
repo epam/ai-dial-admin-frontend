@@ -39,8 +39,6 @@ class MockEventSource {
   }
 }
 
-vi.stubGlobal('EventSource', MockEventSource);
-
 vi.mock('@/src/components/Common/LogViewer/LogViewer', () => ({
   __esModule: true,
   default: ({ logs }: { logs: string }) => (
@@ -56,6 +54,7 @@ describe('InstallationLog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     MockEventSource.instances = [];
+    vi.stubGlobal('EventSource', MockEventSource);
   });
 
   test('opens EventSource with the build id in the URL', () => {

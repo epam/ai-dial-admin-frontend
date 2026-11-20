@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { HeaderI18nKey, ReadOnlyI18nKey } from '@/src/constants/i18n';
 import { MAIN_MENU_ID } from '@/src/constants/main-layout';
 import { useTheme } from '@/src/context/ThemeContext';
+import { navigationMock } from '@/test-mocks/navigation';
 import Header from './Header';
 
 const isReadOnlyAdminMock = vi.fn(() => false);
@@ -17,20 +18,12 @@ vi.mock('next-auth/react', () => ({
   }),
 }));
 
-// One shared router, like the real one: `Breadcrumbs` lists it as an effect dependency.
-const { router } = vi.hoisted(() => ({ router: { push: vi.fn() } }));
-
-vi.mock('next/navigation', () => ({
-  useRouter: vi.fn(() => router),
-  usePathname: vi.fn(() => '/en/models'),
-  useSearchParams: vi.fn(() => new URLSearchParams()),
-}));
-
 describe('Header', () => {
   const renderHeader = (docLink?: string) =>
     render(<Header isEnableAuth={false} appName="DIAL Admin" docLink={docLink} />);
 
   beforeEach(() => {
+    navigationMock.setPathname('/en/models');
     isReadOnlyAdminMock.mockReturnValue(false);
     vi.mocked(useTheme).mockReturnValue({ currentTheme: 'dark' } as ReturnType<typeof useTheme>);
   });

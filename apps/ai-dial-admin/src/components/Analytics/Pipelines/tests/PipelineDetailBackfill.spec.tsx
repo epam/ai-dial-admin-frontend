@@ -32,8 +32,6 @@ import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table
 vi.mock('@/src/app/[lang]/pipelines/actions');
 const backfillSidebar = vi.hoisted(() => ({ showSidebar: vi.fn(), closeSidebar: vi.fn() }));
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
-
 vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification: vi.fn(), removeNotification: vi.fn() }),
 }));

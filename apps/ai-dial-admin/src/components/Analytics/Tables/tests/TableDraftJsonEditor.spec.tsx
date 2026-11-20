@@ -1,3 +1,5 @@
+import { saveValidationMock } from '@/test-mocks/save-validation';
+import { JSONEditorError } from '@/src/types/editor';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -15,26 +17,8 @@ import {
 } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
-// The suite-wide SaveValidationContext mock pins `jsonErrors` empty; the marker cases need a
-// controllable pair, and a `showNotification` this file can count.
 const mocks = vi.hoisted(() => ({
-  jsonErrors: [] as { message: string; startLineNumber: number }[],
-  dispatch: vi.fn(),
   showNotification: vi.fn(() => 'notification-id'),
-}));
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  SaveValidationContextProvider: ({ children }: { children: React.ReactNode }) => children,
-  useSaveValidationContext: () => ({
-    isValid: true,
-    dispatch: mocks.dispatch,
-    jsonErrors: mocks.jsonErrors,
-    jsonErrorNotifications: [],
-  }),
-  useJsonEditorValidation: () => ({ editorId: 'e1', setJsonErrors: vi.fn(), removeEditor: vi.fn() }),
-  ValidationActionType: { SetJsonEditorNotifications: 'SET_JSON_EDITOR_NOTIFICATIONS', Reset: 'RESET' },
 }));
 
 vi.mock('@/src/context/NotificationContext', () => ({
@@ -133,7 +117,6 @@ const save = (user: ReturnType<typeof userEvent.setup>) => user.click(saveButton
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.jsonErrors = [];
   vi.mocked(getTable).mockResolvedValue({ success: false, status: 500 });
   vi.mocked(getTables).mockResolvedValue({ success: true, response: [] });
   vi.mocked(updateTable).mockResolvedValue({ success: true });
@@ -387,10 +370,12 @@ describe('TableDetailView — saving the draft document', () => {
 
 describe('TableDetailView — a document that does not parse', () => {
   test('parse markers block both requests and are raised as notifications', async () => {
-    mocks.jsonErrors = [
-      { message: 'Expected comma', startLineNumber: 4 },
-      { message: 'Unexpected token', startLineNumber: 9 },
-    ];
+    saveValidationMock.set({
+      jsonErrors: [
+        { message: 'Expected comma', startLineNumber: 4 },
+        { message: 'Unexpected token', startLineNumber: 9 },
+      ] as JSONEditorError[],
+    });
     const user = userEvent.setup();
     renderView();
 
@@ -400,7 +385,9 @@ describe('TableDetailView — a document that does not parse', () => {
     expect(updateTable).not.toHaveBeenCalled();
     expect(defineTableSchema).not.toHaveBeenCalled();
     expect(mocks.showNotification).toHaveBeenCalledTimes(2);
-    expect(mocks.dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'SET_JSON_EDITOR_NOTIFICATIONS' }));
+    expect(saveValidationMock.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'SET_JSON_EDITOR_NOTIFICATIONS' }),
+    );
   });
 });
 

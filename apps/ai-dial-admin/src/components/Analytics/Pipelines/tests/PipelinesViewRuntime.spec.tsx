@@ -11,8 +11,6 @@ import { PipelineKind, PipelineListItem, TransformType, TriggerKind } from '@/sr
 import { PauseOrigin } from '@/src/models/analytics/pipeline-runtime';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
 vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification: vi.fn() }),
 }));

@@ -1,3 +1,4 @@
+import { navigationMock } from '@/test-mocks/navigation';
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -13,10 +14,7 @@ import { CreatePipelineDto } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
 
-const refresh = vi.fn();
-const push = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, push }) }));
-
+const { refresh, push } = navigationMock.router;
 const showNotification = vi.fn();
 vi.mock('@/src/context/NotificationContext', () => ({
   useNotification: () => ({ showNotification, removeNotification: vi.fn() }),

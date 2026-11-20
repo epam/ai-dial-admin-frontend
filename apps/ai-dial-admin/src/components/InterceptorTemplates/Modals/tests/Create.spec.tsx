@@ -1,3 +1,4 @@
+import { navigationMock } from '@/test-mocks/navigation';
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -7,11 +8,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import Create from '../Create';
 import { ButtonsI18nKey } from '../../../../constants/i18n';
 
-const pushMock = vi.fn();
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: pushMock }),
-}));
-
+const { push: pushMock } = navigationMock.router;
 vi.mock('@/src/app/[lang]/interceptor-templates/actions', () => ({
   createInterceptorTemplate: vi.fn(() => Promise.resolve({ success: true })),
 }));

@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 import { PluginI18nKey } from '@/src/constants/i18n';
-import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { DialPluginResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
+import { saveValidationMock } from '@/test-mocks/save-validation';
 
 vi.mock('@/src/components/Common/JsonEditorInput/JsonEditorInput', () => ({
   default: ({ value, onChangeValue }: any) => (
@@ -15,12 +15,7 @@ vi.mock('@/src/components/Common/JsonEditorInput/JsonEditorInput', () => ({
   ),
 }));
 
-const dispatch = vi.fn();
-
-vi.mock('@/src/context/SaveValidationContext', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/src/context/SaveValidationContext')>()),
-  useSaveValidationContext: vi.fn(),
-}));
+const { dispatch } = saveValidationMock;
 
 const renderCreateForm = (
   onChangeEntity: (entity: object) => void,
@@ -44,7 +39,6 @@ const renderCreateForm = (
 describe('Plugin asset :: create form', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useSaveValidationContext).mockReturnValue({ dispatch } as any);
   });
 
   test('writes the name the user types to name', () => {

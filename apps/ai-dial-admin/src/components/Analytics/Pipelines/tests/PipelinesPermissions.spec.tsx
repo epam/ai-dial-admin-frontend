@@ -8,8 +8,6 @@ import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
 import { PipelineListItem, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
 // test-setup.tsx pins isFullAdmin true for the whole suite, so the non-admin case needs its own file.
 const isFullAdmin = { value: false };
 vi.mock('@/src/context/AppContext', () => ({

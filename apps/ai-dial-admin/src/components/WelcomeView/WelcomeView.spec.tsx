@@ -3,7 +3,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { WelcomeViewI18nKey } from './i18n';
 import WelcomeView from './WelcomeView';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { navigationMock } from '@/test-mocks/navigation';
 
 const isReadOnlyAdminMock = vi.fn(() => false);
 vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
@@ -19,18 +20,9 @@ vi.mock('@/src/context/AppContext', () => ({
   }),
 }));
 
-const router: ApplicationRoute[] = [];
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
-  usePathname: vi.fn(),
-}));
-
 describe('WelcomeView', () => {
-  beforeAll(() => {
-    global.window.open = vi.fn();
-  });
-
   beforeEach(() => {
+    vi.stubGlobal('open', vi.fn());
     isReadOnlyAdminMock.mockReturnValue(false);
     adminApiEnabled.value = true;
     fullAdmin.value = true;
@@ -76,8 +68,9 @@ describe('WelcomeView', () => {
     fireEvent.click(importBtn);
     fireEvent.click(exportBtn);
 
-    expect(global.window.open).toHaveBeenCalledWith('link', '_blank');
-    expect(router).toEqual([ApplicationRoute.ImportConfig, ApplicationRoute.ExportConfig]);
+    expect(window.open).toHaveBeenCalledWith('link', '_blank');
+    expect(navigationMock.router.push).toHaveBeenNthCalledWith(1, ApplicationRoute.ImportConfig);
+    expect(navigationMock.router.push).toHaveBeenNthCalledWith(2, ApplicationRoute.ExportConfig);
     expect(screen.getByText(WelcomeViewI18nKey.QuickActions)).toBeInTheDocument();
   });
 });

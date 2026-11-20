@@ -28,6 +28,8 @@
     "**/*.spec.tsx",
     "**/*.test.ts",
     "**/*.test.tsx",
-    "test-setup.tsx"
+    "test-setup.tsx",
+    "test-mocks/**",
+    "test-reset.ts"
   ]
 }

@@ -11,8 +11,6 @@ import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
 const backfillSidebar = vi.hoisted(() => ({ showSidebar: vi.fn(), closeSidebar: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
-
 // test-setup.tsx pins isFullAdmin true for the whole suite, so the non-admin case needs its own file.
 const isFullAdmin = { value: false };
 vi.mock('@/src/context/AppContext', () => ({

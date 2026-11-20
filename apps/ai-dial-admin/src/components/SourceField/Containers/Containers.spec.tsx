@@ -14,11 +14,6 @@ import {
   INFERENCE_TASK,
 } from '@/src/types/deployments/containers';
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
-  usePathname: vi.fn(),
-}));
-
 vi.mock('@/src/hooks/use-protected-request', () => ({
   useProtectedRequest: () => vi.fn((fn) => fn()),
 }));
