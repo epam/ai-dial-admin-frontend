@@ -8,6 +8,7 @@ import Properties from '../Properties';
 
 const getDeploymentMock = vi.fn();
 const getModelMock = vi.fn();
+const getPlatformApplicationMock = vi.fn();
 const windowOpenMock = vi.fn();
 
 vi.mock('@/src/app/[lang]/conversations/actions', () => ({
@@ -18,11 +19,17 @@ vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
   getModel: (...args: unknown[]) => getModelMock(...args),
 }));
 
+vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
+  getPlatformApplication: (...args: unknown[]) => getPlatformApplicationMock(...args),
+}));
+
 describe('Assets Conversations :: Properties', () => {
   beforeEach(() => {
     getDeploymentMock.mockReset();
     getModelMock.mockReset();
     getModelMock.mockResolvedValue(null);
+    getPlatformApplicationMock.mockReset();
+    getPlatformApplicationMock.mockResolvedValue(null);
     windowOpenMock.mockReset();
     vi.stubGlobal('open', windowOpenMock);
   });
