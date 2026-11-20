@@ -20,6 +20,8 @@ interface Props {
   disabled?: boolean;
   hideWithLoginOption?: boolean;
   excludeAuthTypes?: ToolsetAuthType[];
+  isDiscoveryUrlSupported?: boolean;
+  isDynamicRegistrationOffered?: boolean;
   onChange?: (authSettings: DialToolsetResourceAuthSettings, forwardPerRequestKey?: boolean) => void;
 }
 
@@ -36,6 +38,8 @@ const ResourceAuthentication: FC<Props> = ({
   redirectUrl,
   hideWithLoginOption,
   excludeAuthTypes,
+  isDiscoveryUrlSupported,
+  isDynamicRegistrationOffered,
   onChange,
   ...props
 }) => {
@@ -43,6 +47,7 @@ const ResourceAuthentication: FC<Props> = ({
   const { dispatch } = useSaveValidationContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isDisabled = disabled || isReadOnlyAdmin;
+  const redirectUri = redirectUrl ? `${window.location.origin}${redirectUrl}` : undefined;
   const selectedAuthType = useMemo(() => authSettings?.authentication_type || ToolsetAuthType.NONE, [authSettings]);
 
   const authOptions: AuthConfig[] = useMemo(
@@ -85,15 +90,12 @@ const ResourceAuthentication: FC<Props> = ({
       onChange?.(
         {
           authentication_type: authenticationType,
-          redirect_uri:
-            authenticationType === ToolsetAuthType.OAUTH && redirectUrl
-              ? `${window.location.origin}${redirectUrl}`
-              : undefined,
+          redirect_uri: authenticationType === ToolsetAuthType.OAUTH ? redirectUri : undefined,
         },
         authenticationType === ToolsetAuthType.API_KEY ? false : undefined,
       );
     },
-    [dispatch, onChange, redirectUrl],
+    [dispatch, onChange, redirectUri],
   );
 
   return (
@@ -108,6 +110,9 @@ const ResourceAuthentication: FC<Props> = ({
             disabled={true}
             authSettings={authSettings}
             withLoginVisible={!hideWithLoginOption}
+            isDiscoveryUrlSupported={isDiscoveryUrlSupported}
+            isDynamicRegistrationOffered={isDynamicRegistrationOffered}
+            redirectUri={redirectUri}
             {...props}
           />
         ) : (
@@ -121,6 +126,9 @@ const ResourceAuthentication: FC<Props> = ({
               authSettings={authSettings}
               onChange={onChange}
               withLoginVisible={!hideWithLoginOption}
+              isDiscoveryUrlSupported={isDiscoveryUrlSupported}
+              isDynamicRegistrationOffered={isDynamicRegistrationOffered}
+              redirectUri={redirectUri}
               {...props}
             />
           ))

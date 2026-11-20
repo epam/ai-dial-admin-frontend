@@ -1715,6 +1715,7 @@ export default {
     TokenEndpoint: 'Enter token endpoint',
     AuthorizationEndpoint: 'Enter authorization endpoint',
     Resource: 'Enter resource URL',
+    DiscoveryUrl: 'Enter MCP server or issuer URL',
     UpstreamEndpoint: 'Enter upstream endpoint',
     UpstreamId: 'Enter ID',
     UpstreamEndpointWithResponses: 'Enter chat completion endpoint',
@@ -1915,6 +1916,12 @@ export default {
     TokenEndpointAuthMethodNone: 'None',
     DynamicRegistration: 'Dynamic registration',
     ExistingClient: 'Existing client',
+    RegisterAutomatically: 'Register automatically',
+    DiscoveryUrl: 'Discovery URL',
+    DiscoveryUrlCaption:
+      "Where DIAL Core reads the sign-in settings: the MCP server's URL, or the identity provider's issuer URL. DIAL Core never sends requests of the application there.",
+    RegisteredByCore: 'Registered by DIAL Core',
+    UseExistingClientInstead: 'Use an existing client instead',
     ResourceCaption:
       'Optional. Sent as the OAuth resource indicator (RFC 8707). When empty, the value published by the MCP server is used, if any.',
     ToolsWarning: 'Endpoint has been changed. Save changes to display auto-detected tools.',

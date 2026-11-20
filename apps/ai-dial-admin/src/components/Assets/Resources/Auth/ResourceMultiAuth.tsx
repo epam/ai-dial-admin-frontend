@@ -33,6 +33,7 @@ import ResourceAuthentication from './ResourceAuthentication';
 import {
   getExternalServiceRowAction,
   isExternalServiceApproved,
+  isDynamicRegistrationOffered,
   isLoggedInToExternalService,
   isUnrecognisedAuthType,
 } from './external-service-auth-utils';
@@ -169,6 +170,8 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
           disabled={isReadOnlyAdmin}
           hideWithLoginOption
           excludeAuthTypes={[ToolsetAuthType.NONE]}
+          isDiscoveryUrlSupported
+          isDynamicRegistrationOffered={isDynamicRegistrationOffered(services, editState.originalId)}
         />
 
         {!isReadOnlyAdmin && (
