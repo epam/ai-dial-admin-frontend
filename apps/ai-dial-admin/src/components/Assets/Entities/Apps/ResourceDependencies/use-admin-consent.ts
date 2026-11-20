@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { startTransition, useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   getAdminConsentStatus,
@@ -35,18 +35,27 @@ export const useAdminConsent = (appPath: string, etag: string, savedDependencies
   const refresh = useCallback(async () => {
     const readId = ++latestReadRef.current;
     setIsLoading(true);
-    const res: ServerActionResponse<AdminConsentStatus> = await getReqRef.current(getAdminConsentStatus, appPath);
-    // A newer read supersedes this one, whichever finishes last.
-    if (readId !== latestReadRef.current) {
-      return;
+    let res: ServerActionResponse<AdminConsentStatus> | undefined;
+    try {
+      res = await getReqRef.current(getAdminConsentStatus, appPath);
+    } catch {
+      res = undefined;
+    } finally {
+      // A newer read supersedes this one, whichever finishes last.
+      if (readId === latestReadRef.current) {
+        setStatus(res?.success ? res.response : undefined);
+        setHasFailed(!res?.success || !res.response);
+        setIsLoading(false);
+      }
     }
-    setStatus(res.success ? res.response : undefined);
-    setHasFailed(!res.success || !res.response);
-    setIsLoading(false);
   }, [appPath]);
 
+  // The etag changes when a Save's `router.refresh()` lands. Dispatching the server action inside a
+  // transition queues it behind that refresh instead of racing it, which left the read unresolved.
   useEffect(() => {
-    void refresh();
+    startTransition(() => {
+      void refresh();
+    });
   }, [refresh, etag]);
 
   const mutate = useCallback(

@@ -46,4 +46,26 @@ describe('useAdminConsent', () => {
 
     expect(result.current).toMatchObject({ status: undefined, hasFailed: true });
   });
+
+  test('re-reads the status and finishes loading when the etag changes', async () => {
+    protectedRequest.mockResolvedValue({ success: true, response: { consented: false } });
+    const hook = renderHook(({ etag }) => useAdminConsent('applications/app', etag), {
+      initialProps: { etag: 'etag-1' },
+    });
+    await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
+
+    protectedRequest.mockResolvedValue({ success: true, response: { consented: true } });
+    hook.rerender({ etag: 'etag-2' });
+
+    await waitFor(() => expect(hook.result.current.status).toEqual({ consented: true }));
+    expect(hook.result.current.isLoading).toBe(false);
+  });
+
+  test('stops loading when the read throws', async () => {
+    protectedRequest.mockRejectedValue(new Error('boom'));
+
+    const { result } = await renderConsent();
+
+    expect(result.current).toMatchObject({ status: undefined, hasFailed: true });
+  });
 });
