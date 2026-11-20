@@ -1853,6 +1853,7 @@ export enum EntityFieldsI18nKey {
 
 export enum ToolsetI18nKey {
   Tools = 'Toolset.Tools',
+  SearchingTools = 'Toolset.SearchingTools',
   AddTools = 'Toolset.AddTools',
   UseAllTools = 'Toolset.UseAllTools',
   AddedManually = 'Toolset.AddedManually',
@@ -1862,6 +1863,7 @@ export enum ToolsetI18nKey {
   ToolsetPath = 'Toolset.ToolsetPaths',
   AutoDetected = 'Toolset.AutoDetected',
   ToolsWarning = 'Toolset.ToolsWarning',
+  SavedApplicationToolsWarning = 'Toolset.SavedApplicationToolsWarning',
   ClientRegistrationType = 'Toolset.ClientRegistrationType',
   TokenEndpointAuthMethod = 'Toolset.TokenEndpointAuthMethod',
   TokenEndpointAuthMethodClientSecretBasic = 'Toolset.TokenEndpointAuthMethodClientSecretBasic',
