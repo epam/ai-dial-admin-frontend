@@ -122,6 +122,33 @@ describe('ModelView — persistent plugin conflict validation', () => {
   });
 });
 
+describe('ModelView — persistent custom translator validation', () => {
+  test.each([
+    { baseUrl: 'not-a-url', isDisabled: true },
+    { baseUrl: 'dial-plugin://', isDisabled: true },
+    { baseUrl: '', isDisabled: false },
+    { baseUrl: 'dial-plugin://example', isDisabled: false },
+    { baseUrl: 'https://example.com', isDisabled: false },
+  ])('retains validity for $baseUrl after leaving Properties', async ({ baseUrl, isDisabled }) => {
+    const user = userEvent.setup();
+    const originalModel = {
+      ...model,
+      interfaces: {
+        [DeploymentInterfaceType.OpenAIChatCompletions]: {
+          base_url: '',
+          mode: InterfaceMode.Translator,
+          translator: { baseUrl, out: DeploymentInterfaceType.OpenAIResponses },
+        },
+      },
+    } as AssetModel;
+    render(<ModelView etag="etag" originalModel={originalModel} roles={[]} interceptors={[]} />);
+
+    expect(screen.getByRole('button', { name: 'Save' })).toHaveProperty('disabled', isDisabled);
+    await user.click(screen.getByRole('button', { name: 'Other tab' }));
+    expect(screen.getByRole('button', { name: 'Save' })).toHaveProperty('disabled', isDisabled);
+  });
+});
+
 describe('ModelView — config-file source', () => {
   beforeEach(() => {
     vi.clearAllMocks();

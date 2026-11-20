@@ -115,7 +115,7 @@ const BaseUrlControl = ({
           {source === BaseUrlSource.Url ? (
             <Input
               id={id}
-              labelProps={{ label: t(BasicI18nKey.URL) }}
+              labelProps={{ label: t(BasicI18nKey.URL), className: 'sr-only' }}
               placeholder={placeholder}
               value={value || ''}
               error={error?.text}
@@ -125,7 +125,7 @@ const BaseUrlControl = ({
           ) : (
             <Select
               id={id}
-              labelProps={{ label: t(BasicI18nKey.Plugin) }}
+              labelProps={{ label: t(BasicI18nKey.Plugin), className: 'sr-only' }}
               placeholder={t(BasicI18nKey.SelectPlugin)}
               options={options}
               value={selectedPlugin}

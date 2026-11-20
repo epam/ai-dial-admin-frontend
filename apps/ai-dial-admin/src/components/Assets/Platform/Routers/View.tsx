@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { removeRouter, updateRouter } from '@/src/app/[lang]/platform-routers/actions';
+import { isPluginUrl } from '@/src/components/BaseControls/BaseUrlControl/utils';
+import { useCustomTranslatorValidation } from '@/src/components/BaseControls/InterfacesField/use-custom-translator-validation';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -20,9 +22,11 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { InterfaceMode } from '@/src/models/dial/interfaces';
 import { DialRouterResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -38,6 +42,7 @@ interface Props {
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
   translators?: ResourceInfo[];
+  plugins?: PluginOptions;
   catalogSchemas?: CatalogSchemaOptions;
   schemes?: DialApplicationScheme[];
   /** True when `originalRouter` came from Core's config-file population, not the platform bucket. */
@@ -50,6 +55,7 @@ const RouterView: FC<Props> = ({
   roles,
   optionWarnings,
   translators,
+  plugins,
   catalogSchemas,
   schemes,
   isConfigFileSource,
@@ -73,6 +79,15 @@ const RouterView: FC<Props> = ({
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [discardKey, setDiscardKey] = useState(0);
+
+  // Interface field validation unmounts outside Properties, so keep this invariant at view level.
+  const hasPluginOverrideConflict = Object.values(selectedRouter.interfaces ?? {}).some(
+    (value) =>
+      (value.mode ?? InterfaceMode.Passthrough) === InterfaceMode.Passthrough &&
+      isPluginUrl(value.base_url || selectedRouter.baseUrl) &&
+      Object.keys(value.overridePaths ?? {}).length > 0,
+  );
+  const hasInvalidTranslatorUrl = useCustomTranslatorValidation(selectedRouter.interfaces);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -131,6 +146,8 @@ const RouterView: FC<Props> = ({
   }, [originalRouter]);
 
   const onSave = useCallback(() => {
+    if (hasPluginOverrideConflict || hasInvalidTranslatorUrl) return;
+
     getReqRef.current(updateRouter, selectedRouter, etag).then((res) => {
       if (res.etag) {
         setEtag(res.etag);
@@ -148,7 +165,16 @@ const RouterView: FC<Props> = ({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [selectedRouter, etag, showNotification, t, router, fetchFiles]);
+  }, [
+    selectedRouter,
+    etag,
+    showNotification,
+    t,
+    router,
+    fetchFiles,
+    hasPluginOverrideConflict,
+    hasInvalidTranslatorUrl,
+  ]);
 
   const onIframeSaved = useCallback(() => {
     fetchFiles(selectedRouter._metadata?.folderId ?? '');
@@ -222,7 +248,7 @@ const RouterView: FC<Props> = ({
         etag={etag}
         isChanged={isChanged || isIframeDirty}
         isSaving={isIframeSaving}
-        isSaveDisabled={!isIframeValid}
+        isSaveDisabled={!isIframeValid || hasPluginOverrideConflict || hasInvalidTranslatorUrl}
         onDiscard={onDiscardChanges}
         onSave={onSaveChanges}
         tabs={tabs}
@@ -248,6 +274,7 @@ const RouterView: FC<Props> = ({
             selectedRouter={selectedRouter}
             roles={roles}
             translators={translators}
+            plugins={plugins}
             catalogSchemas={catalogSchemas}
             schemes={schemes}
             isEditorEnabled={isEditorEnabled}
