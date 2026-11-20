@@ -121,4 +121,10 @@ describe('buildPieOptions', () => {
       { id: '1-writing', label: 'writing', color: '#222' },
     ]);
   });
+
+  test('legends the only slice of a single-slice pie', () => {
+    expect(buildSeriesLegend(buildPieOptions(COLORS, slices.slice(0, 1)))).toEqual([
+      { id: '0-coding', label: 'coding', color: '#111' },
+    ]);
+  });
 });
