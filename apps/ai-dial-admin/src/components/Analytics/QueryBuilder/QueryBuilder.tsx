@@ -3,6 +3,9 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
+  DialItemType,
+  DIAL_ICON_SIZE,
+  FileIcon,
   ButtonDropdown,
   ButtonVariant,
   GhostButton,
@@ -10,13 +13,10 @@ import {
   NoDataContent,
   PrimaryButton,
   SegmentedControl,
-  Badge,
-  BadgeColor,
-  BadgeVariant,
   Button,
 } from '@epam/ai-dial-ui-kit';
 import type { DropdownItem, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
-import { IconCopy, IconPencilMinus, IconPlayerPlay, IconTable } from '@tabler/icons-react';
+import { IconCopy, IconPencilMinus, IconPlayerPlay } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
@@ -32,6 +32,7 @@ import ChipBar from '@/src/components/Analytics/QueryBuilder/Chips/ChipBar';
 import { PeriodControl } from '@/src/components/Analytics/QueryBuilder/Chips/models';
 import BuilderArea from '@/src/components/Analytics/QueryBuilder/Layout/BuilderArea';
 import QueryHeader from '@/src/components/Analytics/QueryBuilder/Layout/QueryHeader';
+import ScopeBadge from '@/src/components/Analytics/QueryBuilder/Common/ScopeBadge';
 import SourceProblemIcon from '@/src/components/Analytics/QueryBuilder/Layout/SourceProblemIcon';
 import DeleteQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DeleteQueryPopup';
 import SwitchToBuilderPopup from '@/src/components/Analytics/QueryBuilder/Modals/SwitchToBuilderPopup';
@@ -60,7 +61,6 @@ import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-for
 import { createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { SAVED_QUERY_SCOPE_I18N } from '@/src/constants/analytics/queries';
 import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
 import { ButtonsI18nKey, QueriesI18nKey, QueryBuilderI18nKey, QueryChipsI18nKey } from '@/src/constants/i18n';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -72,7 +72,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryFunction } from '@/src/models/analytics/query-function';
-import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query';
+import { SavedQuery } from '@/src/models/analytics/saved-query';
 import { StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import {
   ChartConfig,
@@ -107,11 +107,7 @@ interface Props {
 }
 
 const AI_PANEL_STORAGE_KEY = 'query-builder-ai-panel-open';
-
-const SCOPE_BADGE_COLOR: Record<SavedQueryScope, BadgeColor> = {
-  [SavedQueryScope.Personal]: BadgeColor.Violet,
-  [SavedQueryScope.Common]: BadgeColor.Green,
-};
+const SOURCE_ICON_NAME = 'source.csv';
 
 const COPY_HEADER_I18N: Record<QueryCopyMode, QueriesI18nKey> = {
   [QueryCopyMode.SaveDraft]: QueriesI18nKey.SaveAsQuery,
@@ -646,7 +642,7 @@ const QueryBuilder: FC<Props> = ({
     return (
       <div className="flex h-full min-h-0 flex-col gap-2">
         {sqlError && <span className="text-error dial-tiny-text">{sqlError}</span>}
-        <div className="min-h-0 flex-1 overflow-hidden rounded border border-primary">
+        <div className="min-h-0 flex-1 overflow-hidden">
           {sqlLoading ? (
             <div className="flex h-full items-center justify-center">
               <Spinner size={32} fullWidth />
@@ -668,19 +664,11 @@ const QueryBuilder: FC<Props> = ({
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 pr-4">
           <QueryHeader
             title={name ?? t(QueriesI18nKey.Title)}
-            badge={
-              savedQueryPage.savedQuery && (
-                <Badge
-                  variant={BadgeVariant.Filled}
-                  color={SCOPE_BADGE_COLOR[savedQueryPage.savedQuery.scope]}
-                  label={t(SAVED_QUERY_SCOPE_I18N[savedQueryPage.savedQuery.scope])}
-                />
-              )
-            }
+            badge={savedQueryPage.savedQuery && <ScopeBadge scope={savedQueryPage.savedQuery.scope} />}
             subtitle={
               savedQueryPage.savedQuery && (
                 <span className="flex items-center gap-2 text-secondary dial-small-text">
-                  <IconTable size={16} className="shrink-0 text-success" aria-hidden />
+                  <FileIcon type={DialItemType.File} name={SOURCE_ICON_NAME} size={DIAL_ICON_SIZE.SM} decorative />
                   {state.entityName || savedQueryPrimarySource(savedQueryPage.savedQuery)}
                   {shownSourceProblem && <SourceProblemIcon problem={shownSourceProblem} />}
                 </span>

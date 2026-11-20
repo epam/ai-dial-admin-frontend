@@ -2,7 +2,8 @@
 
 import { FC } from 'react';
 
-import { IconLayoutSidebarLeftExpand } from '@tabler/icons-react';
+import { DIAL_ICON_SIZE } from '@epam/ai-dial-ui-kit';
+import { IconLayoutSidebar } from '@tabler/icons-react';
 
 import { QueryBuilderI18nKey, QuerySourcePanelI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -19,11 +20,11 @@ const CollapsedSourcePanel: FC<Props> = ({ onExpand }) => {
       type="button"
       aria-label={t(QuerySourcePanelI18nKey.Expand)}
       aria-expanded="false"
-      className="flex h-full w-9 shrink-0 flex-col items-center gap-2 border-r border-tertiary bg-layer-2 py-3 text-secondary hover:bg-layer-3 hover:text-primary focus-visible:bg-layer-3 focus-visible:text-primary"
+      className="-ml-4 flex h-full w-16 shrink-0 flex-col items-center gap-4 border-r border-tertiary py-3 text-secondary hover:bg-layer-2 hover:text-primary focus-visible:bg-layer-2 focus-visible:text-primary focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary md:-ml-6"
       onClick={onExpand}
     >
-      <IconLayoutSidebarLeftExpand size={18} className="shrink-0" aria-hidden />
-      <span className="uppercase tracking-wide dial-tiny-semi-text [writing-mode:vertical-rl]">
+      <IconLayoutSidebar size={DIAL_ICON_SIZE.MD} className="shrink-0" aria-hidden />
+      <span className="rotate-180 text-primary dial-small-semi-text [writing-mode:vertical-rl]">
         {t(QueryBuilderI18nKey.Source)}
       </span>
     </button>

@@ -14,6 +14,12 @@ export enum QueryScopeFilter {
   Common = 'common',
 }
 
+export enum QueryRowIndent {
+  Root = 'root',
+  BesideGroups = 'beside-groups',
+  Nested = 'nested',
+}
+
 export enum ColumnLoadStatus {
   Loading = 'loading',
   Loaded = 'loaded',

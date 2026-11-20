@@ -2,8 +2,8 @@
 
 import { FC, useEffect, useId, useState } from 'react';
 
-import { ElementSize, GhostIconButton, Tabs } from '@epam/ai-dial-ui-kit';
-import { IconLayoutSidebarLeftCollapse } from '@tabler/icons-react';
+import { DIAL_ICON_SIZE, GhostIconButton, Tabs } from '@epam/ai-dial-ui-kit';
+import { IconLayoutSidebar } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import CollapsedSourcePanel from '@/src/components/Analytics/QueryBuilder/SourcePanel/CollapsedSourcePanel';
@@ -55,7 +55,7 @@ const SourcePanel: FC<Props> = ({ defaultTab, currentTable, currentQueryId }) =>
 
   return (
     <>
-      {isNarrow && <div className="w-9 shrink-0" />}
+      {isNarrow && <div className="-ml-4 w-16 shrink-0 md:-ml-6" />}
       <aside
         aria-label={t(QueryBuilderI18nKey.Source)}
         className={classNames(
@@ -71,11 +71,10 @@ const SourcePanel: FC<Props> = ({ defaultTab, currentTable, currentQueryId }) =>
             onTabChange={(id) => onSelectTab(id as SourcePanelTab)}
           />
           <GhostIconButton
-            size={ElementSize.Small}
             aria-label={t(QuerySourcePanelI18nKey.Collapse)}
             aria-expanded
             aria-controls={contentId}
-            icon={<IconLayoutSidebarLeftCollapse size={16} aria-hidden />}
+            icon={<IconLayoutSidebar size={DIAL_ICON_SIZE.MD} aria-hidden />}
             onClick={() => onToggleExpanded(false)}
           />
         </div>

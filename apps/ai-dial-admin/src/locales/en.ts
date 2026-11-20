@@ -3032,7 +3032,7 @@ export default {
     AiPanelCollapse: 'Collapse the Ask AI panel',
     AiEmptyTitle: 'Build a query with AI',
     AiEmptyDescription:
-      'Describe what you want to see in plain words. AI sets up the filters, grouping and sorting, and can explain or fix your query.\nYou review every change before it is applied.',
+      'Describe what you want to see in plain words. AI sets up the filters, grouping and sorting, and can explain or fix your query.',
     AiPromptPlaceholder: 'Describe or adjust the query…',
     AiSend: 'Send',
     AiSending: 'Sending…',
