@@ -92,9 +92,6 @@ export const useToolsDisplay = ({
   );
 
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('fourth eff');
-
     if (isRunnerApplication) return;
     if (!tools?.length && !manualAddedTools?.length) {
       setDisplayTools([]);
@@ -144,9 +141,6 @@ export const useToolsDisplay = ({
   }, [search, tools, manualAddedTools, selectedFilters, useAllTools, isRunnerApplication]);
 
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('fifth eff');
-
     setUseAllTools(getEntityAllowedTools(originalEntity)?.length === 0);
   }, [getEntityAllowedTools, originalEntity]);
 

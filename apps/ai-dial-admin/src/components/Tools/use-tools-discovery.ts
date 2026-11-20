@@ -27,8 +27,6 @@ export const useToolsDiscovery = ({
   const savedName = originalEntity?.name;
 
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('first eff');
     let isCancelled = false;
     if (selectedEntity?.name && !isMcpToolset && !isRunnerApplication) {
       let getFunction;
@@ -56,9 +54,6 @@ export const useToolsDiscovery = ({
   }, [isApplicationTools, isAsset, isMcpToolset, isRunnerApplication, selectedEntity, showNotification]);
 
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('second eff');
-
     if (!isRunnerApplication || !savedName) return;
     let isCancelled = false;
     const fetchAllowedTools = async () => {
@@ -89,9 +84,6 @@ export const useToolsDiscovery = ({
   }, [isRunnerApplication, isAsset, savedAssetPath, savedName, showNotification]);
 
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('third eff');
-
     const fetchTools = async (id: string) => {
       setLoading(true);
       const res = await getContainerTools(id);

@@ -32,10 +32,10 @@ const ToolsList = memo(
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-            {visibleTools.map((tool, index) => (
+            {visibleTools.map((tool) => (
               <ToolComponent
                 tool={tool}
-                key={index}
+                key={tool.name}
                 disabled={disabled}
                 isAddedManual={!discoveredNames.has(tool.name)}
                 isMcpToolset={isMcpToolset}

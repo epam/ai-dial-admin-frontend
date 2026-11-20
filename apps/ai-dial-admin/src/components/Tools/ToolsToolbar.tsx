@@ -45,6 +45,7 @@ const ToolsToolbar: FC<Props> = ({
   onOpenModal,
 }) => {
   const t = useI18n();
+  const isAllSelected = isEqual(TOOL_FILTERS_CONFIGURATION, selectedFilters);
 
   return (
     <>
@@ -74,7 +75,7 @@ const ToolsToolbar: FC<Props> = ({
           {!useAllTools && isManagementVisible && (
             <div className="flex items-center gap-x-6">
               <ToolsFilter
-                isAllSelected={isEqual(TOOL_FILTERS_CONFIGURATION, selectedFilters)}
+                isAllSelected={isAllSelected}
                 onSelectAll={onSelectAll}
                 selectedFilters={selectedFilters}
                 onSelectFilter={onSelectFilter}
