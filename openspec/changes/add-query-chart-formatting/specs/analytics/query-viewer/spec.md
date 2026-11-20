@@ -255,7 +255,7 @@ A legend SHALL take the room its entries need and give the rest to the chart, up
 chart area: beside the chart it SHALL be as wide as its widest entry, one entry per line; above or below it
 SHALL wrap its entries into as many rows as they need. Only a legend that would exceed that share SHALL
 scroll. Left and right SHALL lay out alike, as SHALL above and below. A long entry SHALL be truncated on
-screen while its accessible name stays the full value.
+screen, show its full value in a tooltip on hover, and keep the full value as its accessible name.
 
 #### Scenario: The legend moves to the chosen side
 

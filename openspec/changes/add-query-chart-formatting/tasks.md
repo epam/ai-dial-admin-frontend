@@ -42,3 +42,4 @@
 - [x] 7.5 Drop the pie's outside labels and leader lines, and size the legend by its entries up to two fifths of the chart area on every side, with truncated entries, in `Result/chart-options.ts` and `Result/SeriesChart.tsx`
 - [x] 7.6 Start the chart formatting panel collapsed until the user opens it (`Result/use-chart-panel-open.ts`)
 - [x] 7.7 Label every category on the X axis and tilt the labels when they do not fit the chart's width (`fitCategoryLabels` in `Result/chart-options.ts`, measured in `Result/SeriesChart.tsx`)
+- [x] 7.8 Reveal a truncated legend entry's full name with the kit `EllipsisTooltip` in `Usage/Charts/ChartLegend.tsx`
