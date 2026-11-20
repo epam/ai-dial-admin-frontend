@@ -32,3 +32,9 @@
 - [x] 6.2 Component tests: `ChartFormattingPanel` (controls per type, collapse state and its persistence, keyboard reachability when collapsed), `ResultChart` wiring, `ResultScorecard` (with and without trend, failed trend raises no notification), saved-query round-trip of the legend and the scorecard, and a pre-legend query not opening as changed
 - [x] 6.3 Run the `spec-browser-verify` skill for this change against the local app (auth working in the Playwright session) and resolve every `fail` verdict; for scenarios that save a query, create a query of its own and delete it afterwards
 - [x] 6.4 Run lint, format, both typechecks and the full test suite
+
+## 7. Default draft table
+
+- [x] 7.1 Make `resolveDraftTable` (`SourcePanel/utils/source-panel.ts`) fall back to `dial_usage_log` before the first queryable table, with unit tests for both fallbacks
+- [x] 7.2 Drop the "(no value)" category label from the Query Builder chart, the dashboard widget and `buildShareFigure`, so a blank category stays unlabelled
+- [x] 7.3 Draw the bar/line Y selector as a single-value select in `Result/ResultChart.tsx` when only one aggregate column is available

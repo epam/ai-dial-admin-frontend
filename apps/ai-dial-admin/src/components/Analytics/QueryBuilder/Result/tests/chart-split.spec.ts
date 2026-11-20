@@ -12,7 +12,7 @@ import { ChartType } from '@/src/models/analytics/query-builder';
 import { fallbackDarkTheme } from '@/src/utils/themes/constant';
 
 const COLORS = getChartColors(fallbackDarkTheme);
-const LABELS = { emptyLabel: '(no value)', otherLabel: 'Other' };
+const LABELS = { otherLabel: 'Other' };
 
 const ROWS = [
   { bucket: '2026-11-13T10:00:00Z', sentiment: 'neutral', n: 14 },
@@ -25,7 +25,6 @@ const CONTEXT = {
   colors: COLORS,
   dimensionColumns: ['bucket', 'sentiment'],
   otherLabel: 'Other',
-  emptyLabel: '(no value)',
   columnLabels: {},
   splitField: 'sentiment',
 };
@@ -56,15 +55,13 @@ describe('pivotSplitSeries', () => {
     expect(series[2].data).toEqual([1]);
   });
 
-  test('names a blank split value with the empty label and sums repeated rows', () => {
+  test('leaves a blank split value unnamed and sums repeated rows', () => {
     const rows = [
       { bucket: 'x', sentiment: '', n: 2 },
       { bucket: 'x', sentiment: null, n: 3 },
     ];
 
-    expect(pivotSplitSeries(rows, 'bucket', 'n', 'sentiment', LABELS).series).toEqual([
-      { name: '(no value)', data: [5] },
-    ]);
+    expect(pivotSplitSeries(rows, 'bucket', 'n', 'sentiment', LABELS).series).toEqual([{ name: '', data: [5] }]);
   });
 });
 

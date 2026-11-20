@@ -341,7 +341,6 @@ export interface ChartBuildContext {
   colors: ChartColors;
   dimensionColumns: string[];
   otherLabel: string;
-  emptyLabel: string;
   columnLabels: Record<string, string>;
   splitField?: string | null;
 }

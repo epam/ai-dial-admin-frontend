@@ -57,6 +57,21 @@ describe('QueryBuilder :: ResultChart', () => {
     expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis, total' })).toBeInTheDocument();
   });
 
+  test('offers several Y columns as tags and a single one as a plain select', () => {
+    renderChart({ ...DEFAULT_CHART_CONFIG, xField: 'deployment', yFields: ['total'] });
+    expect(screen.getByRole('button', { name: 'Remove total' })).toBeInTheDocument();
+  });
+
+  test('draws the Y selector as a plain select when one column is available', () => {
+    renderChart({ ...DEFAULT_CHART_CONFIG, xField: 'deployment', yFields: ['total'] }, RESULT, {
+      ...META,
+      aggregateColumns: ['total'],
+    });
+
+    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis, total' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Remove total' })).toBeNull();
+  });
+
   test('dimension columns display by their schema display name, aggregates by their alias', () => {
     renderChart();
     const xAxis = screen.getByRole('combobox', { name: /^QueryBuilder.ChartXAxis/ });

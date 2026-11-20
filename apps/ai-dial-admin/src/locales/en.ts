@@ -3032,7 +3032,6 @@ export default {
     ChartLegendLeft: 'Left',
     ChartValue: 'Value',
     ChartOtherSlice: 'Other',
-    ChartEmptyCategory: '(no value)',
     ChartNoRows: 'The query returned no rows, so there is nothing to chart.',
     ChartNoDimension: 'Charts need a grouped result — group the query by a column to plot values against.',
     ChartNoValueColumn: 'This result has no column that can be plotted as a value.',

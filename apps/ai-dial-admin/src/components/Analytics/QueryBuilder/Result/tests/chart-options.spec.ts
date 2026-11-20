@@ -26,7 +26,6 @@ const CONTEXT = {
   colors: COLORS,
   dimensionColumns: ['deployment'],
   otherLabel: 'Other',
-  emptyLabel: '(no value)',
   columnLabels: {},
 };
 
@@ -235,13 +234,13 @@ describe('QueryBuilder :: chart-options', () => {
   });
 
   describe('buildChartOptions dispatch', () => {
-    test('names a category with no value on the axis', () => {
+    test('leaves a category with no value unlabelled on the axis', () => {
       const rows = [
         { deployment: '', total: 2 },
         { deployment: 'gpt', total: 1 },
       ];
       const bar = buildChartOptions(ChartType.Bar, rows, 'deployment', ['total'], CONTEXT);
-      expect((bar.xAxis as { data: string[] }).data).toContain('(no value)');
+      expect((bar.xAxis as { data: string[] }).data).toEqual(['', 'gpt']);
     });
 
     test('routes each type to its series shape', () => {

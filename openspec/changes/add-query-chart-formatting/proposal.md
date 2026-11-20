@@ -27,6 +27,9 @@ value.
   in the existing `type` member. A configuration stored without legend settings opens with the legend on,
   below the chart. Storing the legend needs a new member in the analytics service's saved-query chart model,
   so this change ships after the service accepts it.
+- The draft builder opens on `dial_usage_log` instead of the first table in the list, the table most
+  queries start from; without it the first queryable table stays the default.
+- A chart category with no value is left unlabelled instead of reading "(no value)".
 
 ## Capabilities
 
@@ -41,6 +44,9 @@ _None._
   single-row result chartable.
 - `analytics/saved-queries`: the stored chart configuration carries legend settings and the Scorecard type,
   and an older configuration without legend settings opens with defaults.
+- `analytics/query-builder`: a draft opened without a picked table starts on `dial_usage_log` when it is
+  queryable, and on the first queryable table otherwise.
+- `analytics/source-panel`: a table row opened in a new tab shows that same default table.
 
 ## Non-goals
 

@@ -55,9 +55,6 @@ export const strictNumber = (value: unknown): number | null => {
 export const getStrictNumericColumns = (rows: ResultRows, columns: string[]): string[] =>
   rows.length ? columns.filter((column) => rows.every((row) => strictNumber(row[column]) !== null)) : [];
 
-// A blank category would draw an unlabeled bar or slice, so it reads as `emptyLabel` instead.
-const renderCategory = (value: unknown, emptyLabel: string): string => renderCell(value) || emptyLabel;
-
 export interface SplitSeries {
   name: string;
   data: Array<number | null>;
@@ -69,7 +66,6 @@ export interface SplitPivot {
 }
 
 interface SplitLabels {
-  emptyLabel: string;
   otherLabel: string;
 }
 
@@ -81,18 +77,18 @@ export const pivotSplitSeries = (
   xField: string,
   yField: string,
   splitField: string,
-  { emptyLabel, otherLabel }: SplitLabels,
+  { otherLabel }: SplitLabels,
   maxSeries = PIE_MAX_SLICES,
 ): SplitPivot => {
   const ordered = sortRowsByX(rows, xField);
-  const xData = [...new Set(ordered.map((row) => renderCategory(row[xField], emptyLabel)))];
+  const xData = [...new Set(ordered.map((row) => renderCell(row[xField])))];
   const xIndex = new Map(xData.map((x, index) => [x, index]));
 
   const bySplit = new Map<string, Array<number | null>>();
   ordered.forEach((row) => {
-    const name = renderCategory(row[splitField], emptyLabel);
+    const name = renderCell(row[splitField]);
     const data = bySplit.get(name) ?? xData.map(() => null);
-    const index = xIndex.get(renderCategory(row[xField], emptyLabel)) as number;
+    const index = xIndex.get(renderCell(row[xField])) as number;
     data[index] = sumInto(data[index], toNumber(row[yField]));
     bySplit.set(name, data);
   });
@@ -178,15 +174,14 @@ const buildCartesianOptions = (
   xField: string,
   yFields: string[],
   label: (column: string) => string = (column) => column,
-  emptyLabel = '',
   splitField: string | null = null,
   otherLabel = '',
 ): EChartsOption => {
   if (splitField) {
-    return buildSplitOptions(colors, type, rows, xField, yFields[0], splitField, label, { emptyLabel, otherLabel });
+    return buildSplitOptions(colors, type, rows, xField, yFields[0], splitField, label, { otherLabel });
   }
   const ordered = sortRowsByX(rows, xField);
-  const xData = ordered.map((row) => renderCategory(row[xField], emptyLabel));
+  const xData = ordered.map((row) => renderCell(row[xField]));
   const isMultiSeries = yFields.length > 1;
   const options = baseOptions(colors, xData, isMultiSeries ? void 0 : label(yFields[0]));
 
@@ -307,7 +302,6 @@ export const buildChartOptions = (
     xField,
     yFields,
     label,
-    context.emptyLabel,
     context.splitField ?? null,
     context.otherLabel,
   );

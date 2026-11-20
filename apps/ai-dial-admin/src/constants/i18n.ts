@@ -2941,7 +2941,6 @@ export enum QueryBuilderI18nKey {
   ChartLegendLeft = 'QueryBuilder.ChartLegendLeft',
   ChartValue = 'QueryBuilder.ChartValue',
   ChartOtherSlice = 'QueryBuilder.ChartOtherSlice',
-  ChartEmptyCategory = 'QueryBuilder.ChartEmptyCategory',
   ChartNoRows = 'QueryBuilder.ChartNoRows',
   ChartNoDimension = 'QueryBuilder.ChartNoDimension',
   ChartNoValueColumn = 'QueryBuilder.ChartNoValueColumn',

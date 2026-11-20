@@ -80,7 +80,7 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig, trendSou
   const xField = isScorecard ? null : (config.xField ?? xOptions[0] ?? null);
   const splitField =
     isSplitResult && SPLIT_TYPES.includes(config.type) ? resolveChartSplit(meta.dimensionColumns, xField) : null;
-  const isMultiY = descriptor.isMultiY && !splitField;
+  const isMultiY = descriptor.isMultiY && !splitField && yOptions.length > 1;
   const yFields = useMemo(
     () => resolveYFields(config.yFields, yOptions, xField, isMultiY),
     [config.yFields, yOptions, xField, isMultiY],
@@ -127,7 +127,6 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig, trendSou
       const share = buildShareFigure(colors, rows, xField, valueField, {
         otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
         sliceCount: PIE_MAX_SLICES,
-        emptyLabel: t(QueryBuilderI18nKey.ChartEmptyCategory),
       });
       return buildPieOptions(colors, share.slices);
     }
@@ -135,7 +134,6 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig, trendSou
       colors,
       dimensionColumns: meta.dimensionColumns,
       otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
-      emptyLabel: t(QueryBuilderI18nKey.ChartEmptyCategory),
       columnLabels: meta.columnLabels,
       splitField,
     });
