@@ -54,7 +54,9 @@ vi.mock('@/src/components/TestSuites/utils/template-variables', async (importOri
 });
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
-  default: ({ entity }: { entity: unknown }) => <div>JsonEditor:{JSON.stringify(entity)}</div>,
+  default: ({ entity, text }: { entity: unknown; text?: string }) => (
+    <div>JsonEditor:{text ?? JSON.stringify(entity)}</div>
+  ),
 }));
 
 vi.mock('../components/Variables', () => ({
@@ -312,6 +314,71 @@ describe('TryOut Columns tab request binding', () => {
     await user.click(await screen.findByRole('tab', { name: TabsI18nKey.Columns }));
 
     expect(await screen.findByText(TestSuitesI18nKey.ColumnNotExtractedNoneReported)).toBeInTheDocument();
+  });
+});
+
+describe('TryOut streaming Events section', () => {
+  test('shows Events under Response when streaming is true, including empty events', async () => {
+    vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
+      success: true,
+      response: {
+        resolvedRequest: { body: {} },
+        response: {
+          statusCode: 200,
+          streaming: true,
+          events: [],
+          body: { choices: [{ message: { role: 'assistant', content: 'hi' } }] },
+        },
+      },
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuite} />);
+
+    await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest }));
+
+    expect(await screen.findByText(TabsI18nKey.Events)).toBeInTheDocument();
+    expect(
+      screen.getByText('JsonEditor:{"choices":[{"message":{"role":"assistant","content":"hi"}}]}'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('JsonEditor:[]')).toBeInTheDocument();
+  });
+
+  test('hides Events when streaming is omitted', async () => {
+    vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
+      success: true,
+      response: {
+        resolvedRequest: { body: {} },
+        response: { statusCode: 200, body: { ok: true } },
+      },
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuite} />);
+
+    await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest }));
+
+    expect(await screen.findByText('JsonEditor:{"ok":true}')).toBeInTheDocument();
+    expect(screen.queryByText(TabsI18nKey.Events)).not.toBeInTheDocument();
+  });
+
+  test('renders a truncated string response body without crashing', async () => {
+    const truncated = '{"choices":[{"message":';
+    vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
+      success: true,
+      response: {
+        resolvedRequest: { body: {} },
+        response: { statusCode: 200, streaming: true, events: [], body: truncated },
+      },
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuite} />);
+
+    await user.click(await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest }));
+
+    expect(await screen.findByText(`JsonEditor:${truncated}`)).toBeInTheDocument();
+    expect(screen.getByText(TabsI18nKey.Events)).toBeInTheDocument();
   });
 });
 

@@ -128,7 +128,13 @@ export const evaluateTryOutColumnSections = async ({
     for (const { turnIndex, item } of group.turns) {
       const columns = resolveInvocationColumns(requestColumns, historyEntryInvocation(item));
 
-      turns.push({ turnIndex, columns, responseBody: historyEntryDisplayBody(item) });
+      turns.push({
+        turnIndex,
+        columns,
+        responseBody: historyEntryDisplayBody(item),
+        streaming: item.response?.streaming,
+        events: item.response?.events,
+      });
     }
 
     groupResults.push({
