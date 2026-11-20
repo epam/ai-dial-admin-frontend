@@ -37,6 +37,8 @@ export default defineConfig(() => ({
   test: {
     globals: true,
     environment: 'jsdom',
+    pool: 'threads',
+    maxWorkers: isCi ? 4 : undefined,
     setupFiles: './test-setup.tsx',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: [...configDefaults.exclude, '**/.next/**', '*.config.{ts,js}'],
