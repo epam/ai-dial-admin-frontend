@@ -4,10 +4,12 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { RUN_CANCEL_URL, RUN_RESULTS_URL, RUNS_URL, RUN_URL, RunsApi } from '../runs-api';
+import { RUN_CANCEL_URL, RUN_RESULTS_URL, RUNS_URL, RUN_URL, RunsApi, SUITE_PASS_RATE_URL } from '../runs-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
+
+const JSON_HEADERS = { headers: { 'content-type': 'application/json' } };
 
 describe('Server :: RunsApi', () => {
   const instance = new RunsApi({ host: TEST_URL });
@@ -90,5 +92,50 @@ describe('Server :: RunsApi', () => {
       `${TEST_URL}${RUN_RESULTS_URL}?size=1000&filter=status:eq:PASSED&filter=name:co:smoke%20test`,
       expect.objectContaining({ method: 'GET' }),
     );
+  });
+
+  describe('getSuitePassRate', () => {
+    const request = { suiteIds: ['suite-a', 'suite-b'] };
+    const response = {
+      passRate: 0.613,
+      previousPassRate: 0.5,
+      suiteCount: 2,
+      previousSuiteCount: 2,
+    };
+
+    test('Should POST suite ids to SUITE_PASS_RATE_URL', async () => {
+      fetch.mockResponseOnce(JSON.stringify(response), JSON_HEADERS);
+
+      await instance.getSuitePassRate(request, TOKEN_MOCK);
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${TEST_URL}${SUITE_PASS_RATE_URL}`,
+        expect.objectContaining({ method: 'POST', body: JSON.stringify(request) }),
+      );
+    });
+
+    test('Should return the parsed SuitePassRateResponse', async () => {
+      fetch.mockResponseOnce(JSON.stringify(response), JSON_HEADERS);
+
+      const result = await instance.getSuitePassRate(request, TOKEN_MOCK);
+
+      expect(result).toEqual(response);
+    });
+
+    test('Should return null when the API responds with a non-ok status', async () => {
+      fetch.mockResponseOnce('', { status: 500 });
+
+      const result = await instance.getSuitePassRate(request, TOKEN_MOCK);
+
+      expect(result).toBeNull();
+    });
+
+    test('Should return null when the API responds with a null body', async () => {
+      fetch.mockResponseOnce(JSON.stringify(null), JSON_HEADERS);
+
+      const result = await instance.getSuitePassRate(request, TOKEN_MOCK);
+
+      expect(result).toBeNull();
+    });
   });
 });
