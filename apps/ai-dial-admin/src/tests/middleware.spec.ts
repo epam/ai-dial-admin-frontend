@@ -41,12 +41,17 @@ describe('middleware', () => {
     expect(response.headers.get(CspHeader.ReportOnly)).toBeNull();
   });
 
-  test('passes the same policy to the renderer on the request headers', async () => {
+  test.each([
+    ['', CspHeader.ReportOnly],
+    ['enforce', CspHeader.Enforce],
+  ])('passes the same policy to the renderer on the request headers when the mode is "%s"', async (mode, header) => {
+    vi.stubEnv('CSP_MODE', mode);
+
     const response = await runMiddleware('/en/home');
-    const policy = response.headers.get(CspHeader.ReportOnly);
+    const policy = response.headers.get(header);
 
     expect(policy).toMatch(NONCE_PATTERN);
-    expect(response.headers.get(`x-middleware-request-${CspHeader.ReportOnly.toLowerCase()}`)).toBe(policy);
+    expect(response.headers.get(`x-middleware-request-${header.toLowerCase()}`)).toBe(policy);
   });
 
   test('generates a new nonce for every response', async () => {
