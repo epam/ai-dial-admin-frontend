@@ -5,10 +5,6 @@ import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TabsContent from '../TabsContent';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 let capturedAssetRolesProps: { asset?: { userRoles?: string[] }; onChange?: (asset: unknown) => void } | undefined;
 
 vi.mock('@/src/components/EntityView/Roles/AssetRoles', () => ({

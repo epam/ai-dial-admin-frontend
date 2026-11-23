@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -31,9 +32,9 @@ const { mockFeatureFlags } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: mockFeatureFlags }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: mockFeatureFlags }));
+});
 
 describe('HeaderButtons', () => {
   const mockToggleColumnsPanel = vi.fn();

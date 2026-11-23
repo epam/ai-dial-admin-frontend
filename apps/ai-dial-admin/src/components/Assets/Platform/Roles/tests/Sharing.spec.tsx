@@ -5,10 +5,6 @@ import { DialRoleResource } from '@/src/models/dial/resource';
 import { PlatformSharingType } from '../models';
 import RoleSharing from '../Sharing';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 interface MockColDef {
   field?: string;
   valueFormatter?: (params: { value: string }) => string;

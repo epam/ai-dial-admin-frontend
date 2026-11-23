@@ -1,3 +1,6 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { saveValidationMock } from '@/test-mocks/save-validation';
+import { JSONEditorError } from '@/src/types/editor';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -9,28 +12,9 @@ import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
-const mocks = vi.hoisted(() => ({
-  jsonErrors: [] as { message: string; startLineNumber: number }[],
-  dispatch: vi.fn(),
-}));
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  SaveValidationContextProvider: ({ children }: { children: React.ReactNode }) => children,
-  useSaveValidationContext: () => ({
-    isValid: true,
-    dispatch: mocks.dispatch,
-    jsonErrors: mocks.jsonErrors,
-    jsonErrorNotifications: [],
-  }),
-  useJsonEditorValidation: () => ({ editorId: 'e1', setJsonErrors: vi.fn(), removeEditor: vi.fn() }),
-  ValidationActionType: { SetJsonEditorNotifications: 'SET_JSON_EDITOR_NOTIFICATIONS', Reset: 'RESET' },
-}));
-
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: { analyticsEnabled: true } }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: { analyticsEnabled: true } }));
+});
 
 const permissions = vi.hoisted(() => ({
   value: {
@@ -119,7 +103,6 @@ const confirmDiscard = async (user: ReturnType<typeof userEvent.setup>) => {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(getTables).mockResolvedValue({ success: true, response: [] });
-  mocks.jsonErrors = [];
   permissions.value = { ...permissions.value, canDelete: true, canWrite: true, canModify: true, canManageRoles: true };
 });
 
@@ -174,7 +157,7 @@ describe('TableDetailView — the changed-entity header', () => {
   });
 
   test('unresolved parse markers hold the changed header up even though the last parsed document is unchanged', async () => {
-    mocks.jsonErrors = [{ message: 'Expected comma', startLineNumber: 4 }];
+    saveValidationMock.set({ jsonErrors: [{ message: 'Expected comma', startLineNumber: 4 }] as JSONEditorError[] });
     const user = userEvent.setup();
     renderView();
 

@@ -1,3 +1,4 @@
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -6,15 +7,7 @@ import { ValidationActionType } from '@/src/context/SaveValidationContext';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import EndpointSchema from '../EndpointSchema';
 
-const mockDispatch = vi.fn();
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ isValid: true, dispatch: mockDispatch }),
-  ValidationActionType: {
-    SetField: 'SET_FIELD_VALIDATION',
-    RemoveField: 'REMOVE_FIELD_VALIDATION',
-  },
-}));
+const { dispatch: mockDispatch } = saveValidationMock;
 
 let capturedColumnsProps: { responseColumns: unknown; responseSchema: unknown } | undefined;
 

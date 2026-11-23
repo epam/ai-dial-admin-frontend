@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -8,10 +9,8 @@ import { AnalyticsUsageI18nKey, ButtonsI18nKey, MenuI18nKey } from '@/src/consta
 import { StructuredQuery } from '@/src/models/analytics/query';
 
 const runQueryMock = vi.fn();
-const showNotificationMock = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
-}));
+const { showNotification: showNotificationMock } = notificationMock;
+
 // The page reads through the shared runner, which owns cancellation; this spec is about the page's
 // wiring, so the runner is the seam.
 const RUNNER = { runQuery: (...args: unknown[]) => runQueryMock(...args), runSql: vi.fn() };

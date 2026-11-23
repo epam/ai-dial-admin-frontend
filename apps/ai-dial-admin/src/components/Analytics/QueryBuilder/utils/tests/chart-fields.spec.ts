@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
-import { keepValidYFields, resolveYFields } from '@/src/components/Analytics/QueryBuilder/utils/chart-fields';
+import {
+  keepValidYFields,
+  resolveChartSplit,
+  resolveYFields,
+} from '@/src/components/Analytics/QueryBuilder/utils/chart-fields';
 
 const OPTIONS = ['calls', 'cost', 'tokens'];
 
@@ -47,5 +51,17 @@ describe('keepValidYFields', () => {
     expect(keepValidYFields(['gone'], OPTIONS, true)).toBeNull();
     expect(keepValidYFields(null, OPTIONS, true)).toBeNull();
     expect(keepValidYFields([], OPTIONS, false)).toBeNull();
+  });
+});
+
+describe('resolveChartSplit', () => {
+  test('splits by the first dimension that is not on the X axis', () => {
+    expect(resolveChartSplit(['bucket', 'sentiment', 'topic'], 'bucket')).toBe('sentiment');
+    expect(resolveChartSplit(['bucket', 'sentiment'], 'sentiment')).toBe('bucket');
+  });
+
+  test('does not split a single dimension or an unset X', () => {
+    expect(resolveChartSplit(['bucket'], 'bucket')).toBeNull();
+    expect(resolveChartSplit(['bucket', 'sentiment'], null)).toBeNull();
   });
 });

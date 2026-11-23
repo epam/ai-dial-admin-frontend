@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -5,10 +6,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimpleButtonsWrapper from '@/src/components/EntityHeaderControls/Wrappers/SimpleButtonsWrapper';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { ApplicationRoute } from '@/src/types/routes';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn(() => false) }));
 vi.mock('@/src/hooks/use-is-mobile-screen', () => ({ useIsMobileScreen: () => false }));
 vi.mock('@/src/hooks/use-is-tablet-screen', () => ({ useIsOnlyTabletScreen: () => false }));
 
@@ -38,12 +37,12 @@ const openDeleteModal = async () => {
 };
 
 beforeEach(() => {
-  vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+  appContextMock.set({ isReadOnlyAdmin: false });
 });
 
 describe('SimpleButtonsWrapper :: read-only role', () => {
   test('does not offer save or delete controls for a read-only role', () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
 
     const { rerender } = render(<SimpleButtonsWrapper {...baseProps} view={ApplicationRoute.PlatformRoles} />);
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Delete })).toBeNull();

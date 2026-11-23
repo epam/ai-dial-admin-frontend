@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -27,8 +28,6 @@ vi.mock('../TabsContent', () => ({
     ),
 }));
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 let capturedJsonConfiguration: any;
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
   default: ({ jsonConfiguration, isSaveDisabled, onDiscard, onChangeActiveTab }: any) => {
@@ -44,12 +43,12 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
 }));
 
 const setEntityReadOnly = vi.fn();
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
     setEntityReadOnly,
-  }),
-}));
+  }));
+});
 
 const model = { name: 'model-1', path: 'model-1', folderId: '' } as AssetModel;
 
@@ -119,6 +118,33 @@ describe('ModelView — persistent plugin conflict validation', () => {
     } as AssetModel;
     render(<ModelView etag="etag" originalModel={originalModel} roles={[]} interceptors={[]} />);
 
+    expect(screen.getByRole('button', { name: 'Save' })).toHaveProperty('disabled', isDisabled);
+  });
+});
+
+describe('ModelView — persistent custom translator validation', () => {
+  test.each([
+    { baseUrl: 'not-a-url', isDisabled: true },
+    { baseUrl: 'dial-plugin://', isDisabled: true },
+    { baseUrl: '', isDisabled: false },
+    { baseUrl: 'dial-plugin://example', isDisabled: false },
+    { baseUrl: 'https://example.com', isDisabled: false },
+  ])('retains validity for $baseUrl after leaving Properties', async ({ baseUrl, isDisabled }) => {
+    const user = userEvent.setup();
+    const originalModel = {
+      ...model,
+      interfaces: {
+        [DeploymentInterfaceType.OpenAIChatCompletions]: {
+          base_url: '',
+          mode: InterfaceMode.Translator,
+          translator: { baseUrl, out: DeploymentInterfaceType.OpenAIResponses },
+        },
+      },
+    } as AssetModel;
+    render(<ModelView etag="etag" originalModel={originalModel} roles={[]} interceptors={[]} />);
+
+    expect(screen.getByRole('button', { name: 'Save' })).toHaveProperty('disabled', isDisabled);
+    await user.click(screen.getByRole('button', { name: 'Other tab' }));
     expect(screen.getByRole('button', { name: 'Save' })).toHaveProperty('disabled', isDisabled);
   });
 });

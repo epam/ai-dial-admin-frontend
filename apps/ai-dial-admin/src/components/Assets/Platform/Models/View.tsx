@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { removeModel, updateModel } from '@/src/app/[lang]/platform-models/actions';
+import { useCustomTranslatorValidation } from '@/src/components/BaseControls/InterfacesField/use-custom-translator-validation';
 import { isPluginUrl } from '@/src/components/BaseControls/BaseUrlControl/utils';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
@@ -74,6 +75,7 @@ const ModelView: FC<Props> = ({
   const [etag, setEtag] = useState(initialEtag);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedModel, setSelectedModel] = useState(structuredClone(originalModel));
+  const hasInvalidTranslatorUrl = useCustomTranslatorValidation(selectedModel.interfaces);
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [discardKey, setDiscardKey] = useState(0);
@@ -135,6 +137,7 @@ const ModelView: FC<Props> = ({
   }, [originalModel]);
 
   const onSave = useCallback(() => {
+    if (hasInvalidTranslatorUrl) return;
     getReqRef.current(updateModel, selectedModel, etag).then((res) => {
       if (res.etag) {
         setEtag(res.etag);
@@ -152,7 +155,7 @@ const ModelView: FC<Props> = ({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [selectedModel, etag, showNotification, t, router, fetchFiles]);
+  }, [selectedModel, etag, showNotification, t, router, fetchFiles, hasInvalidTranslatorUrl]);
 
   return (
     <div className={ENTITY_VIEW_CLASS_NAME}>
@@ -161,7 +164,7 @@ const ModelView: FC<Props> = ({
         entity={selectedModel}
         etag={etag}
         isChanged={isChanged}
-        isSaveDisabled={hasPluginOverrideConflict}
+        isSaveDisabled={hasPluginOverrideConflict || hasInvalidTranslatorUrl}
         onDiscard={onDiscard}
         onSave={onSave}
         tabs={tabs}

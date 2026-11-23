@@ -1,25 +1,13 @@
 import { render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
 import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
+import { saveValidationMock } from '@/test-mocks/save-validation';
 
 import ContainerCompute from '@/src/components/Deployments/Fields/ContainerCompute';
-
-let mockValidationState: { isValid: boolean; errorFields?: Map<string, boolean> } = { isValid: true };
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  SaveValidationContextProvider: ({ children }: { children: React.ReactNode }) => children,
-  useSaveValidationContext: () => ({
-    isValid: mockValidationState.isValid,
-    errorFields: mockValidationState.errorFields,
-    dispatch: vi.fn(),
-    resetCounter: 0,
-  }),
-  ValidationActionType: { SetField: 'SET_FIELD_VALIDATION', Reset: 'RESET' },
-}));
 
 vi.mock('@/src/components/Deployments/Fields/ContainerNodePool', () => ({
   default: ({ disabled }: { disabled?: boolean }) => (
@@ -56,10 +44,6 @@ const renderCompute = (overrides?: { disabled?: boolean; route?: ApplicationRout
 };
 
 describe('ContainerCompute', () => {
-  afterEach(() => {
-    mockValidationState = { isValid: true };
-  });
-
   test('renders the Compute accordion title', () => {
     renderCompute();
     expect(screen.getByText(EntityFieldsI18nKey.Compute)).toBeInTheDocument();
@@ -86,19 +70,18 @@ describe('ContainerCompute', () => {
   });
 
   test('does not show error indicator when validation is valid', () => {
-    mockValidationState = { isValid: true };
     renderCompute();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
   test('shows error indicator when a tracked field is invalid', () => {
-    mockValidationState = { isValid: false, errorFields: new Map([['cpuRequest', false]]) };
+    saveValidationMock.set({ isValid: false, errorFields: new Map([['cpuRequest', false]]) });
     renderCompute();
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
   test('does not show error indicator for unrelated error keys', () => {
-    mockValidationState = { isValid: false, errorFields: new Map([['somethingElse', false]]) };
+    saveValidationMock.set({ isValid: false, errorFields: new Map([['somethingElse', false]]) });
     renderCompute();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });

@@ -93,7 +93,7 @@ describe('resolveRunDeployment', () => {
     });
   });
 
-  test('resolves application navigation from deployment type', () => {
+  test('resolves application navigation from deployment type and applicationRoute', () => {
     expect(
       resolveRunDeployment(
         {
@@ -101,10 +101,36 @@ describe('resolveRunDeployment', () => {
         } as never,
         DeploymentType.Application,
       ),
+    ).toBeNull();
+
+    expect(
+      resolveRunDeployment(
+        {
+          deploymentRef: { id: 'ref-1', name: 'My App' },
+        } as never,
+        DeploymentType.Application,
+        undefined,
+        ApplicationRoute.Applications,
+      ),
     ).toEqual({
       name: 'My App',
       route: ApplicationRoute.Applications,
       entity: { name: 'ref-1' },
+    });
+
+    expect(
+      resolveRunDeployment(
+        {
+          deploymentRef: { id: 'world-economy-v2-hybrid', name: 'StatGPT' },
+        } as never,
+        DeploymentType.Application,
+        undefined,
+        ApplicationRoute.AssetsApplications,
+      ),
+    ).toEqual({
+      name: 'StatGPT',
+      route: ApplicationRoute.AssetsApplications,
+      entity: { name: 'world-economy-v2-hybrid' },
     });
   });
 

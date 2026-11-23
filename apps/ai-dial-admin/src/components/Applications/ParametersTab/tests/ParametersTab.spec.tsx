@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { appContextMock } from '@/test-mocks/app-context';
+import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import ParametersTab from '../ParametersTab';
 import { BasicI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplication } from '@/src/models/dial/application';
 import { AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import { ApplicationSourceType } from '@/src/models/dial/application';
@@ -26,20 +27,43 @@ vi.mock('@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer', () => ({
   default: ({ data }: { data: Record<string, string> }) => <div>{data.model}</div>,
 }));
 
+vi.mock('@/src/components/Applications/ParametersTab/TableView', async () => {
+  const { default: StringEditorInput } = await import('@/src/components/Common/StringEditorInput/StringEditorInput');
+  return {
+    default: ({
+      applicationProperties,
+      onChangeProperties,
+      disabled,
+    }: {
+      applicationProperties: Record<string, unknown>;
+      onChangeProperties: (properties: Record<string, unknown>) => void;
+      disabled?: boolean;
+    }) => {
+      const entries = Object.entries(applicationProperties);
+      if (!entries.length) return <div>{BasicI18nKey.NoParameters}</div>;
+      return entries.map(([key, value]) => (
+        <StringEditorInput
+          key={key}
+          label={key}
+          value={String(value)}
+          disabled={disabled}
+          onChangeValue={(next) => onChangeProperties({ ...applicationProperties, [key]: next })}
+        />
+      ));
+    },
+  };
+});
+
 vi.mock('@/src/components/FrameRenderer/FrameRenderer', () => ({
   __esModule: true,
   default: ({ iframeUrl }: { iframeUrl: string }) => <p>{iframeUrl}</p>,
-}));
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
 }));
 
 import { getResolvedRunnerSchema, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 
 afterEach(() => {
   vi.unstubAllEnvs();
-  vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+  appContextMock.set({ isReadOnlyAdmin: false });
 });
 
 describe('Applications - ApplicationParametersTab', () => {
@@ -123,6 +147,28 @@ describe('Applications - ApplicationParametersTab', () => {
   });
 });
 
+describe('ParametersTab — property maps', () => {
+  test.each([
+    [ApplicationRoute.Applications, 'applicationProperties'],
+    [ApplicationRoute.AssetsApplications, 'application_properties'],
+  ])('updates the %s draft using %s', async (view, propertyField) => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const application = { name: 'app', [propertyField]: { prompt: 'initial', other: 'untouched' } };
+    render(<ParametersTab application={application} view={view} onChange={onChange} />);
+
+    await user.click(await screen.findByRole('button', { name: `${ButtonsI18nKey.Open} prompt` }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'prompt' }), {
+      target: { value: '  first\nsecond\n' },
+    });
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Apply }));
+    expect(onChange).toHaveBeenLastCalledWith({
+      ...application,
+      [propertyField]: { prompt: '  first\nsecond\n', other: 'untouched' },
+    });
+  });
+});
+
 describe('ParametersTab — router', () => {
   const routerUi = 'http://router-ui.test/';
   const schemaUi = 'http://schema-ui.test/';
@@ -160,7 +206,7 @@ describe('ParametersTab — router', () => {
   });
 
   test('offers no UI view to a read-only admin', async () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderRouterTab(
       { applicationTypeSchemaId: 'router-type', editorUrl: routerUi },
       { schemes: typedRouterSchemes as never[] },

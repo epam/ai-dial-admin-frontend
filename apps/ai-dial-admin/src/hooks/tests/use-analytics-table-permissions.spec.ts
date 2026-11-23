@@ -1,9 +1,12 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 // Override the global AppContext mock with a mutable context for this file.
 const ctx = { isFullAdmin: false, isEnableAuth: true };
-vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => ctx }));
+beforeEach(() => {
+  appContextMock.use(() => ctx);
+});
 
 import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { AnalyticsTable, AnalyticsTableType, TablePermissions } from '@/src/models/analytics/table';

@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import Page from '@/src/app/[lang]/sessions/[id]/page';
@@ -18,11 +19,6 @@ vi.mock('@/src/server/analytics/analytics-access');
 vi.mock('@/src/server/logger', () => ({ errorObjLog: vi.fn(), errorLog: vi.fn() }));
 
 const notFoundError = new Error('NEXT_NOT_FOUND');
-vi.mock('next/navigation', () => ({
-  notFound: () => {
-    throw notFoundError;
-  },
-}));
 
 const CHAT_ID = 'Lrr0e6L5bpTND3IY_dN0_';
 
@@ -71,6 +67,9 @@ const grantsOfNode = (node: Awaited<ReturnType<typeof render>>): Record<string, 
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(notFound).mockImplementation(() => {
+    throw notFoundError;
+  });
   forbidden().mockResolvedValue(false);
   detail().mockResolvedValue({ success: true, response: { session: DETAIL_ROW } });
   feedback().mockResolvedValue({

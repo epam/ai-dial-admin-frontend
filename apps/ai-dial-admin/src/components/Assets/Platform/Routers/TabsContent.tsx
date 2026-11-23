@@ -13,6 +13,7 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { DialModelResource, DialRouterResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -22,6 +23,7 @@ interface Props {
   selectedRouter: DialRouterResource;
   roles: DialRole[];
   translators?: ResourceInfo[];
+  plugins?: PluginOptions;
   catalogSchemas?: CatalogSchemaOptions;
   schemes?: DialApplicationScheme[];
   isEditorEnabled?: boolean;
@@ -38,6 +40,7 @@ const TabsContent: FC<Props> = ({
   selectedRouter,
   roles,
   translators,
+  plugins,
   catalogSchemas,
   schemes,
   isEditorEnabled,
@@ -56,6 +59,7 @@ const TabsContent: FC<Props> = ({
         <RouterAssetProperties
           asset={selectedRouter}
           translators={translators}
+          plugins={plugins}
           catalogSchemas={catalogSchemas}
           schemes={schemes}
           onChange={onChange}

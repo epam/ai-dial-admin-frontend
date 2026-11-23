@@ -1,3 +1,5 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { notificationMock } from '@/test-mocks/notification';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -45,15 +47,11 @@ vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
 vi.mock('@/src/app/[lang]/queries/actions');
 vi.mock('@/src/utils/download');
 
-const { showNotificationMock } = vi.hoisted(() => ({ showNotificationMock: vi.fn() }));
+const { showNotification: showNotificationMock } = notificationMock;
 
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
-}));
-
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => ({ featureFlags: { deploymentsEnabled: true } })),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: { deploymentsEnabled: true } }));
+});
 
 const setQueryAssistantEnabled = (enabled: boolean) =>
   vi.mocked(useAppContext).mockReturnValue({ featureFlags: { queryAssistantEnabled: enabled } } as never);
@@ -145,6 +143,7 @@ const renderBuilder = (props?: Partial<Parameters<typeof QueryBuilder>[0]>) =>
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
+  localStorage.setItem('query-builder-chart-panel-open', 'true');
 });
 
 describe('QueryBuilder', () => {
@@ -954,6 +953,35 @@ describe('QueryBuilder :: SQL view Run', () => {
     await user.click(await screen.findByRole('radio', { name: 'QueryBuilder.ViewChart' }));
     expect(await screen.findByRole('combobox', { name: /^QueryBuilder.ChartXAxis/ })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartYAxis/ })).toBeInTheDocument();
+  });
+
+  test('keeps the legend settings across a re-run whose axes come from the new result', async () => {
+    const user = userEvent.setup();
+    runSqlMock.mockResolvedValue({ isSuccess: true, result: { rows: AGG_ROWS } } as never);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+
+    renderBuilder();
+    await runSql(user, 'SELECT deployment, count(*) AS total FROM dial_usage_log GROUP BY deployment');
+    await screen.findByText('grid rows: 2');
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
+    await user.click(await screen.findByRole('combobox', { name: /^QueryBuilder.ChartLegendPosition/ }));
+    await user.click(await screen.findByRole('option', { name: 'QueryBuilder.ChartLegendRight' }));
+
+    runSqlMock.mockResolvedValue({
+      isSuccess: true,
+      result: {
+        rows: [
+          { model: 'a', total: 1 },
+          { model: 'b', total: 2 },
+        ],
+      },
+    } as never);
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+
+    expect(await screen.findByRole('combobox', { name: /^QueryBuilder.ChartXAxis.*model/ })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartLegendPosition/ })).toHaveAccessibleName(
+      /QueryBuilder.ChartLegendRight/,
+    );
   });
 
   test('a rejected translation still shows the result and raises no notification', async () => {

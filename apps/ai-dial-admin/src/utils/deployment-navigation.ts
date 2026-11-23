@@ -31,6 +31,8 @@ interface ResolveCatalogDeploymentNavigationOptions {
 export interface ResolveDeploymentNavigationOptions {
   /** When set, overrides Entities Models for dial-model deployments (Catalog vs Entities). */
   modelRoute?: ApplicationRoute;
+  /** When set, overrides Entities Applications for dial-application deployments (Platform vs Entities). */
+  applicationRoute?: ApplicationRoute;
 }
 
 /** Core's `object` discriminator mapped to the deployment types navigation understands. */
@@ -176,8 +178,12 @@ export function resolveDeploymentNavigationTarget(
   }
 
   if (deploymentType === DeploymentType.Application) {
+    // Wait for the platform-application probe before committing to Entities Applications.
+    if (options.applicationRoute == null) {
+      return null;
+    }
     return {
-      route: ApplicationRoute.Applications,
+      route: options.applicationRoute,
       entity: { name: deploymentRef.id },
     };
   }

@@ -1,3 +1,4 @@
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -8,12 +9,7 @@ import { AliasPresentAs, AliasTargetType } from '@/src/models/dial/alias';
 import { AssetSource } from '@/src/models/dial/asset-source';
 import TargetField from '../TargetField';
 
-const dispatch = vi.hoisted(() => vi.fn());
-
-vi.mock('@/src/context/SaveValidationContext', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/src/context/SaveValidationContext')>()),
-  useSaveValidationContext: () => ({ isValid: true, dispatch }),
-}));
+const { dispatch } = saveValidationMock;
 
 // Stand-in for the picker popup: exposes which entity type it was opened for and applies a fixed pick.
 const PICKED: PickedEntity = {
@@ -220,6 +216,8 @@ describe('TargetField', () => {
 
     expect(typeSelect()).toHaveAccessibleName(new RegExp(AliasI18nKey.TargetTypeRouter));
     expect(presentAsSelect()).toHaveAccessibleName(new RegExp(AliasI18nKey.PresentAsRouter));
+    expect(screen.getByRole('textbox', { name: new RegExp(AliasI18nKey.Target) })).toHaveValue('routers/r');
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   test('offers the router target type on a Platform alias', async () => {

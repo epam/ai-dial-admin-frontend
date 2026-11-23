@@ -1,7 +1,9 @@
+import { notificationMock } from '@/test-mocks/notification';
+import { navigationMock } from '@/test-mocks/navigation';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FC } from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getEntitySchema } from '@/src/app/[lang]/queries/actions';
 import QueryPageShell from '@/src/components/Analytics/QueryBuilder/SourcePanel/QueryPageShell';
@@ -16,16 +18,9 @@ import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query'
 
 vi.mock('@/src/app/[lang]/queries/actions');
 
-const { showNotification } = vi.hoisted(() => ({ showNotification: vi.fn() }));
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
-const mockPush = vi.fn();
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush, refresh: vi.fn() }),
-}));
-
+const { push: mockPush } = navigationMock.router;
 const TABLES: SourceTable[] = [
   { name: 'conversation', description: 'One row per conversation', tagOrder: ['principal', 'identity'] },
   { name: 'dial_usage_log' },
@@ -498,14 +493,8 @@ describe('SourcePanel', () => {
   });
 
   describe('narrow viewport', () => {
-    const originalWidth = window.innerWidth;
-
     beforeEach(() => {
-      window.innerWidth = 800;
-    });
-
-    afterEach(() => {
-      window.innerWidth = originalWidth;
+      vi.stubGlobal('innerWidth', 800);
     });
 
     test('starts collapsed and opens over the builder without touching the remembered state', async () => {

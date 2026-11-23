@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -16,7 +17,9 @@ vi.mock('../Modals/RenameUnitModal', () => ({ default: () => null }));
 vi.mock('../Modals/RemoveUnitModal', () => ({ default: () => null }));
 
 const appContext = vi.hoisted(() => ({ isUnitMode: false, userAccess: { units: [] as UserOrgUnit[] } }));
-vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => appContext }));
+beforeEach(() => {
+  appContextMock.use(() => appContext);
+});
 
 const UNIT: UserOrgUnit = {
   id: '1',

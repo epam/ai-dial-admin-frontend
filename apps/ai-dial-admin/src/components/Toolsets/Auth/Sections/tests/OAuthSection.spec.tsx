@@ -1,3 +1,4 @@
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import {
   ToolsetAuthSettings,
   ToolsetAuthStatus,
@@ -11,15 +12,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { ValidationActionType } from '@/src/context/SaveValidationContext';
 import OAuthSection from '../OAuthSection';
 
-const mockDispatch = vi.fn();
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ dispatch: mockDispatch }),
-  ValidationActionType: {
-    SetField: 'SetField',
-    RemoveField: 'RemoveField',
-  },
-}));
+const { dispatch: mockDispatch } = saveValidationMock;
 
 describe('OAuthSection', () => {
   beforeEach(() => {

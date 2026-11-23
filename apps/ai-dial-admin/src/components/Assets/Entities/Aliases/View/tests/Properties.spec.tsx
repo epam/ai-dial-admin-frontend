@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -7,9 +8,6 @@ import { DialAliasResource } from '@/src/models/dial/alias';
 import { AliasHealthReason } from '@/src/models/dial/config-health';
 import AliasProperties from '../Properties';
 
-const readOnly = vi.hoisted(() => ({ value: false }));
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => readOnly.value }));
 vi.mock('@/src/components/Assets/Resources/ResourceInfoHeader', () => ({
   default: () => <div>resource-info-header</div>,
 }));
@@ -47,7 +45,7 @@ describe('AliasProperties', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    readOnly.value = false;
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 
   const renderProperties = (
@@ -127,7 +125,7 @@ describe('AliasProperties', () => {
 
   describe('read-only', () => {
     test('disables the version', () => {
-      readOnly.value = true;
+      appContextMock.set({ isReadOnlyAdmin: true });
 
       renderProperties();
 

@@ -1,13 +1,8 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 
-const { showNotificationSpy } = vi.hoisted(() => ({
-  showNotificationSpy: vi.fn(),
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationSpy }),
-}));
+const { showNotification: showNotificationSpy } = notificationMock;
 
 type Listener = (event: { data?: unknown }) => void;
 
@@ -40,8 +35,6 @@ class MockEventSource {
     (this.listeners[name] || []).forEach((fn) => fn({ data }));
   }
 }
-
-vi.stubGlobal('EventSource', MockEventSource);
 
 vi.mock('@/src/app/actions/deployments', () => ({
   getContainer: vi.fn().mockResolvedValue({ success: true, response: undefined }),
@@ -85,6 +78,7 @@ describe('ContainerView events SSE', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     MockEventSource.instances = [];
+    vi.stubGlobal('EventSource', MockEventSource);
   });
 
   test('opens EventSource with the container name in the URL', () => {

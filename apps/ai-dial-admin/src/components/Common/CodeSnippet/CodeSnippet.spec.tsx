@@ -16,7 +16,7 @@ describe('Common components :: CodeSnippet', () => {
 
   test('copies the exact snippet text, not a normalized rendering of it', () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, { clipboard: { writeText } });
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
 
     render(<CodeSnippet title="shell" value={SCRIPT} />);
     fireEvent.click(screen.getByLabelText('copy shell'));

@@ -33,4 +33,33 @@ describe('en locale', () => {
   test('declares the keys it is asked for', () => {
     expect(declaredKeys.length).toBeGreaterThan(0);
   });
+
+  test('names auto routers in navigation and entity actions without renaming routes', () => {
+    expect(en.Menu.PlatformRouters).toBe('Auto Routers');
+    expect(en.Menu.PlatformRoutes).toBe('Routes');
+    expect(en.Menu.AiGatewayDescription).toContain('auto routers');
+    expect(en.Entities.RouterDisplayName).toBe('Auto Router display name');
+    expect(en.DeleteEntity.Entities.Router).toBe('Auto Router');
+    expect(en.DeleteEntity.BulkDelete.Routers).toBe('Auto Routers');
+    expect(en.DuplicateEntity.Entities.Router).toBe('Auto Router');
+    expect(en.CreateEntity.Entities.Router).toBe('Auto Router');
+    expect(en.UpdateEntity.Entities.Router).toBe('Auto Router');
+    expect(en.FileManager.Router).toBe('Auto Router');
+    expect(en.FileManager.Routers).toBe('Auto Routers');
+    expect(en.FileManager.Route).toBe('Route');
+    expect(en.FileManager.Routes).toBe('Routes');
+  });
+
+  test('uses auto router terminology in guidance and aliases', () => {
+    expect(en.FileManager.RoutersEmptyStateTitle).toBe("You don't have any auto routers");
+    expect(en.FileManager.RoutersEmptyStateDescription).toBe('Create an auto router using the Create button');
+    expect(en.ForwardToken.UseForThisRouter).toBe('Use for this auto router');
+    expect(en.Interfaces.InfoDecisionMode).toBe(
+      'An auto router in decision mode serves no interface through a translator',
+    );
+    expect(en.SessionsTrace.DeploymentsHint).toContain('models alongside auto routers');
+    expect(en.Alias.TargetTypeRouter).toBe('Auto Router');
+    expect(en.Alias.SelectRouterTarget).toBe('Select auto router');
+    expect(en.Alias.PresentAsRouter).toBe('Auto Router');
+  });
 });

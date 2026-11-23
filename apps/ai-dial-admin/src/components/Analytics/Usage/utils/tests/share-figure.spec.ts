@@ -51,17 +51,13 @@ describe('buildShareFigure', () => {
     expect(labels(5, rows)).toEqual(['a']);
   });
 
-  test('names a share with no value instead of leaving its label blank', () => {
+  test('leaves a share with no value unlabelled', () => {
     const rows = [
       { model: '', calls: 2 },
       { model: null, calls: 1 },
     ];
-    const { slices } = buildShareFigure(COLORS, rows, 'model', 'calls', {
-      otherLabel: 'Others',
-      sliceCount: 5,
-      emptyLabel: '(no value)',
-    });
-    expect(slices.map((slice) => slice.label)).toEqual(['(no value)', '(no value)']);
+    const { slices } = buildShareFigure(COLORS, rows, 'model', 'calls', { otherLabel: 'Others', sliceCount: 5 });
+    expect(slices.map((slice) => slice.label)).toEqual(['', '']);
   });
 
   test('writes each figure with the given formatter', () => {

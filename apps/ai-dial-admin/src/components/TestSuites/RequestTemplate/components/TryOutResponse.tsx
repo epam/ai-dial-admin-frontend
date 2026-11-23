@@ -15,6 +15,7 @@ import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { BasicI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { toTryOutJsonEditorProps } from '@/src/components/TestSuites/utils/tryout-json-editor';
 import { TestCaseSchema, TestSuite, TryOutCoreResponse, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
 import {
   getRequestTurnCounts,
@@ -23,6 +24,7 @@ import {
   shouldShowTurnLabels,
 } from '@/src/utils/evaluation/tryout-sections';
 import CollapsibleSection from './CollapsibleSection';
+import TryOutEventsSection from './TryOutEventsSection';
 
 interface Props {
   response: TryOutCoreResponse;
@@ -40,12 +42,13 @@ interface Props {
 
 const JsonCollapsible: FC<{
   title: string;
-  entity: object | null | undefined;
+  entity: unknown;
   isLoading?: boolean;
   wordWrap?: 'off' | 'bounded';
   growOnOpen?: boolean;
 }> = ({ title, entity, isLoading, wordWrap = 'bounded', growOnOpen = true }) => {
-  const copyText = useMemo(() => (entity ? JSON.stringify(entity, null, 2) : ''), [entity]);
+  const copyText = useMemo(() => (entity != null ? JSON.stringify(entity, null, 2) : ''), [entity]);
+  const editorProps = useMemo(() => toTryOutJsonEditorProps(entity, { wordWrap }), [entity, wordWrap]);
 
   return (
     <CollapsibleSection
@@ -57,8 +60,13 @@ const JsonCollapsible: FC<{
       {isLoading ? (
         <Spinner size={18} fullWidth />
       ) : (
-        <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64'}>
-          <JsonEditor entity={entity ?? null} options={{ wordWrap }} readonly={true} />
+        <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64 min-h-64'}>
+          <JsonEditor
+            entity={editorProps.entity}
+            text={editorProps.text}
+            options={editorProps.options}
+            readonly={true}
+          />
         </div>
       )}
     </CollapsibleSection>
@@ -71,8 +79,8 @@ const HistoryEntryPair: FC<{
   sectionTitle?: string;
 }> = ({ entry, isRequestSend, sectionTitle }) => {
   const t = useI18n();
-  const turnRequestBody = (entry.resolvedRequest?.body as object) ?? {};
-  const turnResponseBody = entry.response?.body as object | undefined;
+  const turnRequestBody = entry.resolvedRequest?.body ?? {};
+  const turnResponseBody = entry.response?.body;
 
   return (
     <div className="flex flex-col gap-y-4 shrink-0">
@@ -89,6 +97,11 @@ const HistoryEntryPair: FC<{
         isLoading={isRequestSend}
         wordWrap="off"
         growOnOpen={false}
+      />
+      <TryOutEventsSection
+        streaming={entry.response?.streaming}
+        events={entry.response?.events}
+        isLoading={isRequestSend}
       />
     </div>
   );
@@ -206,7 +219,12 @@ const TryOutResponsePreview: FC<Props> = ({
         historyContent
       ) : (
         <>
-          <JsonCollapsible title={t(BasicI18nKey.Request)} entity={requestBody} isLoading={isRequestSend} />
+          <JsonCollapsible
+            title={t(BasicI18nKey.Request)}
+            entity={requestBody}
+            isLoading={isRequestSend}
+            growOnOpen={false}
+          />
           {responseBody}
         </>
       )}

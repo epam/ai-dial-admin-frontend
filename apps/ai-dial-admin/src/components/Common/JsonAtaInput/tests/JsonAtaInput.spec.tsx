@@ -32,8 +32,6 @@ vi.mock('@/src/components/Common/InputPopup/InputPopup', () => ({
   ),
 }));
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
-
 vi.mock('@/src/components/Common/JsonataEditor/JsonataEditor', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   default: (props: any) => {
