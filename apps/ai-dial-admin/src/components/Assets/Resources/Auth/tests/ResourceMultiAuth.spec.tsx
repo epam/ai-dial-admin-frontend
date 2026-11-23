@@ -286,7 +286,11 @@ describe('ResourceMultiAuth — automatic registration', () => {
       path: 'public/my-app',
       external_services: { crm: { display_name: 'CRM', auth_settings: authSettings } },
     }) as unknown as DialApplicationResource;
-
+
+  beforeEach(() => {
+    isReadOnlyAdmin = false;
+  });
+
   const startNewOAuthService = async (onChange = vi.fn()) => {
     render(
       <ResourceMultiAuth asset={{ path: 'public/my-app' } as unknown as DialApplicationResource} onChange={onChange} />,
