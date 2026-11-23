@@ -1,3 +1,4 @@
+import { TabStatus } from '@epam/ai-dial-ui-kit';
 import { describe, expect, test } from 'vitest';
 
 import {
@@ -5,9 +6,11 @@ import {
   getAnalyticsColDefs,
   getAnalyticsPreviewColDefs,
   getAnalyticsPreviewRows,
+  getAnalyticsPreviewTabs,
   getAnalyticsTabs,
 } from '@/src/components/ExportConfig/analytics-utils';
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { TableGrantKey } from '@/src/models/analytics/table';
 import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { ExportType } from '@/src/types/export';
 import {
@@ -44,6 +47,21 @@ describe('buildCatalogExportRequest', () => {
       buildCatalogExportRequest(ExportType.Full, { [AnalyticsExportEntityType.TABLE]: [{ name: 'usage_sentiment' }] }),
     ).toEqual({ components: [] });
   });
+
+  test('adds include_access to a full export only when access is included', () => {
+    expect(buildCatalogExportRequest(ExportType.Full, {}, true)).toEqual({ components: [], include_access: true });
+    expect(buildCatalogExportRequest(ExportType.Full, {}, false)).not.toHaveProperty('include_access');
+  });
+
+  test('adds include_access to a custom export only when access is included', () => {
+    const data = { [AnalyticsExportEntityType.TABLE]: [{ name: 'dial_usage_log' }] };
+
+    expect(buildCatalogExportRequest(ExportType.Custom, data, true)).toEqual({
+      components: [{ type: CatalogComponentType.TABLE, name: 'dial_usage_log' }],
+      include_access: true,
+    });
+    expect(buildCatalogExportRequest(ExportType.Custom, data)).not.toHaveProperty('include_access');
+  });
 });
 
 describe('getAnalyticsTabs', () => {
@@ -65,7 +83,8 @@ describe('getAnalyticsColDefs', () => {
 describe('getAnalyticsPreviewColDefs', () => {
   test.each([
     [AnalyticsExportPreviewTab.OBJECTS, ['type', 'name', 'description', 'reason']],
-    [AnalyticsExportPreviewTab.REQUIRED_SYSTEM_TABLES, ['name']],
+    [AnalyticsExportPreviewTab.REQUIRED_SYSTEM_TABLES, ['name', 'reason']],
+    [AnalyticsExportPreviewTab.ACCESS, ['table', 'role', 'outcome', 'detail']],
     [AnalyticsExportPreviewTab.SKIPPED, ['type', 'name', 'reason']],
   ])('shows the %s fields', (tab, fields) => {
     expect(getAnalyticsPreviewColDefs(t, tab).map(({ field }) => field)).toEqual(fields);
@@ -78,9 +97,73 @@ describe('getAnalyticsPreviewRows', () => {
       { type: CatalogComponentType.TABLE, name: 'usage_source', reason: 'source_table of usage_sentiment' },
       { type: CatalogComponentType.TABLE, name: 'usage_sentiment', reason: 'selected' },
     ];
-    const rows = getAnalyticsPreviewRows({ objects, required_system_tables: [], skipped: [] });
+    const rows = getAnalyticsPreviewRows({ objects, required_system_tables: [], skipped: [] }, t);
 
     expect(rows[AnalyticsExportPreviewTab.OBJECTS]).toEqual(objects);
     expect(rows[AnalyticsExportPreviewTab.SKIPPED]).toEqual([]);
+  });
+});
+
+describe('getAnalyticsPreviewRows — access', () => {
+  const preview = {
+    objects: [],
+    required_system_tables: [],
+    skipped: [],
+    access: [
+      {
+        table: 'dial_usage_log',
+        roles: ['analytics-viewers'],
+        left_behind: [
+          {
+            role: 'writers',
+            entry: { privileges: [TableGrantKey.Write], rows: null, columns: ['model'] },
+            error: 'table_is_system',
+          },
+        ],
+      },
+    ],
+  };
+
+  test('flattens exported roles and left-behind entries into one row each', () => {
+    expect(getAnalyticsPreviewRows(preview, t)[AnalyticsExportPreviewTab.ACCESS]).toEqual([
+      {
+        table: 'dial_usage_log',
+        role: 'analytics-viewers',
+        outcome: ExportI18nKey.AnalyticsAccessExported,
+        isWarning: false,
+      },
+      {
+        table: 'dial_usage_log',
+        role: 'writers',
+        outcome: ExportI18nKey.AnalyticsAccessLeftBehind,
+        detail: `table_is_system: ${TableGrantKey.Write}, ${ExportI18nKey.AnalyticsColumnPolicy}`,
+        isWarning: true,
+      },
+    ]);
+  });
+
+  test('leaves the access rows out when the preview carries no access', () => {
+    expect(getAnalyticsPreviewRows({ ...preview, access: undefined }, t)).not.toHaveProperty(
+      AnalyticsExportPreviewTab.ACCESS,
+    );
+  });
+});
+
+describe('getAnalyticsPreviewTabs', () => {
+  test('hides the Access tab when there are no access rows', () => {
+    expect(getAnalyticsPreviewTabs(t, {}).map(({ id }) => id)).not.toContain(AnalyticsExportPreviewTab.ACCESS);
+  });
+
+  test('counts the access rows and warns about a left-behind one', () => {
+    const tabs = getAnalyticsPreviewTabs(t, {
+      [AnalyticsExportPreviewTab.ACCESS]: [
+        { table: 'a', role: 'r1', outcome: 'x', isWarning: false },
+        { table: 'a', role: 'r2', outcome: 'y', isWarning: true },
+      ],
+    });
+    const access = tabs.find(({ id }) => id === AnalyticsExportPreviewTab.ACCESS);
+
+    expect(access?.label).toBe(`${ExportI18nKey.AnalyticsAccess} (2)`);
+    expect(access?.status).toBe(TabStatus.Warning);
   });
 });

@@ -1,5 +1,5 @@
 import { Pipeline } from '@/src/models/analytics/pipeline';
-import { AnalyticsTable, TableStatus } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { AnalyticsExportEntityType } from '@/src/types/analytics/export';
 
@@ -12,16 +12,20 @@ const OTLP_LANDING_TABLE_PREFIX = 'otel_';
  * The service refuses a system, pending, failed or OTLP landing table as an explicit selection and leaves each out
  * of a full export, so offering one would only produce a refusal or a Skipped row at preview.
  */
-export const isExportableTable = (table: AnalyticsTable): boolean =>
-  !table.system && table.status === TableStatus.Active && !table.name.startsWith(OTLP_LANDING_TABLE_PREFIX);
+export const isExportableTable = (table: AnalyticsTable, isAccessIncluded = false): boolean =>
+  (!table.system || (isAccessIncluded && table.type === AnalyticsTableType.Source)) &&
+  table.status === TableStatus.Active &&
+  !table.name.startsWith(OTLP_LANDING_TABLE_PREFIX);
 
 const toGridData = (
   { name, description }: { name: string; description?: string },
   type: AnalyticsExportEntityType,
 ): EntitiesGridData => ({ name, displayName: name, description, type });
 
-export const getTablesForExportGrid = (tables: AnalyticsTable[]): EntitiesGridData[] =>
-  tables.filter(isExportableTable).map((table) => toGridData(table, AnalyticsExportEntityType.TABLE));
+export const getTablesForExportGrid = (tables: AnalyticsTable[], isAccessIncluded = false): EntitiesGridData[] =>
+  tables
+    .filter((table) => isExportableTable(table, isAccessIncluded))
+    .map((table) => ({ ...toGridData(table, AnalyticsExportEntityType.TABLE), isSystem: table.system }));
 
 export const getPipelinesForExportGrid = (pipelines: Pipeline[]): EntitiesGridData[] =>
   pipelines.map((pipeline) => toGridData(pipeline, AnalyticsExportEntityType.PIPELINE));

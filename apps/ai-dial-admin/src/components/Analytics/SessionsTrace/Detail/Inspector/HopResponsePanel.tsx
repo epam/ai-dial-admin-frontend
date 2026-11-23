@@ -1,5 +1,6 @@
 'use client';
 
+import classNames from 'classnames';
 import { FC, useMemo } from 'react';
 
 import HopClampNote from '@/src/components/Analytics/SessionsTrace/Detail/Inspector/HopClampNote';
@@ -44,8 +45,8 @@ const HopResponsePanel: FC<Props> = ({ envelope, isRaw, traceId, coreSpanId, req
   );
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-col">
-      <div className="flex min-w-0 flex-col gap-3">
+    <div className={classNames('flex min-h-0 min-w-0 flex-col', isRaw && 'flex-1')}>
+      <div className={classNames('flex min-w-0 flex-col gap-3', isRaw && 'min-h-0 flex-1')}>
         {isRaw ? (
           <HopRawView
             traceId={traceId}

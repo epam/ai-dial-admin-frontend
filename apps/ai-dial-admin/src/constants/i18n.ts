@@ -1180,6 +1180,14 @@ export enum ImportI18nKey {
   AnalyticsStatusRolledBack = 'Import.AnalyticsStatusRolledBack',
   AnalyticsStatusRollbackFailed = 'Import.AnalyticsStatusRollbackFailed',
   AnalyticsStatusFailed = 'Import.AnalyticsStatusFailed',
+  AnalyticsStatusReplaced = 'Import.AnalyticsStatusReplaced',
+  AnalyticsIncludeAccess = 'Import.AnalyticsIncludeAccess',
+  AnalyticsIncludeAccessCaption = 'Import.AnalyticsIncludeAccessCaption',
+  AnalyticsAccess = 'Import.AnalyticsAccess',
+  AnalyticsTable = 'Import.AnalyticsTable',
+  AnalyticsRole = 'Import.AnalyticsRole',
+  AnalyticsIneffectiveGrants = 'Import.AnalyticsIneffectiveGrants',
+  AnalyticsResultPipelinesReminder = 'Import.AnalyticsResultPipelinesReminder',
 }
 
 export enum ExportI18nKey {
@@ -1220,6 +1228,17 @@ export enum ExportI18nKey {
   AnalyticsName = 'Export.AnalyticsName',
   AnalyticsDescription = 'Export.AnalyticsDescription',
   AnalyticsReason = 'Export.AnalyticsReason',
+  AnalyticsIncludeAccess = 'Export.AnalyticsIncludeAccess',
+  AnalyticsIncludeAccessCaption = 'Export.AnalyticsIncludeAccessCaption',
+  AnalyticsAccess = 'Export.AnalyticsAccess',
+  AnalyticsTable = 'Export.AnalyticsTable',
+  AnalyticsRole = 'Export.AnalyticsRole',
+  AnalyticsOutcome = 'Export.AnalyticsOutcome',
+  AnalyticsDetail = 'Export.AnalyticsDetail',
+  AnalyticsAccessExported = 'Export.AnalyticsAccessExported',
+  AnalyticsAccessLeftBehind = 'Export.AnalyticsAccessLeftBehind',
+  AnalyticsRowPolicy = 'Export.AnalyticsRowPolicy',
+  AnalyticsColumnPolicy = 'Export.AnalyticsColumnPolicy',
   CandidatesReadFailed = 'Export.CandidatesReadFailed',
 }
 

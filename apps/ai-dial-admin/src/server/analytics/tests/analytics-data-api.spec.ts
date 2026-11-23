@@ -982,7 +982,13 @@ describe('Server :: AnalyticsDataApi — catalog import', () => {
     fetch.mockResponseOnce(JSON.stringify(preview), JSON_HEADERS);
     const body = new FormData();
 
-    const res = await instance.previewCatalogImport(body, CatalogResolutionPolicy.SKIP_IF_EXISTS, false, TOKEN_MOCK);
+    const res = await instance.previewCatalogImport(
+      body,
+      CatalogResolutionPolicy.SKIP_IF_EXISTS,
+      false,
+      false,
+      TOKEN_MOCK,
+    );
 
     expect(res).toEqual(expect.objectContaining({ success: true, response: preview }));
     expect(fetch).toHaveBeenCalledWith(
@@ -999,13 +1005,46 @@ describe('Server :: AnalyticsDataApi — catalog import', () => {
       headers: { 'content-type': 'application/json' },
     });
 
-    const res = await instance.importCatalog(new FormData(), CatalogResolutionPolicy.FAIL_IF_EXISTS, true, TOKEN_MOCK);
+    const res = await instance.importCatalog(
+      new FormData(),
+      CatalogResolutionPolicy.FAIL_IF_EXISTS,
+      true,
+      false,
+      TOKEN_MOCK,
+    );
 
     expect(res).toEqual(expect.objectContaining({ success: false, status: 409 }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringMatching(/\/v1\/catalog\/import\?resolution_policy=FAIL_IF_EXISTS&acknowledge_reused_names=true$/),
       expect.anything(),
     );
+  });
+
+  test('previewCatalogImport asks for access only when it is included', async () => {
+    fetch.mockResponseOnce(JSON.stringify({}), JSON_HEADERS);
+
+    await instance.previewCatalogImport(
+      new FormData(),
+      CatalogResolutionPolicy.SKIP_IF_EXISTS,
+      false,
+      true,
+      TOKEN_MOCK,
+    );
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /\/v1\/catalog\/import\/preview\?resolution_policy=SKIP_IF_EXISTS&acknowledge_reused_names=false&include_access=true$/,
+      ),
+      expect.anything(),
+    );
+  });
+
+  test('importCatalog asks for access only when it is included', async () => {
+    fetch.mockResponseOnce(JSON.stringify({}), JSON_HEADERS);
+
+    await instance.importCatalog(new FormData(), CatalogResolutionPolicy.FAIL_IF_EXISTS, false, true, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('&include_access=true'), expect.anything());
   });
 
   describe('table backfill', () => {

@@ -3,6 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { IconArrowNarrowRight } from '@tabler/icons-react';
 import {
+  Checkbox,
   PrimaryButton,
   RadioButtonWithContent,
   RadioGroup,
@@ -47,6 +48,9 @@ interface Props {
   isAnalyticsEnabled?: boolean;
   analyticsPolicy: CatalogResolutionPolicy;
   onChangeAnalyticsPolicy: (policy: CatalogResolutionPolicy) => void;
+  isAccessIncluded: boolean;
+  canGrantAccess: boolean;
+  onChangeAccessIncluded: (isIncluded: boolean) => void;
   onChangeFiles: (files: File[]) => void;
   onChangeFileType: (fileType: string) => void;
   onChangeImportBody: (body: FormData) => void;
@@ -63,6 +67,9 @@ const Files: FC<Props> = ({
   isAnalyticsEnabled,
   analyticsPolicy,
   onChangeAnalyticsPolicy,
+  isAccessIncluded,
+  canGrantAccess,
+  onChangeAccessIncluded,
   onChangeFiles,
   onNextStep,
   onChangeImportBody,
@@ -133,14 +140,24 @@ const Files: FC<Props> = ({
         );
       case ExportComponentType.ANALYTICS:
         return (
-          <RadioGroup
-            items={toRadioItems(ANALYTICS_IMPORT_RESOLUTIONS(t))}
-            value={analyticsPolicy}
-            id="analyticsConflictResolution"
-            labelProps={{ label: t(ImportI18nKey.ConflictResolution) }}
-            orientation={RadioGroupOrientation.Column}
-            onChange={(value) => onChangeAnalyticsPolicy(value as CatalogResolutionPolicy)}
-          />
+          <div className="flex flex-col gap-4">
+            <RadioGroup
+              items={toRadioItems(ANALYTICS_IMPORT_RESOLUTIONS(t))}
+              value={analyticsPolicy}
+              id="analyticsConflictResolution"
+              labelProps={{ label: t(ImportI18nKey.ConflictResolution) }}
+              orientation={RadioGroupOrientation.Column}
+              onChange={(value) => onChangeAnalyticsPolicy(value as CatalogResolutionPolicy)}
+            />
+            <Checkbox
+              id="analyticsIncludeAccess"
+              isSelected={isAccessIncluded}
+              disabled={!canGrantAccess}
+              labelProps={{ label: t(ImportI18nKey.AnalyticsIncludeAccess) }}
+              caption={t(ImportI18nKey.AnalyticsIncludeAccessCaption)}
+              onChange={onChangeAccessIncluded}
+            />
+          </div>
         );
       default:
         return (
