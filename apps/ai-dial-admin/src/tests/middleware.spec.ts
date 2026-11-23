@@ -22,7 +22,6 @@ describe('middleware', () => {
   beforeEach(() => {
     vi.stubEnv('NEXTAUTH_URL', '');
     vi.stubEnv('CSP_MODE', '');
-    vi.spyOn(console, 'info').mockImplementation(() => undefined);
   });
 
   test('sends a report-only policy with a page when the mode is not set', async () => {

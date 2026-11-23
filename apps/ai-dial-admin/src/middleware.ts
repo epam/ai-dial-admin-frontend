@@ -20,8 +20,6 @@ export const config = {
 };
 
 async function middlewareFn(req: NextRequest) {
-  console.info(`Middleware invoked for ${req.nextUrl.pathname}`);
-
   const i18nResponse = I18nMiddleware(req);
 
   if (i18nResponse.headers.has('location')) {
