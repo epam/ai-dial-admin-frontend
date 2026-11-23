@@ -59,19 +59,19 @@ const Header: FC<Props> = ({
       <div className="min-w-0 mr-3 flex-1">
         <Tabs tabs={tabs} activeTabId={activeTab} onTabChange={onChangeTab} ariaLabel={t(TabsI18nKey.ListLabel)} />
       </div>
-      {isChanged && isDiscardable && (
-        <ChangedEntityButtons disableSave={disableSave} onDiscard={onDiscard} onSave={onSave} />
-      )}
-      {isChanged && !isDiscardable && (
-        <div className="p-3 lg:p-0">
-          <Button
-            variant={ButtonVariant.Primary}
-            label={t(ButtonsI18nKey.Save)}
-            onClick={() => onSave?.()}
-            disabled={disableSave}
-          />
-        </div>
-      )}
+      {isChanged &&
+        (isDiscardable ? (
+          <ChangedEntityButtons disableSave={disableSave} onDiscard={onDiscard} onSave={onSave} />
+        ) : (
+          <div className="p-3 lg:p-0">
+            <Button
+              variant={ButtonVariant.Primary}
+              label={t(ButtonsI18nKey.Save)}
+              onClick={onSave}
+              disabled={disableSave}
+            />
+          </div>
+        ))}
     </div>
   );
 };
