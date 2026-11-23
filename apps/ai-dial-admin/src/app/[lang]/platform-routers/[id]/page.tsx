@@ -13,6 +13,7 @@ import { DialRouterResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import { readCatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
 import { readConfigEntities } from '@/src/server/config-entities/read-page-options';
+import { readPluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { errorObjLog } from '@/src/server/logger';
 import { ConfigFileEntityType } from '@/src/types/config-file-entity';
@@ -59,10 +60,11 @@ export default async function Page(params: {
   // prevent the router from loading, and one list failing must not skip another. Core-direct, as for
   // Platform > Models. The schema list is the one the application source picker offers: configuration-file
   // schemas plus platform App Runners.
-  const [roles, fileSchemas, catalogSchemas] = await Promise.all([
+  const [roles, fileSchemas, catalogSchemas, plugins] = await Promise.all([
     readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
     readConfigEntities<DialApplicationScheme>(token, ConfigFileEntityType.Schemas, optionWarnings, true),
     readCatalogSchemaOptions(token),
+    readPluginOptions(token),
   ]);
 
   if (router == null) {
@@ -77,6 +79,7 @@ export default async function Page(params: {
         roles={roles}
         optionWarnings={optionWarnings}
         translators={translators}
+        plugins={plugins}
         catalogSchemas={catalogSchemas}
         schemes={buildAppRunnerOptions(fileSchemas, platformSchemas)}
         isConfigFileSource={isConfigFileMode}

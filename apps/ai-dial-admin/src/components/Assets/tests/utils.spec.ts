@@ -936,12 +936,38 @@ describe('getAgentLinkForConversation', () => {
     );
   });
 
-  test('returns an Applications link for an unprefixed id whatever the reference', () => {
+  test('returns an empty application link until the application route is probed', () => {
     const deployment = { ...APPLICATION, application: 'my-app', reference: 'other-ref' };
 
-    expect(getAgentLinkForConversation('my-app', deployment, DeploymentType.Application, 'en')).toBe(
-      `/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`,
-    );
+    expect(getAgentLinkForConversation('my-app', deployment, DeploymentType.Application, 'en')).toBe('');
+  });
+
+  test('returns an Applications link for an unprefixed id once the probe finds no platform application', () => {
+    const deployment = { ...APPLICATION, application: 'my-app', reference: 'other-ref' };
+
+    expect(
+      getAgentLinkForConversation(
+        'my-app',
+        deployment,
+        DeploymentType.Application,
+        'en',
+        undefined,
+        ApplicationRoute.Applications,
+      ),
+    ).toBe(`/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`);
+  });
+
+  test('returns a platform application link when the application route is Assets Applications', () => {
+    expect(
+      getAgentLinkForConversation(
+        'world-economy-v2-hybrid',
+        APPLICATION,
+        DeploymentType.Application,
+        'en',
+        undefined,
+        ApplicationRoute.AssetsApplications,
+      ),
+    ).toBe(`/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('world-economy-v2-hybrid')}`);
   });
 
   test('falls back to the catalog record fields when the object does not map', () => {

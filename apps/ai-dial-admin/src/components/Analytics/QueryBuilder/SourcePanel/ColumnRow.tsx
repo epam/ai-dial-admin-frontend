@@ -4,6 +4,7 @@ import { FC, useLayoutEffect, useRef, useState } from 'react';
 
 import { Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 import { IconShield } from '@tabler/icons-react';
+import classNames from 'classnames';
 
 import { QuerySourcePanelI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -11,9 +12,10 @@ import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 
 interface Props {
   field: AnalyticsEntityField;
+  isNested?: boolean;
 }
 
-const ColumnRow: FC<Props> = ({ field }) => {
+const ColumnRow: FC<Props> = ({ field, isNested = false }) => {
   const t = useI18n();
   const labelRef = useRef<HTMLSpanElement>(null);
   const [isTruncated, setIsTruncated] = useState(false);
@@ -27,7 +29,12 @@ const ColumnRow: FC<Props> = ({ field }) => {
   }, [label]);
 
   return (
-    <li className="flex h-8 items-center gap-3 rounded pl-17 pr-3 hover:bg-accent-primary-alpha focus-within:bg-accent-primary-alpha">
+    <li
+      className={classNames(
+        'flex h-8 items-center gap-3 rounded-lg pr-3 hover:bg-accent-primary-alpha focus-within:bg-accent-primary-alpha',
+        isNested ? 'pl-17' : 'pl-13',
+      )}
+    >
       <Tooltip
         asChild
         placement={TooltipPlacement.Right}

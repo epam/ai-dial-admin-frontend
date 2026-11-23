@@ -14,7 +14,7 @@ interface Props {
 
 const STORAGE_KEY = 'query-builder-area-height';
 const DEFAULT_HEIGHT = 120;
-const MIN_HEIGHT = 56;
+const MIN_HEIGHT = 80;
 const MAX_SHARE = 0.6;
 const STEP = 16;
 const HANDLE_HEIGHT = 24;
@@ -23,6 +23,7 @@ const BuilderArea: FC<Props> = ({ ariaLabel, children }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(DEFAULT_HEIGHT);
   const [maxHeight, setMaxHeight] = useState(DEFAULT_HEIGHT);
+  const [isResizing, setIsResizing] = useState(false);
 
   const readMaxHeight = useCallback(
     () => Math.max(MIN_HEIGHT, (containerRef.current?.parentElement?.clientHeight ?? 0) * MAX_SHARE),
@@ -47,8 +48,13 @@ const BuilderArea: FC<Props> = ({ ariaLabel, children }) => {
     [readMaxHeight],
   );
 
+  const onResizeStart = useCallback(() => setIsResizing(true), []);
+
   const onResizeStop: ResizeCallback = useCallback(
-    (_event, _direction, element) => onChangeHeight(element.getBoundingClientRect().height),
+    (_event, _direction, element) => {
+      setIsResizing(false);
+      onChangeHeight(element.getBoundingClientRect().height);
+    },
     [onChangeHeight],
   );
 
@@ -67,11 +73,13 @@ const BuilderArea: FC<Props> = ({ ariaLabel, children }) => {
               minHeight={MIN_HEIGHT}
               maxHeight={maxHeight}
               step={STEP}
+              isResizing={isResizing}
               onChangeHeight={onChangeHeight}
             />
           ),
         }}
         handleStyles={{ bottom: { height: HANDLE_HEIGHT, bottom: -HANDLE_HEIGHT, zIndex: 20 } }}
+        onResizeStart={onResizeStart}
         onResizeStop={onResizeStop}
         className="flex min-h-0 flex-col"
       >

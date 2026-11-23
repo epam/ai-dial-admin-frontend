@@ -1,30 +1,43 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useLayoutEffect, useRef, useState } from 'react';
 
-import { Badge, Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
+import { Tooltip, TooltipPlacement } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import Link from 'next/link';
 
+import ScopeBadge from '@/src/components/Analytics/QueryBuilder/Common/ScopeBadge';
 import { useSourcePanel } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
-import { SAVED_QUERY_SCOPE_I18N } from '@/src/constants/analytics/queries';
-import { useCurrentLocale, useI18n } from '@/src/locales/client';
+import { QueryRowIndent } from '@/src/components/Analytics/QueryBuilder/SourcePanel/models';
+import { useCurrentLocale } from '@/src/locales/client';
 import { SavedQuery } from '@/src/models/analytics/saved-query';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 
+const INDENT_CLASS_NAME: Record<QueryRowIndent, string> = {
+  [QueryRowIndent.Root]: 'pl-3',
+  [QueryRowIndent.BesideGroups]: 'pl-8',
+  [QueryRowIndent.Nested]: 'pl-12',
+};
+
 interface Props {
   query: SavedQuery;
   isCurrent: boolean;
-  isNested?: boolean;
+  indent?: QueryRowIndent;
 }
 
-const QueryRow: FC<Props> = ({ query, isCurrent, isNested = false }) => {
-  const t = useI18n();
+const QueryRow: FC<Props> = ({ query, isCurrent, indent = QueryRowIndent.Root }) => {
   const locale = useCurrentLocale();
   const { onNavigate } = useSourcePanel();
+  const nameRef = useRef<HTMLSpanElement>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
 
   const href = `/${locale}${getUrnForEntity(ApplicationRoute.AnalyticsQueries, query)}`;
+
+  useLayoutEffect(() => {
+    const element = nameRef.current;
+    setIsTruncated(!!element && element.scrollWidth > element.clientWidth);
+  }, [query.name]);
 
   return (
     <li>
@@ -34,7 +47,8 @@ const QueryRow: FC<Props> = ({ query, isCurrent, isNested = false }) => {
         contentClassName="max-w-[320px]"
         tooltip={
           <span className="flex flex-col items-start gap-1">
-            <Badge label={t(SAVED_QUERY_SCOPE_I18N[query.scope])} />
+            {isTruncated && <span className="[overflow-wrap:anywhere]">{query.name}</span>}
+            <ScopeBadge scope={query.scope} />
             {query.description && <span>{query.description}</span>}
           </span>
         }
@@ -43,13 +57,15 @@ const QueryRow: FC<Props> = ({ query, isCurrent, isNested = false }) => {
           href={href}
           aria-current={isCurrent ? 'page' : undefined}
           className={classNames(
-            'flex min-h-8 items-center rounded py-1 pr-3 text-primary dial-tiny-text [overflow-wrap:anywhere] hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha',
-            isNested ? 'pl-8' : 'pl-3',
+            'flex min-h-8 min-w-0 items-center rounded-lg py-1 pr-3 text-primary dial-tiny-text hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha',
+            INDENT_CLASS_NAME[indent],
             isCurrent && 'bg-accent-primary-alpha',
           )}
           onClick={(event) => onNavigate(event, href)}
         >
-          {query.name}
+          <span ref={nameRef} className="truncate">
+            {query.name}
+          </span>
         </Link>
       </Tooltip>
     </li>

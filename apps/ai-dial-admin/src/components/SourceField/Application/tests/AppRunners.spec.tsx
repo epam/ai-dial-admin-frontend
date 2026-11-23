@@ -55,10 +55,6 @@ vi.mock('@/src/hooks/use-is-mobile-screen', () => ({
   useIsMobileScreen: () => false,
 }));
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => false,
-}));
-
 // Expose onApply as a button so tests can trigger runner selection in the immutable branch.
 vi.mock('@/src/components/SourceField/Application/SelectAppRunnersModal', () => ({
   __esModule: true,

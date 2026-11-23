@@ -1,15 +1,12 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialKeyResource } from '@/src/models/dial/resource';
+import { navigationMock } from '@/test-mocks/navigation';
 import KeyAssetView from '../View';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
 
 vi.mock('@/src/app/[lang]/platform-keys/actions', () => ({
   updateKey: vi.fn(async () => ({ success: true })),
@@ -20,13 +17,6 @@ vi.mock('@/src/app/[lang]/platform-keys/actions', () => ({
 vi.mock('@/src/hooks/use-protected-request', () => ({
   useProtectedRequest: () =>
     vi.fn(async (fn: (...args: unknown[]) => Promise<unknown>, ...args: unknown[]) => fn(...args)),
-}));
-
-// Override test-setup's bare `useRouter: vi.fn()` with one that has a refresh spy.
-vi.mock('next/navigation', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('next/navigation')>()),
-  useRouter: vi.fn(() => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() })),
-  usePathname: vi.fn(() => '/assets-keys'),
 }));
 
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
@@ -70,7 +60,8 @@ const renderView = (key: Partial<DialKeyResource> = {}) =>
 
 describe('KeyAssetView', () => {
   beforeEach(() => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
+    navigationMock.setPathname('/assets-keys');
   });
 
   test('Renders the TabsContent by default', () => {
@@ -95,7 +86,7 @@ describe('KeyAssetView', () => {
   });
 
   test('Does not render the Rotate button for a read-only admin', () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
 
     renderView();
 

@@ -20,8 +20,6 @@ import { IngestFailureState } from '@/src/models/analytics/ingest-failure';
 import { TableBackfillRun, TableBackfillState } from '@/src/models/analytics/table-backfill';
 
 vi.mock('@/src/app/[lang]/tables/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
 // Mock the ellipsis tooltip so the delete confirmation's Name value is plain, assertable text.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();

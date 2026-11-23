@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -6,16 +7,11 @@ import { EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n'
 import { ToolsetAuthType } from '@/src/models/dial/resource';
 import ResourceAuthentication from '../ResourceAuthentication';
 
-let isReadOnlyAdmin = false;
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => isReadOnlyAdmin,
-}));
-
 describe('ResourceAuthentication', () => {
   const user = userEvent.setup();
 
   beforeEach(() => {
-    isReadOnlyAdmin = false;
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 
   test('renders all three selectable auth type options by default', () => {
@@ -92,7 +88,7 @@ describe('ResourceAuthentication', () => {
   });
 
   test('a read-only admin sees the DIAL native card without crashing', () => {
-    isReadOnlyAdmin = true;
+    appContextMock.set({ isReadOnlyAdmin: true });
     render(
       <ResourceAuthentication
         name="dial"
@@ -106,7 +102,7 @@ describe('ResourceAuthentication', () => {
   });
 
   test('a read-only admin sees a type this frontend does not know without crashing', () => {
-    isReadOnlyAdmin = true;
+    appContextMock.set({ isReadOnlyAdmin: true });
     render(
       <ResourceAuthentication
         name="dial"

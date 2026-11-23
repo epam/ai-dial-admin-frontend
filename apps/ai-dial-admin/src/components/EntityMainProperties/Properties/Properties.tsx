@@ -1,5 +1,6 @@
 import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
 import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
@@ -27,6 +28,7 @@ interface Props<T> {
   view: ApplicationRoute;
   entity: T;
   names: string[];
+  plugins?: PluginOptions;
   versionsMap?: Record<string, string[]>;
   runners?: DialApplicationScheme[];
   isUniqueNameError?: boolean;
@@ -157,6 +159,7 @@ const Properties = <T extends object>({
       <TranslatorCreateProperties
         entity={entity as { name?: string }}
         names={props.names}
+        plugins={props.plugins}
         isUniqueNameError={isUniqueNameError}
         onChangeEntity={props.onChangeEntity}
         isModal={props.isModal}

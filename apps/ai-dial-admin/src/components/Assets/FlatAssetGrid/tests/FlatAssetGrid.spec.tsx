@@ -1,9 +1,9 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { AssetListItem, BucketType } from '@/src/models/dial/asset-list-item';
 import { AssetSource } from '@/src/models/dial/asset-source';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -12,7 +12,6 @@ import { getFlatAssetColumns } from '../columns';
 import { FlatAssets } from '../models';
 import { PlatformModalType, usePlatformAssetActions } from '../use-platform-asset-actions';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn() }));
 vi.mock('../use-platform-asset-actions', () => ({
   PlatformModalType: { Duplicate: 'duplicate', Delete: 'delete' },
   usePlatformAssetActions: vi.fn(),
@@ -140,7 +139,7 @@ describe('FlatAssetGrid :: Platform source', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     armActions();
   });
 
@@ -178,7 +177,7 @@ describe('FlatAssetGrid :: Platform source', () => {
   });
 
   test('offers only open to a read-only admin and turns selection off', () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderGrid();
 
     expect(screen.queryByRole('button', { name: /Duplicate/ })).not.toBeInTheDocument();
@@ -243,7 +242,7 @@ describe('FlatAssetGrid :: Platform source', () => {
 describe('FlatAssetGrid :: empty state', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     armActions();
   });
 
@@ -265,7 +264,7 @@ describe('FlatAssetGrid :: config.json source', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     armActions();
   });
 
@@ -313,7 +312,7 @@ describe('FlatAssetGrid :: select mode', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     armActions();
   });
 

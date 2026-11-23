@@ -8,7 +8,7 @@ import {
   NotExtractedReason,
   TryOutColumnResults,
 } from '@/src/components/TestSuites/utils/models';
-import { TestSuitesI18nKey, ValidityStatusI18nKey } from '@/src/constants/i18n';
+import { TabsI18nKey, TestSuitesI18nKey, ValidityStatusI18nKey } from '@/src/constants/i18n';
 import { ResponseColumn, SuiteType, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
 import TryOutColumns from '../components/TryOutColumns';
 
@@ -30,7 +30,9 @@ vi.mock('../components/CollapsibleSection', () => ({
 }));
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
-  default: ({ entity }: { entity: unknown }) => <div>JsonEditor:{JSON.stringify(entity)}</div>,
+  default: ({ entity, text }: { entity: unknown; text?: string }) => (
+    <div>JsonEditor:{text ?? JSON.stringify(entity)}</div>
+  ),
 }));
 
 vi.mock('@/src/components/Common/CopyButton/CopyButton', () => ({
@@ -388,5 +390,50 @@ describe('TryOutColumns', () => {
     expect(evaluateTryOutColumnSections).toHaveBeenCalledOnce();
     expect(screen.queryByText('testCol')).not.toBeInTheDocument();
     expect(screen.queryByRole('group', { name: TestSuitesI18nKey.ColumnResultLabel })).not.toBeInTheDocument();
+  });
+
+  test('shows an Events section only for turns with streaming true', async () => {
+    vi.mocked(evaluateTryOutColumnSections).mockResolvedValueOnce({
+      shape: 'turns',
+      groups: [
+        {
+          requestIndex: 0,
+          showTurnLabels: true,
+          turns: [
+            {
+              turnIndex: 0,
+              columns: [makeEvaluatedColumn({ name: 'answer', result: 'a' })],
+              responseBody: { out: 'a' },
+              streaming: true,
+              events: [{ event: 'delta', data: { t: 'a' } }],
+            },
+            {
+              turnIndex: 1,
+              columns: [makeEvaluatedColumn({ name: 'answer', result: 'b' })],
+              responseBody: { out: 'b' },
+            },
+          ],
+        },
+      ],
+    } satisfies TryOutColumnResults);
+
+    render(
+      <TryOutColumns
+        testSuite={{
+          suiteType: SuiteType.Deployment,
+          inputBindings: [{ templateVariable: 'prompt', dataField: 'prompt' }],
+        }}
+        history={[entry({ r: 0, t: 0 }, { out: 'a' }), entry({ r: 0, t: 1 }, { out: 'b' })]}
+        schema={[]}
+        multiTurnData={[{ prompt: 'a' }, { prompt: 'b' }]}
+        response={{}}
+        responseBody={null}
+        selectedRequestIndex={0}
+      />,
+    );
+
+    expect(await screen.findByText('JsonEditor:{"out":"a"}')).toBeInTheDocument();
+    expect(screen.getAllByText(TabsI18nKey.Events)).toHaveLength(1);
+    expect(screen.getByText('JsonEditor:[{"event":"delta","data":{"t":"a"}}]')).toBeInTheDocument();
   });
 });

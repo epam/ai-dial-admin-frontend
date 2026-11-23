@@ -146,7 +146,7 @@ describe('Queries server actions', () => {
     const messages = [{ role: QueryAssistantRole.User, content: 'total cost by deployment' }];
 
     test('passes messages, the configured deployment, and the token', async () => {
-      process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT = 'applications/public/query-helper__0.0.1';
+      vi.stubEnv('DIAL_QUERY_ASSISTANT_DEPLOYMENT', 'applications/public/query-helper__0.0.1');
       (queryAssistantApi.chatCompletion as any).mockResolvedValue({ success: true });
 
       await generateQuery(messages);
@@ -159,7 +159,7 @@ describe('Queries server actions', () => {
     });
 
     test('returns a failure without calling the client when no deployment is configured', async () => {
-      delete process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT;
+      vi.stubEnv('DIAL_QUERY_ASSISTANT_DEPLOYMENT', undefined);
 
       const res = await generateQuery(messages);
 

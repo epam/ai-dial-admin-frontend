@@ -8,6 +8,9 @@ import tsParser from '@typescript-eslint/parser';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
 const RULE = '.claude/rules/testing.md';
+const GLOBAL_OBJECTS = '/^(global|globalThis|window|navigator|localStorage|sessionStorage)$/';
+const CONTROLLED_MODULES =
+  '/^(next\\/navigation|@\\/src\\/context\\/(SaveValidationContext|AppContext|NotificationContext))$/';
 
 const BANNED_SYNTAX = [
   {
@@ -38,6 +41,28 @@ const BANNED_SYNTAX = [
     // Any real timer: a sleep is shorter than the work it waits for on a loaded runner.
     selector: "CallExpression[callee.name='setTimeout']",
     message: `Don't sleep in a spec. Use fake timers (vi.useFakeTimers + vi.advanceTimersByTimeAsync), await the result with findBy*, or await act(async () => {}) to flush (${RULE} §9 rule 3).`,
+  },
+  {
+    // Files share one environment, and only vi.stubGlobal is undone by the global cleanup.
+    selector: `AssignmentExpression[left.object.name=${GLOBAL_OBJECTS}], AssignmentExpression[left.object.object.name=${GLOBAL_OBJECTS}], CallExpression[callee.object.name='Object'][callee.property.name='assign'][arguments.0.name=${GLOBAL_OBJECTS}]`,
+    message: `Don't assign to a global in a spec: the next file inherits it. Use vi.stubGlobal in beforeEach, or vi.spyOn on the object (${RULE} §10).`,
+  },
+  {
+    // Same for the environment: only vi.stubEnv is undone by the global cleanup.
+    selector:
+      "AssignmentExpression[left.object.object.name='process'][left.object.property.name='env'], UnaryExpression[operator='delete'][argument.object.object.name='process'][argument.object.property.name='env']",
+    message: `Don't write process.env in a spec: the next file inherits it. Use vi.stubEnv (${RULE} §10).`,
+  },
+  {
+    // These modules have a controller in apps/ai-dial-admin/test-mocks; a second mock would shadow it.
+    selector: `CallExpression[callee.object.name='vi'][callee.property.name=/^(mock|doMock)$/][arguments.0.value=${CONTROLLED_MODULES}]`,
+    message: `This module is mocked once in test-setup.tsx through a controller in test-mocks/. Configure it with that controller (appContextMock, navigationMock, notificationMock, saveValidationMock) instead of mocking it again (${RULE} §10).`,
+  },
+  {
+    // The hook only reads AppContext, which already has a controller.
+    selector:
+      "CallExpression[callee.object.name='vi'][callee.property.name=/^(mock|doMock)$/][arguments.0.value='@/src/hooks/use-is-read-only-admin']",
+    message: `useIsReadOnlyAdmin reads AppContext; set the state with appContextMock.set({ isReadOnlyAdmin: true }) instead of mocking the hook (${RULE} §10).`,
   },
 ];
 

@@ -4,7 +4,8 @@ import { FC, useCallback, useEffect } from 'react';
 
 import { Select } from '@epam/ai-dial-ui-kit';
 import IdControl from '@/src/components/BaseControls/Id/Id';
-import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
+import BaseUrlControl from '@/src/components/BaseControls/BaseUrlControl/BaseUrlControl';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import { getInterfaceTypeLabel } from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import { MODEL_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
@@ -24,6 +25,7 @@ interface TranslatorCreateEntity {
 interface Props {
   entity: TranslatorCreateEntity;
   names: string[];
+  plugins?: PluginOptions;
   isUniqueNameError?: boolean;
   onChangeEntity: (entity: object) => void;
   /** True in the create popup (full-width inputs, `id` field shown); false on the details view
@@ -43,7 +45,14 @@ interface Props {
  * `Translator` is a plain POJO (neither `Deployment` nor `RoleBasedEntity`), so it has neither field,
  * and Core's deserializer rejects the whole write once either is present in the body.
  */
-const TranslatorCreateProperties: FC<Props> = ({ entity, names, isUniqueNameError, onChangeEntity, isModal }) => {
+const TranslatorCreateProperties: FC<Props> = ({
+  entity,
+  names,
+  plugins,
+  isUniqueNameError,
+  onChangeEntity,
+  isModal,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch } = useSaveValidationContext();
@@ -116,16 +125,19 @@ const TranslatorCreateProperties: FC<Props> = ({ entity, names, isUniqueNameErro
         disabled={isReadOnlyAdmin}
         onChange={onChangeOut}
       />
-      <EndpointControl
-        id="baseUrl"
-        required
-        isModal={isModal}
-        isFullWidth={isModal}
-        label={t(EntityFieldsI18nKey.baseUrl)}
-        placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-        endpoint={entity.baseUrl}
-        onChange={(baseUrl) => onChangeEntity({ ...entity, baseUrl })}
-      />
+      <div className={controlClassName}>
+        <BaseUrlControl
+          id="baseUrl"
+          required
+          label={t(EntityFieldsI18nKey.baseUrl)}
+          placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+          value={entity.baseUrl}
+          isReadOnly={isReadOnlyAdmin}
+          plugins={plugins?.options}
+          optionsError={plugins?.error}
+          onChange={(baseUrl) => onChangeEntity({ ...entity, baseUrl })}
+        />
+      </div>
     </div>
   );
 };

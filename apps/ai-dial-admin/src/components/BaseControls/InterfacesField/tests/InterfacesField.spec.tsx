@@ -1,27 +1,52 @@
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import { useState } from 'react';
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-const { saveValidationDispatch } = vi.hoisted(() => ({ saveValidationDispatch: vi.fn() }));
+const { dispatch: saveValidationDispatch } = saveValidationMock;
 
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ dispatch: saveValidationDispatch, resetCounter: 0 }),
-  ValidationActionType: {
-    SetField: 'SET_FIELD_VALIDATION',
-    RemoveField: 'REMOVE_FIELD_VALIDATION',
-  },
-}));
-
+import { hasInvalidCustomTranslatorUrl } from '@/src/components/BaseControls/InterfacesField/utils';
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
-import { EntityFieldsI18nKey, ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
+import { BaseUrlInterfaceValue } from '@/src/components/BaseControls/InterfacesField/models';
+import { BasicI18nKey, EntityFieldsI18nKey, ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
 import {
   DeploymentInterfaceType,
   InterfaceFieldVariant,
   InterfaceMode,
   TranslatorReference,
 } from '@/src/models/dial/interfaces';
+
+describe('hasInvalidCustomTranslatorUrl', () => {
+  const t = (key: string) => key;
+  const out = DeploymentInterfaceType.OpenAIResponses;
+
+  test.each([
+    { baseUrl: '', isInvalid: false },
+    { baseUrl: 'https://example.com', isInvalid: false },
+    { baseUrl: 'dial-plugin://example', isInvalid: false },
+    { baseUrl: 'dial-plugin://', isInvalid: true },
+    { baseUrl: 'invalid', isInvalid: true },
+  ])('validates the optional inline URL $baseUrl', ({ baseUrl, isInvalid }) => {
+    expect(
+      hasInvalidCustomTranslatorUrl({ chat: { mode: InterfaceMode.Translator, translator: { baseUrl, out } } }, t),
+    ).toBe(isInvalid);
+  });
+
+  test('ignores absent, named and passthrough translators', () => {
+    expect(hasInvalidCustomTranslatorUrl(undefined, t)).toBe(false);
+    expect(hasInvalidCustomTranslatorUrl({ chat: { mode: InterfaceMode.Translator, translator: 'name' } }, t)).toBe(
+      false,
+    );
+    expect(
+      hasInvalidCustomTranslatorUrl(
+        { chat: { mode: InterfaceMode.Passthrough, translator: { baseUrl: 'invalid', out } } },
+        t,
+      ),
+    ).toBe(false);
+  });
+});
 
 type InterfaceValue = {
   baseUrl?: string;
@@ -39,9 +64,11 @@ const ControlledInterfacesField = ({ initialInterfaces }: { initialInterfaces: R
 const ControlledAssetInterfacesField = ({
   initialInterfaces,
   translators = [],
+  plugins,
 }: {
   initialInterfaces: Record<string, InterfaceValue>;
   translators?: { name: string }[];
+  plugins?: { options: string[] };
 }) => {
   const [interfaces, setInterfaces] = useState(initialInterfaces);
   return (
@@ -50,6 +77,7 @@ const ControlledAssetInterfacesField = ({
       onChangeInterfaces={setInterfaces}
       allowedTypes={SINGLE_TYPE}
       translators={translators as any}
+      plugins={plugins}
       isAsset
     />
   );
@@ -650,6 +678,66 @@ describe('InterfacesField — asset surfaces: mode & translator', () => {
     expect(screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.baseUrl}`) })).toHaveValue('x');
   });
 
+  test('selects a plugin for a custom translator when plugins are enabled', async () => {
+    const user = userEvent.setup();
+    const type = DeploymentInterfaceType.OpenAIChatCompletions;
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{
+          [type]: {
+            mode: InterfaceMode.Translator,
+            translator: { baseUrl: '', out: DeploymentInterfaceType.OpenAIResponses },
+          },
+        }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        plugins={{ options: ['example'] }}
+        isAsset
+        isPluginEnabled
+      />,
+    );
+
+    await user.click(screen.getByRole('radio', { name: BasicI18nKey.Plugin }));
+    expect(onChangeInterfaces).toHaveBeenCalledWith({
+      [type]: {
+        mode: InterfaceMode.Translator,
+        translator: { baseUrl: '', out: DeploymentInterfaceType.OpenAIResponses },
+      },
+    });
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: BasicI18nKey.SelectPlugin }),
+      'dial-plugin://example',
+    );
+    expect(onChangeInterfaces).toHaveBeenLastCalledWith({
+      [type]: {
+        mode: InterfaceMode.Translator,
+        translator: { baseUrl: 'dial-plugin://example', out: DeploymentInterfaceType.OpenAIResponses },
+      },
+    });
+  });
+
+  test('keeps the URL-only translator control when plugins are disabled even if options are supplied', () => {
+    const type = DeploymentInterfaceType.OpenAIChatCompletions;
+    render(
+      <InterfacesField
+        interfaces={{
+          [type]: {
+            mode: InterfaceMode.Translator,
+            translator: { baseUrl: '', out: DeploymentInterfaceType.OpenAIResponses },
+          },
+        }}
+        onChangeInterfaces={vi.fn()}
+        allowedTypes={SINGLE_TYPE}
+        plugins={{ options: ['example'] }}
+        isAsset
+      />,
+    );
+
+    expect(screen.getByRole('textbox', { name: new RegExp(`^${EntityFieldsI18nKey.baseUrl}`) })).toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: BasicI18nKey.Plugin })).not.toBeInTheDocument();
+  });
+
   test('renders a default headers editor and Defaults/Features buttons for an asset interface', () => {
     render(
       <ControlledAssetInterfacesField
@@ -776,6 +864,203 @@ describe('InterfacesField — entity base URL fallback', () => {
 
     expect(getBaseUrlInput()).toBeInTheDocument();
     expect(queryBaseUrlInputWithRequiredMarker()).toBeNull();
+  });
+});
+
+describe('InterfacesField — plugin base URLs', () => {
+  const type = DeploymentInterfaceType.OpenAIChatCompletions;
+  const overridePaths = { postAzureOpenaiChatCompletions: '/v1/chat/completions' };
+  const conflictField = `interface-${type}-plugin-override-paths`;
+
+  beforeEach(() => {
+    saveValidationDispatch.mockClear();
+  });
+
+  test('selects a plugin into the interface base_url without changing passthrough mode', async () => {
+    const user = userEvent.setup();
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{ [type]: { mode: InterfaceMode.Passthrough } }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+        isPluginEnabled
+        plugins={{ options: ['example'] }}
+      />,
+    );
+
+    await user.click(screen.getByRole('radio', { name: BasicI18nKey.Plugin }));
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: BasicI18nKey.SelectPlugin }),
+      'dial-plugin://example',
+    );
+
+    expect(onChangeInterfaces).toHaveBeenLastCalledWith({
+      [type]: { mode: InterfaceMode.Passthrough, base_url: 'dial-plugin://example' },
+    });
+  });
+
+  test('keeps an empty interface valid when it inherits the model plugin', () => {
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{ [type]: {} }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+        isPluginEnabled
+        entityBaseUrl="dial-plugin://example"
+      />,
+    );
+
+    expect(screen.getByRole('textbox', { name: BasicI18nKey.URL })).toHaveValue('');
+    expect(screen.queryByText(ErrorI18nKey.RequiredField)).not.toBeInTheDocument();
+    expect(onChangeInterfaces).not.toHaveBeenCalled();
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${type}`,
+      isValid: true,
+    });
+  });
+
+  test('blocks an inherited plugin conflict without removing paths and clears it when the model URL becomes HTTP', () => {
+    const onChangeInterfaces = vi.fn();
+    const interfaces = { [type]: { overridePaths } };
+    const { rerender } = render(
+      <InterfacesField
+        interfaces={interfaces}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+        isPluginEnabled
+        entityBaseUrl="dial-plugin://example"
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(InterfacesI18nKey.PluginOverridePathsError);
+    expect(screen.getByRole('textbox', { name: 'postAzureOpenaiChatCompletions' })).toHaveValue(
+      overridePaths.postAzureOpenaiChatCompletions,
+    );
+    expect(onChangeInterfaces).not.toHaveBeenCalled();
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: conflictField,
+      isValid: false,
+    });
+
+    saveValidationDispatch.mockClear();
+    rerender(
+      <InterfacesField
+        interfaces={interfaces}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+        isPluginEnabled
+        entityBaseUrl="https://example.com"
+      />,
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: conflictField,
+      isValid: true,
+    });
+  });
+
+  test('prefers an explicit HTTP interface URL over an inherited plugin for conflict validation', () => {
+    render(
+      <InterfacesField
+        interfaces={{ [type]: { base_url: 'https://example.com', overridePaths } }}
+        onChangeInterfaces={vi.fn()}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+        isPluginEnabled
+        entityBaseUrl="dial-plugin://example"
+      />,
+    );
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: conflictField,
+      isValid: true,
+    });
+  });
+
+  test('clears an explicit plugin conflict when the override path is removed', async () => {
+    const user = userEvent.setup();
+    const Controlled = () => {
+      const [interfaces, setInterfaces] = useState<Record<string, BaseUrlInterfaceValue>>({
+        [type]: { base_url: 'dial-plugin://example', overridePaths },
+      });
+      return (
+        <InterfacesField
+          interfaces={interfaces}
+          onChangeInterfaces={setInterfaces}
+          allowedTypes={SINGLE_TYPE}
+          isAsset
+          isPluginEnabled
+          entityBaseUrl="https://example.com"
+        />
+      );
+    };
+    render(<Controlled />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent(InterfacesI18nKey.PluginOverridePathsError);
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: conflictField,
+      isValid: false,
+    });
+    saveValidationDispatch.mockClear();
+    await user.click(screen.getByRole('button', { name: 'Buttons.Delete postAzureOpenaiChatCompletions' }));
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: conflictField,
+      isValid: true,
+    });
+  });
+
+  test('retains a missing interface plugin reference without emitting a change', () => {
+    const onChangeInterfaces = vi.fn();
+    render(
+      <InterfacesField
+        interfaces={{ [type]: { base_url: 'dial-plugin://missing/v2' } }}
+        onChangeInterfaces={onChangeInterfaces}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+        isPluginEnabled
+        plugins={{ options: ['example'] }}
+      />,
+    );
+
+    expect(screen.getByRole('radio', { name: BasicI18nKey.Plugin })).toBeChecked();
+    expect(screen.getByRole('option', { name: 'dial-plugin://missing' })).toBeInTheDocument();
+    expect(onChangeInterfaces).not.toHaveBeenCalled();
+    expect(saveValidationDispatch).toHaveBeenCalledWith({
+      type: 'SET_FIELD_VALIDATION',
+      field: `interface-${type}`,
+      isValid: true,
+    });
+  });
+
+  test('does not offer plugin selection or plugin conflict validation without opt-in', () => {
+    render(
+      <InterfacesField
+        interfaces={{ [type]: { overridePaths } }}
+        onChangeInterfaces={vi.fn()}
+        allowedTypes={SINGLE_TYPE}
+        isAsset
+        entityBaseUrl="dial-plugin://example"
+      />,
+    );
+
+    expect(getBaseUrlInput()).toHaveValue('');
+    expect(screen.queryByRole('radio', { name: BasicI18nKey.Plugin })).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
 

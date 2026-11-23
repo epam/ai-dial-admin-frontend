@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -6,16 +7,17 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { FlatAssets } from '@/src/components/Assets/FlatAssetGrid/models';
 import { AssetTabsI18nKey, ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useFlatAssets } from '@/src/hooks/use-flat-assets';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { AssetSource } from '@/src/models/dial/asset-source';
 import { ApplicationRoute } from '@/src/types/routes';
 import TabbedAssetList from '../TabbedAssetList';
 
 const appContext = vi.hoisted(() => ({ isUnitMode: false }));
 
-vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => appContext }));
+beforeEach(() => {
+  appContextMock.use(() => appContext);
+});
 vi.mock('@/src/hooks/use-flat-assets', () => ({ useFlatAssets: vi.fn() }));
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn() }));
+
 vi.mock('@/src/hooks/use-is-tablet-screen', () => ({ useIsTabletScreen: () => false }));
 vi.mock('@/src/components/ListView/Header/ResetFiltersButton', () => ({ default: () => null }));
 vi.mock('@/src/components/Assets/BaseAssetList/BaseAssetList', () => ({
@@ -78,7 +80,7 @@ describe('TabbedAssetList', () => {
     };
     vi.mocked(useRouter).mockReturnValue({ replace } as never);
     vi.mocked(usePathname).mockReturnValue('/assets-applications');
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     vi.mocked(useFlatAssets).mockImplementation(((_: unknown, source: AssetSource) => counts[source]) as never);
   });
 
@@ -249,7 +251,7 @@ describe('TabbedAssetList', () => {
     });
 
     test('is hidden for a read-only admin', () => {
-      vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+      appContextMock.set({ isReadOnlyAdmin: true });
 
       renderList(ApplicationRoute.PlatformModels);
 

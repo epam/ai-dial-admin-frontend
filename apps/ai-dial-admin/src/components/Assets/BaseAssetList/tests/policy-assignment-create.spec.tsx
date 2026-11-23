@@ -20,7 +20,7 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 
-vi.mock('@/src/context/SaveValidationContext', async () => vi.importActual('@/src/context/SaveValidationContext'));
+vi.unmock('@/src/context/SaveValidationContext');
 
 vi.mock('@/src/app/[lang]/platform-policy-assignments/actions', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/src/app/[lang]/platform-policy-assignments/actions')>()),

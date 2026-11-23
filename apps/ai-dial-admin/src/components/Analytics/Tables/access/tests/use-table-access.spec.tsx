@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -15,8 +16,8 @@ import {
   TableGrantKey,
 } from '@/src/models/analytics/table';
 
-const showNotification = vi.hoisted(() => vi.fn());
-vi.mock('@/src/context/NotificationContext', () => ({ useNotification: () => ({ showNotification }) }));
+const { showNotification } = notificationMock;
+
 vi.mock('@/src/app/[lang]/tables/actions');
 
 const filter: QueryFilterNode = {

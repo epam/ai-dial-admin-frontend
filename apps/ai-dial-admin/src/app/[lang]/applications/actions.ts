@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { applicationsApi } from '@/src/app/api/api';
+import { applicationsApi, toolsetOpsApi } from '@/src/app/api/api';
 import { DEFAULT_ROLE_LIMITS } from '@/src/constants/role';
 import { DialApplication } from '@/src/models/dial/application';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -54,6 +54,11 @@ export async function updateCoreApplication(app: DialApplication, name: string, 
 export async function getTools(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return applicationsApi.getTools(name, token);
+}
+
+export async function getAllowedTools(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return toolsetOpsApi.allowedApplicationTools(token, name, false);
 }
 
 export async function tryOutTool(name: string, body: Record<string, unknown>) {

@@ -40,14 +40,14 @@ describe('draft query page', () => {
     expect(getEntities).not.toHaveBeenCalled();
   });
 
-  test('starts the draft on the first table with its schema', async () => {
+  test('starts the draft on the usage log with its schema', async () => {
     const draft = await renderDraft();
 
     expect(draft.type).toBe(QueryBuilderDraftPage);
-    expect(draft.props.initialEntityName).toBe('conversation');
+    expect(draft.props.initialEntityName).toBe('dial_usage_log');
     expect(draft.props.initialFields).toEqual(FIELDS);
     expect(draft.props.initialEntities).toEqual([{ name: 'conversation' }, { name: 'dial_usage_log' }]);
-    expect(getEntitySchema).toHaveBeenCalledExactlyOnceWith('conversation');
+    expect(getEntitySchema).toHaveBeenCalledExactlyOnceWith('dial_usage_log');
   });
 
   test('requests no schema and passes no entities when none are queryable', async () => {

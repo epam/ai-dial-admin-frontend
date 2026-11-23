@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { applicationsApi } from '@/src/app/api/api';
+import { applicationsApi, toolsetOpsApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK, RESPONSE_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -13,6 +13,7 @@ import {
   getApplication,
   getApplications,
   getTools,
+  getAllowedTools,
   tryOutTool,
 } from './actions';
 
@@ -145,6 +146,27 @@ describe('Applications :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(applicationsApi.getTools).toHaveBeenCalledWith('test', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('getAllowedTools authenticates and returns effective definitions for a config application', async () => {
+    const response = { success: true, response: { tools: [{ name: 'one' }, { name: 'two', description: 'Details' }] } };
+    vi.mocked(toolsetOpsApi.allowedApplicationTools).mockResolvedValue(response);
+
+    const result = await getAllowedTools('my-app');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(toolsetOpsApi.allowedApplicationTools).toHaveBeenCalledWith(TOKEN_MOCK, 'my-app', false);
+    expect(result).toEqual(response);
+  });
+
+  test('getAllowedTools propagates discovery failures', async () => {
+    const failure = { success: false, status: 500, errorHeader: 'DiscoveryFailed', errorMessage: 'Tools unavailable' };
+    vi.mocked(toolsetOpsApi.allowedApplicationTools).mockResolvedValue(failure);
+
+    const result = await getAllowedTools('my-app');
+
+    expect(toolsetOpsApi.allowedApplicationTools).toHaveBeenCalledWith(TOKEN_MOCK, 'my-app', false);
+    expect(result).toEqual(failure);
   });
 
   test('Should call tryOutTool action', async () => {

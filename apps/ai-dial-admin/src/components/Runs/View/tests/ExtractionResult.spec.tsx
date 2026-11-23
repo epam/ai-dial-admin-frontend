@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FC, useCallback, useState } from 'react';
@@ -65,8 +66,8 @@ const SCORE_ROWS_RESULT = {
   ],
 };
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     sidebar: {
       show: false,
       content: null,
@@ -75,8 +76,8 @@ vi.mock('@/src/context/AppContext', () => ({
     },
     featureFlags: { deploymentsEnabled: true },
     isReadOnlyAdmin: false,
-  }),
-}));
+  }));
+});
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   getTestCaseRunResults: (...args: unknown[]) => getTestCaseRunResultsMock(...args),

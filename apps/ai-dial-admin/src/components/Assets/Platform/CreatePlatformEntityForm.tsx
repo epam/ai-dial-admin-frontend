@@ -15,6 +15,7 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialRoute } from '@/src/models/dial/route';
 import { ServerActionResponse } from '@/src/models/server-action';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
   getCreateEntityTitle,
@@ -35,6 +36,7 @@ interface Props {
   view: ApplicationRoute;
   isOpen: boolean;
   names: string[];
+  plugins?: PluginOptions;
   initialValues?: Partial<PlatformEntityDraft>;
   /** Rendered above the form, for an entry point that lets the user choose the destination. */
   topSlot?: ReactNode;
@@ -52,6 +54,7 @@ const CreatePlatformEntityForm: FC<Props> = ({
   view,
   isOpen,
   names,
+  plugins,
   initialValues,
   topSlot,
   createEntity,
@@ -152,6 +155,7 @@ const CreatePlatformEntityForm: FC<Props> = ({
           view={view}
           entity={entity}
           names={names}
+          plugins={plugins}
           isUniqueNameError={isUniqueNameError}
           externalIdError={idExistsError}
           onChangeEntity={onChangeEntity}

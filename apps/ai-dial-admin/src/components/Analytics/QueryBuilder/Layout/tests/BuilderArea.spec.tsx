@@ -7,7 +7,7 @@ import BuilderArea from '@/src/components/Analytics/QueryBuilder/Layout/BuilderA
 const STORAGE_KEY = 'query-builder-area-height';
 const PARENT_HEIGHT = 500;
 const MAX_HEIGHT = 300;
-const MIN_HEIGHT = 56;
+const MIN_HEIGHT = 80;
 const DEFAULT_HEIGHT = 120;
 const STEP = 16;
 

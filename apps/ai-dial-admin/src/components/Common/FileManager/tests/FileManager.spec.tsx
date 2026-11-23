@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import type { DialFileManager } from '@epam/ai-dial-react-file-manager';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -31,9 +32,9 @@ vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => {
 
 const { unitContext } = vi.hoisted(() => ({ unitContext: { isUnitMode: false, canWriteAt: vi.fn(() => true) } }));
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ isReadOnlyAdmin: false, ...unitContext }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ isReadOnlyAdmin: false, ...unitContext }));
+});
 
 const renderFileManager = (
   view: ApplicationRoute = ApplicationRoute.AssetsApplications,

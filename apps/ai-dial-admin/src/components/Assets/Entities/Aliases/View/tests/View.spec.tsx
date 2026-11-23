@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
@@ -12,7 +13,9 @@ import AliasView from '../View';
 
 const setEntityReadOnly = vi.hoisted(() => vi.fn());
 
-vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => ({ setEntityReadOnly }) }));
+beforeEach(() => {
+  appContextMock.use(() => ({ setEntityReadOnly }));
+});
 vi.mock('@/src/app/[lang]/assets-aliases/actions', () => ({ updateAlias: vi.fn(), removeAlias: vi.fn() }));
 vi.mock('@/src/hooks/use-protected-request', () => ({
   useProtectedRequest:

@@ -6,10 +6,6 @@ import { DialInterceptorResource } from '@/src/models/dial/resource';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TabsContent from '../TabsContent';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 vi.mock('@/src/app/[lang]/platform-interceptors/actions', () => ({
   getInterceptorConfigurationSchema: vi.fn().mockResolvedValue({ success: true, response: null }),
 }));

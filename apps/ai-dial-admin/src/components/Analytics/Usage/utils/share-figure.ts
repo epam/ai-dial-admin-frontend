@@ -16,7 +16,6 @@ export interface ShareFigureOptions {
   otherLabel: string;
   sliceCount: number;
   formatValue?: (value: number) => string;
-  emptyLabel?: string;
 }
 
 /**
@@ -28,10 +27,10 @@ export const buildShareFigure = (
   rows: ResultRows,
   dimensionColumn: string,
   valueColumn: string,
-  { otherLabel, sliceCount, formatValue = formatChartNumber, emptyLabel = '' }: ShareFigureOptions,
+  { otherLabel, sliceCount, formatValue = formatChartNumber }: ShareFigureOptions,
 ): ShareFigure => {
   const ranked = rows
-    .map((row) => ({ name: renderCell(row[dimensionColumn]) || emptyLabel, value: toNumber(row[valueColumn]) ?? 0 }))
+    .map((row) => ({ name: renderCell(row[dimensionColumn]), value: toNumber(row[valueColumn]) ?? 0 }))
     .filter((entry) => entry.value > 0)
     .sort((a, b) => b.value - a.value);
   const total = ranked.reduce((sum, entry) => sum + entry.value, 0);

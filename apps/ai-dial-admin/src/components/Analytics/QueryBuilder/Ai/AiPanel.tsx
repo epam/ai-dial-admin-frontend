@@ -60,7 +60,6 @@ const AiPanel: FC<Props> = ({
         <NoDataContent
           className="min-h-0 flex-1"
           icon={<EmptyIllustration />}
-          descriptionClassName="whitespace-pre-line"
           title={t(QueryBuilderI18nKey.AiEmptyTitle)}
           description={t(QueryBuilderI18nKey.AiEmptyDescription)}
         />

@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -12,8 +13,7 @@ import RemoveRoleDialog from '@/src/components/Analytics/Tables/access/RemoveRol
 import { AnalyticsTableAccessI18nKey } from '@/src/constants/i18n';
 import { QueryExprType, QueryOperator, QueryValueType } from '@/src/models/analytics/query';
 
-const showNotification = vi.hoisted(() => vi.fn());
-vi.mock('@/src/context/NotificationContext', () => ({ useNotification: () => ({ showNotification }) }));
+const { showNotification } = notificationMock;
 
 const row = (over: Partial<RoleRow> = {}): RoleRow => ({
   role: 'team-x',

@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -10,7 +11,9 @@ const { getRunner, getConfigFileAppRunner, getResolvedRunnerSchema, appContext }
   appContext: { isFullAdmin: true },
 }));
 
-vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => appContext }));
+beforeEach(() => {
+  appContextMock.use(() => appContext);
+});
 
 vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
   getRunner,

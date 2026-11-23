@@ -62,7 +62,7 @@ describe('TagsCellRenderer', () => {
   beforeEach(() => {
     containerWidth = CONTAINER_WIDTH;
     resizeCallbacks.length = 0;
-    global.ResizeObserver = CapturingResizeObserver as unknown as typeof ResizeObserver;
+    vi.stubGlobal('ResizeObserver', CapturingResizeObserver as unknown as typeof ResizeObserver);
   });
 
   test('renders no tags and no overflow badge for an empty set', () => {

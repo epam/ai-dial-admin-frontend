@@ -26,6 +26,11 @@
     "src/**/*.spec.js",
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "test-setup.tsx",
+    "test-reset.ts",
+    "test-models.ts",
+    "test-mocks/**/*.ts",
+    "test-mocks/**/*.tsx"
   ]
 }

@@ -1,3 +1,5 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { notificationMock } from '@/test-mocks/notification';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { ReactNode, useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -11,20 +13,12 @@ import {
   ValueFormatterParams,
 } from 'ag-grid-community';
 
-let isReadOnlyAdminMock = false;
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => isReadOnlyAdminMock,
-}));
-
 const featureFlagsMock = { deploymentsEnabled: true, analyticsEnabled: false };
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: featureFlagsMock }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: featureFlagsMock }));
+});
 
-const showNotificationMock = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
-}));
+const { showNotification: showNotificationMock } = notificationMock;
 
 // Mutable so tests can select the anchored `Since Creation` id without the real hook resolving it.
 let timePeriodMock = 'last_7_days';
@@ -230,7 +224,7 @@ beforeEach(() => {
   // The preselect is read from session storage on mount in every test, not only in the
   // preselect block, so a value left behind by one test would reach the next one.
   sessionStorage.clear();
-  isReadOnlyAdminMock = false;
+  appContextMock.set({ isReadOnlyAdmin: false });
   timePeriodMock = 'last_7_days';
   featureFlagsMock.analyticsEnabled = false;
   showNotificationMock.mockClear();
@@ -367,7 +361,7 @@ describe('ActivityAuditList :: Analytics view option', () => {
   });
 
   test('offers every view option as selectable to a read-only admin', () => {
-    isReadOnlyAdminMock = true;
+    appContextMock.set({ isReadOnlyAdmin: true });
     featureFlagsMock.analyticsEnabled = true;
     render(<ActivityAuditList />);
 

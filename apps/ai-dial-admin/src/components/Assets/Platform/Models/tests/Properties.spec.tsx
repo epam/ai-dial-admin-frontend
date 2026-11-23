@@ -1,16 +1,18 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ButtonsI18nKey, EntityFieldsI18nKey, ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import {
+  BasicI18nKey,
+  ButtonsI18nKey,
+  EntityFieldsI18nKey,
+  ErrorI18nKey,
+  InterfacesI18nKey,
+} from '@/src/constants/i18n';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import { DialModelResource, DialModelResourceType } from '@/src/models/dial/resource';
 import ModelAssetProperties from '../Properties';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
 
 const baseAsset = {
   name: 'gpt-4',
@@ -69,6 +71,32 @@ describe('Model asset Properties :: routing-critical fields', () => {
     renderProperties({ defaultHeaders: { 'x-dial-custom-header': 'foo-bar' } });
 
     expect(screen.getByText(EntityFieldsI18nKey.defaultHeaders)).toBeInTheDocument();
+  });
+});
+
+describe('Model asset Properties :: plugin base URL', () => {
+  test('writes a selected plugin to the existing model baseUrl field', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<ModelAssetProperties asset={baseAsset} plugins={{ options: ['example'] }} onChange={onChange} />);
+
+    await user.click(screen.getByRole('radio', { name: BasicI18nKey.Plugin }));
+    await user.click(screen.getByRole('combobox', { name: BasicI18nKey.Plugin }));
+    await user.click(screen.getByRole('option', { name: 'dial-plugin://example' }));
+
+    expect(onChange).toHaveBeenLastCalledWith({ ...baseAsset, baseUrl: 'dial-plugin://example' });
+  });
+
+  test('retains a missing saved plugin reference and its suffix when editing another property', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const asset = { ...baseAsset, baseUrl: 'dial-plugin://missing/v2' };
+    render(<ModelAssetProperties asset={asset} plugins={{ options: ['example'] }} onChange={onChange} />);
+
+    expect(screen.getByRole('radio', { name: BasicI18nKey.Plugin })).toBeChecked();
+    expect(screen.getByText('dial-plugin://missing')).toBeInTheDocument();
+    await user.type(screen.getByRole('textbox', { name: EntityFieldsI18nKey.provider }), 'G');
+    expect(onChange).toHaveBeenLastCalledWith({ ...asset, provider: 'G' });
   });
 });
 
@@ -146,11 +174,8 @@ describe('Model asset Properties :: responses defaults gating', () => {
 });
 
 describe('Model asset Properties :: interface base URL fallback', () => {
-  const ifaceBaseUrlInput = () => screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}`) });
-  // Label renders the required marker as visually hidden "(required)" text inside the label, so it lands in the
-  // input's accessible name.
-  const queryIfaceBaseUrlInputWithMarker = () =>
-    screen.queryByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}\\s*\\(required\\)$`) });
+  const ifaceBaseUrlInput = () => screen.getAllByRole('textbox', { name: BasicI18nKey.URL })[1];
+  const ifaceLabel = () => screen.getByText(InterfacesI18nKey.BaseUrl).parentElement;
 
   test('Should not mark an empty interface base_url required while the entity base_url is set', () => {
     renderProperties({
@@ -159,7 +184,7 @@ describe('Model asset Properties :: interface base URL fallback', () => {
     });
 
     expect(ifaceBaseUrlInput()).toBeInTheDocument();
-    expect(queryIfaceBaseUrlInputWithMarker()).toBeNull();
+    expect(ifaceLabel()).not.toHaveTextContent('(required)');
   });
 
   test('Should mark an empty interface base_url required while the entity base_url is empty', () => {
@@ -167,7 +192,7 @@ describe('Model asset Properties :: interface base URL fallback', () => {
       interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: '' } },
     });
 
-    expect(queryIfaceBaseUrlInputWithMarker()).not.toBeNull();
+    expect(ifaceLabel()).toHaveTextContent('(required)');
   });
 
   test('Should show no required error for an emptied interface base_url while the entity base_url is set', async () => {
@@ -259,7 +284,7 @@ describe('Model asset Properties :: provider and lifecycle dates', () => {
   });
 
   test('Should disable all three fields for a read-only admin', () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderProperties({ provider: 'Azure', deprecationDate: '2027-06-30' });
 
     expect(providerInput()).toBeDisabled();
@@ -267,6 +292,6 @@ describe('Model asset Properties :: provider and lifecycle dates', () => {
       screen.getByRole('button', { name: `${ButtonsI18nKey.Clear} ${EntityFieldsI18nKey.deprecationDate}` }),
     ).toBeDisabled();
 
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 });

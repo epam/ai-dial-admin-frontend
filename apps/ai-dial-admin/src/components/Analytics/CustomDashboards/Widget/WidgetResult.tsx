@@ -179,7 +179,6 @@ const WidgetResult: FC<Props> = ({
       colors,
       dimensionColumns: meta.dimensionColumns,
       otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
-      emptyLabel: t(QueryBuilderI18nKey.ChartEmptyCategory),
       columnLabels: meta.columnLabels,
     });
   }, [isChart, savedQuery, view, result, meta, colors, t]);
@@ -227,7 +226,6 @@ const WidgetResult: FC<Props> = ({
             otherLabel: t(QueryBuilderI18nKey.ChartOtherSlice),
             sliceCount: pieLayout.sliceCount,
             formatValue: (value) => formatFullFigure(value, valueFormat, currency),
-            emptyLabel: t(QueryBuilderI18nKey.ChartEmptyCategory),
           })
         : null,
     [shareColumns, colors, result.rows, pieLayout.sliceCount, valueFormat, currency, t],

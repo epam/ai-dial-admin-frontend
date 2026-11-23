@@ -27,6 +27,7 @@ import {
   importApps,
   exportApps,
   getAssetTools,
+  getAssetAllowedTools,
   getConfigFileApplication,
   getConfigFileApplications,
   signInExternalService,
@@ -609,6 +610,33 @@ describe('Assets application :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(toolsetOpsApi.discoveredTools).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.APPLICATION);
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test.each(['public/folder/my-app__1.0', 'platform/my-app'])(
+    'getAssetAllowedTools authenticates and returns effective definitions for %s',
+    async (path) => {
+      const response = {
+        success: true,
+        response: { tools: [{ name: 'one' }, { name: 'two', description: 'Details' }] },
+      };
+      vi.mocked(toolsetOpsApi.allowedApplicationTools).mockResolvedValue(response);
+
+      const result = await getAssetAllowedTools(path);
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(toolsetOpsApi.allowedApplicationTools).toHaveBeenCalledWith(TOKEN_MOCK, path, true);
+      expect(result).toEqual(response);
+    },
+  );
+
+  test('getAssetAllowedTools propagates discovery failures', async () => {
+    const failure = { success: false, status: 500, errorHeader: 'DiscoveryFailed', errorMessage: 'Tools unavailable' };
+    vi.mocked(toolsetOpsApi.allowedApplicationTools).mockResolvedValue(failure);
+
+    const result = await getAssetAllowedTools('public/my-app');
+
+    expect(toolsetOpsApi.allowedApplicationTools).toHaveBeenCalledWith(TOKEN_MOCK, 'public/my-app', true);
+    expect(result).toEqual(failure);
   });
 
   test('signInExternalService URL-encodes each path segment of a spaced app path', async () => {

@@ -3,11 +3,13 @@
 import { FC } from 'react';
 
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import { DialTranslatorResource } from '@/src/models/dial/resource';
 import TranslatorCreateProperties from './CreateProperties';
 
 interface Props {
   asset: DialTranslatorResource;
+  plugins?: PluginOptions;
   onChange: (asset: DialTranslatorResource) => void;
 }
 
@@ -18,7 +20,7 @@ interface Props {
  * popup's full width. No display name, description, icon, endpoint list, features, or topics
  * control — `Translator` is a plain POJO, neither a `Deployment` nor a `RoleBasedEntity`.
  */
-const TranslatorAssetProperties: FC<Props> = ({ asset, onChange }) => {
+const TranslatorAssetProperties: FC<Props> = ({ asset, plugins, onChange }) => {
   return (
     <div className="flex flex-col">
       <ResourceInfoHeader entity={asset} />
@@ -26,6 +28,7 @@ const TranslatorAssetProperties: FC<Props> = ({ asset, onChange }) => {
         <TranslatorCreateProperties
           entity={asset}
           names={[]}
+          plugins={plugins}
           onChangeEntity={(entity) => onChange(entity as DialTranslatorResource)}
           isModal={false}
         />

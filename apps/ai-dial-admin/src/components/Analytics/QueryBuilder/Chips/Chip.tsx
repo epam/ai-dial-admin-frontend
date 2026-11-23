@@ -13,7 +13,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const CHIP_CLASS_NAME =
-  'flex h-6 max-w-full items-center gap-1 rounded border border-tertiary bg-layer-3 px-2 dial-tiny-text';
+  'flex h-6 max-w-full items-center gap-1 rounded-lg border border-tertiary bg-layer-3 px-2 dial-tiny-text';
 
 const Chip = forwardRef<HTMLButtonElement, Props>(({ prefix, label, isOpen, isReadOnly, className, ...rest }, ref) => {
   const CaretIcon = isOpen ? IconCaretUpFilled : IconCaretDownFilled;

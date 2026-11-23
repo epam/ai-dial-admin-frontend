@@ -8,7 +8,6 @@ import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { isFullAdminCaller } from '@/src/server/user-access';
 import { groupMock } from '@/src/components/Analytics/Pipelines/Groups/tests/mock';
 
-vi.mock('next/navigation', () => ({ notFound: vi.fn() }));
 vi.mock('@/src/app/[lang]/pipelines/actions');
 vi.mock('@/src/app/[lang]/queries/actions');
 vi.mock('@/src/server/analytics/analytics-access');
