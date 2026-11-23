@@ -11,7 +11,8 @@ tool suites). The suite Trends tab already loads per-suite run windows and chart
 Figma also shows a “Trends in All Test Suites” strip (suite count, average pass rate with trend
 badge, this-month cost with MoM delta). Deployment-scoped eval cost is available via
 `GET /api/v1/costs/deployment/{id}?from=&to=` (`totalTestCaseCost` + `totalMetricEvalCost`).
-Cross-suite average pass rate still has no deployment-scoped aggregate API.
+Cross-suite average pass rate is delivered in follow-up change `eval-trends-avg-pass-rate` via
+`POST /api/v1/analytics/test-suites/pass-rate`.
 
 ## Goals / Non-Goals
 
@@ -21,12 +22,11 @@ Cross-suite average pass rate still has no deployment-scoped aggregate API.
 - Open the selected suite in a new browser tab.
 - Show month-to-date deployment eval cost vs the matching previous-month span, with a two-period
   tooltip, when at least one suite exists.
-- Document the deferred cross-suite pass-rate card and the API gap it waits on.
 
 **Non-Goals:**
-- Implementing the cross-suite average pass-rate KPI card in this change.
 - Changing `test-suite-trends` chart or KPI contracts.
 - Run start from this tab, or Trends deep-link on open-in-new-tab.
+- Cross-suite pass-rate KPI (owned by `eval-trends-avg-pass-rate`).
 
 ## Decisions
 
@@ -61,8 +61,8 @@ Cross-suite average pass rate still has no deployment-scoped aggregate API.
    icons (`higher cost` is worse). Hover tooltip lists both period labels and amounts; `sr-only`
    duplicates them. Cost fetch failures show an em dash inside the card without blocking Trends.
 
-6. **Defer cross-suite pass-rate KPI.** Follow-up still needs a deployment-scoped average latest
-   pass rate (and vs previous). Do not approximate from per-run APIs in the admin app.
+6. **Cross-suite pass-rate KPI.** Owned by follow-up change `eval-trends-avg-pass-rate` once the
+   suite pass-rate summary endpoint is available.
 
 ## Risks / Trade-offs
 

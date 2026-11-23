@@ -17,14 +17,13 @@ comparing recent runs requires navigating away.
   previous-month span) via `GET /api/v1/costs/deployment/{id}`.
 - Show per-suite average overall-score pills in the Eval Trends suite dropdown (latest up to 10
   runs), with a hover tooltip for average score and cost.
-- **Deferred:** the Figma cross-suite average pass-rate KPI card (still needs a deployment-scoped
-  pass-rate aggregate).
+- Cross-suite average pass-rate KPI is delivered in follow-up change `eval-trends-avg-pass-rate`
+  (suite pass-rate endpoint).
 
 ## Non-goals
 
 - Starting a run from the entity Eval Trends tab.
 - Deep-linking the new-tab suite open to the suite’s Trends tab (suite view has no tab query param).
-- Client-side composition of cross-suite pass-rate aggregates from per-run APIs.
 
 ## Capabilities
 

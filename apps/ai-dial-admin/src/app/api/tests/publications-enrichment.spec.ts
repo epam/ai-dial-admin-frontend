@@ -1,13 +1,16 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
-import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { CORE_TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { ConversationPublication, PromptPublication } from '@/src/models/dial/publications';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
 
 const JSON_HEADERS = { headers: { 'content-type': 'application/json' } };
+
+/** SDK-backed calls reach `fetch` as a `Request`, the hand-written ones as a URL string. */
+const requestUrl = (input: unknown): string => (input instanceof Request ? input.url : String(input));
 
 /**
  * Exercises the *real* `publicationsApi` export (not a mock of `EnrichmentClients`) to prove
@@ -17,6 +20,16 @@ const JSON_HEADERS = { headers: { 'content-type': 'application/json' } };
  * `asset-metadata.spec.ts`; this test is about the wiring, not re-deriving that mapping.
  */
 describe('Server :: api :: publications enrichment re-pointed to AssetApi', () => {
+  // `api.ts` reads the Core host once, when first imported, and the publication calls are SDK-backed, which
+  // need an absolute host. CI sets no `DIAL_CORE_API_URL`.
+  beforeAll(() => {
+    vi.stubEnv('DIAL_CORE_API_URL', CORE_TEST_URL);
+  });
+
+  afterAll(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     fetch.resetMocks();
   });
@@ -55,7 +68,7 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
 
     // Every request must have gone to Core (the admin BE URL never appears).
     for (const call of fetch.mock.calls) {
-      expect(call[0]).not.toContain('DIAL_ADMIN_API_URL');
+      expect(requestUrl(call[0])).not.toContain('DIAL_ADMIN_API_URL');
     }
     // Requests 1-3 hit the prompt content/metadata endpoints, not any /api/v1/... BE path.
     expect(fetch.mock.calls[1][0]).toContain('v1/prompts/');
