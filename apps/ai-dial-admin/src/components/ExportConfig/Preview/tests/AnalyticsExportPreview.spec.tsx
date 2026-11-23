@@ -97,6 +97,35 @@ describe('AnalyticsExportPreview', () => {
     );
   });
 
+  test('drops the previous Access tab when a later preview fails', async () => {
+    const onPreviewResult = vi.fn();
+    vi.mocked(previewAnalyticsExportConfig).mockResolvedValueOnce({
+      success: true,
+      response: {
+        objects: [],
+        required_system_tables: [],
+        skipped: [],
+        access: [{ table: 'dial_usage_log', roles: ['analytics-viewers'], left_behind: [] }],
+      },
+    });
+    const { rerender } = render(
+      <AnalyticsExportPreview request={{ ...REQUEST, include_access: true }} onPreviewResult={onPreviewResult} />,
+    );
+    expect(await screen.findByText(`${ExportI18nKey.AnalyticsAccess} (1)`)).toBeInTheDocument();
+
+    vi.mocked(previewAnalyticsExportConfig).mockResolvedValueOnce({
+      success: false,
+      status: 422,
+      errorHeader: ExportI18nKey.PreviewUnavailable,
+      errorMessage: 'refused',
+    });
+    rerender(<AnalyticsExportPreview request={{ ...REQUEST }} onPreviewResult={onPreviewResult} />);
+
+    expect(await screen.findByText(ExportI18nKey.AnalyticsObjects)).toBeInTheDocument();
+    expect(screen.queryByText(`${ExportI18nKey.AnalyticsAccess} (1)`)).toBeNull();
+    expect(onPreviewResult).toHaveBeenLastCalledWith(false);
+  });
+
   test('reports an unreachable service and keeps the selection refused', async () => {
     const onPreviewResult = vi.fn();
     vi.mocked(previewAnalyticsExportConfig).mockRejectedValue(new Error('fetch failed'));

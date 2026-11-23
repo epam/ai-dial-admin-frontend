@@ -49,6 +49,7 @@ const AnalyticsExportPreview: FC<Props> = ({ request, onPreviewResult }) => {
         setRows(getAnalyticsPreviewRows(res.response, tRef.current));
         onPreviewResultRef.current(true);
       } else {
+        setRows(undefined);
         showNotificationRef.current(
           getErrorNotification(tRef.current(ExportI18nKey.PreviewUnavailable), res.errorMessage, res.requestId),
         );
