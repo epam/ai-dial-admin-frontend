@@ -43,7 +43,7 @@ export default async function Page(params: { searchParams: Promise<SearchParams>
   let assetRunners: ResourceInfo[] = [];
 
   try {
-    data = await publicationsApi.getPublication(token, path);
+    data = (await publicationsApi.getPublication(token, path)) ?? null;
     if (type === ResourceType.APPLICATION) {
       if (await isFullAdminCaller()) {
         assetRunners = await getAllRunners();

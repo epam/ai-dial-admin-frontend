@@ -1,16 +1,6 @@
 import { PublicationStatus } from '@/src/models/dial/publications';
 import { ResourceType } from '@/src/types/resource-type';
 
-/** DIAL Core publication operation endpoints (`core.client.url` + path). */
-export const CORE_PUBLICATION_LIST_URL = 'v1/ops/publication/list';
-export const CORE_PUBLICATION_GET_URL = 'v1/ops/publication/get';
-export const CORE_PUBLICATION_APPROVE_URL = 'v1/ops/publication/approve';
-export const CORE_PUBLICATION_REJECT_URL = 'v1/ops/publication/reject';
-export const CORE_PUBLICATION_DELETE_URL = 'v1/ops/publication/delete';
-export const CORE_PUBLICATION_UPDATE_URL = 'v1/ops/publication/update';
-export const CORE_PUBLICATION_CREATE_URL = 'v1/ops/publication/create';
-export const CORE_PUBLICATION_RULES_URL = 'v1/ops/publication/rule/list';
-
 /** DIAL Core file endpoints used by the publication file flow. */
 export const CORE_FILES_URL = 'v1/files';
 export const CORE_FILES_METADATA_URL = 'v1/metadata/files';

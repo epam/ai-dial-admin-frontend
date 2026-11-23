@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
 
-import { resolvePublicationResourceType } from '../mappers';
+import { RuleFunction } from '@/src/models/dial/rule';
+import { PublicationStatus } from '@/src/models/dial/publications';
+import { mapRules, resolvePublicationResourceType, toListedPublication } from '../mappers';
 import { CoreResourceType } from '../models';
 import { ResourceType } from '@/src/types/resource-type';
 
@@ -28,5 +30,43 @@ describe('Server :: Publications :: resolvePublicationResourceType', () => {
   test('returns undefined for an empty or missing type list', () => {
     expect(resolvePublicationResourceType([])).toBeUndefined();
     expect(resolvePublicationResourceType(undefined)).toBeUndefined();
+  });
+});
+
+describe('Server :: Publications :: toListedPublication', () => {
+  test('keeps every field and types the url and status', () => {
+    expect(toListedPublication({ url: 'publications/a', status: 'PENDING', name: 'A', author: 'me' })).toEqual({
+      url: 'publications/a',
+      status: PublicationStatus.PENDING,
+      name: 'A',
+      author: 'me',
+    });
+  });
+
+  test.each([
+    ['url', { status: 'PENDING' as const }],
+    ['status', { url: 'publications/a' }],
+  ])('returns undefined for a publication without a %s', (_, publication) => {
+    expect(toListedPublication(publication)).toBeUndefined();
+  });
+});
+
+describe('Server :: Publications :: mapRules', () => {
+  test('returns undefined when Core sent no rules', () => {
+    expect(mapRules(undefined)).toBeUndefined();
+  });
+
+  test('passes an unknown function and a missing source or targets through, with no default', () => {
+    const rules = mapRules([
+      { source: 'title', function: 'EQUAL', targets: ['x'] },
+      { source: 'role', function: 'UNKNOWN' as never },
+      { function: 'TRUE' },
+    ]);
+
+    expect(rules).toEqual([
+      { source: 'title', function: RuleFunction.EQUAL, targets: ['x'] },
+      { source: 'role', function: 'UNKNOWN', targets: undefined },
+      { source: undefined, function: 'TRUE', targets: undefined },
+    ]);
   });
 });

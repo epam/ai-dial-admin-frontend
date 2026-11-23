@@ -195,11 +195,11 @@ describe('FieldCompareModal', () => {
     });
 
     describe('details', () => {
-      const PRIMARY_DETAILS = '{\n  "tp": 1,\n  "false_positives": []\n}';
-      const SECONDARY_DETAILS = '{\n  "tp": 2\n}';
+      const PRIMARY_DETAILS = '{\n  "tp": 11,\n  "false_positives": []\n}';
+      const SECONDARY_DETAILS = '{\n  "tp": 22\n}';
 
       const getCardTitles = (column: HTMLElement) => {
-        const titles: string[] = [RunsI18nKey.MetricReason, RunsI18nKey.MetricDetails, RunsI18nKey.MetricLogs];
+        const titles: string[] = [RunsI18nKey.MetricReason, 'tp', 'false_positives', RunsI18nKey.MetricLogs];
         return within(column)
           .getAllByRole('button')
           .map((button) => button.textContent ?? '')
@@ -218,46 +218,71 @@ describe('FieldCompareModal', () => {
           ...overrides,
         });
 
-      test('Should show the details card between reason and logs, collapsed behind the reason', () => {
+      test('Should show a card per details field between reason and logs, collapsed behind the reason', () => {
         renderModal(makeFieldWithDetails());
 
         const left = getColumn('Run A');
         expect(getCardTitles(left)).toEqual([
           RunsI18nKey.MetricReason,
-          RunsI18nKey.MetricDetails,
+          'tp',
+          'false_positives',
           RunsI18nKey.MetricLogs,
         ]);
         expect(
           within(left).getByRole('button', { name: RunsI18nKey.MetricReason, expanded: true }),
         ).toBeInTheDocument();
-        expect(
-          within(left).getByRole('button', { name: RunsI18nKey.MetricDetails, expanded: false }),
-        ).toBeInTheDocument();
-        expect(within(left).queryByText(/"tp": 1/)).not.toBeInTheDocument();
+        expect(within(left).getByRole('button', { name: 'tp', expanded: false })).toBeInTheDocument();
+        expect(within(left).getByRole('button', { name: 'false_positives', expanded: false })).toBeInTheDocument();
+        expect(within(left).queryByRole('button', { name: RunsI18nKey.MetricDetails })).not.toBeInTheDocument();
+        expect(within(left).queryByText('11')).not.toBeInTheDocument();
       });
 
-      test('Should show each run its own details once the card is opened', async () => {
+      test('Should show each run its own value once a field card is opened', async () => {
         renderModal(makeFieldWithDetails());
 
-        await user.click(within(getColumn('Run A')).getByRole('button', { name: RunsI18nKey.MetricDetails }));
+        await user.click(within(getColumn('Run A')).getByRole('button', { name: 'tp' }));
 
-        expect(within(getColumn('Run A')).getByText(/"tp": 1/)).toBeInTheDocument();
-        expect(within(getColumn('Run B')).getByText(/"tp": 2/)).toBeInTheDocument();
+        expect(within(getColumn('Run A')).getByText('11')).toBeInTheDocument();
+        expect(within(getColumn('Run B')).getByText('22')).toBeInTheDocument();
       });
 
-      test('Should close the reason when the details open', async () => {
+      test('Should show a string value as plain text and a list as JSON', async () => {
+        renderModal(
+          makeFieldWithDetails({
+            primaryInfo: {
+              reason: null,
+              logs: null,
+              error: null,
+              details: '{"verdict":"correct","missing":["rust"]}',
+            },
+            secondaryInfo: undefined,
+          }),
+        );
+
+        expect(within(getColumn('Run A')).getByText('correct')).toBeInTheDocument();
+
+        await user.click(within(getColumn('Run A')).getByRole('button', { name: 'missing' }));
+
+        expect(within(getColumn('Run A')).getByText(/"rust"/)).toBeInTheDocument();
+      });
+
+      test('Should close the reason and other fields when a field opens', async () => {
         renderModal(makeFieldWithDetails());
 
-        await user.click(within(getColumn('Run A')).getByRole('button', { name: RunsI18nKey.MetricDetails }));
+        await user.click(within(getColumn('Run A')).getByRole('button', { name: 'tp' }));
+        await user.click(within(getColumn('Run A')).getByRole('button', { name: 'false_positives' }));
 
         expect(screen.queryByText('primary reason')).not.toBeInTheDocument();
-        expect(screen.queryByText('primary logs')).not.toBeInTheDocument();
+        expect(screen.queryByText('11')).not.toBeInTheDocument();
+        expect(
+          within(getColumn('Run A')).getByRole('button', { name: 'false_positives', expanded: true }),
+        ).toBeInTheDocument();
         expect(
           within(getColumn('Run B')).getByRole('button', { name: RunsI18nKey.MetricReason, expanded: false }),
         ).toBeInTheDocument();
       });
 
-      test('Should open the details when no run has a reason', () => {
+      test('Should open the first field when no run has a reason', () => {
         renderModal(
           makeFieldWithDetails({
             primaryInfo: { reason: null, logs: null, error: null, details: PRIMARY_DETAILS },
@@ -265,36 +290,59 @@ describe('FieldCompareModal', () => {
           }),
         );
 
-        expect(screen.getAllByRole('button', { name: RunsI18nKey.MetricDetails, expanded: true })).toHaveLength(2);
-        expect(within(getColumn('Run A')).getByText(/"tp": 1/)).toBeInTheDocument();
+        expect(screen.getAllByRole('button', { name: 'tp', expanded: true })).toHaveLength(2);
+        expect(within(getColumn('Run A')).getByText('11')).toBeInTheDocument();
+        expect(
+          within(getColumn('Run A')).getByRole('button', { name: 'false_positives', expanded: false }),
+        ).toBeInTheDocument();
         expect(screen.queryByRole('button', { name: RunsI18nKey.MetricReason })).not.toBeInTheDocument();
       });
 
-      test('Should omit the details card of a run that has none', () => {
+      test('Should omit the field cards a run does not have', () => {
+        renderModal(makeFieldWithDetails());
+
+        expect(within(getColumn('Run A')).getByRole('button', { name: 'false_positives' })).toBeInTheDocument();
+        expect(within(getColumn('Run B')).getByRole('button', { name: 'tp' })).toBeInTheDocument();
+        expect(within(getColumn('Run B')).queryByRole('button', { name: 'false_positives' })).not.toBeInTheDocument();
+      });
+
+      test('Should omit the field cards of a run that has no details', () => {
         renderModal(
           makeFieldWithDetails({
             secondaryInfo: { reason: 'secondary reason', logs: null, error: null, details: null },
           }),
         );
 
-        expect(within(getColumn('Run A')).getByRole('button', { name: RunsI18nKey.MetricDetails })).toBeInTheDocument();
-        expect(
-          within(getColumn('Run B')).queryByRole('button', { name: RunsI18nKey.MetricDetails }),
-        ).not.toBeInTheDocument();
+        expect(within(getColumn('Run A')).getByRole('button', { name: 'tp' })).toBeInTheDocument();
+        expect(within(getColumn('Run B')).queryByRole('button', { name: 'tp' })).not.toBeInTheDocument();
       });
 
       test('Should show no details card when no run has details', () => {
         renderModal(makeField());
 
         expect(screen.queryByRole('button', { name: RunsI18nKey.MetricDetails })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'tp' })).not.toBeInTheDocument();
       });
 
-      test('Should offer copy and no fullscreen on the details card', () => {
-        renderModal(makeFieldWithDetails());
+      test('Should keep details that are not an object of keys in one details card', () => {
+        renderModal(
+          makeFieldWithDetails({
+            primaryInfo: { reason: null, logs: null, error: null, details: 'a plain note' },
+            secondaryInfo: { reason: null, logs: null, error: null, details: '[1, 2]' },
+          }),
+        );
 
         expect(
-          within(getColumn('Run A')).getByRole('button', { name: `copy ${RunsI18nKey.MetricDetails}` }),
+          within(getColumn('Run A')).getByRole('button', { name: RunsI18nKey.MetricDetails, expanded: true }),
         ).toBeInTheDocument();
+        expect(within(getColumn('Run A')).getByText('a plain note')).toBeInTheDocument();
+        expect(within(getColumn('Run B')).getByRole('button', { name: RunsI18nKey.MetricDetails })).toBeInTheDocument();
+      });
+
+      test('Should offer copy and no fullscreen on a field card', () => {
+        renderModal(makeFieldWithDetails());
+
+        expect(within(getColumn('Run A')).getByRole('button', { name: 'copy tp' })).toBeInTheDocument();
         expect(screen.queryAllByRole('button', { name: RunsI18nKey.OpenFullscreen })).toHaveLength(0);
       });
     });
@@ -351,7 +399,7 @@ describe('ScoreModal — single run', () => {
     expect(screen.getByRole('button', { name: RunsI18nKey.MetricLogs, expanded: false })).toBeInTheDocument();
   });
 
-  test('Should open the details of a metric that has no reason, as Set Comparison reports it', () => {
+  test('Should open the first details field of a metric that has no reason, as Set Comparison reports it', () => {
     renderSingle(
       makeField({
         primaryInfo: {
@@ -363,8 +411,9 @@ describe('ScoreModal — single run', () => {
       }),
     );
 
-    expect(screen.getByRole('button', { name: RunsI18nKey.MetricDetails, expanded: true })).toBeInTheDocument();
-    expect(screen.getByText(/"true_positives"/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'tp', expanded: true })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'true_positives', expanded: false })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: RunsI18nKey.MetricDetails })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: RunsI18nKey.MetricReason })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: RunsI18nKey.MetricLogs })).not.toBeInTheDocument();
   });
