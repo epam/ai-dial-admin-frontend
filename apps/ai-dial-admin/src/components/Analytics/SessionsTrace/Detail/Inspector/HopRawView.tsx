@@ -53,7 +53,7 @@ const HopRawView: FC<Props> = ({ traceId, coreSpanId, requestTime, side }) => {
       role="group"
       aria-label={t(TITLE_KEY[side])}
       aria-describedby={body.isPartial ? partialNoteId : undefined}
-      className="flex min-w-0 flex-col gap-1"
+      className="flex min-h-0 min-w-0 flex-1 flex-col gap-1"
     >
       {body.isPartial && <HopPartialNote id={partialNoteId} />}
       <HopClampNote clamp={body.clamp} />
