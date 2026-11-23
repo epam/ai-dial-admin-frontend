@@ -118,10 +118,9 @@ const StringEditorInput: FC<Props> = ({
               aria-label={label}
               value={draft}
               onChange={onChangeDraft}
-              rows={16}
               spellCheck={false}
-              className="overflow-auto h-full"
-              containerClassName="flex-1 min-h-0"
+              className="overflow-auto flex-1 min-h-0"
+              containerClassName="flex-1 min-h-0 [&>div]:flex-1 [&>div]:min-h-0"
             />
           </div>
         </Popup>
