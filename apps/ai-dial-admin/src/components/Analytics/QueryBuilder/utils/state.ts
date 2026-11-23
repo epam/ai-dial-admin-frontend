@@ -45,6 +45,7 @@ export const createPredicate = (fieldType?: string): FilterPredicateNode => ({
   rightKind: FilterOperandKind.Literal,
   rightFn: null,
   rightArgs: [],
+  rightParam: null,
 });
 
 export const createColumnRow = (field: string): ExpressionRow => ({

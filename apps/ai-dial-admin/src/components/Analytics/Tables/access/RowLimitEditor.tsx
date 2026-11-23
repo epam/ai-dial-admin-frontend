@@ -14,8 +14,8 @@ import { serializeNode } from '@/src/components/Analytics/QueryBuilder/utils/ser
 import { createGroup, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { AnalyticsTableAccessI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { QueryFilterNode } from '@/src/models/analytics/query';
-import { FilterGroupNode } from '@/src/models/analytics/query-builder';
+import { CallerValueName, QueryFilterNode } from '@/src/models/analytics/query';
+import { CallerValue, FilterGroupNode } from '@/src/models/analytics/query-builder';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 import { RowLimitNote, RowLimitView } from '@/src/components/Analytics/Tables/access/models';
 import {
@@ -53,7 +53,7 @@ const toJson = (filter: QueryFilterNode | null): string => (filter ? JSON.string
 const RowLimitEditor: FC<Props> = ({ tableName, columns, initialFilter, highlightedField, onChange }) => {
   const t = useI18n();
 
-  const isInitiallyTooDeep = !!initialFilter && !isFilterRepresentable(initialFilter, 0, NO_FUNCTIONS);
+  const isInitiallyTooDeep = !!initialFilter && !isFilterRepresentable(initialFilter, 0, NO_FUNCTIONS, true);
   const [view, setView] = useState<RowLimitView>(isInitiallyTooDeep ? RowLimitView.Json : RowLimitView.Visual);
   const [note, setNote] = useState<RowLimitNote | null>(isInitiallyTooDeep ? RowLimitNote.TooDeep : null);
   // Edited in place, like the Query Builder's tree: every edit ends in `refresh`.
@@ -79,7 +79,26 @@ const RowLimitEditor: FC<Props> = ({ tableName, columns, initialFilter, highligh
     emitTree(tree);
   }, [emitTree, tree]);
 
-  const context = useMemo(() => ({ fields, functions: NO_FUNCTIONS, refresh }), [fields, refresh]);
+  const callerValues: CallerValue[] = useMemo(
+    () => [
+      {
+        name: CallerValueName.UserHash,
+        label: t(AnalyticsTableAccessI18nKey.CallerUserHash),
+        description: t(AnalyticsTableAccessI18nKey.CallerUserHashHint),
+      },
+      {
+        name: CallerValueName.Project,
+        label: t(AnalyticsTableAccessI18nKey.CallerProject),
+        description: t(AnalyticsTableAccessI18nKey.CallerProjectHint),
+      },
+    ],
+    [t],
+  );
+
+  const context = useMemo(
+    () => ({ fields, functions: NO_FUNCTIONS, callerValues, refresh }),
+    [fields, callerValues, refresh],
+  );
 
   useEffect(() => {
     if (isInitiallyTooDeep) onChange({ filter: initialFilter, isComplete: true });
@@ -120,7 +139,7 @@ const RowLimitEditor: FC<Props> = ({ tableName, columns, initialFilter, highligh
     }
 
     const parsed = parseFilterJson(jsonText);
-    if (!parsed || !isFilterRepresentable(parsed, 0, NO_FUNCTIONS)) {
+    if (!parsed || !isFilterRepresentable(parsed, 0, NO_FUNCTIONS, true)) {
       setNote(parsed ? RowLimitNote.TooDeep : RowLimitNote.InvalidJson);
       return;
     }

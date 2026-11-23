@@ -1,19 +1,30 @@
 'use client';
 
-import { Button, ButtonVariant, EllipsisTooltip, Search } from '@epam/ai-dial-ui-kit';
-import { IconPlus, IconUsersGroup } from '@tabler/icons-react';
+import {
+  Button,
+  ButtonVariant,
+  EllipsisTooltip,
+  Notification,
+  NotificationType,
+  NotificationVariant,
+  Search,
+  Tooltip,
+} from '@epam/ai-dial-ui-kit';
+import { IconAlertTriangle, IconPlus, IconUsers, IconUsersGroup } from '@tabler/icons-react';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import classNames from 'classnames';
+import Link from 'next/link';
 import { FC, useMemo, useState } from 'react';
 
 import FilterToggle from '@/src/components/Analytics/Tables/access/FilterToggle';
 import PrivilegeMarkCell from '@/src/components/Analytics/Tables/access/PrivilegeMarkCell';
 import RemoveRoleDialog from '@/src/components/Analytics/Tables/access/RemoveRoleDialog';
 import RoleDrawer from '@/src/components/Analytics/Tables/access/RoleDrawer';
-import { MARKED_PRIVILEGES } from '@/src/components/Analytics/Tables/access/constants';
+import { EVERYONE_ROLE, MARKED_PRIVILEGES } from '@/src/components/Analytics/Tables/access/constants';
 import { AccessStatus, PrivilegeMark, RoleRow, RowsCellKind } from '@/src/components/Analytics/Tables/access/models';
 import { TableAccessState } from '@/src/components/Analytics/Tables/access/use-table-access';
-import { summarizeFilter } from '@/src/components/Analytics/Tables/access/utils';
+import { roleLabel, summarizeFilter } from '@/src/components/Analytics/Tables/access/utils';
+import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
@@ -21,16 +32,28 @@ import { getEditOperation, getRemoveOperation } from '@/src/constants/grid-colum
 import { AnalyticsTableAccessI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
-import { AnalyticsTableColumn } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableColumn } from '@/src/models/analytics/table';
 
 interface Props {
   tableName: string;
   columns: AnalyticsTableColumn[];
   isSystem: boolean;
+  // Set for an enrichment: the table whose access decides who reads it.
+  sourceTable?: string;
+  enrichments: AnalyticsTable[];
+  hasEnrichmentsFailed: boolean;
   access: TableAccessState;
 }
 
-const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
+const AccessTab: FC<Props> = ({
+  tableName,
+  columns,
+  isSystem,
+  sourceTable,
+  enrichments,
+  hasEnrichmentsFailed,
+  access,
+}) => {
   const t = useI18n();
   // `undefined` is closed, `null` adds a role, a name edits that role.
   const [drawerRole, setDrawerRole] = useState<string | null | undefined>(undefined);
@@ -41,16 +64,19 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
 
   const isReady = access.status === AccessStatus.Ready;
   const isEmptyTable = isReady && access.rows.length === 0;
+  const everyoneLabel = t(AnalyticsTableAccessI18nKey.EveryoneLabel);
+  const isEnrichment = sourceTable != null;
+  const everyoneWarnings = access.warnings.filter((warning) => warning.role === EVERYONE_ROLE);
 
   const rows = useMemo(
     () =>
       access.rows.filter(
         (row) =>
-          row.role.toLowerCase().includes(search.trim().toLowerCase()) &&
+          roleLabel(row.role, everyoneLabel).toLowerCase().includes(search.trim().toLowerCase()) &&
           (!isCanReadOnly || row.marks.read !== PrivilegeMark.None) &&
           (!isRowsLimitedOnly || row.filter != null),
       ),
-    [access.rows, search, isCanReadOnly, isRowsLimitedOnly],
+    [access.rows, search, isCanReadOnly, isRowsLimitedOnly, everyoneLabel],
   );
 
   const rowActions: ActionMenuOperationDeclaration<RoleRow>[] = useMemo(
@@ -76,8 +102,26 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
         cellRenderer: ({ data }: ICellRendererParams<RoleRow>) =>
           data && (
             <span className="flex items-center gap-2">
-              <span className="font-mono">{data.role}</span>
+              {data.role === EVERYONE_ROLE ? (
+                <>
+                  <IconUsers size={16} className="text-secondary" aria-hidden />
+                  <span>{everyoneLabel}</span>
+                </>
+              ) : (
+                <span className="font-mono">{data.role}</span>
+              )}
               {data.isSensitive && <SensitiveIndicator />}
+              {data.role !== EVERYONE_ROLE && data.warnings.length > 0 && (
+                <Tooltip tooltip={data.warnings.join(' ')}>
+                  <span
+                    role="img"
+                    aria-label={`${t(AnalyticsTableAccessI18nKey.RoleWarnings)}: ${data.warnings.join(' ')}`}
+                    className="flex text-warning"
+                  >
+                    <IconAlertTriangle size={16} aria-hidden />
+                  </span>
+                </Tooltip>
+              )}
             </span>
           ),
       },
@@ -96,6 +140,7 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
         flex: 3,
         cellRenderer: ({ data }: ICellRendererParams<RoleRow>) => {
           if (!data) return null;
+          if (isEnrichment) return <span className="text-secondary">{t(AnalyticsTableAccessI18nKey.SetOnSource)}</span>;
           if (data.rowsKind === RowsCellKind.Policy && data.filter) {
             return <EllipsisTooltip className="font-mono" text={summarizeFilter(data.filter)} />;
           }
@@ -120,9 +165,28 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
           );
         },
       },
+      {
+        headerName: t(AnalyticsTableAccessI18nKey.ColColumns),
+        colId: 'columns',
+        flex: 1,
+        cellRenderer: ({ data }: ICellRendererParams<RoleRow>) => {
+          if (!data) return null;
+          if (isEnrichment) return <span className="text-secondary">{t(AnalyticsTableAccessI18nKey.SetOnSource)}</span>;
+          if (!data.columns) return <span>{t(AnalyticsTableAccessI18nKey.AllColumns)}</span>;
+
+          return (
+            <EllipsisTooltip
+              text={t(AnalyticsTableAccessI18nKey.ColumnsCount, {
+                count: data.columns.length,
+                names: data.columns.join(', '),
+              })}
+            />
+          );
+        },
+      },
       ACTION_COLUMN(rowActions),
     ],
-    [t, rowActions],
+    [t, rowActions, everyoneLabel, isEnrichment],
   );
 
   const onOpenRow = (field: string | undefined, row: RoleRow | undefined) => {
@@ -165,6 +229,25 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
         />
       </div>
 
+      {isEnrichment && (
+        <p className="dial-small-text text-secondary">
+          {t(AnalyticsTableAccessI18nKey.EnrichmentNote)}{' '}
+          {!!sourceTable && (
+            <Link href={tableDetailHref(sourceTable)} className="text-accent-primary underline">
+              {sourceTable}
+            </Link>
+          )}
+        </p>
+      )}
+      {everyoneWarnings.map((warning) => (
+        <Notification
+          key={`${warning.key}:${warning.reason}`}
+          type={NotificationType.SectionMessage}
+          variant={NotificationVariant.Warning}
+          message={warning.message}
+        />
+      ))}
+
       {isEmptyTable ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
           <IconUsersGroup size={32} className="text-secondary" aria-hidden />
@@ -195,6 +278,9 @@ const AccessTab: FC<Props> = ({ tableName, columns, isSystem, access }) => {
           tableName={tableName}
           columns={columns}
           isSystem={isSystem}
+          isEnrichment={isEnrichment}
+          enrichments={enrichments}
+          hasEnrichmentsFailed={hasEnrichmentsFailed}
           access={access}
           role={drawerRole}
           onClose={() => setDrawerRole(undefined)}
