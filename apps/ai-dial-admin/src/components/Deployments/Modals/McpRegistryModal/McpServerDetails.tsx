@@ -34,7 +34,7 @@ const McpServerDetails: FC<Props> = ({ server, serverResponse, isLoading, isOpen
   return (
     <SidePanel label={t(ContainersI18nKey.ServerDetails)} isOpen={isOpen} onClose={onClose}>
       {server && (
-        <div className="flex flex-col gap-4 overflow-y-auto">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
           <h3 className="dial-h3">{server.name}</h3>
 
           {server.description && <p className="dial-small-text text-primary">{server.description}</p>}
