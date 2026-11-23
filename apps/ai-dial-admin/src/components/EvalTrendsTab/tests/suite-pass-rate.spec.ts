@@ -6,7 +6,7 @@ import {
   EMPTY_SUITE_PASS_RATE_SUMMARY,
   getPassRateTrend,
   SUITE_PASS_RATE_BATCH_SIZE,
-} from '../suite-pass-rate';
+} from '@/src/components/EvalTrendsTab/suite-pass-rate';
 
 describe('chunkSuiteIds', () => {
   test('returns no batches for an empty or blank id list', () => {

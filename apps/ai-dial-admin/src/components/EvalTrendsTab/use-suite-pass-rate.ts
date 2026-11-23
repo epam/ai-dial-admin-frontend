@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { getSuitePassRate } from '@/src/app/[lang]/test-suites/actions';
 import { EMPTY_SUITE_PASS_RATE_SUMMARY, SuitePassRateSummary } from '@/src/components/EvalTrendsTab/suite-pass-rate';
@@ -11,12 +11,15 @@ export interface SuitePassRateState {
 }
 
 export const useSuitePassRate = (suiteIds: string[]): SuitePassRateState => {
-  const suiteIdsKey = JSON.stringify([...suiteIds].sort());
+  // A JSON string key keeps the effect dependency stable across renders with equal ids, and JSON round-trips any id.
+  const suiteIdsKey = useMemo(() => JSON.stringify([...suiteIds].sort()), [suiteIds]);
   const [summary, setSummary] = useState<SuitePassRateSummary>({ ...EMPTY_SUITE_PASS_RATE_SUMMARY });
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (suiteIds.length === 0) {
+    const ids: string[] = JSON.parse(suiteIdsKey);
+
+    if (ids.length === 0) {
       setSummary({ ...EMPTY_SUITE_PASS_RATE_SUMMARY });
       setIsLoading(false);
       return;
@@ -27,7 +30,7 @@ export const useSuitePassRate = (suiteIds: string[]): SuitePassRateState => {
 
     const load = async () => {
       try {
-        const next = await getSuitePassRate(suiteIds);
+        const next = await getSuitePassRate(ids);
         if (!cancelled) {
           setSummary(next);
         }
@@ -47,7 +50,7 @@ export const useSuitePassRate = (suiteIds: string[]): SuitePassRateState => {
     return () => {
       cancelled = true;
     };
-  }, [suiteIdsKey]); // eslint-disable-line react-hooks/exhaustive-deps -- suiteIds captured when suiteIdsKey changes
+  }, [suiteIdsKey]);
 
   return { summary, isLoading };
 };

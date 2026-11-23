@@ -10,18 +10,6 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getSuitePassRate: (...args: unknown[]) => getSuitePassRateMock(...args),
 }));
 
-vi.mock('@epam/ai-dial-ui-kit', () => ({
-  Spinner: () => <div>loader</div>,
-  Badge: ({ label, icon }: { label: string; icon?: React.ReactNode }) => (
-    <span>
-      {icon}
-      {label}
-    </span>
-  ),
-  BadgeVariant: { Filled: 'filled' },
-  BadgeColor: { Green: 'green', Red: 'red' },
-}));
-
 describe('EvalAvgPassRateCard', () => {
   beforeEach(() => {
     getSuitePassRateMock.mockReset();
