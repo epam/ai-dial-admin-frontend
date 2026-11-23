@@ -315,11 +315,9 @@ describe('ResourceOAuthSection — registration type', () => {
     await chooseAutomatic(user);
 
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DiscoveryUrl)).toHaveValue('');
-    expect(
-      screen.getByRole('combobox', {
-        name: `${ToolsetI18nKey.ClientRegistrationType}, ${ToolsetI18nKey.RegisterAutomatically}`,
-      }),
-    ).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: new RegExp(ToolsetI18nKey.ClientRegistrationType) })).toHaveValue(
+      ToolsetI18nKey.RegisterAutomatically,
+    );
     expect(mockDispatch).toHaveBeenCalledWith({
       type: ValidationActionType.SetField,
       field: 'discoveryUrl',
@@ -437,11 +435,9 @@ describe('ResourceOAuthSection — token endpoint authentication method', () => 
       />,
     );
 
-    expect(
-      screen.getByRole('combobox', {
-        name: `${ToolsetI18nKey.TokenEndpointAuthMethod}, ${ToolsetI18nKey.TokenEndpointAuthMethodNone}`,
-      }),
-    ).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: methodSelectorName })).toHaveValue(
+      ToolsetI18nKey.TokenEndpointAuthMethodNone,
+    );
   });
 
   test('saves none when None is chosen', async () => {
