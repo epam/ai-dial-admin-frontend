@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { ToolsetI18nKey } from '@/src/constants/i18n';
+import { EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { ToolsetAuthType } from '@/src/models/dial/resource';
 import ResourceAuthentication from '../ResourceAuthentication';
 
@@ -127,5 +127,52 @@ describe('ResourceAuthentication', () => {
 
     expect(screen.queryByText(ToolsetI18nKey.DialNativeAuth)).not.toBeInTheDocument();
     expect(screen.getByText(ToolsetI18nKey.OAuth)).toBeInTheDocument();
+  });
+});
+
+describe('ResourceAuthentication — external service OAuth props', () => {
+  const user = userEvent.setup();
+  const oauth = { authentication_type: ToolsetAuthType.OAUTH, client_id: 'id' };
+
+  beforeEach(() => {
+    appContextMock.set({ isReadOnlyAdmin: false });
+  });
+
+  test('shows no Discovery URL for a toolset caller that passes neither prop', () => {
+    render(<ResourceAuthentication name="toolset-1" authSettings={oauth} hideWithLoginOption />);
+
+    expect(screen.queryByPlaceholderText(EntityPlaceholdersI18nKey.DiscoveryUrl)).not.toBeInTheDocument();
+  });
+
+  test('shows the Discovery URL when the caller supports it', () => {
+    render(
+      <ResourceAuthentication name="service-1" authSettings={oauth} hideWithLoginOption isDiscoveryUrlSupported />,
+    );
+
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.DiscoveryUrl)).toBeInTheDocument();
+  });
+
+  test('choosing OAuth stamps the admin callback as the redirect URI', async () => {
+    const onChange = vi.fn();
+    render(<ResourceAuthentication name="service-1" redirectUrl="/external-service-signin" onChange={onChange} />);
+
+    await user.click(screen.getByText(ToolsetI18nKey.OAuth));
+
+    expect(onChange).toHaveBeenCalledWith(
+      { authentication_type: ToolsetAuthType.OAUTH, redirect_uri: `${window.location.origin}/external-service-signin` },
+      undefined,
+    );
+  });
+
+  test('choosing another type leaves no redirect URI', async () => {
+    const onChange = vi.fn();
+    render(<ResourceAuthentication name="service-1" redirectUrl="/external-service-signin" onChange={onChange} />);
+
+    await user.click(screen.getByText(ToolsetI18nKey.ApiKey));
+
+    expect(onChange).toHaveBeenCalledWith(
+      { authentication_type: ToolsetAuthType.API_KEY, redirect_uri: undefined },
+      false,
+    );
   });
 });

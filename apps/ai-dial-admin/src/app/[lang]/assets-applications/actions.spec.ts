@@ -365,6 +365,54 @@ describe('Assets application :: server actions', () => {
     );
   });
 
+  test('updateApp forwards discovery_url and dynamically_registered of external services, a blank one clearing it', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateApp(
+      appResource({
+        folderId: 'public',
+        version: '1.0',
+        external_services: {
+          registration: {
+            auth_settings: { authentication_type: 'OAUTH', discovery_url: 'https://mcp.example.com/mcp' },
+          },
+          registered: {
+            auth_settings: {
+              client_id: 'id',
+              discovery_url: 'https://mcp.example.com/mcp',
+              dynamically_registered: true,
+              user_level_auth_status: 'SIGNED_OUT',
+            },
+          },
+          cleared: { auth_settings: { client_id: 'id', discovery_url: '' } },
+        },
+      } as any),
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public/my-app__1.0',
+      expect.objectContaining({
+        external_services: {
+          registration: {
+            auth_settings: { authentication_type: 'OAUTH', discovery_url: 'https://mcp.example.com/mcp' },
+          },
+          registered: {
+            auth_settings: {
+              client_id: 'id',
+              discovery_url: 'https://mcp.example.com/mcp',
+              dynamically_registered: true,
+            },
+          },
+          cleared: { auth_settings: { client_id: 'id', discovery_url: '' } },
+        },
+      }),
+      { etag: 'etag' },
+    );
+  });
+
   test('updateApp passes interfaces through unchanged before calling Core', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
