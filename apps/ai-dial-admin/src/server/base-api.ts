@@ -106,6 +106,21 @@ export class BaseApi {
     return this.sendRequest<object, R>(url, 'GET', void 0, token, headers) as Promise<R | null>;
   }
 
+  /**
+   * A GET whose success body is plain text whatever `Content-Type` the service sends. `get` parses a body without
+   * `text/plain` as JSON first, which consumes it, so a bare string such as a version comes back as `''`.
+   * Any failure, a 403 included, and a cancelled request resolve to `null`.
+   */
+  protected async getText(url: string, token?: Token, headers?: HeadersInit): Promise<string | null> {
+    const res = await this.fetchRegistered(url, 'GET', token, undefined, headers);
+
+    if (isEnvelope(res) || isFailedRequest(res)) {
+      return null;
+    }
+
+    return res.text();
+  }
+
   protected head<R extends object>(url: string, token?: Token, headers?: HeadersInit): Promise<R | null> {
     return this.sendRequest<object, R>(url, 'HEAD', void 0, token, headers) as Promise<R | null>;
   }

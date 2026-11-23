@@ -51,7 +51,7 @@ export class CoreUtilityApi extends CoreApi {
   }
 
   getCoreVersion(token: Token): Promise<string | null> {
-    return this.get(VERSION_URL, token, { Accept: 'text/plain' }).catch(() => null) as Promise<string | null>;
+    return this.getText(VERSION_URL, token, { Accept: 'text/plain' }).catch(() => null);
   }
 
   async getUserInfo(token: Token): Promise<ServerActionResponse<{ userInfo: UserInfo }>> {
