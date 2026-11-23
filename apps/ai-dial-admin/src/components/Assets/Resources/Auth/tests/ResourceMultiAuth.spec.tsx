@@ -2,7 +2,13 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { ButtonsI18nKey, ErrorI18nKey, ExternalServiceI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import {
+  ButtonsI18nKey,
+  EntityPlaceholdersI18nKey,
+  ErrorI18nKey,
+  ExternalServiceI18nKey,
+  ToolsetI18nKey,
+} from '@/src/constants/i18n';
 
 import {
   DialApplicationResource,
@@ -266,5 +272,150 @@ describe('ResourceMultiAuth', () => {
     render(<ResourceMultiAuth asset={asset} onChange={vi.fn()} />);
 
     expect(screen.queryByRole('button', { name: ExternalServiceI18nKey.GrantConsent })).not.toBeInTheDocument();
+  });
+});
+
+describe('ResourceMultiAuth — automatic registration', () => {
+  const user = userEvent.setup();
+  const registrationTypeName = new RegExp(ToolsetI18nKey.ClientRegistrationType);
+  const registrationType = () => screen.queryByRole('combobox', { name: registrationTypeName });
+  const discoveryUrl = () => screen.queryByPlaceholderText(EntityPlaceholdersI18nKey.DiscoveryUrl);
+
+  const assetWithAuth = (authSettings: DialExternalService['auth_settings']): DialApplicationResource =>
+    ({
+      path: 'public/my-app',
+      external_services: { crm: { display_name: 'CRM', auth_settings: authSettings } },
+    }) as unknown as DialApplicationResource;
+
+  beforeEach(() => {
+    isReadOnlyAdmin = false;
+  });
+
+  const startNewOAuthService = async (onChange = vi.fn()) => {
+    render(
+      <ResourceMultiAuth asset={{ path: 'public/my-app' } as unknown as DialApplicationResource} onChange={onChange} />,
+    );
+    await user.click(screen.getByRole('button', { name: ExternalServiceI18nKey.AddService }));
+    await user.type(screen.getByLabelText(ExternalServiceI18nKey.ServiceId, { exact: false }), 'crm');
+    await user.click(screen.getByText(ToolsetI18nKey.OAuth));
+    return onChange;
+  };
+
+  const chooseAutomatic = async () => {
+    await user.click(screen.getByRole('combobox', { name: registrationTypeName }));
+    await user.click(screen.getByRole('option', { name: ToolsetI18nKey.RegisterAutomatically }));
+  };
+
+  test('a new service defaults to an existing client and offers automatic registration', async () => {
+    await startNewOAuthService();
+
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientSecret)).toBeInTheDocument();
+    expect(discoveryUrl()).toBeInTheDocument();
+    await user.click(screen.getByRole('combobox', { name: registrationTypeName }));
+    expect(screen.getByRole('option', { name: ToolsetI18nKey.RegisterAutomatically })).toBeInTheDocument();
+  });
+
+  test('applies a service that carries only the type and the Discovery URL', async () => {
+    const onChange = await startNewOAuthService();
+    await chooseAutomatic();
+
+    await user.type(discoveryUrl() as HTMLElement, 'https://mcp.example.com/mcp');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Apply }));
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        external_services: {
+          crm: {
+            auth_settings: { authentication_type: ToolsetAuthType.OAUTH, discovery_url: 'https://mcp.example.com/mcp' },
+          },
+        },
+      }),
+    );
+  });
+
+  test('a stored OAuth service shows its Discovery URL but offers no registration type', async () => {
+    render(
+      <ResourceMultiAuth
+        asset={assetWithAuth({
+          authentication_type: ToolsetAuthType.OAUTH,
+          client_id: 'id',
+          discovery_url: 'https://a.io',
+        })}
+        onChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Edit }));
+
+    expect(discoveryUrl()).toHaveValue('https://a.io');
+    expect(registrationType()).toBeNull();
+  });
+
+  test('a stored OAuth service switched to API Key and back still offers no automatic registration', async () => {
+    render(
+      <ResourceMultiAuth
+        asset={assetWithAuth({ authentication_type: ToolsetAuthType.OAUTH, client_id: 'id' })}
+        onChange={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Edit }));
+
+    await user.click(screen.getByText(ToolsetI18nKey.ApiKey));
+    await user.click(screen.getByText(ToolsetI18nKey.OAuth));
+
+    expect(registrationType()).toBeNull();
+  });
+
+  test('a stored API Key service switched to OAuth offers automatic registration', async () => {
+    render(
+      <ResourceMultiAuth asset={assetWithAuth({ authentication_type: ToolsetAuthType.API_KEY })} onChange={vi.fn()} />,
+    );
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Edit }));
+
+    await user.click(screen.getByText(ToolsetI18nKey.OAuth));
+
+    expect(registrationType()).toBeInTheDocument();
+  });
+
+  test('a registered service shows the registered state and leaves Apply enabled when nothing changed', async () => {
+    render(
+      <ResourceMultiAuth
+        asset={assetWithAuth({
+          authentication_type: ToolsetAuthType.OAUTH,
+          dynamically_registered: true,
+          discovery_url: 'https://mcp.example.com/mcp',
+          client_id: 'registered-id',
+          authorization_endpoint: 'https://auth.example.com/authorize',
+          token_endpoint: 'https://auth.example.com/token',
+        })}
+        onChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Edit }));
+
+    expect(screen.getByText(ToolsetI18nKey.RegisteredByCore)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Apply })).toBeEnabled();
+  });
+
+  test('a stored registered service keeps its Discovery URL locked even after converting to an existing client', async () => {
+    render(
+      <ResourceMultiAuth
+        asset={assetWithAuth({
+          authentication_type: ToolsetAuthType.OAUTH,
+          dynamically_registered: true,
+          discovery_url: 'https://mcp.example.com/mcp',
+          client_id: 'registered-id',
+          authorization_endpoint: 'https://auth.example.com/authorize',
+          token_endpoint: 'https://auth.example.com/token',
+        })}
+        onChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Edit }));
+    await user.click(screen.getByRole('button', { name: ToolsetI18nKey.UseExistingClientInstead }));
+
+    expect(screen.getByDisplayValue('https://mcp.example.com/mcp')).toBeDisabled();
   });
 });
