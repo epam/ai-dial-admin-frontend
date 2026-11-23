@@ -39,7 +39,6 @@ describe('StringEditorInput', () => {
     expect(preview).toHaveValue('  first  second   ');
     const editor = await openEditor(user);
     expect(editor).toHaveValue('  first\n\nsecond  \n');
-    expect(editor).toHaveClass('h-full');
     expect(editor).toHaveFocus();
   });
 

@@ -216,6 +216,8 @@ describe('TargetField', () => {
 
     expect(typeSelect()).toHaveAccessibleName(new RegExp(AliasI18nKey.TargetTypeRouter));
     expect(presentAsSelect()).toHaveAccessibleName(new RegExp(AliasI18nKey.PresentAsRouter));
+    expect(screen.getByRole('textbox', { name: new RegExp(AliasI18nKey.Target) })).toHaveValue('routers/r');
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   test('offers the router target type on a Platform alias', async () => {
