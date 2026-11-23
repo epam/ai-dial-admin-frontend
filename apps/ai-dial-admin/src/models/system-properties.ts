@@ -46,6 +46,7 @@ export interface GlobalSettings {
 
 export interface SystemPropertiesTabStore {
   isChanged: boolean;
+  isDiscardable?: boolean;
   disableSave?: boolean;
   onSave: () => void;
   onDiscard: () => void;
