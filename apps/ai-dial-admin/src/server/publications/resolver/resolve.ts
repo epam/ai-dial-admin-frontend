@@ -16,7 +16,7 @@ import {
   mapPublicationBase,
   resolvePublicationResourceType,
 } from '../mappers';
-import { CorePublication, CorePublicationResource, CoreResourceAction } from '../models';
+import { CorePublicationResource, CoreResourceAction, ListedPublication } from '../models';
 import { parseEncodedFolderPath, parseEncodedVersionedPath } from '../path';
 import { enrichFileResource } from './file-resource';
 import { PUBLICATION_TYPE_REGISTRY } from './registry';
@@ -102,7 +102,7 @@ const enrichPrimaryResource = (
  * per-type resolvers; `getPublication` only ever resolves PENDING publications.
  */
 export const resolvePublication = async (
-  core: CorePublication,
+  core: ListedPublication,
   token: Token,
   clients: EnrichmentClients,
 ): Promise<Publication> => {
