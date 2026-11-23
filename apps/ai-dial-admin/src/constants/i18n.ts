@@ -2209,6 +2209,8 @@ export enum TestSuitesI18nKey {
   NumberOfParallelTestCases = 'TestSuites.NumberOfParallelTestCases',
   IncreaseParallelTestCases = 'TestSuites.IncreaseParallelTestCases',
   DecreaseParallelTestCases = 'TestSuites.DecreaseParallelTestCases',
+  ParallelTestCasesMaximum = 'TestSuites.ParallelTestCasesMaximum',
+  ParallelTestCasesAboveMaximum = 'TestSuites.ParallelTestCasesAboveMaximum',
   AllTestCasesCount = 'TestSuites.AllTestCasesCount',
   SelectedTestCasesCount = 'TestSuites.SelectedTestCasesCount',
   TryoutWarning = 'TestSuites.TryoutWarning',

@@ -2278,6 +2278,8 @@ export default {
     NumberOfParallelTestCases: 'Number of parallel test cases',
     IncreaseParallelTestCases: 'Increase number of parallel test cases',
     DecreaseParallelTestCases: 'Decrease number of parallel test cases',
+    ParallelTestCasesMaximum: 'Maximum is {max}.',
+    ParallelTestCasesAboveMaximum: 'Value is above the maximum of {max}.',
     AllTestCasesCount: 'All ({count})',
     SelectedTestCasesCount: '{selected} out of {total}',
     TryoutWarning: 'Test this suite`s request template against a real deployment.',
