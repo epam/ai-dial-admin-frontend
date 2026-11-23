@@ -15,6 +15,7 @@ import {
 import { IconExternalLink } from '@tabler/icons-react';
 
 import AllSuitesTrendsHeader from '@/src/components/EvalTrendsTab/AllSuitesTrendsHeader';
+import EvalAvgPassRateCard from '@/src/components/EvalTrendsTab/EvalAvgPassRateCard';
 import EvalMonthCostCard from '@/src/components/EvalTrendsTab/EvalMonthCostCard';
 import SuiteScorePill from '@/src/components/EvalTrendsTab/SuiteScorePill';
 import { useEntityTestSuites } from '@/src/components/EvalTrendsTab/use-entity-test-suites';
@@ -99,7 +100,10 @@ const EvalTrendsTab: FC<Props> = ({ deploymentId }) => {
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 flex-col gap-4 px-4 pt-4">
         <AllSuitesTrendsHeader suiteCount={suites.length} />
-        <EvalMonthCostCard deploymentId={deploymentId} suiteCount={suites.length} />
+        <div className="flex flex-wrap gap-4">
+          <EvalAvgPassRateCard suiteIds={suiteIds} suiteCount={suites.length} />
+          <EvalMonthCostCard deploymentId={deploymentId} suiteCount={suites.length} />
+        </div>
       </div>
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 px-4 pt-4">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
