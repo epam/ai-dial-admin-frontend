@@ -164,10 +164,15 @@ export const CATALOG_EXPORT_URL = `${CATALOG_URL}/export`;
 export const CATALOG_EXPORT_PREVIEW_URL = `${CATALOG_EXPORT_URL}/preview`;
 export const CATALOG_IMPORT_URL = `${CATALOG_URL}/import`;
 export const CATALOG_IMPORT_PREVIEW_URL = `${CATALOG_IMPORT_URL}/preview`;
-export const CATALOG_IMPORT_QUERY = (policy: CatalogResolutionPolicy, isReusedNamesAcknowledged: boolean): string =>
+export const CATALOG_IMPORT_QUERY = (
+  policy: CatalogResolutionPolicy,
+  isReusedNamesAcknowledged: boolean,
+  isAccessIncluded = false,
+): string =>
   new URLSearchParams({
     resolution_policy: policy,
     acknowledge_reused_names: String(isReusedNamesAcknowledged),
+    ...(isAccessIncluded && { include_access: 'true' }),
   }).toString();
 
 export class AnalyticsDataApi extends BaseApi {
@@ -422,10 +427,11 @@ export class AnalyticsDataApi extends BaseApi {
     file: FormData,
     policy: CatalogResolutionPolicy,
     isReusedNamesAcknowledged: boolean,
+    isAccessIncluded: boolean,
     token: Token,
   ): Promise<ServerActionResponse<CatalogImportPreview>> {
     return this.postFiles(
-      `${CATALOG_IMPORT_PREVIEW_URL}?${CATALOG_IMPORT_QUERY(policy, isReusedNamesAcknowledged)}`,
+      `${CATALOG_IMPORT_PREVIEW_URL}?${CATALOG_IMPORT_QUERY(policy, isReusedNamesAcknowledged, isAccessIncluded)}`,
       file,
       token,
     );
@@ -435,10 +441,11 @@ export class AnalyticsDataApi extends BaseApi {
     file: FormData,
     policy: CatalogResolutionPolicy,
     isReusedNamesAcknowledged: boolean,
+    isAccessIncluded: boolean,
     token: Token,
   ): Promise<ServerActionResponse<CatalogImportResult>> {
     return this.postFiles(
-      `${CATALOG_IMPORT_URL}?${CATALOG_IMPORT_QUERY(policy, isReusedNamesAcknowledged)}`,
+      `${CATALOG_IMPORT_URL}?${CATALOG_IMPORT_QUERY(policy, isReusedNamesAcknowledged, isAccessIncluded)}`,
       file,
       token,
     );

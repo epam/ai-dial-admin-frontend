@@ -49,16 +49,18 @@ export async function previewAnalyticsImportConfig(
   file: FormData,
   policy: CatalogResolutionPolicy,
   isReusedNamesAcknowledged: boolean,
+  isAccessIncluded = false,
 ): Promise<ServerActionResponse<CatalogImportPreview>> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return analyticsDataApi.previewCatalogImport(file, policy, isReusedNamesAcknowledged, token);
+  return analyticsDataApi.previewCatalogImport(file, policy, isReusedNamesAcknowledged, isAccessIncluded, token);
 }
 
 export async function importAnalyticsConfig(
   file: FormData,
   policy: CatalogResolutionPolicy,
   isReusedNamesAcknowledged: boolean,
+  isAccessIncluded = false,
 ): Promise<ServerActionResponse<CatalogImportResult>> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return analyticsDataApi.importCatalog(file, policy, isReusedNamesAcknowledged, token);
+  return analyticsDataApi.importCatalog(file, policy, isReusedNamesAcknowledged, isAccessIncluded, token);
 }

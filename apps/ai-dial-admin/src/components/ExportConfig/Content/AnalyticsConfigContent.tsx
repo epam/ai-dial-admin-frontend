@@ -14,9 +14,10 @@ interface Props {
   customExportData: Record<string, EntitiesGridData[]>;
   setCustomExportData: Dispatch<SetStateAction<Record<string, EntitiesGridData[]>>>;
   isFull: boolean;
+  isAccessIncluded: boolean;
 }
 
-const AnalyticsConfigContent: FC<Props> = ({ customExportData, setCustomExportData, isFull }) => {
+const AnalyticsConfigContent: FC<Props> = ({ customExportData, setCustomExportData, isFull, isAccessIncluded }) => {
   const t = useI18n();
 
   const tabs = useMemo(() => getAnalyticsTabs(t), [t]);
@@ -30,13 +31,15 @@ const AnalyticsConfigContent: FC<Props> = ({ customExportData, setCustomExportDa
     [t],
   );
   const getEmptyTitle = useCallback(() => t(EntitiesI18nKey.NoEntities), [t]);
+  const loadCandidates = useCallback((tab: string) => getAnalyticsEntities(tab, isAccessIncluded), [isAccessIncluded]);
 
   return (
     <TabbedSelectionContent
+      key={String(isAccessIncluded)}
       tabs={tabs}
       customExportData={customExportData}
       setCustomExportData={setCustomExportData}
-      loadCandidates={getAnalyticsEntities}
+      loadCandidates={loadCandidates}
       getColDefs={getColDefs}
       getAddButtonTitle={getAddButtonTitle}
       getEmptyTitle={getEmptyTitle}

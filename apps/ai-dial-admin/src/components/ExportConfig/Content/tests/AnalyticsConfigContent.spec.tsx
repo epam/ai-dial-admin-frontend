@@ -18,9 +18,14 @@ vi.mock('@/src/utils/notification', async (importOriginal) => ({
 }));
 
 describe('AnalyticsConfigContent', () => {
-  const renderContent = (customExportData = {}, isFull = false) =>
+  const renderContent = (customExportData = {}, isFull = false, isAccessIncluded = false) =>
     render(
-      <AnalyticsConfigContent customExportData={customExportData} setCustomExportData={vi.fn()} isFull={isFull} />,
+      <AnalyticsConfigContent
+        customExportData={customExportData}
+        setCustomExportData={vi.fn()}
+        isFull={isFull}
+        isAccessIncluded={isAccessIncluded}
+      />,
     );
 
   beforeEach(() => {
@@ -32,10 +37,23 @@ describe('AnalyticsConfigContent', () => {
     const user = userEvent.setup();
     renderContent();
 
-    await vi.waitFor(() => expect(getAnalyticsEntities).toHaveBeenCalledWith(AnalyticsExportEntityType.TABLE));
+    await vi.waitFor(() => expect(getAnalyticsEntities).toHaveBeenCalledWith(AnalyticsExportEntityType.TABLE, false));
     await user.click(screen.getByText(MenuI18nKey.Pipelines));
 
-    await vi.waitFor(() => expect(getAnalyticsEntities).toHaveBeenCalledWith(AnalyticsExportEntityType.PIPELINE));
+    await vi.waitFor(() =>
+      expect(getAnalyticsEntities).toHaveBeenCalledWith(AnalyticsExportEntityType.PIPELINE, false),
+    );
+  });
+
+  test('reads the table candidates again with access when the box changes', async () => {
+    const { rerender } = renderContent();
+    await vi.waitFor(() => expect(getAnalyticsEntities).toHaveBeenCalledWith(AnalyticsExportEntityType.TABLE, false));
+
+    rerender(
+      <AnalyticsConfigContent customExportData={{}} setCustomExportData={vi.fn()} isFull={false} isAccessIncluded />,
+    );
+
+    await vi.waitFor(() => expect(getAnalyticsEntities).toHaveBeenCalledWith(AnalyticsExportEntityType.TABLE, true));
   });
 
   test('shows the selected count and the Add button for the open tab', async () => {

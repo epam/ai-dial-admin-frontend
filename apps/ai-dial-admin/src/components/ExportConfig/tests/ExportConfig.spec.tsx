@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { exportAnalyticsConfig } from '@/src/app/[lang]/export-config/actions';
+import { useAnalyticsAccessGrant } from '@/src/hooks/use-analytics-access-grant';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { ButtonsI18nKey, ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
@@ -22,6 +23,8 @@ vi.mock('@/src/app/[lang]/export-config/actions', async (importOriginal) => {
 
 vi.mock('@/src/utils/download', () => ({ downloadFile: vi.fn() }));
 
+vi.mock('@/src/hooks/use-analytics-access-grant', () => ({ useAnalyticsAccessGrant: vi.fn() }));
+
 vi.mock('@/src/utils/notification', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/src/utils/notification')>()),
   getErrorNotification: vi.fn(),
@@ -34,9 +37,21 @@ vi.mock('@/src/components/ExportConfig/Content/AnalyticsConfigContent', () => ({
     isFull ? (
       <p>full-listing</p>
     ) : (
-      <button type="button" onClick={() => setCustomExportData({ 'analytics-table': [{ name: 'usage_sentiment' }] })}>
-        select-table
-      </button>
+      <>
+        <button type="button" onClick={() => setCustomExportData({ 'analytics-table': [{ name: 'usage_sentiment' }] })}>
+          select-table
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            setCustomExportData({
+              'analytics-table': [{ name: 'usage_sentiment' }, { name: 'dial_usage_log', isSystem: true }],
+            })
+          }
+        >
+          select-with-system
+        </button>
+      </>
     ),
 }));
 
@@ -79,6 +94,7 @@ describe('ExportConfig — Components selector', () => {
 describe('ExportConfig — Analytics scope', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useAnalyticsAccessGrant).mockReturnValue(true);
   });
 
   const selectAnalytics = async () => {
@@ -184,5 +200,57 @@ describe('ExportConfig — Analytics scope', () => {
     await user.click(screen.getByText(ExportI18nKey.EntitiesBuildersAccess));
 
     expect(screen.getByText(ExportI18nKey.ExportFormat)).toBeInTheDocument();
+  });
+
+  test('disables Include access for a caller without the grant permission', async () => {
+    vi.mocked(useAnalyticsAccessGrant).mockReturnValue(false);
+    await selectAnalytics();
+
+    expect(screen.getByRole('checkbox', { name: ExportI18nKey.AnalyticsIncludeAccess })).toBeDisabled();
+  });
+
+  test('sends include_access with a full export when the box is checked', async () => {
+    vi.mocked(exportAnalyticsConfig).mockResolvedValue({
+      success: true,
+      response: { blob: new Blob(['{}']), fileName: 'adas-catalog.json' },
+    });
+    const user = await selectAnalytics();
+
+    await user.click(screen.getByRole('checkbox', { name: ExportI18nKey.AnalyticsIncludeAccess }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Export }));
+    await user.click(screen.getByRole('button', { name: 'confirm-preview' }));
+
+    await vi.waitFor(() =>
+      expect(exportAnalyticsConfig).toHaveBeenCalledWith({ components: [], include_access: true }),
+    );
+  });
+
+  test('drops system tables from the selection when the box is unchecked', async () => {
+    vi.mocked(exportAnalyticsConfig).mockResolvedValue({
+      success: true,
+      response: { blob: new Blob(['{}']), fileName: 'adas-catalog.json' },
+    });
+    const user = await selectAnalyticsCustom();
+    const checkbox = screen.getByRole('checkbox', { name: ExportI18nKey.AnalyticsIncludeAccess });
+
+    await user.click(checkbox);
+    await user.click(screen.getByRole('button', { name: 'select-with-system' }));
+    await user.click(checkbox);
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Export }));
+    await user.click(screen.getByRole('button', { name: 'confirm-preview' }));
+
+    await vi.waitFor(() =>
+      expect(exportAnalyticsConfig).toHaveBeenCalledWith({ components: [{ type: 'table', name: 'usage_sentiment' }] }),
+    );
+  });
+
+  test('unchecks Include access when the scope changes', async () => {
+    const user = await selectAnalytics();
+    await user.click(screen.getByRole('checkbox', { name: ExportI18nKey.AnalyticsIncludeAccess }));
+
+    await user.click(screen.getByText(ExportI18nKey.Deployments));
+    await user.click(screen.getByText(MenuI18nKey.Analytics));
+
+    expect(screen.getByRole('checkbox', { name: ExportI18nKey.AnalyticsIncludeAccess })).not.toBeChecked();
   });
 });
