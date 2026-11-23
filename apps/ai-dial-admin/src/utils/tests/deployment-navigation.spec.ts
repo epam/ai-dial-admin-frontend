@@ -25,10 +25,33 @@ describe('resolveCatalogDeploymentNavigation', () => {
     });
   });
 
-  test('routes entity applications through Applications', () => {
-    expect(resolveDeploymentNavigationTarget({ id: 'my-app', name: 'My App' }, DeploymentType.Application)).toEqual({
+  test('waits for the application route probe before routing applications', () => {
+    expect(resolveDeploymentNavigationTarget({ id: 'my-app', name: 'My App' }, DeploymentType.Application)).toBeNull();
+  });
+
+  test('routes entity applications through the probed application route', () => {
+    expect(
+      resolveDeploymentNavigationTarget({ id: 'my-app', name: 'My App' }, DeploymentType.Application, {
+        applicationRoute: ApplicationRoute.Applications,
+      }),
+    ).toEqual({
       route: ApplicationRoute.Applications,
       entity: { name: 'my-app' },
+    });
+  });
+
+  test('routes platform applications through AssetsApplications when probed', () => {
+    expect(
+      resolveDeploymentNavigationTarget(
+        { id: 'world-economy-v2-hybrid', name: 'StatGPT' },
+        DeploymentType.Application,
+        {
+          applicationRoute: ApplicationRoute.AssetsApplications,
+        },
+      ),
+    ).toEqual({
+      route: ApplicationRoute.AssetsApplications,
+      entity: { name: 'world-economy-v2-hybrid' },
     });
   });
 

@@ -5,10 +5,10 @@ import { Select } from '@epam/ai-dial-ui-kit';
 import DecisionSettings from '@/src/components/Assets/Platform/Routers/DecisionSettings';
 import { applyRouterMode, getRouterMode } from '@/src/components/Assets/Platform/Routers/utils';
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
+import BaseUrlControl from '@/src/components/BaseControls/BaseUrlControl/BaseUrlControl';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import EditorUrlControl from '@/src/components/BaseControls/Endpoint/EditorUrl';
-import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import IconControl from '@/src/components/BaseControls/Icon';
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import IntroControl from '@/src/components/BaseControls/Intro';
@@ -24,12 +24,14 @@ import AppRunnersResource from '@/src/components/SourceField/Application/AppRunn
 import { CATALOG_SCHEMA_PICKER_ENTITY_TYPE } from '@/src/constants/catalog-schemas';
 import { ROUTER_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialRouterResource } from '@/src/models/dial/resource';
 import { RouterMode } from '@/src/models/dial/router';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { supportsResponsesInterface } from '@/src/utils/models/responses-interface';
@@ -37,12 +39,13 @@ import { supportsResponsesInterface } from '@/src/utils/models/responses-interfa
 interface Props {
   asset: DialRouterResource;
   translators?: ResourceInfo[];
+  plugins?: PluginOptions;
   catalogSchemas?: CatalogSchemaOptions;
   schemes?: DialApplicationScheme[];
   onChange: (asset: DialRouterResource) => void;
 }
 
-const RouterAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, schemes, onChange }) => {
+const RouterAssetProperties: FC<Props> = ({ asset, translators, plugins, catalogSchemas, schemes, onChange }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const mode = getRouterMode(asset);
@@ -106,12 +109,15 @@ const RouterAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, 
           <DecisionSettings decision={asset.decision} onChange={(decision) => onChange({ ...asset, decision })} />
         )}
 
-        <EndpointControl
+        <BaseUrlControl
+          containerClassName={STANDARD_CONTROL_WIDTH}
           id="base_url"
           label={t(EntityFieldsI18nKey.baseUrl)}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          endpoint={asset.baseUrl}
+          value={asset.baseUrl}
           onChange={(baseUrl) => onChange({ ...asset, baseUrl })}
+          plugins={plugins?.options}
+          optionsError={plugins?.error}
         />
         <EditorUrlControl
           endpoint={asset.editorUrl}
@@ -122,6 +128,8 @@ const RouterAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, 
           onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
           allowedTypes={ROUTER_INTERFACE_TYPES}
           translators={translators}
+          plugins={plugins}
+          isPluginEnabled
           entityBaseUrl={asset.baseUrl}
           isTranslatorDisabled={isDecision}
           view={ApplicationRoute.PlatformRouters}

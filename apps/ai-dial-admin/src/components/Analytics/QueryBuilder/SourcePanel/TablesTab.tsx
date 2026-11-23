@@ -41,7 +41,7 @@ const TablesTab: FC<Props> = ({ currentTable }) => {
       ) : (
         <ul
           ref={scroll.ref}
-          className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto"
+          className="-mr-6 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto pr-6"
           onScroll={scroll.onScroll}
         >
           {visibleTables.map((table) => (

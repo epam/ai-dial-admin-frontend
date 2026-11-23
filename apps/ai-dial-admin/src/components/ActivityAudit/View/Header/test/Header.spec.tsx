@@ -37,7 +37,7 @@ describe('ViewHeader', () => {
 
   test('opens the resource page in a new tab when the resource external link is clicked', async () => {
     const user = userEvent.setup();
-    global.open = vi.fn();
+    vi.stubGlobal('open', vi.fn());
     render(<ViewHeader activity={baseActivity} />);
 
     await user.click(resourceLinkButton());
@@ -111,7 +111,7 @@ describe('ViewHeader — analytics activities', () => {
 
   test('links a table activity to its table page', async () => {
     const user = userEvent.setup();
-    global.open = vi.fn();
+    vi.stubGlobal('open', vi.fn());
     renderHeader();
 
     await user.click(resourceLinkButton());
@@ -121,7 +121,7 @@ describe('ViewHeader — analytics activities', () => {
 
   test('links a column activity to the table page its identifier carries', async () => {
     const user = userEvent.setup();
-    global.open = vi.fn();
+    vi.stubGlobal('open', vi.fn());
     renderHeader({ resourceType: ActivityAuditResourceType.TABLE_COLUMN, resourceId: 'orders:total' });
 
     expect(screen.getByText('orders:total')).toBeInTheDocument();

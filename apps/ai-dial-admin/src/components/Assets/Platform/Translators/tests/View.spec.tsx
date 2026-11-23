@@ -39,8 +39,6 @@ vi.mock('../TabsContent', () => ({
   ),
 }));
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 const translator = (overrides: Partial<DialTranslatorResource> = {}): DialTranslatorResource =>
   ({
     name: 'to-responses',

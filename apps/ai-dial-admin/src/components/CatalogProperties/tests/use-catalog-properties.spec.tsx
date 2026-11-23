@@ -1,17 +1,11 @@
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { CatalogSchemaDocument } from '@/src/models/dial/catalog-schema';
 import { useCatalogProperties } from '../use-catalog-properties';
 
-const dispatch = vi.fn();
-
-// The global mock in `test-setup.tsx` hands out a fresh `vi.fn()` per call, so the dispatch a
-// component made is unobservable through it — this spec needs its own.
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ isValid: true, dispatch }),
-  ValidationActionType: { SetField: 'SET_FIELD_VALIDATION', RemoveField: 'REMOVE_FIELD_VALIDATION' },
-}));
+const { dispatch } = saveValidationMock;
 
 const getCatalogSchemaById = vi.fn();
 

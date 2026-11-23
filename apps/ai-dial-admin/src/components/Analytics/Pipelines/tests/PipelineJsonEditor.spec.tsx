@@ -1,3 +1,7 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { notificationMock } from '@/test-mocks/notification';
+import { saveValidationMock } from '@/test-mocks/save-validation';
+import { JSONEditorError } from '@/src/types/editor';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -8,44 +12,21 @@ import { AnalyticsPipelinesI18nKey, ButtonsI18nKey, EntitiesI18nKey } from '@/sr
 import { Pipeline, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
-
-// The suite-wide SaveValidationContext mock pins `jsonErrors` empty and hands out a fresh
-// `showNotification` per call, so the marker cases need their own controllable pair.
 const mocks = vi.hoisted(() => ({
-  jsonErrors: [] as { message: string; startLineNumber: number }[],
-  dispatch: vi.fn(),
-  showNotification: vi.fn(() => 'notification-id'),
   isFullAdmin: { value: true },
   sidebar: { showSidebar: vi.fn(), closeSidebar: vi.fn() },
   editorProps: { current: {} as Record<string, unknown> },
 }));
 
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  SaveValidationContextProvider: ({ children }: { children: React.ReactNode }) => children,
-  useSaveValidationContext: () => ({
-    isValid: true,
-    dispatch: mocks.dispatch,
-    jsonErrors: mocks.jsonErrors,
-    jsonErrorNotifications: [],
-  }),
-  useJsonEditorValidation: () => ({ editorId: 'e1', setJsonErrors: vi.fn(), removeEditor: vi.fn() }),
-  ValidationActionType: { SetJsonEditorNotifications: 'SET_JSON_EDITOR_NOTIFICATIONS', Reset: 'RESET' },
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: mocks.showNotification, removeNotification: vi.fn() }),
-}));
-
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     isFullAdmin: mocks.isFullAdmin.value,
     isReadOnlyAdmin: !mocks.isFullAdmin.value,
     isEnableAuth: true,
     featureFlags: {},
     sidebar: mocks.sidebar,
-  }),
-}));
+  }));
+});
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,8 +73,8 @@ const confirmDiscard = async (user: ReturnType<typeof userEvent.setup>) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  notificationMock.showNotification.mockReturnValue('notification-id');
   vi.mocked(listPipelineBackfills).mockResolvedValue({ success: true, response: [] });
-  mocks.jsonErrors = [];
   mocks.isFullAdmin.value = true;
   mocks.editorProps.current = {};
 });
@@ -167,7 +148,7 @@ describe('PipelineDetailView — the identity row while a change is pending', ()
   });
 
   test('breaking the document without changing the draft still offers a way out', async () => {
-    mocks.jsonErrors = [{ message: 'Expected comma', startLineNumber: 4 }];
+    saveValidationMock.set({ jsonErrors: [{ message: 'Expected comma', startLineNumber: 4 }] as JSONEditorError[] });
     const user = userEvent.setup();
     renderView();
 
@@ -179,44 +160,46 @@ describe('PipelineDetailView — the identity row while a change is pending', ()
   });
 
   test('the toggle returns once the document parses again', async () => {
-    mocks.jsonErrors = [{ message: 'Expected comma', startLineNumber: 4 }];
+    saveValidationMock.set({ jsonErrors: [{ message: 'Expected comma', startLineNumber: 4 }] as JSONEditorError[] });
     const user = userEvent.setup();
     renderView();
 
     await enableEditor(user);
     expect(queryToggleRow()).not.toBeInTheDocument();
 
-    mocks.jsonErrors = [];
+    saveValidationMock.set({ jsonErrors: [] });
     await confirmDiscard(user);
 
     expect(queryToggleRow()).toBeInTheDocument();
   });
 
   test('discarding clears the validation state before resetting', async () => {
-    mocks.jsonErrors = [{ message: 'Expected comma', startLineNumber: 4 }];
+    saveValidationMock.set({ jsonErrors: [{ message: 'Expected comma', startLineNumber: 4 }] as JSONEditorError[] });
     const user = userEvent.setup();
     renderView();
 
     await enableEditor(user);
     await confirmDiscard(user);
 
-    expect(mocks.dispatch).toHaveBeenCalledWith({ type: 'RESET' });
+    expect(saveValidationMock.dispatch).toHaveBeenCalledWith({ type: 'RESET' });
   });
 });
 
 describe('PipelineDetailView — saving from the JSON editor', () => {
   test('unparseable JSON is reported per line and nothing is sent', async () => {
-    mocks.jsonErrors = [
-      { message: 'Expected comma', startLineNumber: 4 },
-      { message: 'Unexpected token', startLineNumber: 9 },
-    ];
+    saveValidationMock.set({
+      jsonErrors: [
+        { message: 'Expected comma', startLineNumber: 4 },
+        { message: 'Unexpected token', startLineNumber: 9 },
+      ] as JSONEditorError[],
+    });
     const user = userEvent.setup();
     renderView();
 
     await enableEditor(user);
     await user.click(saveButton() as HTMLElement);
 
-    expect(mocks.showNotification).toHaveBeenCalledTimes(2);
+    expect(notificationMock.showNotification).toHaveBeenCalledTimes(2);
   });
 
   test('the fields shape check does not disable Save while the editor is on', async () => {

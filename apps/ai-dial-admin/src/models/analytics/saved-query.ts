@@ -41,10 +41,16 @@ export interface SavedQueryAbsoluteTime {
 
 export type SavedQueryTime = SavedQueryRelativeTime | SavedQueryAbsoluteTime;
 
+export interface SavedQueryChartLegend {
+  visible?: boolean;
+  position?: string;
+}
+
 export interface SavedQueryChart {
   type: ChartType;
   x_field: string | null;
   y_field: string[] | null;
+  legend?: SavedQueryChartLegend;
 }
 
 export interface SavedQuery {

@@ -1,3 +1,4 @@
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import { UpstreamAuthType } from '@/src/models/dial/model';
@@ -6,15 +7,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-const { saveValidationDispatch } = vi.hoisted(() => ({ saveValidationDispatch: vi.fn() }));
+const { dispatch: saveValidationDispatch } = saveValidationMock;
 
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ dispatch: saveValidationDispatch, resetCounter: 0 }),
-  ValidationActionType: {
-    SetField: 'SET_FIELD_VALIDATION',
-    RemoveField: 'REMOVE_FIELD_VALIDATION',
-  },
-}));
 import Endpoint from './Endpoint';
 
 const baseEndpoint = {

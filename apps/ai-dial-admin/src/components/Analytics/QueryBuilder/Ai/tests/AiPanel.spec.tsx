@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -15,10 +16,7 @@ import { generateQuery } from '@/src/app/[lang]/queries/actions';
 
 vi.mock('@/src/app/[lang]/queries/actions');
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification }),
-}));
+const { showNotification } = notificationMock;
 
 const reply = (content: string) => ({
   success: true,

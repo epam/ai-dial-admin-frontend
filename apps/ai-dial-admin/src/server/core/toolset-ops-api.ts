@@ -39,6 +39,17 @@ export class ToolsetOpsApi extends CoreApi {
     return this.getAction(url, token);
   }
 
+  /** Fetches an application's effective discovered tools (`GET v1/toolset/{id}/allowed-tools`). */
+  allowedApplicationTools(token: Token, id: string, isAsset: boolean): Promise<ServerActionResponse> {
+    let deploymentId = id;
+    if (isAsset) {
+      deploymentId = isPlatformBucketPath(id)
+        ? stripPrefix(id, `${PLATFORM_ROOT_FOLDER}/`)
+        : `${RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION]}${id}`;
+    }
+    return this.getAction(`${CORE_TOOLSET_TOOLS_URL}/${encodeCorePath(deploymentId)}/allowed-tools`, token);
+  }
+
   /** Signs in to a toolset (`POST v1/ops/toolset/signin`). */
   signIn(token: Token, body: Record<string, unknown>): Promise<ServerActionResponse> {
     return this.postAction(CORE_TOOLSET_SIGN_IN_URL, body, token);

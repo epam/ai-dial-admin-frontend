@@ -30,8 +30,6 @@ vi.mock('@/src/components/Assets/Modals/CreateSeededAsset', () => ({
 }));
 
 vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 // The real dropdown keeps its items behind a floating overlay with no menu roles to query; flattening
 // them to buttons keeps these tests about the action rather than the ui-kit's popover.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {

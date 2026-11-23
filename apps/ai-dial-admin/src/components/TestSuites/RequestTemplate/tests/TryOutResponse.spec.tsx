@@ -2,13 +2,15 @@ import { render, screen } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { SuiteType, TestCaseSchema, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import TryOutResponsePreview from '../components/TryOutResponse';
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
-  default: ({ entity }: { entity: unknown }) => <div>JsonEditor:{JSON.stringify(entity)}</div>,
+  default: ({ entity, text }: { entity: unknown; text?: string }) => (
+    <div>JsonEditor:{text ?? JSON.stringify(entity)}</div>
+  ),
 }));
 
 vi.mock('../components/CollapsibleSection', () => ({
@@ -70,9 +72,13 @@ const mixedSuite: TestSuite = {
   additionalRequests: [{ inputBindings: [{ templateVariable: 'prompt', dataField: 'prompt' }] }],
 };
 
-const entry = (body: unknown, out: unknown): TryOutHistoryEntry => ({
+const entry = (
+  body: unknown,
+  out: unknown,
+  responseExtras: Partial<TryOutHistoryEntry['response']> = {},
+): TryOutHistoryEntry => ({
   resolvedRequest: { body },
-  response: { statusCode: 200, body: out },
+  response: { statusCode: 200, body: out, ...responseExtras },
 });
 
 describe('TryOutResponsePreview history', () => {
@@ -306,5 +312,47 @@ describe('TryOutResponsePreview history', () => {
     expect(screen.queryByText(TestSuitesI18nKey.TurnLabel)).not.toBeInTheDocument();
     expect(screen.getByText('TopLevelResponseBody')).toBeInTheDocument();
     expect(screen.getByText('JsonEditor:{"top":true}')).toBeInTheDocument();
+  });
+
+  test('shows an Events section only for history entries with streaming true', () => {
+    const history = [
+      entry({ turn: 1 }, { out: 'a' }, { streaming: true, events: [{ event: 'delta', data: { t: 'a' } }] }),
+      entry({ turn: 2 }, { out: 'b' }),
+    ];
+
+    render(
+      <TryOutResponsePreview
+        response={{ statusCode: 200 }}
+        resolvedRequest={{ body: { top: true } }}
+        history={history}
+        responseBody={responseBody}
+        testSuite={multiTurnSuite}
+        schema={schema}
+        multiTurnData={[{ prompt: 'a' }, { prompt: 'b' }]}
+      />,
+    );
+
+    expect(screen.getAllByText(TabsI18nKey.Events)).toHaveLength(1);
+    expect(screen.getByText('JsonEditor:[{"event":"delta","data":{"t":"a"}}]')).toBeInTheDocument();
+  });
+
+  test('renders a truncated string body on a history entry without crashing', () => {
+    const truncated = '{"choices":[{"message":';
+    const history = [entry({ turn: 1 }, truncated, { streaming: true, events: [] }), entry({ turn: 2 }, { out: 'b' })];
+
+    render(
+      <TryOutResponsePreview
+        response={{ statusCode: 200 }}
+        resolvedRequest={{ body: { top: true } }}
+        history={history}
+        responseBody={responseBody}
+        testSuite={multiTurnSuite}
+        schema={schema}
+        multiTurnData={[{ prompt: 'a' }, { prompt: 'b' }]}
+      />,
+    );
+
+    expect(screen.getByText(`JsonEditor:${truncated}`)).toBeInTheDocument();
+    expect(screen.getByText(TabsI18nKey.Events)).toBeInTheDocument();
   });
 });

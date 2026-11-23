@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -10,14 +11,10 @@ import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/t
 import ContainerNodePool from '@/src/components/Deployments/Fields/ContainerNodePool';
 
 const getNodePoolsMock = vi.fn();
-const showNotificationMock = vi.fn();
+const { showNotification: showNotificationMock } = notificationMock;
 
 vi.mock('@/src/app/actions/deployments', () => ({
   getNodePools: () => getNodePoolsMock(),
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
 }));
 
 const gpuPool: NodePool = {

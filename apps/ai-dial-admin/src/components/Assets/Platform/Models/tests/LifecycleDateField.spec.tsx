@@ -1,14 +1,10 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import LifecycleDateField from '../LifecycleDateField';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
 
 const LABEL = 'Deprecation date';
 
@@ -70,7 +66,7 @@ describe('LifecycleDateField', () => {
   });
 
   test('Should disable the field and the clear button for a read-only admin', () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValueOnce(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderField('2027-06-30');
 
     expect(clearButton()).toBeDisabled();

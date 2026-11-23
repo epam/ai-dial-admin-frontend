@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ColDef, GridReadyEvent } from 'ag-grid-community';
@@ -5,12 +6,9 @@ import { ComponentProps } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ResourceDependenciesI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { ResourceAccess, ResourceDependency } from '@/src/models/dial/resource-dependency';
 import DependenciesGrid from '../DependenciesGrid';
 import { MAX_DECLARED_DEPENDENCIES } from '../constants';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn(() => false) }));
 
 const { updateGridOptions } = vi.hoisted(() => ({ updateGridOptions: vi.fn() }));
 
@@ -48,7 +46,7 @@ describe('DependenciesGrid', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 
   const renderGrid = (props?: Partial<ComponentProps<typeof DependenciesGrid>>) =>
@@ -143,7 +141,7 @@ describe('DependenciesGrid', () => {
   });
 
   test('a read-only admin gets no Add button and no action columns', () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
 
     renderGrid();
 

@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { fireEvent, render, screen, waitForElementToBeRemoved } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -10,10 +11,7 @@ import { AnalyticsTable, AnalyticsTableType, TableGrantKey } from '@/src/models/
 
 vi.mock('@/src/app/[lang]/tables/actions');
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification }),
-}));
+const { showNotification } = notificationMock;
 
 const table: AnalyticsTable = {
   name: 'widget_metrics',

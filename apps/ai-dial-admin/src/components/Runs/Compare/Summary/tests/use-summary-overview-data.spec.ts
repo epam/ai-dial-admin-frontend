@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -9,7 +10,7 @@ const executeStructuredQueryMock = vi.fn();
 const getMetricSnapshotsMock = vi.fn();
 const getTestSuiteMock = vi.fn();
 const getMetricLatestVersionMock = vi.fn();
-const showNotificationMock = vi.fn();
+const { showNotification: showNotificationMock } = notificationMock;
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   getRun: (...args: unknown[]) => getRunMock(...args),
@@ -21,10 +22,6 @@ vi.mock('@/src/app/[lang]/runs/actions', () => ({
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getTestSuite: (...args: unknown[]) => getTestSuiteMock(...args),
   getMetricLatestVersion: (...args: unknown[]) => getMetricLatestVersionMock(...args),
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
 }));
 
 const ZERO_MATCHED_RUN = {

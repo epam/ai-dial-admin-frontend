@@ -1,16 +1,12 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import { DialTranslatorResource } from '@/src/models/dial/resource';
 import TranslatorAssetProperties from '../Properties';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
@@ -66,9 +62,9 @@ describe('Translator asset Properties', () => {
   });
 
   test('shows a read-only plugin reference without editable source choices', () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderProperties({ baseUrl: 'dial-plugin://example/v2' });
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
 
     expect(screen.getByRole('textbox', { name: /EntityFields.baseUrl/ })).toHaveValue('dial-plugin://example/v2');
     expect(screen.getByRole('textbox', { name: /EntityFields.baseUrl/ })).toBeDisabled();

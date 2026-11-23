@@ -15,7 +15,7 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { PolicySubjectFunction } from '@/src/models/dial/policy';
 import { ApplicationRoute } from '@/src/types/routes';
 
-vi.mock('@/src/context/SaveValidationContext', async () => vi.importActual('@/src/context/SaveValidationContext'));
+vi.unmock('@/src/context/SaveValidationContext');
 
 const nameInput = () => screen.getByRole('textbox', { name: /entityfields.id/i });
 const costObjectInput = () => screen.getByRole('textbox', { name: new RegExp(PoliciesI18nKey.CostObject) });

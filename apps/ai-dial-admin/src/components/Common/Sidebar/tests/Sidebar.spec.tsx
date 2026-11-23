@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { AppContextType, useAppContext } from '@/src/context/AppContext';
@@ -5,11 +6,11 @@ import { AppContextType, useAppContext } from '@/src/context/AppContext';
 import Sidebar from '@/src/components/Common/Sidebar/Sidebar';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => {
+beforeEach(() => {
+  appContextMock.use(() => {
     return { sidebar: { show: true, content: <div>content</div>, position: SidebarPosition.Right } };
-  }),
-}));
+  });
+});
 
 describe('Sidebar', () => {
   test('should render Sidebar component', () => {

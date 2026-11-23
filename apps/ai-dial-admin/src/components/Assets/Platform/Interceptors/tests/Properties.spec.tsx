@@ -5,10 +5,6 @@ import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { DialInterceptorResource } from '@/src/models/dial/resource';
 import InterceptorAssetProperties from '../Properties';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 const baseAsset = {
   name: 'redactor',
   path: 'redactor',

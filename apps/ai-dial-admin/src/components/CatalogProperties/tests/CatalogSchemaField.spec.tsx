@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ComponentProps } from 'react';
@@ -6,12 +7,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { BasicI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { CatalogEntityType, CatalogSchemaOption } from '@/src/models/dial/catalog-schema';
 import CatalogSchemaField from '../CatalogSchemaField';
-
-const isReadOnlyAdmin = vi.fn(() => false);
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => isReadOnlyAdmin(),
-}));
 
 interface ModalProps {
   selectedId?: string;
@@ -51,7 +46,7 @@ describe('CatalogSchemaField', () => {
 
   beforeEach(() => {
     capturedModalProps = undefined;
-    isReadOnlyAdmin.mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     vi.clearAllMocks();
   });
 
@@ -187,7 +182,7 @@ describe('CatalogSchemaField', () => {
   });
 
   test('a read-only admin cannot change the selection', () => {
-    isReadOnlyAdmin.mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderField({ schemaId: apiWritten.$id });
 
     expect(screen.getByRole('button', { name: 'Buttons.Browse' }).getAttribute('disabled')).not.toBeNull();
@@ -213,7 +208,7 @@ describe('CatalogSchemaField — filtered to an entity kind', () => {
 
   beforeEach(() => {
     capturedModalProps = undefined;
-    isReadOnlyAdmin.mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     vi.clearAllMocks();
   });
 

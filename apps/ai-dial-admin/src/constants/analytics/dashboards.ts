@@ -63,6 +63,7 @@ export const WIDGET_VIEW_BY_CHART_TYPE: Record<ChartType, WidgetView> = {
   [ChartType.Line]: WidgetView.LineChart,
   [ChartType.Pie]: WidgetView.Share,
   [ChartType.Scatter]: WidgetView.ScatterChart,
+  [ChartType.Scorecard]: WidgetView.SingleValue,
 };
 
 export const DEFAULT_CURRENCY = 'USD';

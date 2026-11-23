@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getTable } from '@/src/app/[lang]/tables/actions';
@@ -8,11 +9,6 @@ import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/an
 
 vi.mock('@/src/app/[lang]/tables/actions');
 vi.mock('@/src/server/logger', () => ({ errorObjLog: vi.fn(), errorLog: vi.fn() }));
-
-const notFound = vi.fn(() => {
-  throw new Error('NEXT_NOT_FOUND');
-});
-vi.mock('next/navigation', () => ({ notFound: () => notFound() }));
 
 const table: AnalyticsTable = {
   name: 'conversation_ratings',
@@ -33,8 +29,8 @@ const renderView = async (id?: string): Promise<RenderedElement> =>
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(getTable).mockResolvedValue({ success: true, response: table });
-  delete process.env.ANALYTICS_PUBLIC_URL;
-  delete process.env.ANALYTICS_FLIGHT_SQL_PUBLIC_URL;
+  vi.stubEnv('ANALYTICS_PUBLIC_URL', undefined);
+  vi.stubEnv('ANALYTICS_FLIGHT_SQL_PUBLIC_URL', undefined);
 });
 
 describe('table detail page', () => {
@@ -47,8 +43,8 @@ describe('table detail page', () => {
   });
 
   test('hands the view the fetched table, decoded name, and configured base URLs', async () => {
-    process.env.ANALYTICS_PUBLIC_URL = 'https://analytics.example.com';
-    process.env.ANALYTICS_FLIGHT_SQL_PUBLIC_URL = 'grpc://flight.example.com';
+    vi.stubEnv('ANALYTICS_PUBLIC_URL', 'https://analytics.example.com');
+    vi.stubEnv('ANALYTICS_FLIGHT_SQL_PUBLIC_URL', 'grpc://flight.example.com');
 
     const view = await renderView('conversation_ratings');
 

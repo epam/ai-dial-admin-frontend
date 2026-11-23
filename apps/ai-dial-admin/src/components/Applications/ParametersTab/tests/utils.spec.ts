@@ -15,7 +15,8 @@ import {
   convertAppPropertiesToArray,
   validateAppProperties,
   inferTypeFromValue,
-} from '../utils';
+  getAppPropertiesColumns,
+} from '@/src/components/Applications/ParametersTab/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { DialSchemePropertyType } from '@/src/models/dial/scheme';
 import { DialApplicationResource } from '@/src/models/dial/resource';
@@ -26,7 +27,48 @@ import {
   TypeEntity,
 } from '@/src/models/dial/application';
 import { UserSession } from '@/src/models/auth';
-import { ApplicationPropertyRow } from '../models';
+import { ApplicationPropertyRow } from '@/src/components/Applications/ParametersTab/models';
+import { ICellRendererParams } from 'ag-grid-community';
+import StringEditorCellRenderer from '@/src/components/Grid/CellRenderers/StringEditorCellRenderer';
+import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
+import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import { ParamsFields } from '@/src/types/parameters';
+
+describe('getAppPropertiesColumns', () => {
+  const onChange = vi.fn();
+  const getValueColumn = (isReadOnly = false) =>
+    getAppPropertiesColumns(vi.fn(), vi.fn(), onChange, vi.fn(), vi.fn(), (key) => key, isReadOnly).find(
+      (column) => column.field === ParamsFields.VALUE,
+    )!;
+  const selectRenderer = (row: ApplicationPropertyRow, isReadOnly = false) =>
+    getValueColumn(isReadOnly).cellRendererSelector!({ data: row } as ICellRendererParams);
+
+  test.each([false, true])('selects the string editor for named rows with isFromScheme=%s', (isFromScheme) => {
+    const row = { key: 'prompt', value: 'text', type: TypeEntity.STRING, required: true, isFromScheme };
+
+    expect(selectRenderer(row)).toMatchObject({
+      component: StringEditorCellRenderer,
+      params: { label: 'prompt', onChange, disabled: false },
+    });
+    expect(selectRenderer(row, true)).toMatchObject({ params: { disabled: true } });
+  });
+
+  test.each([
+    [TypeEntity.NUMBER, EditableCellRenderer],
+    [TypeEntity.BOOLEAN, SelectCellRenderer],
+    [TypeEntity.OBJECT, JsonEditorCellRenderer],
+  ])('retains the existing renderer for %s rows', (type, component) => {
+    expect(selectRenderer({ key: 'other', value: '', type, required: false })).toMatchObject({ component });
+  });
+
+  test('keeps a pending empty-key row read-only rather than selecting the string editor', () => {
+    expect(selectRenderer({ key: '', value: '', type: TypeEntity.STRING, required: false })).toMatchObject({
+      component: EditableCellRenderer,
+      params: { isReadonly: true },
+    });
+  });
+});
 
 describe('getFrameConfig', () => {
   test('returns config for DialApplicationScheme', () => {

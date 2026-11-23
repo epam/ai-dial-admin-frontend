@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import userEvent from '@testing-library/user-event';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
@@ -6,10 +7,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 // The global `t()` mock returns the key as-is and drops interpolation params — override it here so
 // the notification description embeds `entityId`, the only way to assert which key was passed.

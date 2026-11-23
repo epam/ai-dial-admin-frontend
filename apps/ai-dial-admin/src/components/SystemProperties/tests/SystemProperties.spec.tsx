@@ -1,3 +1,6 @@
+import { notificationMock } from '@/test-mocks/notification';
+import { navigationMock } from '@/test-mocks/navigation';
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -22,37 +25,15 @@ import {
   WeekDay,
 } from '@/src/models/system-properties';
 
-const routerRefresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: routerRefresh }) }));
-
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { refresh: routerRefresh } = navigationMock.router;
+const { showNotification } = notificationMock;
 
 vi.mock('@/src/app/[lang]/system-properties/actions');
 
-// Integration cases use the real validation hook and provider.
 const validationContext = vi.hoisted(() => ({
-  isValid: true,
   isUsingRealSchedule: false,
   isUsingRealSpendingLimits: false,
-  dispatch: vi.fn(),
-  jsonErrors: [] as unknown[],
-  jsonErrorNotifications: [] as unknown[],
-  resetCounter: 0,
-  errorFields: new Map<string, boolean>(),
 }));
-vi.mock('@/src/context/SaveValidationContext', async (importOriginal) => {
-  const original = await importOriginal<typeof import('@/src/context/SaveValidationContext')>();
-  return {
-    ...original,
-    useSaveValidationContext: () =>
-      validationContext.isUsingRealSchedule || validationContext.isUsingRealSpendingLimits
-        ? original.useSaveValidationContext()
-        : validationContext,
-  };
-});
 
 // AG Grid is heavy and not meaningful in jsdom — stand in with a button that fires the same
 // onChangeInterceptors contract the real grid's drag/add/remove handlers all funnel into.
@@ -149,7 +130,6 @@ const openSpendingLimitsTab = async (user: ReturnType<typeof userEvent.setup>) =
 describe('SystemProperties', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    validationContext.isValid = true;
     validationContext.isUsingRealSchedule = false;
     validationContext.isUsingRealSpendingLimits = false;
   });
@@ -222,7 +202,7 @@ describe('SystemProperties', () => {
       expect.objectContaining({ title: ErrorI18nKey.Error, description: ErrorI18nKey.TryAgainLater }),
     );
     expect(routerRefresh).not.toHaveBeenCalled();
-    expect(validationContext.dispatch).not.toHaveBeenCalledWith({ type: ValidationActionType.Reset });
+    expect(saveValidationMock.dispatch).not.toHaveBeenCalledWith({ type: ValidationActionType.Reset });
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
   });
 
@@ -271,12 +251,12 @@ describe('SystemProperties', () => {
     renderSystemProperties({ globalSettings: { globalInterceptors: [] } });
 
     await openRateLimitScheduleTab(user);
-    validationContext.isValid = false;
+    saveValidationMock.set({ isValid: false });
     await user.click(screen.getByText('change-schedule'));
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
 
-    validationContext.isValid = true;
+    saveValidationMock.set({ isValid: true });
     await user.click(screen.getByText('change-schedule'));
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
@@ -290,7 +270,7 @@ describe('SystemProperties', () => {
     await user.click(screen.getByText('change-interceptors'));
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
-    expect(validationContext.dispatch).toHaveBeenCalledWith({ type: ValidationActionType.Reset });
+    expect(saveValidationMock.dispatch).toHaveBeenCalledWith({ type: ValidationActionType.Reset });
   });
 
   test('discard restores the schedule from the last read', async () => {
@@ -317,6 +297,7 @@ describe('SystemProperties', () => {
   test('saves the visually selected time with other settings and the existing success notification', async () => {
     const user = userEvent.setup();
     validationContext.isUsingRealSchedule = true;
+    saveValidationMock.useRealContext();
     vi.mocked(updateProperties).mockResolvedValue({ success: true });
     renderSystemProperties({
       doesSettingsExist: true,
@@ -349,6 +330,7 @@ describe('SystemProperties', () => {
   test('restores the stored time after discarding a visual selection', async () => {
     const user = userEvent.setup();
     validationContext.isUsingRealSchedule = true;
+    saveValidationMock.useRealContext();
     renderSystemProperties({ globalSettings: { globalInterceptors: [], rateLimitSchedule: VALID_SCHEDULE } });
 
     await openRateLimitScheduleTab(user);
@@ -366,6 +348,7 @@ describe('SystemProperties', () => {
   test.each(['', '09'])('blocks Save when the focused time field contains the incomplete draft "%s"', async (draft) => {
     const user = userEvent.setup();
     validationContext.isUsingRealSchedule = true;
+    saveValidationMock.useRealContext();
     renderSystemProperties({ globalSettings: { globalInterceptors: [], rateLimitSchedule: VALID_SCHEDULE } });
 
     await user.click(screen.getByRole('button', { name: 'change-interceptors' }));
@@ -393,6 +376,7 @@ describe('SystemProperties', () => {
   ])('blocks Save for an invalid stored schedule before opening its tab: %j', async (schedule) => {
     const user = userEvent.setup();
     validationContext.isUsingRealSchedule = true;
+    saveValidationMock.useRealContext();
     renderSystemProperties({ globalSettings: { globalInterceptors: [], rateLimitSchedule: schedule } });
 
     await user.click(screen.getByRole('button', { name: 'change-interceptors' }));
@@ -403,6 +387,7 @@ describe('SystemProperties', () => {
   test('keeps an invalid schedule registered across tabs and clears it on discard', async () => {
     const user = userEvent.setup();
     validationContext.isUsingRealSchedule = true;
+    saveValidationMock.useRealContext();
     renderSystemProperties({ globalSettings: { globalInterceptors: [], rateLimitSchedule: VALID_SCHEDULE } });
 
     await openRateLimitScheduleTab(user);
@@ -422,6 +407,7 @@ describe('SystemProperties', () => {
   test('re-enables Save after correcting an invalid schedule on its tab', async () => {
     const user = userEvent.setup();
     validationContext.isUsingRealSchedule = true;
+    saveValidationMock.useRealContext();
     renderSystemProperties({
       globalSettings: { globalInterceptors: [], rateLimitSchedule: { ...VALID_SCHEDULE, resetTime: '25:00' } },
     });
@@ -439,6 +425,7 @@ describe('SystemProperties', () => {
   test('keeps an invalid schedule registered after an earlier save resets validation', async () => {
     const user = userEvent.setup();
     validationContext.isUsingRealSchedule = true;
+    saveValidationMock.useRealContext();
     let resolveSave!: (result: Awaited<ReturnType<typeof updateProperties>>) => void;
     vi.mocked(updateProperties).mockReturnValueOnce(new Promise((resolve) => (resolveSave = resolve)));
     renderSystemProperties({ globalSettings: { globalInterceptors: [], rateLimitSchedule: VALID_SCHEDULE } });
@@ -548,6 +535,7 @@ describe('SystemProperties', () => {
   ])('keeps Save disabled for cost object "%s" after switching to %s', async (value, tab) => {
     const user = userEvent.setup();
     validationContext.isUsingRealSpendingLimits = true;
+    saveValidationMock.useRealContext();
     vi.mocked(updateProperties).mockResolvedValue({ success: true });
     renderSystemProperties({ globalSettings: { globalInterceptors: [], spendingLimits: VALID_SPENDING_LIMITS } });
 
@@ -580,6 +568,7 @@ describe('SystemProperties', () => {
   test.each(['', '   '])('blocks Save for stored cost object "%s" without opening Spending Limits', async (value) => {
     const user = userEvent.setup();
     validationContext.isUsingRealSpendingLimits = true;
+    saveValidationMock.useRealContext();
     renderSystemProperties({
       globalSettings: {
         globalInterceptors: [],
@@ -598,6 +587,7 @@ describe('SystemProperties', () => {
   test('marks a hidden invalid spending tab and clears its status after correction', async () => {
     const user = userEvent.setup();
     validationContext.isUsingRealSpendingLimits = true;
+    saveValidationMock.useRealContext();
     renderSystemProperties({
       globalSettings: {
         globalInterceptors: [],
@@ -615,6 +605,7 @@ describe('SystemProperties', () => {
   test('restores Save availability after discarding an invalid cost object on another tab', async () => {
     const user = userEvent.setup();
     validationContext.isUsingRealSpendingLimits = true;
+    saveValidationMock.useRealContext();
     renderSystemProperties({ globalSettings: { globalInterceptors: [], spendingLimits: VALID_SPENDING_LIMITS } });
 
     await openSpendingLimitsTab(user);
@@ -632,6 +623,7 @@ describe('SystemProperties', () => {
   test('keeps an invalid cost object registered when an earlier save resets validation', async () => {
     const user = userEvent.setup();
     validationContext.isUsingRealSpendingLimits = true;
+    saveValidationMock.useRealContext();
     let resolveSave!: (result: Awaited<ReturnType<typeof updateProperties>>) => void;
     vi.mocked(updateProperties).mockReturnValue(new Promise((resolve) => (resolveSave = resolve)));
     renderSystemProperties({ globalSettings: { globalInterceptors: [], spendingLimits: VALID_SPENDING_LIMITS } });

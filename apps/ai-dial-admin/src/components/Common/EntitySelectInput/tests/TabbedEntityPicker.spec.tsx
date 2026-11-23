@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -24,7 +25,9 @@ const setFlat = (source: AssetSource, names: string[]) => {
 
 const appContext = vi.hoisted(() => ({ isUnitMode: false }));
 
-vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => appContext }));
+beforeEach(() => {
+  appContextMock.use(() => appContext);
+});
 vi.mock('@/src/hooks/use-flat-assets', () => ({
   useFlatAssets: (_view: string, source: string, isEnabled: boolean) =>
     isEnabled ? flat[source] : { rows: [], count: undefined, isLoading: false, hasError: false, refetch: vi.fn() },

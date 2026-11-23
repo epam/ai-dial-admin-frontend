@@ -8,8 +8,6 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { Pipeline, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
-
 /**
  * Only Monaco is stubbed, so the real EntityJsonEditor runs: its parse, its remount-on-external-change, and
  * the path from the typed document to the request all take part. The sibling spec stubs the whole editor.

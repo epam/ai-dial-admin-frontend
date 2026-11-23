@@ -1,7 +1,9 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { updateRouter } from '@/src/app/[lang]/platform-routers/actions';
+import { DeploymentInterfaceType, InterfaceMode } from '@/src/models/dial/interfaces';
 import { DialRouterResource } from '@/src/models/dial/resource';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import RouterView from '../View';
@@ -19,8 +21,6 @@ vi.mock('../TabsContent', () => ({
   },
 }));
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 let capturedHeader: any;
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
   default: (props: any) => {
@@ -31,14 +31,14 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
 
 const setEntityReadOnly = vi.fn();
 let isReadOnlyAdmin = false;
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     featureFlags: { dashboardEnabled: true, adminApiEnabled: true },
     isReadOnlyAdmin,
     visualizerConnector: undefined,
     setEntityReadOnly,
-  }),
-}));
+  }));
+});
 
 const router = { name: 'cost-aware' } as DialRouterResource;
 const tabIds = () => capturedHeader.tabs.map((tab: { id: string }) => tab.id);
@@ -147,6 +147,113 @@ describe('RouterView', () => {
 
     expect(tabIds()).not.toContain(EntityViewTab.Parameters);
     expect(capturedHeader.activeTab).toBe(EntityViewTab.Properties);
+  });
+
+  test('passes plugin options to the tab content', () => {
+    const plugins = { options: ['one'] };
+    render(<RouterView etag="etag" originalRouter={router} roles={[]} plugins={plugins} />);
+
+    expect(capturedTabs.plugins).toEqual(plugins);
+  });
+
+  test('keeps a plugin override conflict disabled across tabs and clears it on discard', () => {
+    const originalRouter = {
+      ...router,
+      baseUrl: 'https://example.com',
+      interfaces: {
+        [DeploymentInterfaceType.OpenAIChatCompletions]: {
+          base_url: '',
+          overridePaths: { postAzureOpenaiChatCompletions: '/v1/chat/completions' },
+        },
+      },
+    };
+    render(<RouterView etag="etag" originalRouter={originalRouter} roles={[]} />);
+    expect(capturedHeader.isSaveDisabled).toBe(false);
+
+    act(() => capturedTabs.onChange({ ...originalRouter, baseUrl: 'dial-plugin://one' }));
+    expect(capturedHeader.isSaveDisabled).toBe(true);
+    act(() => capturedHeader.onSave());
+    expect(updateRouter).not.toHaveBeenCalled();
+    act(() => capturedHeader.onChangeActiveTab(EntityViewTab.Features));
+    expect(capturedHeader.isSaveDisabled).toBe(true);
+    act(() => capturedHeader.onDiscard());
+    expect(capturedHeader.isSaveDisabled).toBe(false);
+  });
+
+  test.each([
+    { baseUrl: 'https://example.com', interfaceUrl: 'dial-plugin://one', isDisabled: true },
+    { baseUrl: 'dial-plugin://one', interfaceUrl: 'https://example.com', isDisabled: false },
+    { baseUrl: 'dial-plugin://one', interfaceUrl: '', mode: InterfaceMode.Translator, isDisabled: false },
+    { baseUrl: 'dial-plugin://one', interfaceUrl: '', isDisabled: true },
+  ])(
+    'validates the effective interface URL for $baseUrl and $interfaceUrl',
+    ({ baseUrl, interfaceUrl, mode, isDisabled }) => {
+      const originalRouter = {
+        ...router,
+        baseUrl,
+        interfaces: {
+          [DeploymentInterfaceType.OpenAIChatCompletions]: {
+            base_url: interfaceUrl,
+            mode,
+            overridePaths: { postAzureOpenaiChatCompletions: '/v1/chat/completions' },
+          },
+        },
+      };
+      render(<RouterView etag="etag" originalRouter={originalRouter} roles={[]} />);
+      expect(capturedHeader.isSaveDisabled).toBe(isDisabled);
+    },
+  );
+
+  test('blocks malformed custom translator URLs across tabs and restores validity on discard', () => {
+    const type = DeploymentInterfaceType.OpenAIChatCompletions;
+    const originalRouter = {
+      ...router,
+      interfaces: {
+        [type]: {
+          base_url: '',
+          mode: InterfaceMode.Translator,
+          translator: { baseUrl: 'https://example.com', out: type },
+        },
+      },
+    };
+    render(<RouterView etag="etag" originalRouter={originalRouter} roles={[]} />);
+    expect(capturedHeader.isSaveDisabled).toBe(false);
+
+    act(() =>
+      capturedTabs.onChange({
+        ...originalRouter,
+        interfaces: {
+          [type]: { ...originalRouter.interfaces[type], translator: { baseUrl: 'dial-plugin://', out: type } },
+        },
+      }),
+    );
+    expect(capturedHeader.isSaveDisabled).toBe(true);
+    act(() => capturedHeader.onChangeActiveTab(EntityViewTab.Features));
+    expect(capturedHeader.isSaveDisabled).toBe(true);
+    act(() => capturedHeader.onSave());
+    expect(updateRouter).not.toHaveBeenCalled();
+    act(() => capturedHeader.onDiscard());
+    expect(capturedHeader.isSaveDisabled).toBe(false);
+  });
+
+  test('combines iframe validity with the plugin conflict', () => {
+    const originalRouter = {
+      ...editorRouter,
+      baseUrl: 'dial-plugin://one',
+      interfaces: {
+        [DeploymentInterfaceType.OpenAIChatCompletions]: {
+          base_url: '',
+          overridePaths: { postAzureOpenaiChatCompletions: '/v1/chat/completions' },
+        },
+      },
+    };
+    render(<RouterView etag="etag" originalRouter={originalRouter} roles={[]} />);
+    act(() => capturedTabs.frameCallbacks.onValidityChange(false));
+    expect(capturedHeader.isSaveDisabled).toBe(true);
+    act(() => capturedTabs.onChange({ ...originalRouter, baseUrl: 'https://example.com' }));
+    expect(capturedHeader.isSaveDisabled).toBe(true);
+    act(() => capturedTabs.frameCallbacks.onValidityChange(true));
+    expect(capturedHeader.isSaveDisabled).toBe(false);
   });
 
   test('routes the header save to the iframe while it reports unsaved changes', () => {

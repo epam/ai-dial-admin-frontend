@@ -1,6 +1,97 @@
 import { describe, test, expect } from 'vitest';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { ApplicationRoute } from '@/src/types/routes';
 import { ToolFilter } from './type';
-import { getAllTools, getFilteredTools } from './utils';
+import { getAllTools, getFilteredTools, getToolsContext } from './utils';
+
+describe('getToolsContext', () => {
+  test('defaults to an editable non-asset context with an empty name', () => {
+    expect(getToolsContext({})).toEqual({
+      isApplicationTools: false,
+      isAssetToolset: false,
+      isAssetApplication: false,
+      isManagementVisible: true,
+      toolSetName: '',
+    });
+  });
+
+  test('uses the selected name for a direct application', () => {
+    expect(
+      getToolsContext({
+        view: ApplicationRoute.Applications,
+        originalEntity: { name: 'saved' },
+        selectedEntity: { name: 'edited' },
+      }),
+    ).toEqual({
+      isApplicationTools: true,
+      isAssetToolset: false,
+      isAssetApplication: false,
+      isManagementVisible: true,
+      toolSetName: 'edited',
+    });
+  });
+
+  test('uses the saved path for a runner-backed asset application', () => {
+    const saved: AssetToolset = {
+      name: 'saved',
+      path: 'public/saved',
+      version: '1',
+      _metadata: { name: 'saved', path: 'public/saved', folderId: 'public' },
+    };
+    const selected: AssetToolset = {
+      name: 'edited',
+      path: 'public/edited',
+      version: '1',
+      _metadata: { name: 'edited', path: 'public/edited', folderId: 'public' },
+    };
+    expect(
+      getToolsContext({
+        view: ApplicationRoute.AssetsApplications,
+        isAsset: true,
+        isRunnerApplication: true,
+        originalEntity: saved,
+        selectedEntity: selected,
+      }),
+    ).toEqual({
+      isApplicationTools: true,
+      isAssetToolset: false,
+      isAssetApplication: true,
+      isManagementVisible: false,
+      toolSetName: 'public/saved',
+    });
+  });
+
+  test('uses the saved name for a runner without asset metadata', () => {
+    const context = getToolsContext({ isAsset: true, isRunnerApplication: true, originalEntity: { name: 'saved' } });
+    expect(context.toolSetName).toBe('saved');
+    expect(context.isAssetApplication).toBe(false);
+  });
+
+  test('uses the selected path for an asset toolset', () => {
+    const selected: AssetToolset = {
+      name: 'selected',
+      path: 'public/selected',
+      version: '1',
+      _metadata: { name: 'selected', path: 'public/selected', folderId: 'public' },
+    };
+    const context = getToolsContext({
+      view: ApplicationRoute.Toolsets,
+      isAsset: true,
+      selectedEntity: selected,
+    });
+    expect(context.isAssetToolset).toBe(true);
+    expect(context.toolSetName).toBe('public/selected');
+  });
+
+  test.each([
+    { disabled: true },
+    { isMcpToolset: true },
+    { isRunnerApplication: true },
+    { appRunner: { name: 'runner' } },
+  ])('hides management for restricted context %o', (options) => {
+    expect(getToolsContext(options).isManagementVisible).toBe(false);
+  });
+});
 
 describe('getFilteredTools', () => {
   const tools = ['toolA', 'toolB', 'toolC'];
