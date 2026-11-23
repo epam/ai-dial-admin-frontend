@@ -135,7 +135,7 @@ describe('ResourceAuthentication — external service OAuth props', () => {
   const oauth = { authentication_type: ToolsetAuthType.OAUTH, client_id: 'id' };
 
   beforeEach(() => {
-    isReadOnlyAdmin = false;
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 
   test('shows no Discovery URL for a toolset caller that passes neither prop', () => {

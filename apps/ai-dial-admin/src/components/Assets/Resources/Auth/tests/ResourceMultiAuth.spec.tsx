@@ -284,7 +284,7 @@ describe('ResourceMultiAuth — automatic registration', () => {
     }) as unknown as DialApplicationResource;
 
   beforeEach(() => {
-    isReadOnlyAdmin = false;
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 
   const startNewOAuthService = async (onChange = vi.fn()) => {
