@@ -282,3 +282,6 @@ export const splitFolderId = (folderId: string) => {
 export const getCurrentPolicy = (entity: Image | Container) => {
   return entity.allowedDomains?.includes(ALLOW_ALL_DOMAINS) ? WHITELIST_POLICY.ALL : WHITELIST_POLICY.CUSTOM;
 };
+
+export const normalizeAllowedDomains = (allowedDomains?: string[] | null): string[] =>
+  (allowedDomains ?? []).filter(Boolean);

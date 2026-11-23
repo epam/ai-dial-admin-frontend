@@ -205,6 +205,12 @@
       @apply bg-transparent;
     }
   }
+  .ag-warning-row {
+    @apply bg-warning;
+    &.ag-row-hover:not(.ag-full-width-row):before {
+      @apply bg-transparent;
+    }
+  }
   .ag-new-row {
     @apply bg-success;
     &.ag-new-border {
@@ -260,6 +266,9 @@
     &.ag-row-hover:not(.ag-full-width-row):before {
       @apply bg-transparent;
     }
+  }
+  .ag-test-case-group-row {
+    @apply bg-layer-2;
   }
   .ag-activity-row-clickable {
     cursor: pointer;

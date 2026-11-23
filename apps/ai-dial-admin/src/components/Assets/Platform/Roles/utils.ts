@@ -1,8 +1,11 @@
 import { ColDef, Column, GridApi, IRowNode } from 'ag-grid-community';
 
 import { SharingGridData } from '@/src/components/Roles/models';
+import { APPLICATIONS_PREFIX } from '@/src/constants/publications-core';
 import { DialRoleResource } from '@/src/models/dial/resource';
 import { DialCoreRoleLimits, DialCoreRoleShare, DialRoleShare } from '@/src/models/dial/role-limits';
+import { PickedEntity } from '@/src/components/Common/EntitySelectInput/models';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { platformSharingDefaults } from './constants';
 import { PlatformRoleModelLimitRow, PlatformRoleModelOption, PlatformSharingType } from './models';
 
@@ -147,7 +150,7 @@ export const clearModelLimits = (
 
 export const addModelLimits = (
   limits: Record<string, DialCoreRoleLimits> | undefined,
-  models: PlatformRoleModelOption[],
+  models: Pick<PlatformRoleModelOption, 'name'>[],
 ): Record<string, DialCoreRoleLimits> =>
   models.reduce<Record<string, DialCoreRoleLimits>>(
     (updatedLimits, model) => ({
@@ -155,6 +158,23 @@ export const addModelLimits = (
       [model.name]: updatedLimits[model.name] ?? {},
     }),
     { ...limits },
+  );
+
+/**
+ * The `limits` key of a picked application. Core keys a public application by its resource reference, while a
+ * platform or config-file application is keyed by its name alone.
+ */
+export const getApplicationLimitKey = ({ source, path, name }: PickedEntity): string =>
+  source === AssetSource.Public ? `${APPLICATIONS_PREFIX}${path}` : name;
+
+/** Attaches the picked applications; a key already in `limits` keeps its entry, so re-picking it is a no-op. */
+export const addApplicationLimits = (
+  limits: Record<string, DialCoreRoleLimits> | undefined,
+  entities: PickedEntity[],
+): Record<string, DialCoreRoleLimits> =>
+  addModelLimits(
+    limits,
+    entities.map((entity) => ({ name: getApplicationLimitKey(entity) })),
   );
 
 export const removeModelLimit = (

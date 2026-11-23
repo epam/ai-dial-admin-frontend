@@ -2,9 +2,11 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import SessionsProvenanceLine from '@/src/components/Analytics/SessionsTrace/Header/SessionsProvenanceLine';
-import { SESSIONS_ENTITY, FEEDBACK_ENTITY } from '@/src/constants/analytics/sessions-trace';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
+
+const BASE_TABLE = 'sessions';
+const RATINGS = 'session_ratings';
 
 const field = (name: string): AnalyticsEntityField => ({
   name,
@@ -16,91 +18,89 @@ const SCHEMA: AnalyticsEntityField[] = [
   field('chat_id'),
   field('session_insights.title'),
   field('session_insights.summary'),
+  field(`${RATINGS}.rate_pos_count`),
+  field(`${RATINGS}.rate_zero_count`),
+  field(`${RATINGS}.rate_neg_count`),
   field('conversation_buckets.turn_bucket'),
 ];
 
+const renderLine = (schemaFields: AnalyticsEntityField[] | null = SCHEMA, baseTable = BASE_TABLE) =>
+  render(<SessionsProvenanceLine baseTable={baseTable} schemaFields={schemaFields} />);
+
+const entityNames = (container: HTMLElement) =>
+  Array.from(container.querySelectorAll('span.font-mono')).map((node) => node.textContent);
+
 describe('SessionsProvenanceLine', () => {
   test('introduces the list from i18n', () => {
-    render(<SessionsProvenanceLine schemaFields={SCHEMA} />);
+    renderLine();
 
     expect(screen.getByText(SessionsTraceI18nKey.ComposedOver)).toBeInTheDocument();
   });
 
-  test('names the real catalog entities rather than generic labels', () => {
-    render(<SessionsProvenanceLine schemaFields={SCHEMA} />);
+  test('names the configured base table', () => {
+    const { container } = renderLine([field('run_key')], 'agent_runs');
 
-    expect(screen.getByText(SESSIONS_ENTITY)).toBeInTheDocument();
-    expect(screen.getByText(FEEDBACK_ENTITY)).toBeInTheDocument();
+    expect(entityNames(container)).toEqual(['agent_runs']);
   });
 
   test('names every enrichment namespace the fetched schema reports', () => {
-    render(<SessionsProvenanceLine schemaFields={SCHEMA} />);
+    renderLine();
 
     expect(screen.getByText('session_insights')).toBeInTheDocument();
+    expect(screen.getByText(RATINGS)).toBeInTheDocument();
     expect(screen.getByText('conversation_buckets')).toBeInTheDocument();
   });
 
   test('names an enrichment once however many of its fields the schema reports', () => {
-    render(<SessionsProvenanceLine schemaFields={SCHEMA} />);
+    renderLine();
 
     expect(screen.getAllByText('session_insights')).toHaveLength(1);
   });
 
-  test('lists the base entity first, then the enrichments in first-appearance order', () => {
-    const { container } = render(<SessionsProvenanceLine schemaFields={SCHEMA} />);
-    const names = Array.from(container.querySelectorAll('span.font-mono')).map((node) => node.textContent);
+  test('lists the base table first, then the enrichments in first-appearance order', () => {
+    const { container } = renderLine();
 
-    expect(names).toEqual([SESSIONS_ENTITY, 'session_insights', 'conversation_buckets', FEEDBACK_ENTITY]);
+    expect(entityNames(container)).toEqual([BASE_TABLE, 'session_insights', RATINGS, 'conversation_buckets']);
   });
 
   test('colours each entity by its provenance, matching the grid band', () => {
-    render(<SessionsProvenanceLine schemaFields={SCHEMA} />);
+    renderLine();
 
-    expect(screen.getByText(SESSIONS_ENTITY)).toHaveClass('text-accent-primary');
+    expect(screen.getByText(BASE_TABLE)).toHaveClass('text-accent-primary');
     expect(screen.getByText('session_insights')).toHaveClass('text-accent-secondary');
-    expect(screen.getByText(FEEDBACK_ENTITY)).toHaveClass('text-warning');
+    expect(screen.getByText(RATINGS)).toHaveClass('text-warning');
+    expect(screen.getByText('conversation_buckets')).toHaveClass('text-accent-tertiary');
   });
 
-  // The unattributed colour is what its columns get in the grid band, so the two cannot disagree.
-  test('names an enrichment it cannot label, under the unattributed colour', () => {
-    render(<SessionsProvenanceLine schemaFields={[field('some_future_enrichment.value')]} />);
+  test('colours enrichments by position rather than by name', () => {
+    renderLine([field('some_future_enrichment.value'), field('session_insights.title')]);
 
-    expect(screen.getByText('some_future_enrichment')).toHaveClass('text-secondary');
+    expect(screen.getByText('some_future_enrichment')).toHaveClass('text-accent-secondary');
+    expect(screen.getByText('session_insights')).toHaveClass('text-accent-tertiary');
   });
 
-  // The case design D4 anticipates: ratings arrive as an enrichment, the schema reports the namespace and
-  // QUERIED_SOURCE_ENTITIES still names the table. Listed twice it would also duplicate a React key, which
-  // the globally silenced console.error would hide.
-  test('names an entity once when the schema and the queried list both report it', () => {
-    const { container } = render(
-      <SessionsProvenanceLine schemaFields={[field(`${FEEDBACK_ENTITY}.rate_pos_count`)]} />,
-    );
-    const names = Array.from(container.querySelectorAll('span.font-mono')).map((node) => node.textContent);
+  test('names an enrichment past the palette under the unattributed colour', () => {
+    renderLine(['a', 'b', 'c', 'd'].map((namespace) => field(`${namespace}.value`)));
 
-    expect(names.filter((name) => name === FEEDBACK_ENTITY)).toHaveLength(1);
-    expect(names).toEqual([SESSIONS_ENTITY, FEEDBACK_ENTITY]);
+    expect(screen.getByText('d')).toHaveClass('text-secondary');
   });
 
-  test('names the base entity alone when the schema reports no enrichment', () => {
-    const { container } = render(<SessionsProvenanceLine schemaFields={[field('chat_id')]} />);
-    const names = Array.from(container.querySelectorAll('span.font-mono')).map((node) => node.textContent);
+  test('names the base table alone when the schema reports no enrichment', () => {
+    const { container } = renderLine([field('chat_id')]);
 
-    expect(names).toEqual([SESSIONS_ENTITY, FEEDBACK_ENTITY]);
+    expect(entityNames(container)).toEqual([BASE_TABLE]);
   });
 
-  test('falls back to the queried entities when no schema was fetched', () => {
-    const { container } = render(<SessionsProvenanceLine schemaFields={null} />);
-    const names = Array.from(container.querySelectorAll('span.font-mono')).map((node) => node.textContent);
+  test('names the base table alone when no schema was fetched', () => {
+    const { container } = renderLine(null);
 
-    expect(names).toEqual([SESSIONS_ENTITY, FEEDBACK_ENTITY]);
+    expect(entityNames(container)).toEqual([BASE_TABLE]);
   });
 
-  // A source the page does not query must not be named at all, and nothing here is pending.
   test('names only real entities, none of them marked pending', () => {
-    render(<SessionsProvenanceLine schemaFields={SCHEMA} />);
+    renderLine();
 
     expect(screen.queryByText('conversation_summary')).not.toBeInTheDocument();
-    expect(screen.getByText(SESSIONS_ENTITY)).not.toHaveAttribute('title');
-    expect(screen.getByText(FEEDBACK_ENTITY)).not.toHaveAttribute('title');
+    expect(screen.getByText(BASE_TABLE)).not.toHaveAttribute('title');
   });
 });

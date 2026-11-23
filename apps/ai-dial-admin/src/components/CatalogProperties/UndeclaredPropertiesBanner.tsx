@@ -2,12 +2,11 @@
 
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex -- the scrollable message must be keyboard accessible. */
 
-import { OutlinedButton, Notification, NotificationType, ElementSize, NotificationVariant } from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
+import { Notification, NotificationType, ElementSize, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 
@@ -48,11 +47,10 @@ const UndeclaredPropertiesBanner: FC<Props> = ({ className, names, isForbidden, 
       }
     >
       {isForbidden && !isReadOnlyAdmin && (
-        <OutlinedButton
+        <RemoveButton
           className="shrink-0"
           size={ElementSize.Small}
           label={t(EntitiesI18nKey.RemoveUndeclaredCatalogProperties)}
-          iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
           onClick={onRemove}
         />
       )}

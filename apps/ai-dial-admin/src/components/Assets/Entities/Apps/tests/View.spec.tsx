@@ -1,4 +1,6 @@
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
+import { useNotification } from '@/src/context/NotificationContext';
+import { getErrorNotification } from '@/src/utils/notification';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -7,7 +9,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 import { updateApp, moveApps } from '@/src/app/[lang]/assets-applications/actions';
-import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, GrafanaLinksI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { GrafanaTraceLinks } from '@/src/utils/grafana/models';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import AppView from '@/src/components/Assets/Entities/Apps/View';
 
@@ -15,6 +18,7 @@ import AppView from '@/src/components/Assets/Entities/Apps/View';
 
 vi.mock('@/src/context/assets/AppsFolderContext', () => ({
   useAppsFolder: vi.fn(),
+  AppsFolderProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
@@ -30,6 +34,10 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   getPlatformApplication: vi.fn(),
   createPlatformApplication: vi.fn(),
   bulkDeletePlatformApplications: vi.fn(),
+  signInExternalService: vi.fn(),
+  signOutExternalService: vi.fn(),
+  grantExternalServiceConsent: vi.fn(),
+  withdrawExternalServiceConsent: vi.fn(),
 }));
 
 vi.mock('@/src/app/[lang]/assets-toolsets/actions', () => ({
@@ -77,7 +85,12 @@ describe('AppView', () => {
     });
   });
 
-  const renderView = () =>
+  const grafanaLinks: GrafanaTraceLinks = {
+    allTracesUrl: 'https://grafana.example.com/explore?all',
+    errorTracesUrl: 'https://grafana.example.com/explore?errors',
+  };
+
+  const renderView = (links?: GrafanaTraceLinks | null) =>
     render(
       <AppView
         etag={mockEtag}
@@ -86,6 +99,7 @@ describe('AppView', () => {
         applications={mockApplications}
         schemes={mockSchemes}
         interceptors={mockInterceptors}
+        grafanaLinks={links}
       />,
     );
 
@@ -100,6 +114,70 @@ describe('AppView', () => {
     renderView();
     expect(screen.getByText('stable')).toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: /version/i })).toBeNull();
+  });
+
+  test('shows the client Core registered once the page is refreshed after a save', async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderView();
+    const refreshedApp = {
+      ...mockOriginalApp,
+      external_services: {
+        crm: {
+          auth_settings: { authentication_type: 'OAUTH', dynamically_registered: true, client_id: 'registered-id' },
+        },
+      },
+    } as unknown as AssetApp;
+
+    rerender(
+      <AppView
+        etag="etag-456"
+        originalApp={refreshedApp}
+        models={mockModels}
+        applications={mockApplications}
+        schemes={mockSchemes}
+        interceptors={mockInterceptors}
+      />,
+    );
+    await user.click(screen.getByRole('switch', { name: EntitiesI18nKey.JSONEditor }));
+
+    expect(((await screen.findByRole('textbox', { name: 'JSON editor' })) as HTMLTextAreaElement).value).toContain(
+      'registered-id',
+    );
+  });
+
+  test("shows Core's message and stays on the page when registering an external service fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateApp).mockResolvedValue({
+      success: false,
+      errorHeader: 'Request error',
+      errorMessage: "External service 'crm': Cannot connect to https://mcp.example.com/mcp",
+    });
+    renderView();
+    await user.click(screen.getByRole('switch', { name: EntitiesI18nKey.JSONEditor }));
+    fireEvent.change(await screen.findByRole('textbox', { name: 'JSON editor' }), {
+      target: {
+        value: JSON.stringify({
+          ...mockOriginalApp,
+          external_services: {
+            crm: { auth_settings: { authentication_type: 'OAUTH', discovery_url: 'https://mcp.example.com/mcp' } },
+          },
+        }),
+      },
+    });
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    await vi.waitFor(() =>
+      expect(useNotification().showNotification).toHaveBeenCalledWith(
+        getErrorNotification(
+          'Request error',
+          "External service 'crm': Cannot connect to https://mcp.example.com/mcp",
+          undefined,
+        ),
+      ),
+    );
+    expect(push).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   test('freezes JSON identity while preserving independent display version on save', async () => {
@@ -145,5 +223,31 @@ describe('AppView', () => {
     await vi.waitFor(() =>
       expect(moveApps).toHaveBeenCalledExactlyOnceWith(['public/team/assistant__stable'], 'public/new'),
     );
+  });
+
+  test('shows one Grafana traces control beside Delete when links are provided', () => {
+    renderView(grafanaLinks);
+
+    const trigger = screen.getByRole('button', { name: GrafanaLinksI18nKey.Traces });
+    const deleteButtons = screen.getAllByRole('button', { name: ButtonsI18nKey.Delete });
+
+    expect(deleteButtons.some((button) => button.parentElement?.contains(trigger))).toBe(true);
+    expect(screen.queryByRole('link')).toBeNull();
+  });
+
+  test('shows no Grafana trace links when none are provided', () => {
+    renderView(null);
+
+    expect(screen.queryByRole('button', { name: GrafanaLinksI18nKey.Traces })).toBeNull();
+  });
+
+  test('hides the Grafana trace links while the JSON editor is open', async () => {
+    const user = userEvent.setup();
+    renderView(grafanaLinks);
+
+    await user.click(screen.getByRole('switch', { name: EntitiesI18nKey.JSONEditor }));
+
+    expect(await screen.findByRole('textbox', { name: 'JSON editor' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: GrafanaLinksI18nKey.Traces })).toBeNull();
   });
 });

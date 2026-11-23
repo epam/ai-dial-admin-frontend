@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { PipelineTransform, TransformType } from '@/src/models/analytics/pipeline';
+import { PipelineTransform, TransformPreset, TransformType } from '@/src/models/analytics/pipeline';
 import { TransformDraft } from '@/src/models/analytics/pipeline-ui';
 import {
   buildTransformDto,
@@ -203,6 +203,65 @@ describe('Utils :: analytics :: buildTransformDto', () => {
     const broken = { ...draft, outputs: 'x' } as unknown as TransformDraft;
 
     expect(buildTransformDto(broken).outputs).toEqual({});
+  });
+});
+
+describe('Utils :: analytics :: buildTransformDto — the call preset', () => {
+  const routeDraft: TransformDraft = {
+    type: TransformType.Llm,
+    preset: TransformPreset.DialAppRoute,
+    model: 'insights-app',
+    route: 'insights',
+    outputs: [{ name: 'check_count', jsonata: 'kept_for_chat', source: 'intent_counts.check' }],
+  };
+
+  test('sends the route and each output source under the application-route preset', () => {
+    expect(buildTransformDto(routeDraft)).toEqual({
+      type: TransformType.Llm,
+      preset: TransformPreset.DialAppRoute,
+      model: 'insights-app',
+      route: 'insights',
+      outputs: { check_count: { source: 'intent_counts.check' } },
+    });
+  });
+
+  test('sends neither the route nor a source once the preset is chat completion', () => {
+    const dto = buildTransformDto({ ...routeDraft, preset: TransformPreset.ChatCompletion });
+
+    expect(dto.route).toBeUndefined();
+    expect(dto.outputs).toEqual({ check_count: { jsonata: 'kept_for_chat' } });
+  });
+
+  test('sends no jsonata under the application-route preset', () => {
+    const dto = buildTransformDto({ ...routeDraft, outputs: [{ name: 'title', jsonata: 'heading' }] });
+
+    expect(dto.outputs).toEqual({ title: {} });
+  });
+
+  test('leaves an absent preset absent and drops a stray route with it', () => {
+    const dto = buildTransformDto({ type: TransformType.Llm, model: 'gpt-4o', route: 'insights', outputs: [] });
+
+    expect('preset' in dto).toBe(false);
+    expect('route' in dto).toBe(false);
+  });
+
+  test('drops the preset and the route from a sql transform', () => {
+    const dto = buildTransformDto({ ...routeDraft, type: TransformType.Sql, outputs: [{ name: 'n', sql: '1' }] });
+
+    expect(dto).toEqual({ type: TransformType.Sql, outputs: { n: '1' } });
+  });
+
+  test('reads a stored source and drops an identity one', () => {
+    expect(
+      toTransformOutputs({
+        type: TransformType.Llm,
+        preset: TransformPreset.DialAppRoute,
+        outputs: { check_count: { source: 'intent_counts.check' }, title: { source: 'title' } },
+      }),
+    ).toEqual([
+      expect.objectContaining({ name: 'check_count', source: 'intent_counts.check' }),
+      expect.objectContaining({ name: 'title', source: undefined }),
+    ]);
   });
 });
 

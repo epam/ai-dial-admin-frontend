@@ -1,9 +1,12 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 // Override the global AppContext mock with a mutable context for this file.
 const ctx = { isFullAdmin: false, isEnableAuth: true };
-vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => ctx }));
+beforeEach(() => {
+  appContextMock.use(() => ctx);
+});
 
 import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { AnalyticsTable, AnalyticsTableType, TablePermissions } from '@/src/models/analytics/table';
@@ -33,7 +36,7 @@ describe('useAnalyticsTablePermissions', () => {
   test('full admin on a fully-permitted table can do everything', () => {
     ctx.isFullAdmin = true;
     const { result } = renderHook(() =>
-      useAnalyticsTablePermissions(table({ permissions: perms(true, true, { sensitive: true }) })),
+      useAnalyticsTablePermissions(table({ permissions: perms(true, true, { sensitive: true, grant: true }) })),
     );
     expect(result.current).toEqual({
       canCreate: true,
@@ -43,6 +46,7 @@ describe('useAnalyticsTablePermissions', () => {
       canModify: true,
       canChangeSensitive: true,
       isRowsRestricted: false,
+      isColumnsRestricted: false,
     });
   });
 
@@ -56,6 +60,7 @@ describe('useAnalyticsTablePermissions', () => {
       canModify: false,
       canChangeSensitive: false,
       isRowsRestricted: false,
+      isColumnsRestricted: false,
     });
   });
 
@@ -71,10 +76,10 @@ describe('useAnalyticsTablePermissions', () => {
     expect(result.current.canModify).toBe(false);
   });
 
-  test('system table: delete is false but access stays manageable for a full admin', () => {
+  test('system table: delete is false but access stays manageable while the service reports grant', () => {
     ctx.isFullAdmin = true;
     const { result } = renderHook(() =>
-      useAnalyticsTablePermissions(table({ system: true, permissions: perms(false, false) })),
+      useAnalyticsTablePermissions(table({ system: true, permissions: perms(false, false, { grant: true }) })),
     );
     expect(result.current.canDelete).toBe(false);
     expect(result.current.canWrite).toBe(false);
@@ -104,12 +109,44 @@ describe('useAnalyticsTablePermissions', () => {
     expect(result.current.isRowsRestricted).toBe(true);
   });
 
+  test('a caller who is not a full admin manages access when the service reports grant', () => {
+    const { result } = renderHook(() =>
+      useAnalyticsTablePermissions(table({ permissions: perms(false, false, { grant: true }) })),
+    );
+    expect(result.current.canManageRoles).toBe(true);
+    expect(result.current.canCreate).toBe(false);
+  });
+
+  test('a full admin does not manage access when the service reports no grant', () => {
+    ctx.isFullAdmin = true;
+    const { result } = renderHook(() =>
+      useAnalyticsTablePermissions(table({ permissions: perms(true, true, { grant: false }) })),
+    );
+    expect(result.current.canManageRoles).toBe(false);
+  });
+
+  test('permissions without the grant flag fall back to closed when auth is enabled', () => {
+    ctx.isFullAdmin = true;
+    const { result } = renderHook(() => useAnalyticsTablePermissions(table({ permissions: perms(true, true) })));
+    expect(result.current.canManageRoles).toBe(false);
+  });
+
+  test('a confining column policy is reported as columns restricted', () => {
+    const { result } = renderHook(() =>
+      useAnalyticsTablePermissions(table({ permissions: perms(false, false, { columns_restricted: true }) })),
+    );
+    expect(result.current.isColumnsRestricted).toBe(true);
+    expect(result.current.isRowsRestricted).toBe(false);
+  });
+
   test('missing permissions default to read-only when auth is enabled', () => {
     const { result } = renderHook(() => useAnalyticsTablePermissions(table()));
     expect(result.current.canWrite).toBe(false);
     expect(result.current.canModify).toBe(false);
+    expect(result.current.canManageRoles).toBe(false);
     expect(result.current.canChangeSensitive).toBe(false);
     expect(result.current.isRowsRestricted).toBe(false);
+    expect(result.current.isColumnsRestricted).toBe(false);
   });
 
   test('auth disabled opens everything even without permissions', () => {
@@ -124,6 +161,7 @@ describe('useAnalyticsTablePermissions', () => {
       canModify: true,
       canChangeSensitive: true,
       isRowsRestricted: false,
+      isColumnsRestricted: false,
     });
   });
 

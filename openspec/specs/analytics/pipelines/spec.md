@@ -21,7 +21,8 @@ A registry holding no pipelines is an ordinary state and SHALL render as the con
 **failed** listing fetch SHALL also render the console and SHALL NOT resolve to a not-found result. A
 not-found page conflates three conditions an operator needs to tell apart — nothing registered, the service
 unreachable, and the route absent — which is the confusion this page exists to remove. That failure SHALL be
-reported by an error notification carrying the service's own header, message and request id, under *An
+reported by an error notification titled with this app's own string and carrying the service's message and
+request id, under *An
 Analytics read failure is reported by notification, in the service's own words*, and SHALL NOT be stated as
 text above the grid. Exactly one report SHALL be raised per failure: the console already notified on a failed
 client-side re-read, and a page that both notified and wrote the sentence reported the same failure twice.
@@ -729,6 +730,10 @@ group answers:
     **Catching up (last up to date …)** — where one is known: the runner's caught-up time for an
     enrichment, falling back to the registry's drained-at probe for a SQL enrichment. An aggregate states a
     bare Catching up. Up to date carries no date: it would repeat the status.
+    The registry's `has_more` SHALL be presented only beside evidence that the pipeline ran — a last run,
+    a Data up to, a recorded position or a failure. The registry reports `false` for a pipeline that has
+    never fired, and read alone it called such a pipeline Up to date. The runner's own answer needs no
+    such evidence: it reports progress only for a pipeline it drives.
   - **Data up to**, for an `aggregate` pipeline and an `enrich` pipeline whose transform is SQL — the moment
     up to which the output has been computed, converted from the epoch-millisecond version the registry
     records (the cursor version for an aggregate, the materialized-through version for a SQL enrichment) to
@@ -824,6 +829,11 @@ The tab SHALL present exactly one of these content states:
 - **Unavailable** — neither service reported anything: the pipeline carries no state and no runtime view was
   read. The tab SHALL state that the runtime state could not be read and SHALL state that the pipeline's
   configuration is unaffected, so the reader does not act on the absence as if the pipeline were broken.
+
+A **disabled** pipeline in the Loaded state SHALL carry an information notice above its values stating
+that nothing is running it and the values are from its last run, and SHALL NOT present a next run: a
+status read beside a stopped pipeline otherwise reads as a live one. The header's badge says it is
+disabled, not that the tab below describes the past.
 
 The failures card is governed by its own requirements and SHALL be presented independently of these three:
 it reads a different service, and a pipeline that has never run can still hold dead letters from before
@@ -1034,6 +1044,28 @@ State SHALL NOT be sent when the pipeline is saved.
 - **WHEN** a full admin opens its `Runtime` tab
 - **THEN** the tab does not state that the pipeline has not run yet
 - **AND** the failure is presented in the failures group
+
+#### Scenario: A registry that reports only an empty backlog is not called up to date
+
+- **GIVEN** a pipeline whose state carries `has_more: false` and nothing else
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab states that the pipeline has not run yet
+- **AND** no status reading Up to date is presented
+
+#### Scenario: A disabled pipeline states that its values are from its last run
+
+- **GIVEN** a disabled pipeline whose state records a run
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** an information notice states that the pipeline is disabled and the values are from its last run
+- **AND** the last run is still presented
+- **AND** no next run is presented
+
+#### Scenario: A disabled pipeline that never ran carries no disabled notice
+
+- **GIVEN** a disabled pipeline whose state records no run
+- **WHEN** a full admin opens its `Runtime` tab
+- **THEN** the tab states that the pipeline has not run yet
+- **AND** no disabled notice is presented
 
 #### Scenario: Unclamped reads are not presented
 
@@ -5747,3 +5779,30 @@ edge of its container, ellipsised, or left to scroll sideways.
 - **WHEN** a full admin opens the `Runtime` tab
 - **THEN** the whole message is visible, wrapped across lines
 
+### Requirement: A pipeline editor never offers a projection-only field as an operand
+
+A schema field marked `projection_only: true` is computed by the service after a query runs, and the service
+rejects any query that filters, sorts, groups or aggregates on it or passes it to a function. Every pipeline
+editor that picks a source field to compare, group, measure, order by or bind SHALL leave such a field out of
+its options: the filter condition's column, the aggregate group keys and measures, the enrichment's order-by
+and member-selection fields, and its variables.
+
+The exclusion SHALL key on the flag alone and SHALL add to the existing type-based exclusion of `object`, `array`
+and `map` fields, not replace it. A field without the flag, or with it `false`, SHALL be offered as before. A
+pipeline whose saved declaration already names a projection-only field in one of these positions SHALL load
+with that value shown as authored; the service's own error reports the problem.
+
+#### Scenario: The filter condition does not list a projection-only field
+
+- **WHEN** a pipeline's source schema reports a field with `projection_only: true`
+- **THEN** the filter condition's column dropdown does not list it
+
+#### Scenario: Aggregate and enrichment editors do not list a projection-only field
+
+- **WHEN** the source schema reports a projection-only field
+- **THEN** the group keys, measures, order-by, member-selection and variable dropdowns do not list it
+
+#### Scenario: A saved declaration keeps an authored projection-only field
+
+- **WHEN** a saved pipeline already names a projection-only field as a group key
+- **THEN** the editor shows that group key as authored

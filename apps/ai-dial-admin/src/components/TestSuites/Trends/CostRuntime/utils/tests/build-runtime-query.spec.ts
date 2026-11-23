@@ -1,18 +1,18 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-  AVG_DURATION_ALIAS,
-  AVG_METRIC_EVAL_DURATION_ALIAS,
   EVAL_SUMMARIES_ENTITY,
   EXEC_DURATION_MS_FIELD,
   METRIC_EVAL_DURATION_MS_FIELD,
   RUN_ID_FIELD,
+  TOTAL_DURATION_ALIAS,
+  TOTAL_METRIC_EVAL_DURATION_ALIAS,
 } from '@/src/components/Runs/Summary/constants';
 import { buildTrendsRuntimeQuery } from '@/src/components/TestSuites/Trends/CostRuntime/utils/build-runtime-query';
 import { ComparisonOp, ExprType, PageType, QueryMode, ValueType } from '@/src/models/evaluation/structured-query';
 
 describe('buildTrendsRuntimeQuery', () => {
-  test('aggregates exec and metric-eval duration averages by run id', () => {
+  test('aggregates exec and metric-eval duration sums by run id', () => {
     const query = buildTrendsRuntimeQuery(['run-a', 'run-b']);
 
     expect(query).toEqual({
@@ -22,16 +22,16 @@ describe('buildTrendsRuntimeQuery', () => {
       select: [
         { expr: { type: ExprType.Field, name: RUN_ID_FIELD } },
         {
-          expr: { type: ExprType.Fn, name: 'avg', args: [{ type: ExprType.Field, name: EXEC_DURATION_MS_FIELD }] },
-          as: AVG_DURATION_ALIAS,
+          expr: { type: ExprType.Fn, name: 'sum', args: [{ type: ExprType.Field, name: EXEC_DURATION_MS_FIELD }] },
+          as: TOTAL_DURATION_ALIAS,
         },
         {
           expr: {
             type: ExprType.Fn,
-            name: 'avg',
+            name: 'sum',
             args: [{ type: ExprType.Field, name: METRIC_EVAL_DURATION_MS_FIELD }],
           },
-          as: AVG_METRIC_EVAL_DURATION_ALIAS,
+          as: TOTAL_METRIC_EVAL_DURATION_ALIAS,
         },
       ],
       filter: {

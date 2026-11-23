@@ -2,11 +2,11 @@
 
 ## Purpose
 
-What a run produces: execution of the current query, the result grid, the stat tiles, and the table and chart views over the returned rows. How the query was authored is `analytics/query-builder`.
+What a run produces: execution of the current query, the result count, the result grid, and the table and chart views over the returned rows. How the query was authored is `analytics/query-builder`.
 ## Requirements
 ### Requirement: Run query and result
 
-The toolbar Run action SHALL execute the current query and render the result in the main results area. In the Builder view the query is the serialized `StructuredQuery` from the builder state; in the JSON view it is the query as written in the editor — both executed via a server action delegating to `analyticsDataApi.executeAction` (`/v1/queries/execute`). The result SHALL be shown as a grid whose columns are derived from the returned result (the result's declared columns when present, otherwise the union of keys across the returned rows), with object/array cell values stringified. A cell SHALL make its value readable whatever its size: up to a
+The Run action SHALL execute the current query and render the result in the main results area. In the Builder view the query is the serialized `StructuredQuery` from the builder state, executed via a server action delegating to `analyticsDataApi.executeAction` (`/v1/queries/execute`). The result SHALL be shown as a grid whose columns are derived from the returned result (the result's declared columns when present, otherwise the union of keys across the returned rows), with object/array cell values stringified. A cell SHALL make its value readable whatever its size: up to a
 bounded length the value SHALL be reachable as a tooltip — carrying that rendered text, or, where that
 rendered text is a rounded or compacted rendering of a numeric value, the value as returned in full (see
 "Numeric and temporal result-cell formatting") — including for an
@@ -15,7 +15,7 @@ cell SHALL instead show a bounded preview and a named control that opens the val
 SHALL present the value in a read-only editor that scrolls, folds and searches, SHALL indent a value that is
 JSON — including one that arrives as JSON text, which is the shape the heavy columns take — and SHALL offer
 copying it and closing. No tooltip SHALL be offered past that length, where one could not show the value
-anyway. The cell SHALL carry only the preview, not the whole document. A result column that names a schema field SHALL be headed by that field's display name, resolved through the same executed-query column-label map the chart views use; a column produced by a computed output column SHALL be headed by its alias, which is already human-readable. A SQL-view run, whose columns the builder cannot attribute to schema fields, SHALL head every column by its returned name. Before any run, the results area SHALL show an empty state inviting the user to run the query. An empty result SHALL show an empty-state message. A failed run SHALL surface an error via the app's notification convention and SHALL NOT replace a previously shown result with a broken grid. Run SHALL be disabled until a schema is loaded and while the JSON view contains invalid (unparseable) JSON.
+anyway. The cell SHALL carry only the preview, not the whole document. A result column that names a schema field SHALL be headed by that field's display name, resolved through the same executed-query column-label map the chart views use; a column produced by a computed output column SHALL be headed by its alias, which is already human-readable. A SQL-view run, whose columns the builder cannot attribute to schema fields, SHALL head every column by its returned name. Before any run, the results area SHALL show a "Ready to run" empty state — an illustration, the title "Ready to run" and the line "Run the query to see results here". An empty result SHALL show the "No matching results" empty state with the line "Adjust or remove filters, then run the query.". A failed run SHALL surface an error via the app's notification convention and SHALL NOT replace a previously shown result with a broken grid. Run SHALL be disabled until a schema is loaded.
 
 #### Scenario: Successful run renders a result grid
 
@@ -25,12 +25,13 @@ anyway. The cell SHALL carry only the preview, not the whole document. A result 
 #### Scenario: Empty state before the first run
 
 - **WHEN** the page is open and no query has been run yet
-- **THEN** the results area shows an empty state inviting the user to run the query
+- **THEN** the results area shows the "Ready to run" empty state
 
 #### Scenario: Empty result
 
 - **WHEN** a run returns no rows
-- **THEN** an empty-state message is shown instead of a grid
+- **THEN** the "No matching results" empty state is shown instead of a grid, suggesting to adjust or remove
+  filters
 
 #### Scenario: Failed run surfaces an error
 
@@ -78,26 +79,6 @@ anyway. The cell SHALL carry only the preview, not the whole document. A result 
 - **THEN** the value as shown is placed on the clipboard
 - **AND** a confirmation names the column it came from
 
-### Requirement: Result stat tiles
-
-When a result is shown, the results area SHALL display a stat-tile row above the result with: the number of returned rows, the number of result columns (Fields), and — when the response includes a total count — the Total. The service computes `totalCount` only for row-mode offset paging with `include_total=true`, so the Include total toggle SHALL be offered only in row mode with offset paging, and aggregate/SQL results never show a Total tile. No timing tile SHALL be shown (the backend does not report query timing).
-
-#### Scenario: Tiles reflect the result
-
-- **WHEN** a run returns 12 rows with 5 columns and no total
-- **THEN** the stat tiles show Rows 12 and Fields 5
-- **AND** no Total tile is shown
-
-#### Scenario: Total appears when reported
-
-- **WHEN** a row-mode offset-paged run requested a total and the response includes one
-- **THEN** a Total tile shows the reported total
-
-#### Scenario: Include total is offered only where the service supports it
-
-- **WHEN** the builder is in aggregate mode (or cursor paging is selected)
-- **THEN** the Include total toggle is not shown
-
 ### Requirement: Result table and chart views
 
 The results area SHALL offer a Table ⇄ Chart switcher. The Table view SHALL render the result grid. Each result column SHALL render its row's actual value looked up by its exact column name, including a column name that itself contains a literal `.` (for example an enrichment projection's `table.column`) — such a name SHALL NOT be treated as a nested-path lookup. The Table view SHALL show one grid row per returned row: rows whose values are identical, or that share an `id` value, SHALL each stay on screen, so the grid's row count always matches the Rows returned tile. The Chart view SHALL render the result with ECharts and offer a chart-type control with four types — bar, line, pie, and scatter — plus two column selectors whose allowed columns and labels follow the selected type. The Chart view SHALL be available whenever the shown result has at least one dimension column and at least one aggregate column, as those are defined below for the run that produced it; otherwise the Chart view SHALL show a hint naming the reason it is unavailable. Chart colors SHALL come from the shared chart color tokens.
@@ -108,13 +89,17 @@ For a **SQL run**, the executed SQL SHALL be translated to the structured DSL th
 
 When the backend rejects the translation — the SQL view accepts constructs the DSL cannot express, so this is an expected outcome and SHALL NOT fail the run or discard the result — the run SHALL still be charted, with its columns classified from the returned rows instead: every returned column SHALL be offered as a dimension, since without the query's semantics the client cannot tell which column is a dimension, and only columns whose every value is a number SHALL be offered as an aggregate. A column that is numeric but semantically a dimension (a time bucket returned as an epoch number, a numeric code) will consequently appear in both selectors; the user's pick decides. Such a run SHALL NOT be reported as an aggregate-mode run.
 
-For **bar** and **line**, the selectors SHALL be labeled X axis and Y axis: X over the executed query's group-by/bucket columns, Y over its aggregate columns (including the count column when present); defaults SHALL be the first dimension and the first aggregate. When every X value is numeric or date-like, the chart SHALL order the points along the X axis by that natural order (chronological/numeric ascending) regardless of the query's row order; mixed or plain-text X values keep row order. Long X-axis labels SHALL be truncated to a fixed label width with the full value available in the tooltip.
+For **bar** and **line**, the selectors SHALL be labeled X axis and Y axis: X over the executed query's group-by/bucket columns, Y over its aggregate columns (including the count column when present); defaults SHALL be the first dimension and the first aggregate. The Y selector SHALL accept several aggregate columns, and each picked column SHALL render as its own series against the one X axis, in the order picked, each in a distinct colour taken from the shared chart palette. With two or more series the chart SHALL show a legend naming each series and an axis tooltip listing every series' value at the hovered X value, and bars sharing an X value SHALL stand side by side rather than stack; with one series the chart SHALL look as a single-series chart does, with the Y axis titled by that column and no legend. Removing every Y pick SHALL leave the chart with no valid pick. When every X value is numeric or date-like, the chart SHALL order the points along the X axis by that natural order (chronological/numeric ascending) regardless of the query's row order; mixed or plain-text X values keep row order. Long X-axis labels SHALL be truncated to a fixed label width with the full value available in the tooltip.
 
 For **pie**, the same two selectors SHALL be labeled Category (group-by/bucket columns) and Value (aggregate columns). The chart SHALL show at most the top 10 categories by value as slices; any remaining categories SHALL be merged into a single "Other" slice.
 
 For **scatter**, both selectors SHALL be labeled X axis and Y axis and SHALL offer the result's numeric columns — the group-by/bucket and aggregate columns whose every value is numeric or date-like, each counted once even where a run's dimension and aggregate lists overlap. Each result row (one group) SHALL render as one point, with the row's dimension values available in the point tooltip; scatter SHALL NOT re-order rows. The scatter type SHALL be offered only when the result has at least two numeric columns; otherwise it is hidden from the chart-type control.
 
-Switching chart type SHALL keep a column pick that is valid for the new type's selector and SHALL fall back to that selector's first valid default otherwise.
+**Pie** and **scatter** SHALL take exactly one column in their Value or Y selector.
+
+Switching chart type SHALL keep the column picks that are valid for the new type's selector and SHALL fall back to that selector's first valid default when none is. Switching to pie or scatter SHALL keep only the first valid Y pick.
+
+A chart's Y columns SHALL be stored with the saved query as a list in pick order, a single-series chart as a one-element list, and SHALL be restored in that order when the query is opened. A stored chart whose Y axis is a single column name rather than a list SHALL open as a single-series chart on that column, and an empty or blank entry in a stored list SHALL be ignored.
 
 Everywhere the chart names a column — selector options, in-chart axis titles, and point tooltips — a group-by/bucket column SHALL display by its schema display name when the executed entity defines one (raw name otherwise); aggregate and scalar-function columns display by their user-authored alias. The labels SHALL follow the executed query's entity, not the currently selected source.
 
@@ -153,6 +138,38 @@ Each reason the Chart view has nothing to render SHALL have its own hint text na
 
 - **WHEN** the user configured Category and Value on a pie and switches to the bar type
 - **THEN** the same columns stay selected as X and Y
+
+#### Scenario: A line chart plots two aggregates as two series
+
+- **WHEN** an aggregate result grouped by a time bucket has two aggregate columns and the user picks both on the Y selector of a line chart
+- **THEN** the chart draws two lines over the same X axis, each in its own colour
+- **AND** a legend names both series and the tooltip at an X value lists both values
+
+#### Scenario: Bars of several series stand side by side
+
+- **WHEN** the user picks two aggregate columns on the Y selector of a bar chart
+- **THEN** each X value shows one bar per series next to each other, not stacked
+
+#### Scenario: A single series keeps the single-series look
+
+- **WHEN** a bar or line chart has one Y column picked
+- **THEN** the Y axis is titled by that column and no legend is shown
+
+#### Scenario: Switching to pie keeps the first series
+
+- **WHEN** a line chart has two Y columns picked and the user switches to the pie type
+- **THEN** the Value selector holds the first of the two columns
+- **AND** the pie is drawn from that column alone
+
+#### Scenario: A multi-series chart survives a save and reopen
+
+- **WHEN** the user saves a query whose line chart has two Y columns and opens it again
+- **THEN** the chart shows the same two series in the same order
+
+#### Scenario: A query saved with one Y column opens unchanged
+
+- **WHEN** the user opens a saved query whose stored chart names its Y axis as a single column
+- **THEN** the chart renders a single series on that column
 
 #### Scenario: Comparable X values are ordered on the axis
 
@@ -382,7 +399,7 @@ A formatted numeric column SHALL right-align its cells and its header and SHALL 
 
 When a result is shown, the results area SHALL offer an Export CSV action in its header row, in both the Table and the Chart view, including for a result with no rows (the file then holds only the header record). The action SHALL NOT be offered before the first successful run, and SHALL be disabled while a run or an export is in progress. While an export is in progress — from activation until the file starts downloading or the export fails — the action SHALL show a spinner in place of its icon and SHALL expose the busy state programmatically. Before the user activates it, the action SHALL state the export's ceiling — that a file holds at most 1,000 rows — in a tooltip reachable by hover and by keyboard focus, and in the action's accessible description. For a result produced by SQL the tooltip SHALL add that a lower `LIMIT` in the statement exports fewer rows.
 
-The export SHALL re-execute the request that produced the shown result — not the query as it currently stands in the editor or builder. A result produced from the Form or JSON view SHALL be exported through the service's structured CSV endpoint (`POST /v1/queries/execute-csv`) with the run's query, its page replaced by the first page of 1000 rows — the service's per-request maximum — so the file starts at the first matching row whatever page the grid showed: an offset page keeps its type and `include_total` with offset 0 and limit 1000, a cursor page keeps its type with no cursor and limit 1000, and a query with no page gets an offset page of 1000 without a total. Everything else in the query (entity, mode, columns, filter, grouping, sort) SHALL be sent unchanged. A result produced by SQL — from the SQL view or from an AI-message run that ran SQL — SHALL be exported through the SQL CSV endpoint (`POST /v1/queries/execute-sql-csv`) with the statement unchanged, so its own limit (or the service default) applies; the statement text SHALL NOT be rewritten. A failed run, which leaves the previous result shown, SHALL leave the export bound to the request that produced that result. A relative time range is evaluated again when the export runs, so the file reflects the window at export time.
+The export SHALL re-execute the request that produced the shown result — not the query as it currently stands in the editor or builder. A result produced from the Builder view SHALL be exported through the service's structured CSV endpoint (`POST /v1/queries/execute-csv`) with the run's query, its page replaced by the first page of 1000 rows — the service's per-request maximum — so the file starts at the first matching row whatever page the grid showed: an offset page keeps its type and `include_total` with offset 0 and limit 1000, a cursor page keeps its type with no cursor and limit 1000, and a query with no page gets an offset page of 1000 without a total. Everything else in the query (entity, mode, columns, filter, grouping, sort) SHALL be sent unchanged. A result produced by SQL — from the SQL view or from an AI-message run that ran SQL — SHALL be exported through the SQL CSV endpoint (`POST /v1/queries/execute-sql-csv`) with the statement unchanged, so its own limit (or the service default) applies; the statement text SHALL NOT be rewritten. A failed run, which leaves the previous result shown, SHALL leave the export bound to the request that produced that result. A relative time range is evaluated again when the export runs, so the file reflects the window at export time.
 
 When the downloaded file may not hold every matching row, the export SHALL tell the user so through a notification shown with the download: when the service reported a total count larger than the number of records in the file, the notice SHALL name both numbers; otherwise, when the file holds 1000 records, the notice SHALL say the file reached the 1000-row maximum and more rows may match. A file under that maximum with no larger total SHALL download without a notice.
 
@@ -416,7 +433,7 @@ The export SHALL run with the signed-in user's own token, as Run does, and SHALL
 
 #### Scenario: A structured run exports through the structured CSV endpoint
 
-- **WHEN** the shown result came from the Form or JSON view and the user activates Export CSV
+- **WHEN** the shown result came from the Builder view and the user activates Export CSV
 - **THEN** the service's structured CSV endpoint is called with the query the run sent, its page widened to the first 1000 rows
 
 #### Scenario: A structured export asks for the first 1000 rows
@@ -472,4 +489,83 @@ The export SHALL run with the signed-in user's own token, as Run does, and SHALL
 
 - **WHEN** a run succeeds, a later run fails, and the user activates Export CSV
 - **THEN** the export sends the request of the successful run whose result is still shown
+
+### Requirement: An empty result over a row-restricted table says so
+
+When a run returns no rows and the query's source is a table for which `GET /v1/tables/{name}` of the analytics-data-access-service reports `permissions.rows_restricted = true`, the result area's empty state SHALL show a hint that no rows match the user's access in place of the usual suggestion to adjust filters. The hint SHALL state only that access limits the rows; the limit itself SHALL NOT be shown or requested.
+
+The hint SHALL NOT be shown when the source reports `rows_restricted` as false or omits it, when the source's permissions cannot be read — which SHALL produce no notification — or for a SQL-view run, whose source tables the viewer does not attribute. A result that has rows SHALL be unaffected.
+
+#### Scenario: A confined caller's empty result carries the hint
+
+- **GIVEN** a query whose source table reports `permissions.rows_restricted = true`
+- **WHEN** the run returns no rows
+- **THEN** the empty state shows the usual empty-result title and a hint that no rows match the user's access
+
+#### Scenario: An unconfined caller's empty result is unchanged
+
+- **GIVEN** a query whose source table reports `rows_restricted = false` or omits it
+- **WHEN** the run returns no rows
+- **THEN** only the usual empty-result text is shown
+
+#### Scenario: Unreadable permissions leave the empty state unchanged
+
+- **GIVEN** the source table's permissions cannot be read
+- **WHEN** the run returns no rows
+- **THEN** only the usual empty-result text is shown and no notification appears
+
+#### Scenario: A SQL-view run carries no hint
+
+- **WHEN** a SQL-view run returns no rows
+- **THEN** only the usual empty-result text is shown
+
+### Requirement: Result count
+
+When a result is shown, the results header SHALL state the number of returned rows beside the Table and
+Chart switch. When the response includes a total count, the header SHALL state the total as well; the
+service computes a total only for a row query paged by offset that requested one, which the chips never
+request, so a total appears only for a result produced another way. No count of result columns and no
+timing SHALL be shown.
+
+When the query has changed since the shown result was produced, the count SHALL be replaced by "Query
+changed · Run to update results" until the query runs again; the result stays shown but dimmed, while the results header and its controls keep full strength. A change is judged
+by the query itself: the SQL text when the SQL buffer was edited, otherwise the builder's query and its
+period. Switching between the Builder and SQL views without editing, and the clock moving a relative
+period forward, SHALL NOT count as a change.
+
+The results header SHALL also carry, right-aligned, the Add to dashboard action — for a saved query
+without unsaved changes, where custom dashboards are enabled — and the Export CSV action.
+
+#### Scenario: The count reflects the result
+
+- **WHEN** a run returns 12 rows
+- **THEN** the results header states 12 results
+- **AND** no column count is shown
+
+#### Scenario: A reported total is stated
+
+- **WHEN** a run's response includes a total count
+- **THEN** the results header states the total beside the number of returned rows
+
+#### Scenario: An edit since the run marks the result out of date
+
+- **WHEN** a result is shown and the user then adds a filter
+- **THEN** the results header reads "Query changed · Run to update results" instead of the count
+- **AND** the shown result is dimmed
+- **AND** after the next run it states the count again and the result is no longer dimmed
+
+#### Scenario: Switching views alone is not a change
+
+- **WHEN** a result is shown and the user switches from the Builder to the SQL view without editing
+- **THEN** the results header still states the count
+
+#### Scenario: No count before a run
+
+- **WHEN** no result is shown
+- **THEN** the results header states no count
+
+#### Scenario: Add to dashboard sits in the results header
+
+- **WHEN** a saved query without unsaved changes is open and custom dashboards are enabled
+- **THEN** the results header offers Add to dashboard beside Export CSV
 

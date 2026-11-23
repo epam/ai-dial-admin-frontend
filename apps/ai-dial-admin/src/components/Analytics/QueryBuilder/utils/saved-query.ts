@@ -1,11 +1,20 @@
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { StructuredQuery } from '@/src/models/analytics/query';
-import { ChartConfig, QueryResultView } from '@/src/models/analytics/query-builder';
+import { DEFAULT_CHART_LEGEND } from '@/src/constants/analytics/query-builder';
+import {
+  ChartConfig,
+  ChartLegendConfig,
+  ChartLegendPosition,
+  QueryResultView,
+  QueryTimeBound,
+} from '@/src/models/analytics/query-builder';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 import {
   SavedQuery,
   SavedQueryCaptureInput,
   SavedQueryMetadata,
   SavedQueryChart,
+  SavedQueryChartLegend,
   SavedQueryEditor,
   SavedQueryRequest,
   SavedQueryRestore,
@@ -15,14 +24,14 @@ import {
   SavedQueryTimeIntentInput,
   SavedQueryTimeMode,
   SavedQueryTimeRestore,
+  StoredTimeBoundInput,
 } from '@/src/models/analytics/saved-query';
 import { TimeRange } from '@/src/models/time-range';
 import { buildQuery } from './serialize';
-import { isBuilderRepresentable, parseQuery } from './deserialize';
+import { isChipRepresentable, parseQuery } from './deserialize';
 import { createInitialState } from './state';
 import { formatSql } from './sql-format';
-
-const JSON_INDENT = 2;
+import { findTimestampField, withTimeBound } from './time';
 
 const trimmed = (value?: string): string | undefined => {
   const next = value?.trim();
@@ -42,10 +51,30 @@ const toSavedQueryTime = (time: SavedQueryTimeIntentInput): SavedQueryTime => {
   };
 };
 
-const toSavedQueryChart = (chartConfig: ChartConfig): SavedQueryChart => ({
-  type: chartConfig.type,
-  x_field: chartConfig.xField,
-  y_field: chartConfig.yField,
+export const readChartYFields = (yField: SavedQueryChart['y_field'] | string | undefined): string[] | null => {
+  if (yField == null) return null;
+  const entries: unknown[] = typeof yField === 'string' ? [yField] : yField;
+  return entries.filter((entry): entry is string => typeof entry === 'string' && entry.trim() !== '');
+};
+
+const toSavedQueryChart = (chartConfig: ChartConfig): SavedQueryChart => {
+  const legend = chartConfig.legend ?? DEFAULT_CHART_LEGEND;
+  return {
+    type: chartConfig.type,
+    x_field: chartConfig.xField,
+    y_field: chartConfig.yFields,
+    legend: { visible: legend.isVisible, position: legend.position },
+  };
+};
+
+const LEGEND_POSITIONS: string[] = Object.values(ChartLegendPosition);
+
+export const readChartLegend = (legend: SavedQueryChartLegend | undefined): ChartLegendConfig => ({
+  isVisible: typeof legend?.visible === 'boolean' ? legend.visible : DEFAULT_CHART_LEGEND.isVisible,
+  position:
+    legend?.position && LEGEND_POSITIONS.includes(legend.position)
+      ? (legend.position as ChartLegendPosition)
+      : DEFAULT_CHART_LEGEND.position,
 });
 
 interface SavedQueryRequestParts {
@@ -83,27 +112,12 @@ const assembleRequest = ({ meta, body, time, resultView, chart }: SavedQueryRequ
   return request;
 };
 
-// A JSON body the builder cannot display, parsed from its editor buffer. Unparseable text yields null,
-// leaving the builder state as the body rather than sending something the service would reject.
-const parseDivergedBody = (jsonText?: string | null): StructuredQuery | null => {
-  if (!jsonText?.trim()) return null;
-  try {
-    return JSON.parse(jsonText) as StructuredQuery;
-  } catch {
-    return null;
-  }
-};
-
 export const toSavedQueryRequest = (input: SavedQueryCaptureInput): SavedQueryRequest => {
   const sql = trimmed(input.sqlText ?? void 0);
-  const divergedBody = parseDivergedBody(input.divergedJsonText);
 
   return assembleRequest({
     meta: input,
-    // Exactly one body, in precedence order: a non-blank SQL buffer is the authored query; failing that a
-    // diverged JSON buffer, whose edits the builder state does not carry; failing that the builder state.
-    // The null time bound is deliberate — a persisted range would freeze the query to its authoring date.
-    body: sql ? { sql } : { query: divergedBody ?? buildQuery(input.state, null) },
+    body: sql ? { sql } : { query: input.fallbackQuery ?? buildQuery(input.state, null) },
     time: input.time ? toSavedQueryTime(input.time) : void 0,
     resultView: input.resultView,
     chart:
@@ -125,15 +139,14 @@ export const toMetadataReplaceRequest = (saved: SavedQuery, meta: SavedQueryMeta
     chart: saved.chart,
   });
 
-// `functions` is null for the saved-queries grid, which has no catalog loaded — see
-// isBuilderRepresentable for what that leaves unchecked.
 export const deriveSavedQueryEditor = (
   saved: Pick<SavedQuery, 'sql' | 'query'>,
-  functions: QueryFunction[] | null,
+  functions: QueryFunction[],
+  fields: AnalyticsEntityField[],
 ): SavedQueryEditor => {
   if (saved.sql?.trim()) return SavedQueryEditor.Sql;
-  if (saved.query && isBuilderRepresentable(saved.query, functions)) return SavedQueryEditor.Builder;
-  return saved.query ? SavedQueryEditor.Json : SavedQueryEditor.Builder;
+  if (!saved.query) return SavedQueryEditor.Builder;
+  return isChipRepresentable(saved.query, functions, fields) ? SavedQueryEditor.Builder : SavedQueryEditor.Sql;
 };
 
 // A deployment may still answer with a single name rather than a list, so every read of `source` goes
@@ -144,16 +157,12 @@ const savedQuerySources = (source: SavedQuery['source']): string[] => {
 };
 
 // The one entity a saved query is treated as being about, for every consumer needing exactly one: the
-// schema prefetch, the source selector, SQL autocomplete, and the assistant's schema message. A SQL
+// schema prefetch, SQL autocomplete, and the assistant's schema message. A SQL
 // body falls back to the first source, which for a composite statement is the alphabetically first
 // entity the service reports — arbitrary but stable, and better than no field suggestions at all.
 // `''` means nothing resolved, which callers read as "load no schema".
 export const savedQueryPrimarySource = (saved: Pick<SavedQuery, 'query' | 'source'>): string =>
   saved.query?.entity ?? savedQuerySources(saved.source)[0] ?? '';
-
-// Every source a query reads, as one display string — for the Queries grid, where the full set belongs
-// on screen rather than the single primary source.
-export const savedQuerySourcesLabel = (source: SavedQuery['source']): string => savedQuerySources(source).join(', ');
 
 const parseInstant = (value: string): Date | null => {
   const date = new Date(value);
@@ -181,30 +190,56 @@ const toTimeRestore = (time: SavedQuery['time'], knownPeriods: string[]): SavedQ
   return { action: SavedQueryTimeAction.ApplyRange, range };
 };
 
+const toStoredTimeBound = (
+  restore: SavedQueryTimeRestore,
+  field: string,
+  periodRange: (period: string) => TimeRange,
+): QueryTimeBound | null => {
+  if (restore.action === SavedQueryTimeAction.ApplyPeriod && restore.period) {
+    return { field, range: periodRange(restore.period), period: restore.period };
+  }
+  if (restore.action === SavedQueryTimeAction.ApplyRange && restore.range) {
+    return { field, range: restore.range };
+  }
+  return null;
+};
+
+export const withStoredTimeBound = (input: StoredTimeBoundInput): StructuredQuery | undefined => {
+  const { saved, fields, functions, knownPeriods, periodRange } = input;
+  const { query } = saved;
+  const field = findTimestampField(fields);
+  if (!query || !field) return query;
+
+  const bound = toStoredTimeBound(toTimeRestore(saved.time, knownPeriods), field, periodRange);
+  return bound ? { ...query, filter: withTimeBound(query.filter ?? null, bound, functions) } : query;
+};
+
 export const toBuilderRestore = (input: SavedQueryRestoreInput): SavedQueryRestore => {
-  const { saved, fields, functions, knownPeriods } = input;
+  const { saved, fields, functions, knownPeriods, translatedSql } = input;
   const entityName = savedQueryPrimarySource(saved);
 
-  const editor = deriveSavedQueryEditor(saved, functions);
-  // Only a query the builder can hold reaches builder state. Parsing one it cannot would seed the
-  // rail — and the SQL the rail generates on the way out — from a query missing whatever the parser
-  // could not keep, which is the loss this whole guard exists to prevent.
+  const editor = deriveSavedQueryEditor(saved, functions, fields);
+  const isBuilder = editor === SavedQueryEditor.Builder;
   const state =
-    saved.query && editor === SavedQueryEditor.Builder
+    saved.query && isBuilder
       ? parseQuery(saved.query, fields, functions)
       : { ...createInitialState(functions), entityName, fields };
+  const sql = saved.sql ?? (isBuilder ? '' : (translatedSql ?? ''));
 
   return {
     editor,
     state,
-    // Laid out for reading like the JSON body; the page's unsaved-changes baseline is built from this same
-    // text, so opening a query stored on one line does not mark it as edited.
-    sqlText: saved.sql ? formatSql(saved.sql) : '',
-    jsonText: saved.query ? JSON.stringify(saved.query, null, JSON_INDENT) : '',
+    sqlText: sql ? formatSql(sql) : '',
+    unloadedQuery: !isBuilder && !sql ? saved.query : void 0,
     time: toTimeRestore(saved.time, knownPeriods),
     resultView: saved.result_view ?? QueryResultView.Table,
     chartConfig: saved.chart
-      ? { type: saved.chart.type, xField: saved.chart.x_field, yField: saved.chart.y_field }
+      ? {
+          type: saved.chart.type,
+          xField: saved.chart.x_field,
+          yFields: readChartYFields(saved.chart.y_field),
+          legend: readChartLegend(saved.chart.legend),
+        }
       : void 0,
   };
 };

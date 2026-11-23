@@ -12,10 +12,23 @@ import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 const getRunMock = vi.fn();
 const getTestCaseRunResultsMock = vi.fn();
+const executeStructuredQueryMock = vi.fn();
+
+const THRESHOLDS: Record<string, number> = { 'run-1': 0.6, 'run-sibling': 0.8 };
+
+const SCORE_ROWS_RESULT = {
+  rows: [
+    { test_suite_run_id: 'run-1', test_case_id: 'tc-1', test_case_name: 'Test Case 1', score: 0.7 },
+    { test_suite_run_id: 'run-1', test_case_id: 'tc-2', test_case_name: 'Test Case 2', score: 0.9 },
+    { test_suite_run_id: 'run-sibling', test_case_id: 'tc-1', test_case_name: 'Test Case 1', score: 0.7 },
+    { test_suite_run_id: 'run-sibling', test_case_id: 'tc-2', test_case_name: 'Test Case 2', score: 0.5 },
+  ],
+};
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   getRun: (...args: unknown[]) => getRunMock(...args),
   getTestCaseRunResults: (...args: unknown[]) => getTestCaseRunResultsMock(...args),
+  executeStructuredQuery: (...args: unknown[]) => executeStructuredQueryMock(...args),
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -84,6 +97,8 @@ describe('ExecutionResultsTab', () => {
   beforeEach(() => {
     getRunMock.mockReset();
     getTestCaseRunResultsMock.mockReset();
+    executeStructuredQueryMock.mockReset();
+    executeStructuredQueryMock.mockResolvedValue(SCORE_ROWS_RESULT);
     defaultDisplayPanelProps.onToggleDisplayPanel.mockReset();
     defaultRowDetailProps.onOpenRowDetail.mockReset();
     getRunMock.mockImplementation((id: string) =>
@@ -91,6 +106,7 @@ describe('ExecutionResultsTab', () => {
         id,
         testSuiteId: 'suite-1',
         testRunName: id === 'run-1' ? 'Run #316' : 'Run #317',
+        suiteSnapshot: { overallScoreThreshold: THRESHOLDS[id] },
       }),
     );
     getTestCaseRunResultsMock.mockImplementation((filters: { column: string; value: string }[]) => {
@@ -146,6 +162,51 @@ describe('ExecutionResultsTab', () => {
     expect(getRunMock).toHaveBeenCalledWith('run-sibling');
     expect(getTestCaseRunResultsMock).toHaveBeenCalledTimes(2);
     expect(screen.getByText('Runs.RunCompareDiffLabel')).toBeInTheDocument();
+  });
+
+  test('requests the scores of both runs with a single structured query', async () => {
+    renderExecutionResultsTab();
+
+    await screen.findByRole('region', { name: 'Data grid' });
+
+    expect(executeStructuredQueryMock).toHaveBeenCalledOnce();
+    expect(executeStructuredQueryMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entity: 'test_case_eval_scores',
+        filter: expect.objectContaining({
+          args: [
+            expect.anything(),
+            expect.objectContaining({
+              items: [expect.objectContaining({ value: 'run-1' }), expect.objectContaining({ value: 'run-sibling' })],
+            }),
+          ],
+        }),
+      }),
+    );
+  });
+
+  test('keeps the spinner until the scores have loaded', async () => {
+    executeStructuredQueryMock.mockReturnValue(new Promise(() => {}));
+    renderExecutionResultsTab();
+
+    expect(await screen.findByLabelText('loading-40')).toBeInTheDocument();
+    await vi.waitFor(() => expect(getTestCaseRunResultsMock).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole('region', { name: 'Data grid' })).not.toBeInTheDocument();
+  });
+
+  test('still renders the grid when the scores request fails', async () => {
+    executeStructuredQueryMock.mockRejectedValue(new Error('boom'));
+    renderExecutionResultsTab();
+
+    expect(await screen.findByRole('region', { name: 'Data grid' })).toBeInTheDocument();
+  });
+
+  test('does not refetch scores when cached state is provided', async () => {
+    renderExecutionResultsTab({ initialState: { testCaseScores: [] } });
+
+    await screen.findByRole('region', { name: 'Data grid' });
+
+    expect(executeStructuredQueryMock).not.toHaveBeenCalled();
   });
 
   test('skips fetch when results are already lifted', async () => {
@@ -413,6 +474,46 @@ describe('ExecutionResultsTab', () => {
 
     await waitFor(() => expect(document.querySelector('[col-id="http"]')).not.toBeInTheDocument());
     await waitFor(() => expect(document.querySelector('[col-id="cmp_http"]')).not.toBeInTheDocument());
+  });
+
+  test('keeps the Overall score columns out of the grid until they are checked in the display panel', async () => {
+    const user = userEvent.setup();
+    renderExecutionResultsTab({ showDisplayPanel: true });
+
+    const panel = await screen.findByRole('toolbar', { name: 'Runs.RunCompareDisplay' });
+
+    expect(document.querySelector('[col-id="overallScore"]')).not.toBeInTheDocument();
+    expect(document.querySelector('[col-id="cmp_overallScore"]')).not.toBeInTheDocument();
+
+    await user.click(within(panel).getAllByRole('button', { name: 'Expand' })[1]);
+    await user.click(within(panel).getByRole('checkbox', { name: 'Overall score' }));
+
+    await waitFor(() => expect(document.querySelector('[col-id="overallScore"]')).toBeInTheDocument());
+    await waitFor(() => expect(document.querySelector('[col-id="cmp_overallScore"]')).toBeInTheDocument());
+  });
+
+  test('reads each run’s score against that run’s own threshold once the columns are shown', async () => {
+    const user = userEvent.setup();
+    renderExecutionResultsTab({ showDisplayPanel: true });
+
+    const panel = await screen.findByRole('toolbar', { name: 'Runs.RunCompareDisplay' });
+    await user.click(within(panel).getAllByRole('button', { name: 'Expand' })[1]);
+    await user.click(within(panel).getByRole('checkbox', { name: 'Overall score' }));
+
+    // Test Case 1 scored 0.7 in both runs: above the first run's 0.6, below the second run's 0.8.
+    expect(
+      await screen.findAllByRole('group', { name: /^0\.7\. .*TestCaseOverallScoreAboveThresholdTooltip/ }),
+    ).toHaveLength(1);
+    expect(screen.getAllByRole('group', { name: /^0\.7\. .*TestCaseOverallScoreBelowThresholdTooltip/ })).toHaveLength(
+      1,
+    );
+    // Test Case 2: 0.9 above 0.6 in the first run, 0.5 below 0.8 in the second.
+    expect(screen.getAllByRole('group', { name: /^0\.9\. .*TestCaseOverallScoreAboveThresholdTooltip/ })).toHaveLength(
+      1,
+    );
+    expect(screen.getAllByRole('group', { name: /^0\.5\. .*TestCaseOverallScoreBelowThresholdTooltip/ })).toHaveLength(
+      1,
+    );
   });
 
   test('calls onOpenRowDetail when a row is clicked', async () => {

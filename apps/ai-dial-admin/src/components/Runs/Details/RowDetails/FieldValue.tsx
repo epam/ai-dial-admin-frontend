@@ -7,12 +7,16 @@ import classNames from 'classnames';
 import ScoreCellValue from '@/src/components/Common/ScoreCell/ScoreCellValue';
 import { TRUNCATE_THRESHOLD } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import { formatFieldValue } from '@/src/components/Runs/Details/BottomDrawer/utils';
+import ThresholdScoreValue from '@/src/components/Runs/Details/RowDetails/ThresholdScoreValue';
 import { getScoreFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/score-field-value';
+import { parseScoreRaw } from '@/src/components/Runs/utils/test-case-scores';
 
 interface Props {
   raw: string | null;
   isFailed?: boolean;
   isScoreIndicator: boolean;
+  /** Set only for the overall score: a score with a threshold gets its above/below icon. */
+  threshold?: number | null;
   failedLabel: string;
   onOverflowChange?: (overflowing: boolean) => void;
   singleLine?: boolean;
@@ -26,6 +30,7 @@ const FieldValue: FC<Props> = ({
   raw,
   isFailed,
   isScoreIndicator,
+  threshold,
   failedLabel,
   onOverflowChange,
   singleLine,
@@ -57,6 +62,11 @@ const FieldValue: FC<Props> = ({
 
   if (scoreValue != null) {
     return <ScoreCellValue value={scoreValue} />;
+  }
+
+  const thresholdScore = parseScoreRaw(raw);
+  if (raw != null && threshold != null && thresholdScore != null) {
+    return <ThresholdScoreValue raw={raw} score={thresholdScore} threshold={threshold} />;
   }
 
   const displayText = formatFieldValue(raw);

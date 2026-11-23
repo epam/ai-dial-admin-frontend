@@ -10,12 +10,21 @@ import MetricCard from '../MetricCard';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   Avatar: ({ name }: { name: string }) => <div data-testid="avatar">{name}</div>,
+  EllipsisTooltip: ({ text }: { text?: string }) => <span>{text}</span>,
   GhostButton: ({ label, onClick }: { label: string; onClick?: () => void }) => (
     <button type="button" onClick={onClick}>
       {label}
     </button>
   ),
   ElementSize: { Standard: 'standard' },
+}));
+
+vi.mock('@/src/components/Common/RemoveButton/RemoveButton', () => ({
+  default: ({ label, onClick }: { label: string; onClick?: () => void }) => (
+    <button type="button" onClick={onClick}>
+      {label}
+    </button>
+  ),
 }));
 
 vi.mock('@/src/components/Common/ContentWithLinks/ContentWithLinks', () => ({

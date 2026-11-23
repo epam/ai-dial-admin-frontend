@@ -7,6 +7,8 @@ import { SESSIONS_TRACE_COLUMNS, SESSIONS_TRACE_COLUMN_GROUPS } from '@/src/cons
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { ColumnProvenance, SessionColumn, SessionsField } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
+import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 
 const t = (key: string) => key;
 
@@ -66,10 +68,22 @@ const ALL_FIELDS: AnalyticsEntityField[] = [
   insight('evaluator_version', AnalyticsFieldType.Integer, 'provenance'),
   insight('enriched_at', AnalyticsFieldType.Timestamp, 'provenance'),
   insight('truncated', AnalyticsFieldType.Boolean, 'provenance'),
+  ...['rate_pos_count', 'rate_zero_count', 'rate_neg_count', 'rate_event_count'].map((name) => ({
+    name: `session_ratings.${name}`,
+    source: name,
+    type: AnalyticsFieldType.Long,
+    tag: 'feedback',
+  })),
 ];
 
-const columns = (schemaFields: AnalyticsEntityField[] = ALL_FIELDS): ColDef[] =>
-  SESSIONS_TRACE_COLUMNS(t, schemaFields);
+const RATED_SOURCE: SessionsSource = {
+  ...defaultSessionsSource(),
+  enrichments: ['session_insights', 'session_ratings'],
+  ratingEnrichment: 'session_ratings',
+};
+
+const columns = (schemaFields: AnalyticsEntityField[] = ALL_FIELDS, source: SessionsSource = RATED_SOURCE): ColDef[] =>
+  SESSIONS_TRACE_COLUMNS(t, schemaFields, source);
 
 const column = (fieldName: string): ColDef => columns().find((col) => col.field === fieldName) as ColDef;
 
@@ -85,8 +99,10 @@ const valueFormatterOf = (column: ColDef): ValueFormatterFunc => {
 const format = (fieldName: string, value: unknown): string =>
   valueFormatterOf(column(fieldName))({ value } as ValueFormatterParams);
 
-const groups = (schemaFields: AnalyticsEntityField[] = ALL_FIELDS): ColGroupDef[] =>
-  SESSIONS_TRACE_COLUMN_GROUPS(t, schemaFields);
+const groups = (
+  schemaFields: AnalyticsEntityField[] = ALL_FIELDS,
+  source: SessionsSource = RATED_SOURCE,
+): ColGroupDef[] => SESSIONS_TRACE_COLUMN_GROUPS(t, schemaFields, source);
 
 const childFields = (group: ColGroupDef): string[] => (group.children as ColDef[]).map((col) => col.field as string);
 
@@ -255,8 +271,12 @@ describe('sessions columns :: composition', () => {
 });
 
 describe('sessions columns :: origins and tags', () => {
-  const groupOf = (provenance: ColumnProvenance, tag: string): ColGroupDef =>
-    groups().find((group) => group.groupId === `${provenance}:${tag}`) as ColGroupDef;
+  const groupOf = (provenance: ColumnProvenance, tag: string, source = ''): ColGroupDef =>
+    groups().find(
+      (group) => group.groupId === [source ? `${provenance}:${source}` : provenance, tag].join(':'),
+    ) as ColGroupDef;
+
+  const insightsGroup = (tag: string) => groupOf(ColumnProvenance.Insights, tag, 'session_insights');
 
   test('groups on the pair of origin and tag rather than on origin alone', () => {
     expect(childFields(groupOf(ColumnProvenance.Sessions, 'identity'))).toEqual([
@@ -271,31 +291,27 @@ describe('sessions columns :: origins and tags', () => {
   });
 
   test('an enrichment group names the enrichment in its label, while a rollup group does not', () => {
-    expect(groupOf(ColumnProvenance.Insights, 'insight').headerName).toBe(
-      `${SessionsTraceI18nKey.ProvenanceInsights} · ${SessionsTraceI18nKey.TagInsight}`,
-    );
+    expect(insightsGroup('insight').headerName).toBe(`session_insights · ${SessionsTraceI18nKey.TagInsight}`);
     expect(groupOf(ColumnProvenance.Sessions, 'cost').headerName).toBe(SessionsTraceI18nKey.TagCost);
   });
 
   test('the evaluator bookkeeping is grouped as the evaluator run, never as a bare column', () => {
-    const bookkeeping = groupOf(ColumnProvenance.Insights, 'provenance');
+    const bookkeeping = insightsGroup('provenance');
 
-    expect(bookkeeping.headerName).toBe(
-      `${SessionsTraceI18nKey.ProvenanceInsights} · ${SessionsTraceI18nKey.TagProvenance}`,
-    );
+    expect(bookkeeping.headerName).toBe(`session_insights · ${SessionsTraceI18nKey.TagProvenance}`);
     expect(childFields(bookkeeping)).toContain('session_insights.model');
     expect(childFields(bookkeeping)).toContain('session_insights.enriched_at');
   });
 
   test('no column headed Model sits outside the evaluator run group', () => {
     const modelColumns = renderedColumns().filter((col) => col.headerName === 'Model');
-    const bookkeeping = childFields(groupOf(ColumnProvenance.Insights, 'provenance'));
+    const bookkeeping = childFields(insightsGroup('provenance'));
 
     modelColumns.forEach((col) => expect(bookkeeping).toContain(col.field));
   });
 
   test('an insight column is attributed to the enrichment, not the rollup', () => {
-    expect(childFields(groupOf(ColumnProvenance.Insights, 'insight'))).toContain(SessionsField.InsightTopics);
+    expect(childFields(insightsGroup('insight'))).toContain(SessionsField.InsightTopics);
     expect(childFields(groupOf(ColumnProvenance.Sessions, 'identity'))).not.toContain(SessionsField.InsightTopics);
   });
 
@@ -311,9 +327,11 @@ describe('sessions columns :: origins and tags', () => {
     expect(childFields(saturation)).toEqual(['queue_depth']);
   });
 
-  test('two enrichments it cannot name get distinct groups and distinct ids', () => {
+  test('two enrichments past the palette share a colour but get distinct groups and distinct ids', () => {
     const withTwo = [
       ...ALL_FIELDS,
+      { name: 'conversation_alpha.a', source: 'a', type: AnalyticsFieldType.String, tag: 'cost' },
+      { name: 'conversation_beta.b', source: 'b', type: AnalyticsFieldType.String, tag: 'cost' },
       { name: 'conversation_buckets.cost_bucket', source: 'cost_bucket', type: AnalyticsFieldType.String, tag: 'cost' },
       { name: 'conversation_topics.cost_rank', source: 'cost_rank', type: AnalyticsFieldType.String, tag: 'cost' },
     ];
@@ -337,7 +355,27 @@ describe('sessions columns :: origins and tags', () => {
     const costGroups = groups(withBuckets).filter((group) => (group.groupId as string).endsWith(':cost'));
 
     expect(costGroups).toHaveLength(2);
-    expect(costGroups.map((group) => group.groupId)).toContain(`${ColumnProvenance.Other}:conversation_buckets:cost`);
+    expect(costGroups.map((group) => group.groupId)).toContain(
+      `${ColumnProvenance.Tertiary}:conversation_buckets:cost`,
+    );
+  });
+
+  test('colours enrichments by the order their namespace appears, not by their name', () => {
+    const withBuckets = [
+      ...ALL_FIELDS,
+      { name: 'conversation_buckets.bucket', source: 'bucket', type: AnalyticsFieldType.String, tag: 'cost' },
+      { name: 'conversation_topics.rank', source: 'rank', type: AnalyticsFieldType.String, tag: 'cost' },
+    ];
+    const ids = groups(withBuckets).map((group) => group.groupId);
+
+    expect(ids).toContain(`${ColumnProvenance.Tertiary}:conversation_buckets:cost`);
+    expect(ids).toContain(`${ColumnProvenance.Info}:conversation_topics:cost`);
+  });
+
+  test('derives no column for the rating enrichment counts, which the Rating column already composes', () => {
+    const fields = columns().map((col) => col.field as string);
+
+    expect(fields.filter((name) => name.startsWith('session_ratings.'))).toEqual([]);
   });
 
   test('every column is attributed to exactly one group', () => {
@@ -349,8 +387,8 @@ describe('sessions columns :: origins and tags', () => {
   });
 
   test('each group states its origin on hover, so colour is not the only carrier', () => {
-    expect(groupOf(ColumnProvenance.Insights, 'insight').headerTooltip).toContain(
-      SessionsTraceI18nKey.ProvenanceInsights,
+    expect(insightsGroup('insight').headerTooltip).toBe(
+      `session_insights · ${SessionsTraceI18nKey.ProvenanceInsightsHint}`,
     );
     expect(groupOf(ColumnProvenance.Sessions, 'cost').headerTooltip).toContain(SessionsTraceI18nKey.ProvenanceSessions);
   });
@@ -363,7 +401,9 @@ describe('sessions columns :: origins and tags', () => {
   test('a group whose columns the schema does not report is not rendered at all', () => {
     const withoutInsights = ALL_FIELDS.filter((entry) => !entry.name.startsWith('session_insights.'));
 
-    expect(groups(withoutInsights).map((group) => group.groupId)).not.toContain(`${ColumnProvenance.Insights}:insight`);
+    expect(groups(withoutInsights).map((group) => group.groupId)).not.toContain(
+      `${ColumnProvenance.Insights}:session_insights:insight`,
+    );
   });
 
   test('groups collapse to one per origin when no schema was read', () => {
@@ -371,6 +411,71 @@ describe('sessions columns :: origins and tags', () => {
       SessionsTraceI18nKey.ProvenanceSessions,
       SessionsTraceI18nKey.ProvenanceFeedback,
     ]);
+  });
+
+  test('ids a group by the base table namespace-free and by the enrichment namespace otherwise', () => {
+    const ids = groups().map((group) => group.groupId);
+
+    expect(ids).toContain(`${ColumnProvenance.Sessions}:identity`);
+    expect(ids).toContain(`${ColumnProvenance.Insights}:session_insights:insight`);
+    expect(ids).toContain(ColumnProvenance.Feedback);
+  });
+});
+
+describe('sessions columns :: the configured source', () => {
+  const CUSTOM: SessionsSource = {
+    baseTable: 'agent_runs',
+    sessionId: 'run_key',
+    time: 'ended_at',
+    project: null,
+    title: null,
+    cost: null,
+    turns: 'steps',
+    enrichments: [],
+    ratingEnrichment: null,
+  };
+
+  const CUSTOM_FIELDS: AnalyticsEntityField[] = [
+    field('run_key', AnalyticsFieldType.String, 'identity'),
+    field('ended_at', AnalyticsFieldType.Timestamp, 'identity'),
+    field('steps', AnalyticsFieldType.Long, 'response'),
+    field('region', AnalyticsFieldType.String, 'principal'),
+  ];
+
+  const customFields = () => columns(CUSTOM_FIELDS, CUSTOM).map((col) => col.field as string);
+
+  test('keeps the role columns whose role is bound, under their canonical ids', () => {
+    expect(customFields()).toEqual(
+      expect.arrayContaining([SessionsField.ChatId, SessionsField.LastRequestTime, SessionsField.TurnCount]),
+    );
+  });
+
+  test('drops the Project and Cost columns when those roles are unbound', () => {
+    expect(customFields()).not.toContain(SessionsField.ProjectId);
+    expect(customFields()).not.toContain(SessionsField.TotalPrice);
+  });
+
+  test('drops the Rating column without a rating enrichment', () => {
+    expect(customFields()).not.toContain(SessionColumn.Rating);
+    expect(columns(ALL_FIELDS, defaultSessionsSource()).map((col) => col.field)).not.toContain(SessionColumn.Rating);
+  });
+
+  test('derives no column for a role-bound field, and one for an unbound field', () => {
+    expect(customFields()).not.toContain('run_key');
+    expect(customFields()).not.toContain('ended_at');
+    expect(customFields()).not.toContain('steps');
+    expect(customFields()).toContain('region');
+  });
+
+  test('drops a curated column whose canonical field the custom table does not carry', () => {
+    expect(customFields()).not.toContain(SessionsField.UserHash);
+    expect(customFields()).not.toContain(SessionsField.Deployments);
+  });
+
+  test('renders the default binding as before when no source is passed', () => {
+    expect(SESSIONS_TRACE_COLUMNS(t, ALL_FIELDS).map((col) => col.field)).toEqual(
+      columns(ALL_FIELDS, defaultSessionsSource()).map((col) => col.field),
+    );
   });
 });
 

@@ -2,7 +2,12 @@ import { ColDef } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import { ResultDto } from '@/src/models/evaluation/run';
-import { ExecutionIndexField, getUniformExecutionFields, hideUniformColumns } from '../column-variation';
+import {
+  ExecutionIndexField,
+  getUniformExecutionFields,
+  hasVaryingExecutionIndices,
+  hideUniformColumns,
+} from '../column-variation';
 
 const result = (overrides: Partial<ResultDto> = {}): ResultDto => ({
   responseStatusCode: 200,
@@ -60,6 +65,37 @@ describe('getUniformExecutionFields', () => {
     ]);
 
     expect(fields).toEqual(new Set([ExecutionIndexField.RequestIndex]));
+  });
+});
+
+describe('hasVaryingExecutionIndices', () => {
+  test('is false for an empty result list', () => {
+    expect(hasVaryingExecutionIndices([])).toBe(false);
+  });
+
+  test('is false for a single result', () => {
+    expect(hasVaryingExecutionIndices([result({ runIndex: 2, turnIndex: 1 })])).toBe(false);
+  });
+
+  test('is false when run, request and turn are the same on every result', () => {
+    expect(
+      hasVaryingExecutionIndices([
+        result({ requestIndex: 0, turnIndex: 0, testCaseName: 'a' }),
+        result({ requestIndex: 0, turnIndex: 0, testCaseName: 'b' }),
+      ]),
+    ).toBe(false);
+  });
+
+  test.each([
+    ['run number', [result({ runIndex: 0 }), result({ runIndex: 1 })]],
+    ['request', [result({ requestIndex: 0 }), result({ requestIndex: 1 })]],
+    ['turn', [result({ turnIndex: 0 }), result({ turnIndex: 1 })]],
+  ])('is true when only the %s varies', (_name, results) => {
+    expect(hasVaryingExecutionIndices(results)).toBe(true);
+  });
+
+  test('is true when the index is present on one result and absent on another', () => {
+    expect(hasVaryingExecutionIndices([result({ turnIndex: 0 }), result()])).toBe(true);
   });
 });
 

@@ -102,3 +102,15 @@ export const getExternalServiceLevels = (): ExternalServiceCredentialLevel[] => 
   }
   return [];
 };
+
+// Core answers 400 to a changed `discovery_url` while the stored client is Core-registered, even when the
+// same save converts it to a static one, so the URL stays fixed until that save lands.
+export const isDiscoveryUrlLocked = (services: Record<string, DialExternalService>, originalId: string): boolean =>
+  !!originalId && services[originalId]?.auth_settings?.dynamically_registered === true;
+
+// Core registers only when it creates the service or changes its type to OAUTH, so the choice follows
+// the type as loaded: the one being edited can be switched away from OAUTH and back with no effect.
+export const isDynamicRegistrationOffered = (
+  services: Record<string, DialExternalService>,
+  originalId: string,
+): boolean => !originalId || services[originalId]?.auth_settings?.authentication_type !== ToolsetAuthType.OAUTH;

@@ -151,19 +151,50 @@ Three behaviors of that setup are easy to miss and change how you assert:
 - `console.error` and `console.warn` are silenced globally — a test cannot assert on them, and a real
   React warning will not surface in the output.
 
-Mocking mechanics:
+A mock is either **shared** (declared once, in `test-setup.tsx`, for every spec) or **local** (declared in
+one spec for that spec). Pick by who needs it, not by convenience.
 
-- To keep most of a real module and replace one export, use `importOriginal` rather than
-  re-declaring the whole surface:
+### Shared mocks and controllers
+
+- A module becomes shared when three or more specs mock it the same way, or when leaving it real breaks every
+  render (contexts, Next.js hooks, i18n). Add it to `test-setup.tsx`; don't copy the same `vi.mock` into a
+  third spec.
+- A shared mock that specs need to steer gets a **controller** in `apps/ai-dial-admin/test-mocks/<name>.ts(x)`.
+  The controllers today are `appContextMock` (`AppContext`), `navigationMock` (`next/navigation`),
+  `notificationMock` (`NotificationContext`) and `saveValidationMock` (`SaveValidationContext`); read them before
+  writing a new one. A controller:
+  - keeps **one stable default** — the same router, the same context value — so an effect that lists it as a
+    dependency does not loop;
+  - exposes the spies and typed setters a spec needs (`navigationMock.router.push`, `setPathname(...)`,
+    `saveValidationMock.set({ ... })`), and a `reset()` that `test-setup.tsx` calls in `beforeEach`;
+  - takes exported constants and enums from the real module (`importOriginal`), never from a copy;
+  - keeps hooks as `vi.fn(impl)`, so `vi.mocked(hook).mockReturnValue(...)` still works for a one-off case and
+    `reset()` restores the default.
+- Register a new controller in three places in the same change: `vi.mock` plus `reset()` in `test-setup.tsx`,
+  its module path in `CONTROLLED_MODULES` in `eslint.specs.config.mjs`, and this list.
+- A spec never mocks a controlled module again. It configures the controller in `beforeEach` or in the test;
+  a test that needs the real implementation says so through the controller
+  (`saveValidationMock.useRealContext()`) or with `vi.unmock(path)`.
+
+### Local mocks
+
+- Use a local mock for what only this spec cares about: a heavy child component (§4 rule 5), a server action
+  or API module the component under test calls, a hook whose result the test varies.
+- Mock the narrowest module that does the job — the child component, not the whole `ui-kit`. To keep most of a
+  real module and replace one export, use `importOriginal` rather than re-declaring the whole surface:
   ```ts
   vi.mock('@/utils/entities', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@/utils/entities')>()),
     getEntityLabel: vi.fn(() => 'label'),
   }));
   ```
-- Use `vi.mocked(fn)` for typed access to a mocked import instead of casting.
-- Call `vi.clearAllMocks()` in `beforeEach` whenever shared mock state could leak between tests —
-  the centralized mocks in `test-setup.tsx` persist across a file.
+- Prefer an automock (`vi.mock(path)`) for an action or API module, and set the result per test with
+  `vi.mocked(fn).mockResolvedValue(...)`; use `vi.mocked(fn)` for typed access instead of casting.
+- Set behavior in `beforeEach` or in the test, not at module scope: the global `afterEach` clears call history
+  but keeps implementations, so a default set once at the top survives every test and hides which one relies
+  on it.
+- A spy the factory needs is declared with `vi.hoisted`; never mutate a module-level object to steer a mock
+  (`currentPath.value = …`) — that is what a controller is for.
 
 ## §6 Conventions
 
@@ -272,3 +303,37 @@ they are correct at any speed.
 `npm run lint:specs` (it also runs on staged specs at commit time) rejects the shapes in rules 1–3: a `waitFor` on a
 mock call, an action or a `{ timeout }` inside a wait, and `setTimeout`. Rules 4–6 are judgement calls and are not
 linted.
+
+## §10 Shared test environment
+
+The suite runs with `isolate: false`: one worker keeps its jsdom environment and its loaded libraries across the
+files it runs, which is what makes the run fast. Two setup files keep files from seeing each other:
+
+- `test-reset.ts` runs first and, before each file, drops every application module from the worker's module table
+  (so each file gets fresh modules and its own mocks), empties `document.body` and clears both storages.
+- `test-setup.tsx` re-registers the shared mocks, resets the controllers in `beforeEach`, and in `afterEach` clears
+  mock calls, unstubs globals and env variables, and restores real timers.
+
+What that cleanup cannot undo is yours to avoid:
+
+1. **Change a global only through Vitest.** `vi.stubGlobal('fetch', vi.fn())` in `beforeEach`, or `vi.spyOn` on
+   the object; never `global.x = …`, `window.x = …` or `Object.assign(navigator, …)`. A property Vitest cannot
+   stub (a getter such as `navigator.clipboard`) is installed with `Object.defineProperty(…, { configurable: true })`.
+2. **Change the environment only through `vi.stubEnv`**, never by writing or deleting `process.env`.
+3. **Configure a controlled module through its controller.** Navigation: `navigationMock.router.push` is the spy,
+   `navigationMock.setPathname(...)` / `setSearchParams(...)` set the location. Save validation:
+   `saveValidationMock.dispatch` is the spy, `saveValidationMock.set({ isValid: false })` sets the state, and
+   `saveValidationMock.useRealContext()` switches the test to the real provider and hooks. App context:
+   `appContextMock.set({ isFullAdmin: false })` for a fixed value, `appContextMock.use(() => ({ ... }))` for one
+   read on every render, `appContextMock.sidebar.showSidebar` and `setEntityReadOnly` as spies; read-only mode is
+   `appContextMock.set({ isReadOnlyAdmin: true })`, because `useIsReadOnlyAdmin` only reads the context.
+   Notifications: `notificationMock.showNotification` and `removeNotification` are the spies. Set any of them in
+   `beforeEach` or in the test: all reset before every test.
+4. **Leave nothing running.** A timer, interval or subscription a test starts must stop by the end of that test.
+
+The file order is shuffled on every run, so an order dependency fails instead of hiding. A failure that only
+appears in some orders is a leak: reproduce it with the seed the run prints
+(`npx vitest run --sequence.seed=<seed>`), then fix the spec — don't re-run until it passes.
+
+`npm run lint:specs` rejects rules 1–3: a write to a global, a write or delete on `process.env`, a second
+`vi.mock` of a controlled module, and a mock of `use-is-read-only-admin`.

@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import FullscreenValueViewer from '@/src/components/Runs/View/RowDetails/FullscreenValueViewer';
 
 describe('FullscreenValueViewer', () => {
@@ -47,6 +48,14 @@ describe('FullscreenValueViewer', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: /close/i }));
 
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  test('copies the value as shown, from a labeled Copy button', async () => {
+    renderViewer({ fieldLabel: 'requestBody', value: '{"a":1}' });
+
+    await userEvent.setup().click(screen.getByRole('button', { name: ButtonsI18nKey.Copy }));
+
+    expect(await navigator.clipboard.readText()).toBe('{\n  "a": 1\n}');
   });
 
   test('renders nothing while closed', () => {

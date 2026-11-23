@@ -38,6 +38,7 @@ interface Props {
   application?: DialApplication | DialApplicationResource;
   applicationSchemes?: DialApplicationScheme[] | null;
   isEditorEnabled?: boolean;
+  isUiViewForced?: boolean;
   view?: ApplicationRoute;
   isChanged?: boolean;
   discardKey?: number;
@@ -54,6 +55,7 @@ const ParametersTab: FC<Props> = ({
   onChange,
   applicationSchemes,
   isEditorEnabled,
+  isUiViewForced,
   view,
   isChanged,
   discardKey,
@@ -79,16 +81,27 @@ const ParametersTab: FC<Props> = ({
     const foundRunner = getAppRunner(application as DialApplication, applicationSchemes);
     setIsSchemeLoading(true);
     resolveAppRunnerScheme(
-      foundRunner ?? { $id: (application as DialApplicationResource).application_type_schema_id },
+      foundRunner ?? {
+        $id:
+          (application as DialApplicationResource).application_type_schema_id ??
+          (application as { applicationTypeSchemaId?: string }).applicationTypeSchemaId,
+      },
     ).then(({ runner: resolvedRunner, scheme: resolvedScheme }) => {
       const scheme = resolvedScheme ?? resolvedRunner;
       setIsSchemeLoading(false);
       setScheme(scheme);
       const config = getCorrectConfig(scheme, application, currentTheme, session as UserSession);
       const targetUrl = getTargetUrl(view, application, config);
+      const hasUi = !!targetUrl && !isReadOnlyAdmin;
 
-      setViewItems(generateViewItems(t, view, !!targetUrl && !isReadOnlyAdmin, !!config));
-      setParamsView(getInitialParamsView(view, !!targetUrl && !isReadOnlyAdmin));
+      if (isUiViewForced) {
+        setViewItems(generateViewItems(t, view, hasUi, false).filter((item) => item.value === ParamsView.UI));
+        setParamsView(ParamsView.UI);
+        return;
+      }
+
+      setViewItems(generateViewItems(t, view, hasUi, !!scheme));
+      setParamsView(getInitialParamsView(view, hasUi));
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

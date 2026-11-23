@@ -10,7 +10,6 @@ import { LARGE_ICON_SIZE } from '@/src/components/FoldersStorage/constants';
 import RemoveUnitModal from '@/src/components/FoldersStorage/Modals/RemoveUnitModal';
 import RenameUnitModal from '@/src/components/FoldersStorage/Modals/RenameUnitModal';
 import { RolesCardStatus } from '@/src/components/FoldersStorage/models';
-import NewUnitButton from '@/src/components/FoldersStorage/NewUnitButton';
 import UnitRolesCard from '@/src/components/FoldersStorage/UnitRolesCard';
 import { useUnitRolesDraft } from '@/src/components/FoldersStorage/use-unit-roles-draft';
 import { ActionMenuOperationI18nKey, ErrorI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
@@ -37,7 +36,7 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const { fetchFiles, toggleFolder } = useRuleFolder();
-  const { units, groupClaim, refreshUnits } = useOrgUnits();
+  const { units, refreshUnits } = useOrgUnits();
   const { isUnitMode, userAccess } = useAppContext();
   const hasUnitAction = (namespace: UnitNamespace, action: UnitAction) =>
     !isUnitMode || hasActionAt(userAccess.units, namespace, action, unit.folder);
@@ -102,7 +101,6 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
         ) : (
           !isUnitReadonly && (
             <div className="flex flex-row gap-3">
-              <NewUnitButton />
               <Button
                 variant={ButtonVariant.Neutral}
                 label={t(ActionMenuOperationI18nKey.Rename)}
@@ -124,7 +122,6 @@ const UnitInfo: FC<Props> = ({ unit, isReadonly }) => {
         <UnitRolesCard
           roles={draft.roles}
           holders={draft.draft}
-          groupClaim={groupClaim}
           isReadonly={isRolesReadonly}
           onAdd={draft.addHolder}
           onRemove={draft.removeHolder}

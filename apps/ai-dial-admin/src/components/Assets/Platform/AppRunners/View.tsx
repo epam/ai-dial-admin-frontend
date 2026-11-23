@@ -8,7 +8,7 @@ import { ButtonAppearance, ButtonVariant, ButtonDropdown, DropdownItem } from '@
 import { JSONSchema7 } from 'json-schema';
 
 import { getResolvedRunnerSchema, removeRunner, updateRunner } from '@/src/app/[lang]/platform-app-runners/actions';
-import CreateAsset from '@/src/components/Assets/Modals/CreateAsset';
+import CreateSeededAsset from '@/src/components/Assets/Modals/CreateSeededAsset';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -232,9 +232,9 @@ const AppRunnerAssetView: FC<Props> = ({
         )}
         {isCreateAssetAppModalOpen &&
           createPortal(
-            <CreateAsset
+            <CreateSeededAsset
               view={ApplicationRoute.AssetsApplications}
-              isModalOpen={isCreateAssetAppModalOpen}
+              isOpen={isCreateAssetAppModalOpen}
               onClose={onCloseCreateAssetAppModal}
               context={useAppsFolder}
               initialValues={{

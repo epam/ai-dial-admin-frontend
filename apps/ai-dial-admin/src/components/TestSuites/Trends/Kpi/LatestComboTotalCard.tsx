@@ -38,7 +38,23 @@ const LatestComboTotalCard: FC<Props> = ({
   const deltaLabel = formatDelta(total, previousTotal);
 
   return (
-    <KpiCardFrame className={className} ariaLabel={title} title={title}>
+    <KpiCardFrame
+      className={className}
+      ariaLabel={title}
+      title={title}
+      footer={
+        <div className="flex flex-wrap gap-4 dial-tiny-text">
+          <div className="flex gap-1">
+            <span className="text-secondary">{sourceLabel}:</span>
+            <span className="text-primary">{formatValue(latest?.source ?? null)}</span>
+          </div>
+          <div className="flex gap-1">
+            <span className="text-secondary">{t(TestSuitesI18nKey.TrendsMetricsLabel)}:</span>
+            <span className="text-primary">{formatValue(latest?.metrics ?? null)}</span>
+          </div>
+        </div>
+      }
+    >
       <div className="flex items-center gap-1">
         {isLoading && points.length === 0 ? (
           <Spinner size={24} />
@@ -50,16 +66,6 @@ const LatestComboTotalCard: FC<Props> = ({
             {deltaLabel != null && <KpiDeltaBadge label={deltaLabel} higherIsBetter={false} />}
           </>
         )}
-      </div>
-      <div className="flex flex-wrap gap-4 dial-tiny-text">
-        <div className="flex gap-1">
-          <span className="text-secondary">{sourceLabel}:</span>
-          <span className="text-primary">{formatValue(latest?.source ?? null)}</span>
-        </div>
-        <div className="flex gap-1">
-          <span className="text-secondary">{t(TestSuitesI18nKey.TrendsMetricsLabel)}:</span>
-          <span className="text-primary">{formatValue(latest?.metrics ?? null)}</span>
-        </div>
       </div>
     </KpiCardFrame>
   );

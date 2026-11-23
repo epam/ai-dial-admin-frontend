@@ -1,10 +1,11 @@
-import { ButtonAppearance, DangerButton, OutlinedButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconBlocks, IconPlayerPause, IconPlus, IconTrashX } from '@tabler/icons-react';
+import { OutlinedButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
+import { IconBlocks, IconPlayerPause, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { createContainer, createImage, deleteImage, installImage, stopBuild } from '@/src/app/actions/deployments';
 import AddVersionModal from '@/src/components/Assets/Modals/AddVersionModal';
 import { getVersionsPerName } from '@/src/components/Assets/utils';
@@ -273,8 +274,8 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
           <div className="flex flex-row items-center w-full gap-x-4">
             {!jsonConfiguration?.isEditorEnabled && (
               <div className="flex-1 flex flex-row items-center gap-3">
-                {/* ui-kit Select has no content-width mode: its field is an input with the browser's default width. */}
-                <div className="shrink-0 [&_input]:field-sizing-content">
+                {/* Select 2.0 draws the label in the content slot; shrink the field to that text, not the collapsed input. */}
+                <div className="shrink-0 [&_.dial-kit-select]:!w-auto [&_[aria-label=input-container]]:!w-auto">
                   <VersionsSelect
                     selected={image.id}
                     versions={versions}
@@ -282,11 +283,9 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
                     onClick={onOpenCreteNewVersionModal}
                   />
                 </div>
-                <DangerButton
+                <RemoveButton
                   className={buttonsClassNames}
                   label={t(ButtonsI18nKey.Delete)}
-                  appearance={ButtonAppearance.Outlined}
-                  iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenDeleteModal}
                 />
                 {image.buildStatus === IMAGE_STATUS.BUILDING && (

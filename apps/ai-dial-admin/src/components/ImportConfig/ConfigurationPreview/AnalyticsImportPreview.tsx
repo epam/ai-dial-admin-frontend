@@ -9,7 +9,7 @@ import {
   getAnalyticsImportRows,
   isAnalyticsImportBlocked,
 } from '@/src/components/ImportConfig/ConfigurationPreview/analytics-import.utils';
-import { ImportI18nKey } from '@/src/constants/i18n';
+import { ExportI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
@@ -21,6 +21,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 interface Props {
   importBody: FormData;
   policy: CatalogResolutionPolicy;
+  isAccessIncluded: boolean;
   result?: CatalogImportResult;
   isReusedNamesAcknowledged: boolean;
   onChangeReusedNamesAcknowledged: (isAcknowledged: boolean) => void;
@@ -30,6 +31,7 @@ interface Props {
 const AnalyticsImportPreview: FC<Props> = ({
   importBody,
   policy,
+  isAccessIncluded,
   result,
   isReusedNamesAcknowledged,
   onChangeReusedNamesAcknowledged,
@@ -49,7 +51,7 @@ const AnalyticsImportPreview: FC<Props> = ({
     const loadPreview = async () => {
       setIsLoading(true);
       setPreview(undefined);
-      const res = await getReqRef.current(previewAnalyticsImportConfig, importBody, policy, false);
+      const res = await getReqRef.current(previewAnalyticsImportConfig, importBody, policy, false, isAccessIncluded);
       setIsLoading(false);
 
       if (res.success && res.response) {
@@ -58,12 +60,14 @@ const AnalyticsImportPreview: FC<Props> = ({
         const message = isUnreachableResponse(res)
           ? tRef.current(ImportI18nKey.AnalyticsPreviewFailed)
           : res.errorMessage;
-        showNotificationRef.current(getErrorNotification(res.errorHeader, message, res.requestId));
+        showNotificationRef.current(
+          getErrorNotification(tRef.current(ExportI18nKey.PreviewUnavailable), message, res.requestId),
+        );
       }
     };
 
     void loadPreview();
-  }, [importBody, policy]);
+  }, [importBody, policy, isAccessIncluded]);
 
   useEffect(() => {
     onBlockedChange(!!result || isAnalyticsImportBlocked(preview, isReusedNamesAcknowledged));
@@ -86,6 +90,7 @@ const AnalyticsImportPreview: FC<Props> = ({
       <AnalyticsImportNotices
         preview={preview}
         result={result}
+        isAccessIncluded={isAccessIncluded}
         isReusedNamesAcknowledged={isReusedNamesAcknowledged}
         onChangeReusedNamesAcknowledged={onChangeReusedNamesAcknowledged}
       />

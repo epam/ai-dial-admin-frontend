@@ -3,10 +3,10 @@
 import { FC } from 'react';
 
 import { ApplicationRoute } from '@/src/types/routes';
-import BaseAssetList from '@/src/components/Assets/BaseAssetList/BaseAssetList';
+import TabbedAssetList from '@/src/components/Assets/TabbedAssetList/TabbedAssetList';
 
 const ModelsList: FC = () => {
-  return <BaseAssetList view={ApplicationRoute.PlatformModels} />;
+  return <TabbedAssetList view={ApplicationRoute.PlatformModels} />;
 };
 
 export default ModelsList;

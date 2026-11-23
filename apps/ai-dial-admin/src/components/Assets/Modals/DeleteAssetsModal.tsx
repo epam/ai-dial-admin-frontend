@@ -22,6 +22,7 @@ import {
   getDeleteModalTitle,
   getGridColumns,
   normalizePath,
+  withoutFilters,
 } from './utils';
 import { ColDef } from 'ag-grid-community';
 import { FILE_MANAGER_GRID_CLASS } from '@/src/components/Common/FileManager/constants';
@@ -75,11 +76,7 @@ const DeleteAssetsModal: FC<Props> = ({ view, isOpen, itemsToDelete, context, on
   );
 
   const getDeleteModalContent = useCallback(() => {
-    const columnDefs = getGridColumns(view, hasFoldersToDelete, itemsToDelete).map((column) => ({
-      ...column,
-      filter: false,
-      floatingFilter: false,
-    }));
+    const columnDefs = getGridColumns(view, hasFoldersToDelete, itemsToDelete).map(withoutFilters);
 
     return (
       <div className="px-6 dial-small mb-6">
@@ -129,6 +126,7 @@ const DeleteAssetsModal: FC<Props> = ({ view, isOpen, itemsToDelete, context, on
               navigationPanelOptions={{
                 searchable: false,
               }}
+              sortOptions={{ sortable: false }}
             />
           </div>
         )}

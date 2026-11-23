@@ -53,6 +53,31 @@ describe('VariablesEditor', () => {
     expect(valueSelect).toHaveAttribute('data-invalid', 'false');
   });
 
+  test('does not offer a projection-only column', () => {
+    render(
+      <VariablesEditor
+        vars={{ request: { column: 'deployment' } }}
+        fields={[
+          ...columns,
+          {
+            source: 'request_body_full',
+            name: 'dial_usage_log_payload.request_body_full',
+            type: AnalyticsFieldType.String,
+            projection_only: true,
+          },
+        ]}
+        isReady
+        onChange={vi.fn()}
+      />,
+    );
+
+    const [, valueSelect] = screen.getAllByRole('combobox');
+    const offered = Array.from(valueSelect.querySelectorAll('option')).map((option) => option.value);
+
+    expect(offered).not.toContain('dial_usage_log_payload.request_body_full');
+    expect(offered).toContain('deployment');
+  });
+
   test('still marks a binding to a field the entity does not carry', () => {
     render(<Host seed={{ request: { column: 'retired_column' } }} />);
 

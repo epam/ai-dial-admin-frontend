@@ -40,9 +40,18 @@ A `[Preview]` or `[Deprecated]` marker after a section title is that group's `ba
   - **Toolsets**
     - **Key**: `Toolsets`
     - **Description**: Navigate to the assets toolsets page to manage toolset assets.
+  - **Auto Routers**
+    - **Key**: `PlatformRouters`
+    - **Description**: Navigate to the auto routers page to manage the auto routers DIAL Core uses to pick the deployment serving a request, in proxy or decision mode.
   - **Translators**
     - **Key**: `PlatformTranslators`
     - **Description**: Navigate to the translators page to manage the interface translators DIAL Core applies between LLM API dialects.
+  - **Plugins**
+    - **Key**: `PlatformPlugins`
+    - **Description**: Navigate to the plugins page to manage the instances of in-process plugin code that DIAL Core runs in place of an HTTP call, each with a type and settings (preview).
+  - **Aliases**
+    - **Key**: `PlatformAliases`
+    - **Description**: Navigate to the aliases page to manage the deployments that forward calls to a model, application or toolset under a name of their own, kept in Core's Platform and Public storage or declared in the config file.
   - **Routes**
     - **Key**: `PlatformRoutes`
     - **Description**: Navigate to the routes page to manage Core's own routing rules.

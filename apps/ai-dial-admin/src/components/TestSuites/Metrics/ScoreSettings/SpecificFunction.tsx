@@ -78,7 +78,7 @@ const SpecificFunction: FC<Props> = ({
   );
 
   return (
-    <div className="mt-4 flex flex-col gap-4 rounded bg-layer-2 p-4">
+    <div className="mt-4 flex flex-col gap-4 rounded bg-layer-sunken p-4">
       <span className="dial-tiny-semi-text text-secondary">{t(TestSuitesI18nKey.OverallScoreFunction)}</span>
 
       <Select
@@ -89,7 +89,7 @@ const SpecificFunction: FC<Props> = ({
         onChange={onFunctionNameChange}
       />
 
-      <div className="flex flex-col gap-4 border-l border-tertiary pl-4">
+      <div className="flex flex-col gap-4 border-l border-secondary pl-4">
         <span className="dial-tiny-semi-text text-secondary">
           {t(TestSuitesI18nKey.OverallScoreFunctionParameters)}
         </span>

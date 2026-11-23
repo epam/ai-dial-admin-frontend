@@ -1,11 +1,13 @@
 import { EChartsOption } from 'echarts-for-react/src/types';
 
 import { renderCell } from '@/src/components/Analytics/QueryBuilder/utils/result';
+import { DonutSliceView } from '@/src/components/Analytics/Usage/models';
 import { PIE_MAX_SLICES } from '@/src/constants/analytics/query-builder';
 import { CHART_SERIES_COLOR_CYCLE } from '@/src/constants/analytics/query-builder-palette';
 import { CHART_TOOLTIP_STYLE } from '@/src/constants/chart-tooltip';
 import { ChartColors } from '@/src/components/Common/MetricCard/models';
-import { ChartBuildContext, ChartType, PieSlice } from '@/src/models/analytics/query-builder';
+import { ChartLegendEntry } from '@/src/components/Analytics/Usage/Charts/ChartLegend';
+import { ChartBuildContext, ChartType } from '@/src/models/analytics/query-builder';
 
 type ResultRows = Array<Record<string, unknown>>;
 
@@ -53,27 +55,59 @@ export const strictNumber = (value: unknown): number | null => {
 export const getStrictNumericColumns = (rows: ResultRows, columns: string[]): string[] =>
   rows.length ? columns.filter((column) => rows.every((row) => strictNumber(row[column]) !== null)) : [];
 
-// A blank category would draw an unlabeled bar or slice, so it reads as `emptyLabel` instead.
-const renderCategory = (value: unknown, emptyLabel: string): string => renderCell(value) || emptyLabel;
+export interface SplitSeries {
+  name: string;
+  data: Array<number | null>;
+}
 
-// Top-N pie slices by value; the remaining categories merge into one localized "Other" slice.
-export const bucketTopSlices = (
+export interface SplitPivot {
+  xData: string[];
+  series: SplitSeries[];
+}
+
+interface SplitLabels {
+  otherLabel: string;
+}
+
+const sumInto = (current: number | null, value: number | null): number | null =>
+  value === null ? current : (current ?? 0) + value;
+
+export const pivotSplitSeries = (
   rows: ResultRows,
-  categoryField: string,
-  valueField: string,
-  otherLabel: string,
-  maxSlices: number = PIE_MAX_SLICES,
-  emptyLabel = '',
-): PieSlice[] => {
-  const slices = rows
-    .map((row) => ({ name: renderCategory(row[categoryField], emptyLabel), value: toNumber(row[valueField]) ?? 0 }))
-    .sort((a, b) => b.value - a.value);
-  if (slices.length <= maxSlices) return slices;
-  const other = slices.slice(maxSlices).reduce((sum, s) => sum + s.value, 0);
-  return [...slices.slice(0, maxSlices), { name: otherLabel, value: other }];
+  xField: string,
+  yField: string,
+  splitField: string,
+  { otherLabel }: SplitLabels,
+  maxSeries = PIE_MAX_SLICES,
+): SplitPivot => {
+  const ordered = sortRowsByX(rows, xField);
+  const xData = [...new Set(ordered.map((row) => renderCell(row[xField])))];
+  const xIndex = new Map(xData.map((x, index) => [x, index]));
+
+  const bySplit = new Map<string, Array<number | null>>();
+  ordered.forEach((row) => {
+    const name = renderCell(row[splitField]);
+    const data = bySplit.get(name) ?? xData.map(() => null);
+    const index = xIndex.get(renderCell(row[xField])) as number;
+    data[index] = sumInto(data[index], toNumber(row[yField]));
+    bySplit.set(name, data);
+  });
+
+  const total = (data: Array<number | null>) => data.reduce<number>((sum, value) => sum + (value ?? 0), 0);
+  const ranked = [...bySplit.entries()]
+    .map(([name, data]) => ({ name, data }))
+    .sort((a, b) => total(b.data) - total(a.data));
+  const shown = ranked.slice(0, maxSeries);
+  const rest = ranked.slice(maxSeries);
+  if (!rest.length) return { xData, series: shown };
+
+  const other = xData.map((_, index) =>
+    rest.reduce<number | null>((sum, entry) => sumInto(sum, entry.data[index]), null),
+  );
+  return { xData, series: [...shown, { name: otherLabel, data: other }] };
 };
 
-const baseOptions = (colors: ChartColors, xData: string[], yField: string): EChartsOption => ({
+const baseOptions = (colors: ChartColors, xData: string[], yName?: string): EChartsOption => ({
   title: { show: false },
   tooltip: { trigger: 'axis', ...CHART_TOOLTIP_STYLE },
   xAxis: {
@@ -88,7 +122,7 @@ const baseOptions = (colors: ChartColors, xData: string[], yField: string): ECha
   },
   yAxis: {
     type: 'value',
-    name: yField,
+    name: yName,
     nameTextStyle: { color: colors.neutral, fontSize: 12, fontWeight: 500 },
     axisLabel: { color: colors.neutral },
     splitLine: { show: true, lineStyle: { color: colors.track, width: 1 } },
@@ -97,26 +131,106 @@ const baseOptions = (colors: ChartColors, xData: string[], yField: string): ECha
   color: colors.accent,
 });
 
-const buildCartesianOptions = (
+const CATEGORY_LABEL_MAX_WIDTH = 120;
+const CATEGORY_LABEL_CHAR_WIDTH = 7;
+const CATEGORY_LABEL_ROTATE = 45;
+
+interface CategoryAxis {
+  type?: string;
+  data?: unknown[];
+  axisLabel?: Record<string, unknown>;
+}
+
+export const fitCategoryLabels = (options: EChartsOption, width: number): EChartsOption => {
+  const xAxis = options.xAxis as CategoryAxis | undefined;
+  if (!width || xAxis?.type !== 'category' || !xAxis.data?.length) return options;
+  const longest = Math.max(...xAxis.data.map((value) => String(value ?? '').length));
+  const labelWidth = Math.min(CATEGORY_LABEL_MAX_WIDTH, longest * CATEGORY_LABEL_CHAR_WIDTH);
+  const isRotated = labelWidth > width / xAxis.data.length;
+  const grid = options.grid as { bottom?: number } | undefined;
+  return {
+    ...options,
+    xAxis: {
+      ...xAxis,
+      axisLabel: { ...xAxis.axisLabel, interval: 0, rotate: isRotated ? CATEGORY_LABEL_ROTATE : 0 },
+    },
+    grid: isRotated ? { ...grid, bottom: (grid?.bottom ?? 0) + Math.round(labelWidth * Math.SQRT1_2) } : grid,
+  };
+};
+
+const seriesColor = (index: number) => CHART_SERIES_COLOR_CYCLE[index % CHART_SERIES_COLOR_CYCLE.length];
+
+const buildSplitOptions = (
   colors: ChartColors,
   type: ChartType,
   rows: ResultRows,
   xField: string,
   yField: string,
-  yLabel: string = yField,
-  emptyLabel = '',
+  splitField: string,
+  label: (column: string) => string,
+  labels: SplitLabels,
 ): EChartsOption => {
-  const ordered = sortRowsByX(rows, xField);
-  const xData = ordered.map((row) => renderCategory(row[xField], emptyLabel));
-  const yData = ordered.map((row) => toNumber(row[yField]));
-  const options = baseOptions(colors, xData, yLabel);
+  const { xData, series } = pivotSplitSeries(rows, xField, yField, splitField, labels);
+  const options = baseOptions(colors, xData, label(yField));
+  const blur = { blur: { itemStyle: { opacity: 0.2 }, lineStyle: { opacity: 0.2 } }, emphasis: { focus: 'series' } };
+  options.series = series.map((entry, index) => {
+    const color = seriesColor(index);
+    if (type === ChartType.Bar) {
+      return { type: 'bar', name: entry.name, data: entry.data, barMaxWidth: 48, itemStyle: { color }, ...blur };
+    }
+    if (type === ChartType.Scatter) {
+      return { type: 'scatter', name: entry.name, data: entry.data, symbolSize: 10, itemStyle: { color }, ...blur };
+    }
+    return {
+      type: 'line',
+      name: entry.name,
+      data: entry.data,
+      smooth: true,
+      itemStyle: { color },
+      lineStyle: { color },
+      ...blur,
+    };
+  });
+  return options;
+};
 
-  if (type === ChartType.Bar) {
-    options.series = [{ type: 'bar', data: yData, barMaxWidth: 48, itemStyle: { color: colors.accent } }];
-    return options;
+const buildCartesianOptions = (
+  colors: ChartColors,
+  type: ChartType,
+  rows: ResultRows,
+  xField: string,
+  yFields: string[],
+  label: (column: string) => string = (column) => column,
+  splitField: string | null = null,
+  otherLabel = '',
+): EChartsOption => {
+  if (splitField) {
+    return buildSplitOptions(colors, type, rows, xField, yFields[0], splitField, label, { otherLabel });
   }
+  const ordered = sortRowsByX(rows, xField);
+  const xData = ordered.map((row) => renderCell(row[xField]));
+  const isMultiSeries = yFields.length > 1;
+  const options = baseOptions(colors, xData, isMultiSeries ? void 0 : label(yFields[0]));
 
-  options.series = [{ type: 'line', data: yData, smooth: true }];
+  options.series = yFields.map((yField, index) => {
+    const data = ordered.map((row) => toNumber(row[yField]));
+    const color = isMultiSeries ? seriesColor(index) : colors.accent;
+    const name = label(yField);
+    if (type === ChartType.Bar) {
+      const focus = isMultiSeries ? { emphasis: { focus: 'series' }, blur: { itemStyle: { opacity: 0.2 } } } : {};
+      return { type: 'bar', name, data, barMaxWidth: 48, itemStyle: { color }, ...focus };
+    }
+    const lineStyle = isMultiSeries
+      ? {
+          itemStyle: { color },
+          lineStyle: { color },
+          emphasis: { focus: 'series' },
+          blur: { lineStyle: { opacity: 0.2 }, itemStyle: { opacity: 0.2 } },
+        }
+      : {};
+    return { type: 'line', name, data, smooth: true, ...lineStyle };
+  });
+
   return options;
 };
 
@@ -124,36 +238,15 @@ export const buildBarChartOptions = (
   colors: ChartColors,
   rows: ResultRows,
   xField: string,
-  yField: string,
-): EChartsOption => buildCartesianOptions(colors, ChartType.Bar, rows, xField, yField);
+  yFields: string[],
+): EChartsOption => buildCartesianOptions(colors, ChartType.Bar, rows, xField, yFields);
 
 export const buildLineChartOptions = (
   colors: ChartColors,
   rows: ResultRows,
   xField: string,
-  yField: string,
-): EChartsOption => buildCartesianOptions(colors, ChartType.Line, rows, xField, yField);
-
-export const buildPieChartOptions = (
-  colors: ChartColors,
-  rows: ResultRows,
-  categoryField: string,
-  valueField: string,
-  otherLabel: string,
-  emptyLabel = '',
-): EChartsOption => ({
-  title: { show: false },
-  tooltip: { trigger: 'item', ...CHART_TOOLTIP_STYLE },
-  series: [
-    {
-      type: 'pie',
-      radius: '70%',
-      data: bucketTopSlices(rows, categoryField, valueField, otherLabel, PIE_MAX_SLICES, emptyLabel),
-      label: { color: colors.neutral },
-    },
-  ],
-  color: CHART_SERIES_COLOR_CYCLE,
-});
+  yFields: string[],
+): EChartsOption => buildCartesianOptions(colors, ChartType.Line, rows, xField, yFields);
 
 // 'value' when every axis value is a plain number; 'time' otherwise — a scatter axis column is
 // pre-filtered by getNumericColumns, so non-numeric means date-like strings.
@@ -213,14 +306,12 @@ export const buildChartOptions = (
   type: ChartType,
   rows: ResultRows,
   xField: string,
-  yField: string,
+  yFields: string[],
   context: ChartBuildContext,
 ): EChartsOption => {
   const label = (column: string): string => context.columnLabels[column] ?? column;
-  if (type === ChartType.Pie) {
-    return buildPieChartOptions(context.colors, rows, xField, yField, context.otherLabel, context.emptyLabel);
-  }
-  if (type === ChartType.Scatter) {
+  const [yField] = yFields;
+  if (type === ChartType.Scatter && !context.splitField) {
     return buildScatterChartOptions(
       context.colors,
       rows,
@@ -231,5 +322,66 @@ export const buildChartOptions = (
       label(yField),
     );
   }
-  return buildCartesianOptions(context.colors, type, rows, xField, yField, label(yField), context.emptyLabel);
+  return buildCartesianOptions(
+    context.colors,
+    type,
+    rows,
+    xField,
+    yFields,
+    label,
+    context.splitField ?? null,
+    context.otherLabel,
+  );
+};
+
+export const buildPieOptions = (colors: ChartColors, slices: DonutSliceView[]): EChartsOption => ({
+  title: { show: false },
+  tooltip: { trigger: 'item', ...CHART_TOOLTIP_STYLE, formatter: '{b}: {c}' },
+  series: [
+    {
+      type: 'pie',
+      radius: ['0%', '80%'],
+      data: slices.map((slice) => ({ name: slice.label, value: slice.value, itemStyle: { color: slice.color } })),
+      label: { show: false },
+      labelLine: { show: false },
+    },
+  ],
+});
+
+interface CartesianSeries {
+  type?: string;
+  name?: string;
+  itemStyle?: { color?: string };
+}
+
+interface PieSlice {
+  name?: string;
+  itemStyle?: { color?: string };
+}
+
+interface PieSeries {
+  type?: string;
+  data?: PieSlice[];
+}
+
+export const buildSeriesLegend = (options: EChartsOption | null): ChartLegendEntry[] => {
+  const [first]: PieSeries[] = Array.isArray(options?.series) ? options.series : [];
+  if (first?.type === 'pie') {
+    return (first.data ?? []).map((slice, index) => ({
+      id: `${index}-${slice.name ?? ''}`,
+      label: slice.name ?? '',
+      color: slice.itemStyle?.color,
+    }));
+  }
+  const series: CartesianSeries[] = Array.isArray(options?.series) ? options.series : [];
+  const isCartesian = series.every(
+    (entry) => entry.type === 'bar' || entry.type === 'line' || entry.type === 'scatter',
+  );
+  if (series.length < 2 || !isCartesian) return [];
+  return series.map((entry, index) => ({
+    id: `${index}-${entry.name ?? ''}`,
+    label: entry.name ?? '',
+    color: entry.itemStyle?.color,
+    seriesIndex: index,
+  }));
 };

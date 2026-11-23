@@ -286,34 +286,21 @@ describe('findFolderByPath', () => {
   });
 });
 
-describe('getBulkActionsToolbarOptions — Assets Applications bucket switch', () => {
-  test('restricts to delete-only while browsing the platform bucket', () => {
-    const { actionLabels } = getBulkActionsToolbarOptions(ApplicationRoute.AssetsApplications, translate, 'platform/');
+describe('getBulkActionsToolbarOptions', () => {
+  test('keeps the full bulk action set for Applications', () => {
+    const { actionLabels } = getBulkActionsToolbarOptions(ApplicationRoute.AssetsApplications, translate);
 
-    expect(Object.keys(actionLabels)).toEqual(['delete']);
+    expect(Object.keys(actionLabels).sort()).toEqual(['delete', 'download', 'move']);
   });
 
-  test('keeps the full bulk action set while browsing the public bucket', () => {
-    const withPublicPath = getBulkActionsToolbarOptions(ApplicationRoute.AssetsApplications, translate, 'public/');
-    const withoutPath = getBulkActionsToolbarOptions(ApplicationRoute.AssetsApplications, translate);
+  test.each([ApplicationRoute.Skills, ApplicationRoute.Projects, ApplicationRoute.Conversations])(
+    'offers only delete for the %s view',
+    (view) => {
+      const { actionLabels } = getBulkActionsToolbarOptions(view, translate);
 
-    expect(Object.keys(withPublicPath.actionLabels).sort()).toEqual(['delete', 'download', 'move']);
-    expect(withPublicPath.actionLabels).toEqual(withoutPath.actionLabels);
-  });
-
-  test.each([ApplicationRoute.Skills, ApplicationRoute.Projects])('offers only delete for the %s view', (view) => {
-    const { actionLabels } = getBulkActionsToolbarOptions(view, translate);
-
-    expect(Object.keys(actionLabels)).toEqual(['delete']);
-  });
-
-  test('is unaffected for other views regardless of the path argument', () => {
-    const withPath = getBulkActionsToolbarOptions(ApplicationRoute.PlatformKeys, translate, 'platform/');
-    const withoutPath = getBulkActionsToolbarOptions(ApplicationRoute.PlatformKeys, translate);
-
-    expect(withPath.actionLabels).toEqual(withoutPath.actionLabels);
-    expect(Object.keys(withPath.actionLabels)).toEqual(['delete']);
-  });
+      expect(Object.keys(actionLabels)).toEqual(['delete']);
+    },
+  );
 });
 
 describe('getGridOptions — file manager grid design', () => {

@@ -32,6 +32,39 @@ describe('TitleSubtitleCellRenderer', () => {
     expect(screen.getByText('run-0001')).toBeTruthy();
   });
 
+  test('renders the title as a link and keeps the subtitle as text when an address is given', () => {
+    renderCell({
+      value: 'Nightly regression',
+      data: ROW,
+      getSubtitle: (data) => data?.id,
+      getHref: (data) => `/runs/${data?.id}`,
+    });
+
+    expect(screen.getByRole('link', { name: 'Nightly regression' })).toHaveAttribute('href', '/runs/run-0001');
+    expect(screen.getByRole('link')).not.toHaveTextContent('run-0001');
+  });
+
+  test('opens the link in a new tab only when asked to', () => {
+    const params = { value: 'Nightly regression', data: ROW, getHref: (data?: Row) => `/runs/${data?.id}` };
+
+    const { unmount } = renderCell(params);
+    expect(screen.getByRole('link')).not.toHaveAttribute('target');
+    unmount();
+
+    renderCell({ ...params, isNewTab: true });
+    expect(screen.getByRole('link')).toHaveAttribute('target', '_blank');
+    expect(screen.getByRole('link')).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  test('renders no link and skips the address lookup when the title is empty', () => {
+    const getHref = vi.fn(() => '/runs/run-0001');
+    renderCell({ value: '', data: ROW, getSubtitle: (data) => data?.id, getHref });
+
+    expect(screen.getByText('run-0001')).toBeTruthy();
+    expect(screen.queryByRole('link')).toBeNull();
+    expect(getHref).not.toHaveBeenCalled();
+  });
+
   test('truncates each line independently rather than as one block of text', () => {
     const title = 'A run name long enough to be clipped by any realistic column width';
     renderCell({ value: title, data: ROW, getSubtitle: (data) => data?.id });

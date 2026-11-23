@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
@@ -46,9 +47,9 @@ vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => {
 const platformRoot = { name: 'platform', path: 'platform/', nodeType: 'FOLDER', items: [] } as unknown as Asset;
 const publicRoot = { name: 'public', path: 'public/', nodeType: 'FOLDER', items: [] } as unknown as Asset;
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ isUnitMode: false }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ isUnitMode: false }));
+});
 
 const renderFilePath = (files: Asset[], view = ApplicationRoute.AssetsApplications) => {
   const fetchFiles = vi.fn();
@@ -83,18 +84,7 @@ describe('FilePath', () => {
     await user.click(screen.getByRole('button', { name: 'ActionMenuOperation.Move_to' }));
     expect(screen.getAllByText('item:assistant')).toHaveLength(2);
   });
-  test('does not offer the platform bucket as a Move-to destination for a dual-bucket view', async () => {
-    const user = userEvent.setup();
-    renderFilePath([platformRoot, publicRoot]);
-
-    await user.click(screen.getByRole('button', { name: 'ActionMenuOperation.Move_to' }));
-
-    expect(screen.getByText('item:public')).toBeInTheDocument();
-    expect(screen.queryByText('item:platform')).not.toBeInTheDocument();
-    expect(screen.queryByText('item:platform')).not.toBeInTheDocument();
-  });
-
-  test('offers every root as a Move-to destination for a non-dual-bucket view', async () => {
+  test('offers the public root as a Move-to destination', async () => {
     const user = userEvent.setup();
     renderFilePath([publicRoot], ApplicationRoute.Prompts);
 
@@ -103,10 +93,10 @@ describe('FilePath', () => {
     expect(screen.getByText('root:public')).toBeInTheDocument();
   });
 
-  test('fetches file, platform, and public roots for a dual-bucket view', () => {
+  test('fetches only the public root', () => {
     const fetchFiles = renderFilePath([]);
 
     expect(fetchFiles).toHaveBeenCalledOnce();
-    expect(fetchFiles).toHaveBeenCalledWith(['file/', 'platform/', 'public/']);
+    expect(fetchFiles).toHaveBeenCalledWith('public/');
   });
 });

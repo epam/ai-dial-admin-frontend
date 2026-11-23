@@ -1,3 +1,5 @@
+import type { DeploymentData } from '@epam/ai-dial-typescript-sdk';
+
 import { APPLICATIONS_PREFIX, MODELS_PREFIX, TOOLSETS_PREFIX } from '@/src/constants/publications-core';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { McpDeploymentRef, RoutesRef, TestSuiteDeploymentRef } from '@/src/models/evaluation/test-suite';
@@ -29,7 +31,20 @@ interface ResolveCatalogDeploymentNavigationOptions {
 export interface ResolveDeploymentNavigationOptions {
   /** When set, overrides Entities Models for dial-model deployments (Catalog vs Entities). */
   modelRoute?: ApplicationRoute;
+  /** When set, overrides Entities Applications for dial-application deployments (Platform vs Entities). */
+  applicationRoute?: ApplicationRoute;
 }
+
+/** Core's `object` discriminator mapped to the deployment types navigation understands. */
+const CORE_OBJECT_DEPLOYMENT_TYPES: Partial<Record<DeploymentData['object'], DeploymentType>> = {
+  model: DeploymentType.Model,
+  application: DeploymentType.Application,
+};
+
+/** The navigation type of a Core deployment; `undefined` for a toolset, a router, or no deployment. */
+export const getDeploymentTypeFromCoreObject = (
+  deployment: DeploymentData | null | undefined,
+): DeploymentType | undefined => (deployment ? CORE_OBJECT_DEPLOYMENT_TYPES[deployment.object] : undefined);
 
 const stripApplicationsPrefix = (applicationPath: string): string =>
   applicationPath.startsWith(APPLICATIONS_PREFIX) ? applicationPath.slice(APPLICATIONS_PREFIX.length) : applicationPath;
@@ -128,20 +143,10 @@ export function resolveCatalogDeploymentNavigation(
 export function resolveDeploymentNavigationTarget(
   deploymentRef: TestSuiteDeploymentRef,
   deploymentType: string | undefined,
-  catalogDeployments: CatalogDeploymentRecord[] = [],
   options: ResolveDeploymentNavigationOptions = {},
 ): DeploymentNavigationTarget | null {
   if (!deploymentRef.id) {
     return null;
-  }
-
-  const catalogDeployment = catalogDeployments.find((item) => item.reference === deploymentRef.id);
-  const fromCatalog = resolveCatalogDeploymentNavigation(catalogDeployment, {
-    fallbackDisplayName: deploymentRef.name,
-  });
-
-  if (fromCatalog) {
-    return fromCatalog;
   }
 
   if (deploymentRef.id.startsWith(APPLICATIONS_PREFIX)) {
@@ -173,8 +178,12 @@ export function resolveDeploymentNavigationTarget(
   }
 
   if (deploymentType === DeploymentType.Application) {
+    // Wait for the platform-application probe before committing to Entities Applications.
+    if (options.applicationRoute == null) {
+      return null;
+    }
     return {
-      route: ApplicationRoute.Applications,
+      route: options.applicationRoute,
       entity: { name: deploymentRef.id },
     };
   }

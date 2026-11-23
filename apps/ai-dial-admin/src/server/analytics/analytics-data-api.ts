@@ -31,10 +31,9 @@ import {
   AnalyticsTable,
   CreateTableDto,
   DraftSchemaDto,
-  RowPolicy,
-  RowPoliciesResponse,
-  TableAccess,
-  TableAccessUpdateResult,
+  TableAccessConfig,
+  TableAccessEntryDto,
+  TableAccessEntryResult,
   UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
@@ -129,9 +128,12 @@ export const TABLE_URL = (name: string): string => `${TABLES_URL}/${encodeURICom
 export const TABLE_SCHEMA_URL = (name: string): string => `${TABLE_URL(name)}/schema`;
 export const TABLE_ROWS_URL = (name: string): string => `${TABLE_URL(name)}/rows`;
 export const TABLE_ACCESS_URL = (name: string): string => `${TABLE_URL(name)}/access`;
-export const TABLE_ROW_POLICIES_URL = (name: string): string => `${TABLE_URL(name)}/row-policies`;
-export const TABLE_ROW_POLICY_URL = (name: string, role: string): string =>
-  `${TABLE_ROW_POLICIES_URL(name)}/${encodeURIComponent(role)}`;
+export const TABLE_ACCESS_ROLE_URL = (name: string, role: string, generation?: number): string => {
+  const params = new URLSearchParams({ role });
+  if (generation != null) params.set('generation', String(generation));
+
+  return `${TABLE_ACCESS_URL(name)}?${params.toString()}`;
+};
 
 export const TABLE_BACKFILL_URL = 'v1/data-sync/backfill';
 export const TABLE_BACKFILL_LIST_URL = (state?: TableBackfillState): string =>
@@ -162,10 +164,15 @@ export const CATALOG_EXPORT_URL = `${CATALOG_URL}/export`;
 export const CATALOG_EXPORT_PREVIEW_URL = `${CATALOG_EXPORT_URL}/preview`;
 export const CATALOG_IMPORT_URL = `${CATALOG_URL}/import`;
 export const CATALOG_IMPORT_PREVIEW_URL = `${CATALOG_IMPORT_URL}/preview`;
-export const CATALOG_IMPORT_QUERY = (policy: CatalogResolutionPolicy, isReusedNamesAcknowledged: boolean): string =>
+export const CATALOG_IMPORT_QUERY = (
+  policy: CatalogResolutionPolicy,
+  isReusedNamesAcknowledged: boolean,
+  isAccessIncluded = false,
+): string =>
   new URLSearchParams({
     resolution_policy: policy,
     acknowledge_reused_names: String(isReusedNamesAcknowledged),
+    ...(isAccessIncluded && { include_access: 'true' }),
   }).toString();
 
 export class AnalyticsDataApi extends BaseApi {
@@ -310,29 +317,28 @@ export class AnalyticsDataApi extends BaseApi {
     return this.postAction<WriteRowsDto>(TABLE_ROWS_URL(name), dto, token);
   }
 
-  getTableAccess(name: string, token: Token): Promise<ServerActionResponse<TableAccess>> {
+  getTableAccess(name: string, token: Token): Promise<ServerActionResponse<TableAccessConfig>> {
     return this.getAction(TABLE_ACCESS_URL(name), token);
   }
 
-  updateTableAccess(
+  putTableAccessEntry(
     name: string,
-    access: Partial<TableAccess>,
+    role: string,
+    entry: TableAccessEntryDto,
     token: Token,
-  ): Promise<ServerActionResponse<TableAccessUpdateResult>> {
-    return this.putAction<Partial<TableAccess>>(TABLE_ACCESS_URL(name), access, token);
+  ): Promise<ServerActionResponse<TableAccessEntryResult>> {
+    return this.putAction<TableAccessEntryDto>(TABLE_ACCESS_ROLE_URL(name, role), entry, token);
   }
 
-  getRowPolicies(name: string, token: Token): Promise<ServerActionResponse<RowPoliciesResponse>> {
-    return this.getAction(TABLE_ROW_POLICIES_URL(name), token);
-  }
+  async deleteTableAccessEntry(
+    name: string,
+    role: string,
+    generation: number,
+    token: Token,
+  ): Promise<ServerActionResponse> {
+    const res = await this.deleteAction(TABLE_ACCESS_ROLE_URL(name, role, generation), token);
 
-  putRowPolicy(name: string, role: string, policy: RowPolicy, token: Token): Promise<ServerActionResponse<RowPolicy>> {
-    return this.putAction<RowPolicy>(TABLE_ROW_POLICY_URL(name, role), policy, token);
-  }
-
-  // 404 when the role has no policy on the table.
-  deleteRowPolicy(name: string, role: string, token: Token): Promise<ServerActionResponse> {
-    return this.deleteAction(TABLE_ROW_POLICY_URL(name, role), token);
+    return res.status === 404 ? { success: true } : res;
   }
 
   async getPipelines(
@@ -421,10 +427,11 @@ export class AnalyticsDataApi extends BaseApi {
     file: FormData,
     policy: CatalogResolutionPolicy,
     isReusedNamesAcknowledged: boolean,
+    isAccessIncluded: boolean,
     token: Token,
   ): Promise<ServerActionResponse<CatalogImportPreview>> {
     return this.postFiles(
-      `${CATALOG_IMPORT_PREVIEW_URL}?${CATALOG_IMPORT_QUERY(policy, isReusedNamesAcknowledged)}`,
+      `${CATALOG_IMPORT_PREVIEW_URL}?${CATALOG_IMPORT_QUERY(policy, isReusedNamesAcknowledged, isAccessIncluded)}`,
       file,
       token,
     );
@@ -434,10 +441,11 @@ export class AnalyticsDataApi extends BaseApi {
     file: FormData,
     policy: CatalogResolutionPolicy,
     isReusedNamesAcknowledged: boolean,
+    isAccessIncluded: boolean,
     token: Token,
   ): Promise<ServerActionResponse<CatalogImportResult>> {
     return this.postFiles(
-      `${CATALOG_IMPORT_URL}?${CATALOG_IMPORT_QUERY(policy, isReusedNamesAcknowledged)}`,
+      `${CATALOG_IMPORT_URL}?${CATALOG_IMPORT_QUERY(policy, isReusedNamesAcknowledged, isAccessIncluded)}`,
       file,
       token,
     );

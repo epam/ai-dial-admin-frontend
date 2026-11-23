@@ -1,5 +1,6 @@
 import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
 import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
@@ -11,6 +12,7 @@ import PolicyCreateProperties from '@/src/components/Assets/Platform/Policies/Cr
 import PolicyAssignmentCreateProperties from '@/src/components/Assets/Platform/PolicyAssignments/CreateProperties';
 import RouteCreateProperties from '@/src/components/Assets/Platform/Routes/CreateProperties';
 import TranslatorCreateProperties from '@/src/components/Assets/Platform/Translators/CreateProperties';
+import PluginCreateProperties from '@/src/components/Assets/Platform/Plugins/CreateProperties';
 import ProjectCreateProperties from '@/src/components/Assets/Artifacts/Projects/CreateProperties';
 import SkillCreateProperties from '@/src/components/Assets/Artifacts/Skills/CreateProperties';
 import {
@@ -26,6 +28,7 @@ interface Props<T> {
   view: ApplicationRoute;
   entity: T;
   names: string[];
+  plugins?: PluginOptions;
   versionsMap?: Record<string, string[]>;
   runners?: DialApplicationScheme[];
   isUniqueNameError?: boolean;
@@ -135,6 +138,20 @@ const Properties = <T extends object>({
     );
   }
 
+  // Ahead of `isSimpleEntity` for the same reason as Route above: `Plugin` is a plain POJO with only
+  // `type` and `settings` (see `PluginCreateProperties`).
+  if (view === ApplicationRoute.PlatformPlugins) {
+    return (
+      <PluginCreateProperties
+        entity={entity as { name?: string }}
+        names={props.names}
+        isUniqueNameError={isUniqueNameError}
+        onChangeEntity={props.onChangeEntity}
+        isModal={props.isModal}
+      />
+    );
+  }
+
   // Ahead of `isSimpleEntity` for the same reason as Route above: `Translator` is also a plain POJO
   // with no `displayName`/`description` (see `TranslatorCreateProperties`'s doc comment).
   if (view === ApplicationRoute.PlatformTranslators) {
@@ -142,6 +159,7 @@ const Properties = <T extends object>({
       <TranslatorCreateProperties
         entity={entity as { name?: string }}
         names={props.names}
+        plugins={props.plugins}
         isUniqueNameError={isUniqueNameError}
         onChangeEntity={props.onChangeEntity}
         isModal={props.isModal}

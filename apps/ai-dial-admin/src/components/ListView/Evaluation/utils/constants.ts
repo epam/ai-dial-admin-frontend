@@ -25,7 +25,9 @@ export const APPLICATION_FILTER_COLUMN = 'application';
 export const RUN_TARGET_FILTER_COLUMN = 'target';
 
 export const DEPLOYMENT_REF_NAME_FIELD = 'deployment_ref::name';
+export const DEPLOYMENT_REF_ID_FIELD = 'deployment_ref::id';
 export const MCP_DEPLOYMENT_REF_NAME_FIELD = 'mcp_deployment_ref::name';
+export const MCP_DEPLOYMENT_REF_ID_FIELD = 'mcp_deployment_ref::id';
 export const ROUTES_REF_NAME_FIELD = 'routes_ref::name';
 
 /** AG Grid column id/field → Query DSL field name. */

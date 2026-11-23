@@ -4,7 +4,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SessionDetailHeader from '@/src/components/Analytics/SessionsTrace/Detail/SessionDetailHeader';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
-import { SessionDetailRow } from '@/src/models/analytics/sessions-trace';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
+import { SessionDetailRow, SessionsField } from '@/src/models/analytics/sessions-trace';
+import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 
 const CHAT_ID = 'Lrr0e6L5bpTND3IY_dN0_';
 const NOW_MS = Date.parse('2026-07-22T12:12:52.157Z');
@@ -29,8 +31,14 @@ const SESSION: SessionDetailRow = {
   'session_insights.title': TITLE,
 };
 
-const renderHeader = (overrides: Partial<SessionDetailRow> = {}) =>
-  render(<SessionDetailHeader session={{ ...SESSION, ...overrides }} nowMs={NOW_MS} />);
+const renderHeader = (overrides: Partial<SessionDetailRow> = {}, source: Partial<SessionsSource> = {}) =>
+  render(
+    <SessionDetailHeader
+      session={{ ...SESSION, ...overrides }}
+      source={{ ...{ ...defaultSessionsSource(), title: SessionsField.InsightTitle }, ...source }}
+      nowMs={NOW_MS}
+    />,
+  );
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -153,5 +161,31 @@ describe('SessionDetailHeader', () => {
     expect(screen.queryByText(SessionsTraceI18nKey.RatingUp)).toBeNull();
     expect(screen.queryByText(SessionsTraceI18nKey.RatingDown)).toBeNull();
     expect(screen.queryByRole('link')).toBeNull();
+  });
+});
+
+describe('SessionDetailHeader — unbound optional roles', () => {
+  test('states the session id alone as the heading without a Title role', () => {
+    renderHeader({}, { title: null });
+
+    const heading = screen.getByRole('heading', { level: 1 });
+
+    expect(heading).toHaveTextContent(CHAT_ID);
+    expect(screen.queryByText(TITLE)).toBeNull();
+    expect(screen.queryByText(SessionsTraceI18nKey.DetailId)).toBeNull();
+    expect(screen.getByRole('button', { name: `copy ${SessionsTraceI18nKey.Session}` })).toBeTruthy();
+  });
+
+  test('hides the turns figure without a Turns role', () => {
+    renderHeader({}, { turns: null });
+
+    expect(screen.queryByText(SessionsTraceI18nKey.DetailTurns)).toBeNull();
+  });
+
+  test('hides the project without a Project role', () => {
+    renderHeader({}, { project: null });
+
+    expect(screen.queryByText(SessionsTraceI18nKey.Project)).toBeNull();
+    expect(screen.queryByText('internal-copilot')).toBeNull();
   });
 });

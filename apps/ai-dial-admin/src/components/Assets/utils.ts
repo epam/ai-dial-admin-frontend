@@ -1,19 +1,15 @@
+import type { DeploymentData } from '@epam/ai-dial-typescript-sdk';
+
 import { ImageVersion } from '@/src/models/deployments/images';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { Deployment } from '@/src/models/evaluation/deployment';
+import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { compareVersions } from '@/src/utils/entities/versions';
 import {
-  CatalogDeploymentRecord,
   resolveCatalogDeploymentNavigation,
   resolveDeploymentNavigationTarget,
 } from '@/src/utils/deployment-navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import {
-  isFileRootPath,
-  isPlatformBucketView,
-  isPlatformBucketRow,
-  isPlatformDualBucketView,
-} from '@/src/utils/files/root-folder';
+import { isPlatformBucketRow } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
   allActionLabels,
@@ -23,29 +19,32 @@ import {
 } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ImportFileType } from '@/src/types/import';
+import { ImportResult } from '@/src/components/Assets/types';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-react-file-manager';
 import { CoreResourceEntityMetadata } from '@/src/models/dial/resource';
 
-const isEvalDeployment = (deployment: CatalogDeploymentRecord | Deployment): deployment is Deployment =>
-  '$type' in deployment && typeof deployment.$type === 'string';
-
+/**
+ * The agent link of a conversation. `deploymentId` is the conversation's `model.id`; `deployment` is Core's
+ * lookup of it and `deploymentType` its `object`, mapped. A model link waits for `modelRoute`.
+ */
 export const getAgentLinkForConversation = (
-  deployment: CatalogDeploymentRecord | Deployment | null,
+  deploymentId: string | undefined,
+  deployment: DeploymentData | null | undefined,
+  deploymentType: DeploymentType | undefined,
   currentLocale: string,
   modelRoute?: ApplicationRoute,
+  applicationRoute?: ApplicationRoute,
 ): string => {
-  if (!deployment) {
+  if (!deployment || !deploymentId) {
     return '';
   }
 
-  const target = isEvalDeployment(deployment)
-    ? resolveDeploymentNavigationTarget(
-        { id: deployment.deploymentId, name: deployment.displayName },
-        deployment.$type,
-        [],
-        { modelRoute },
-      )
-    : resolveCatalogDeploymentNavigation(deployment);
+  const target = deploymentType
+    ? resolveDeploymentNavigationTarget({ id: deploymentId }, deploymentType, { modelRoute, applicationRoute })
+    : resolveCatalogDeploymentNavigation(
+        { model: deployment.model, application: deployment.application, reference: deployment.reference },
+        { fallbackDisplayName: deploymentId },
+      );
 
   if (!target) {
     return '';
@@ -103,41 +102,14 @@ export const getParentPathByFullPath = (fullPath: string) => {
   return normalized.slice(0, lastSlash + 1);
 };
 
-export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
-  if (isFileRootPath(currentPath)) {
-    return allActionLabels.filter((item) => item.key === 'openInNewTab');
-  }
-
+export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
   switch (view) {
     case ApplicationRoute.Files:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
-    case ApplicationRoute.PlatformModels:
-    case ApplicationRoute.PlatformAppRunners:
-    case ApplicationRoute.PlatformCatalogSchemas:
-    case ApplicationRoute.PlatformInterceptors:
-    case ApplicationRoute.PlatformRoutes:
-    case ApplicationRoute.PlatformRoles:
-    case ApplicationRoute.PlatformKeys:
-    case ApplicationRoute.PlatformPolicies:
-    case ApplicationRoute.PlatformPolicyAssignments:
-    case ApplicationRoute.PlatformTranslators:
-      return isReadOnlyAdmin
-        ? []
-        : allActionLabels.filter(
-            (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
-          );
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
-      if (isPlatformDualBucketView(view, currentPath)) {
-        return isReadOnlyAdmin
-          ? []
-          : allActionLabels.filter(
-              (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
-            );
-      }
-      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Conversations:
@@ -154,15 +126,7 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
   }
 };
 
-export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute, currentPath?: string) => {
-  if (isFileRootPath(currentPath)) {
-    return [];
-  }
-
-  if (isPlatformBucketView(view) || isPlatformDualBucketView(view, currentPath)) {
-    return [];
-  }
-
+export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute) => {
   // No rename or move here: Core-backed folder rename/move doesn't cover these types. Folder delete
   // runs through its own recursive endpoints (`removeSkillFolder` / `removeProjectFolder`).
   if (view === ApplicationRoute.Skills || view === ApplicationRoute.Projects) {
@@ -180,98 +144,12 @@ export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationR
       );
 };
 
-export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean, currentPath?: string) => {
-  if (isReadOnlyAdmin || isFileRootPath(currentPath)) return [];
-
-  if (isPlatformDualBucketView(view, currentPath)) {
-    const label =
-      view === ApplicationRoute.AssetsToolsets ? FileManagerI18nKey.Toolset : FileManagerI18nKey.Application;
-    return [{ key: 'newItem', label, icon: null }];
-  }
+export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boolean) => {
+  if (isReadOnlyAdmin) return [];
 
   switch (view) {
     case ApplicationRoute.Files:
       return [...baseToolbarOptionLabels, { key: 'uploadFiles', label: FileManagerI18nKey.Files, icon: null }];
-    case ApplicationRoute.PlatformAppRunners:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.AppRunner,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformCatalogSchemas:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.CatalogSchema,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformModels:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Model,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformInterceptors:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Interceptor,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformTranslators:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Translator,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformRoutes:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Route,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformPolicies:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Policy,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformPolicyAssignments:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.PolicyAssignment,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformRoles:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Role,
-          icon: null,
-        },
-      ];
-    case ApplicationRoute.PlatformKeys:
-      return [
-        {
-          key: 'newItem',
-          label: FileManagerI18nKey.Key,
-          icon: null,
-        },
-      ];
     case ApplicationRoute.AssetsApplications:
       return [
         ...baseToolbarOptionLabels,
@@ -409,6 +287,9 @@ export const getDeleteNotificationContent = (
     case ApplicationRoute.PlatformCatalogSchemas:
     case ApplicationRoute.PlatformInterceptors:
     case ApplicationRoute.PlatformTranslators:
+    case ApplicationRoute.PlatformPlugins:
+    case ApplicationRoute.AssetsAliases:
+    case ApplicationRoute.PlatformRouters:
     case ApplicationRoute.PlatformRoutes:
     case ApplicationRoute.PlatformRoles:
     case ApplicationRoute.PlatformKeys:
@@ -420,6 +301,9 @@ export const getDeleteNotificationContent = (
         if (view === ApplicationRoute.PlatformCatalogSchemas) return FileManagerI18nKey.CatalogSchema;
         if (view === ApplicationRoute.PlatformInterceptors) return FileManagerI18nKey.Interceptor;
         if (view === ApplicationRoute.PlatformTranslators) return FileManagerI18nKey.Translator;
+        if (view === ApplicationRoute.PlatformPlugins) return FileManagerI18nKey.Plugin;
+        if (view === ApplicationRoute.AssetsAliases) return FileManagerI18nKey.Alias;
+        if (view === ApplicationRoute.PlatformRouters) return FileManagerI18nKey.Router;
         if (view === ApplicationRoute.PlatformRoutes) return FileManagerI18nKey.Route;
         if (view === ApplicationRoute.PlatformRoles) return FileManagerI18nKey.Role;
         if (view === ApplicationRoute.PlatformKeys) return FileManagerI18nKey.Key;
@@ -698,6 +582,34 @@ export const getExportNotificationContent = (
   }
 };
 
+/**
+ * Lists failed imports grouped by Core's reason: a `reason:` header, then its paths one per line. Items
+ * with no reason come last, under the generic import-error header.
+ */
+export const getImportErrorDescription = (
+  failedResults: ImportResult[],
+  t: (key: string, options?: Record<string, string | number>) => string,
+): string => {
+  const pathsByReason = new Map<string, string[]>();
+  const pathsWithoutReason: string[] = [];
+
+  failedResults.forEach(({ error, targetPath }) => {
+    const reason = error?.trim();
+    if (!reason) {
+      pathsWithoutReason.push(targetPath);
+      return;
+    }
+    pathsByReason.set(reason, [...(pathsByReason.get(reason) ?? []), targetPath]);
+  });
+
+  const groups = Array.from(pathsByReason, ([reason, paths]) => ({ header: reason, paths }));
+  if (pathsWithoutReason.length > 0) {
+    groups.push({ header: t(FileManagerI18nKey.ImportErrorDescription), paths: pathsWithoutReason });
+  }
+
+  return groups.map(({ header, paths }) => [`${header}:`, ...paths.map((path) => ` ${path}`)].join('\n')).join('\n');
+};
+
 export const getImportNotificationContent = (
   view: ApplicationRoute,
   importResults: { targetPath: string; status: string; error?: string }[] | undefined,
@@ -708,7 +620,6 @@ export const getImportNotificationContent = (
   const successfullyItems = importResults?.filter((result) => result.status === 'success') || [];
   const failedResults = importResults?.filter((result) => result.status === 'failure') || [];
   const failedItems = failedResults.map((result) => result.targetPath);
-  const failedMessages = Array.from(new Set(failedResults.map((result) => result.error || result.targetPath)));
   const skippedItems =
     importResults?.filter((result) => result.status === 'skipped').map((result) => result.targetPath) || [];
   const isImportSeveralItems = successfullyItems.length > 1;
@@ -760,12 +671,7 @@ export const getImportNotificationContent = (
                 item: failedItems.length > 1 ? t(FileManagerI18nKey.Files) : t(FileManagerI18nKey.File),
               })
             : '',
-        errorDescription:
-          failedItems.length > 0
-            ? t(FileManagerI18nKey.ImportErrorDescription, {
-                list: failedMessages.join(', '),
-              })
-            : '',
+        errorDescription: failedItems.length > 0 ? getImportErrorDescription(failedResults, t) : '',
       };
     }
     case ApplicationRoute.Prompts: {
@@ -814,12 +720,7 @@ export const getImportNotificationContent = (
                 item: failedItems.length > 1 ? t(FileManagerI18nKey.Prompts) : t(FileManagerI18nKey.Prompt),
               })
             : '',
-        errorDescription:
-          failedItems.length > 0
-            ? t(FileManagerI18nKey.ImportErrorDescription, {
-                list: failedMessages.join(', '),
-              })
-            : '',
+        errorDescription: failedItems.length > 0 ? getImportErrorDescription(failedResults, t) : '',
       };
     }
     case ApplicationRoute.AssetsApplications: {
@@ -868,12 +769,7 @@ export const getImportNotificationContent = (
                 item: failedItems.length > 1 ? t(FileManagerI18nKey.Applications) : t(FileManagerI18nKey.Application),
               })
             : '',
-        errorDescription:
-          failedItems.length > 0
-            ? t(FileManagerI18nKey.ImportErrorDescription, {
-                list: failedMessages.join(', '),
-              })
-            : '',
+        errorDescription: failedItems.length > 0 ? getImportErrorDescription(failedResults, t) : '',
       };
     }
     case ApplicationRoute.AssetsToolsets: {
@@ -922,12 +818,7 @@ export const getImportNotificationContent = (
                 item: failedItems.length > 1 ? t(FileManagerI18nKey.Toolsets) : t(FileManagerI18nKey.Toolset),
               })
             : '',
-        errorDescription:
-          failedItems.length > 0
-            ? t(FileManagerI18nKey.ImportErrorDescription, {
-                list: failedMessages.join(', '),
-              })
-            : '',
+        errorDescription: failedItems.length > 0 ? getImportErrorDescription(failedResults, t) : '',
       };
     }
     default:

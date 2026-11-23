@@ -16,7 +16,7 @@ import PassRateValue from '@/src/components/Runs/Summary/Cards/PassRateValue';
 import RuntimeValue from '@/src/components/Runs/Summary/Cards/RuntimeValue';
 import TestCasesCompletedValue from '@/src/components/Runs/Summary/Cards/TestCasesCompletedValue';
 import { RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
-import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 
@@ -112,7 +112,6 @@ const Analytics: FC<Props> = ({
         <AnalyticsCard
           className={CARD_CLASS}
           title={t(RunsI18nKey.OverallScore)}
-          description={t(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)}
           delta={toDeltaValue(deltas.overallScore)}
           compareValues={toCompareCardItems(runs, (run) => (
             <OverallScoreValue

@@ -14,26 +14,21 @@ The system SHALL add an `App Runners` menu item to the Assets section of the adm
 
 ### Requirement: App-runner asset list is flat with create and delete actions
 
-The system SHALL render the Platform App Runner list as a single, non-nested list of entries under the `platform` root, built on the shared asset list, exposing create, delete, and bulk-delete actions and no folder-create, rename-folder, or move-into-folder controls. The metadata-only list SHALL label and show each resource's decoded Core storage name as `Name`; it SHALL NOT claim that a metadata row supplies the schema body's declared `$id`.
+The system SHALL render the Platform App Runner list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (Create button) and delete actions and no folder-create, rename-folder, or move-into-folder controls. The metadata-only list SHALL label and show each resource's decoded Core storage name as `Name`; it SHALL NOT claim that a metadata row supplies the schema body's declared `$id`.
 
 #### Scenario: List shows entries without a folder tree
 
 - **WHEN** a user opens `/platform-app-runners`
-- **THEN** all app-runner resources are shown as direct entries with no folder-expand affordance
+- **THEN** all app-runner resources are shown as direct grid rows with no folder-expand affordance
 
 #### Scenario: No create-folder or move action is present
 
-- **WHEN** a user opens the app-runner list toolbar and row actions
+- **WHEN** a user opens the app-runner list header and row actions
 - **THEN** neither a create-folder action nor a move-to-folder action is offered
-
-#### Scenario: The folder tree offers no folder actions
-
-- **WHEN** a user opens the context menu on the app-runner folder tree's root
-- **THEN** no add-sibling, add-child, rename, move, or manage-permissions action is offered
 
 #### Scenario: Create action requests both identities
 
-- **WHEN** a user activates the create action in the list toolbar
+- **WHEN** a user activates the Create button
 - **THEN** a modal requests required storage `name`, declared `$id`, and display name fields
 - **AND** submitting valid values creates the resource and navigates to its detail view
 
@@ -42,11 +37,6 @@ The system SHALL render the Platform App Runner list as a single, non-nested lis
 - **WHEN** the list renders an App Runner whose Core storage name differs from its declared body `$id`
 - **THEN** the `Name` column shows the decoded storage name
 - **AND** no content request is made merely to display the declared `$id`
-
-#### Scenario: Bulk delete removes the selected runners
-
-- **WHEN** a user selects several runners and confirms bulk delete
-- **THEN** each selected runner is deleted and the list refreshes without them
 
 ### Requirement: App-runner asset list columns are metadata-only
 
@@ -493,7 +483,7 @@ The system SHALL derive an asset runner's default `applicationProperties` from D
 - **AND** an entity runner opens under `/application-runners/`
 
 ### Requirement: Interceptors tab options are sourced from DIAL Core
-The system SHALL render the app-runner Interceptors tab using the existing shared interceptors component, populating the selectable interceptors from DIAL Core as the union of its two populations, and storing the selection in the runner's `dial:applicationTypeInterceptors` field.
+The system SHALL render the app-runner Interceptors tab using the existing shared interceptors component, populating the selectable interceptors from DIAL Core as the union of its two populations, and storing the selection in the runner's `dial:applicationTypeInterceptors` field. Adding interceptors SHALL retain only the first occurrence of each reference, preserving their order.
 
 #### Scenario: Selectable interceptors come from Core, both populations
 - **WHEN** the app-runner detail page loads
@@ -803,3 +793,4 @@ A Platform App Runner route response SHALL have a non-empty string body and a st
 
 - **WHEN** all staged responses have a valid status and non-empty body
 - **THEN** response validation no longer blocks Save, subject to the other existing Save gates
+

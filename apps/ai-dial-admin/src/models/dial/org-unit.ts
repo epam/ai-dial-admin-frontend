@@ -67,7 +67,7 @@ export interface OrgUnitAssignmentDeleteResponse {
 
 export enum SubjectKind {
   PERSON = 'person',
-  GROUP = 'group',
+  CLAIM = 'claim',
   EVERYONE = 'everyone',
   DIAL_ROLE = 'dialRole',
   RAW = 'raw',

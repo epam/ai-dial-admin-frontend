@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -18,10 +19,7 @@ import {
   SpanKind,
 } from '@/src/models/analytics/sessions-trace';
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 const getSessionHopRequest = vi.fn();
 const getSessionHopResponse = vi.fn();
@@ -105,6 +103,7 @@ const envelope = (overrides: Partial<HopRequestEnvelope> = {}): HopRequestEnvelo
   ],
   recordedBytes: 200,
   isClamped: false,
+  isPartial: false,
   ...overrides,
 });
 
@@ -311,6 +310,45 @@ describe('HopInspector — the request side', () => {
     expect(await screen.findByText(/"raw": true/)).toBeInTheDocument();
     // The spec requires the inspector to state that it cannot structure the body, not just to show it.
     expect(screen.getByText(SessionsTraceI18nKey.InspectorUnstructured)).toBeInTheDocument();
+  });
+});
+
+describe('HopInspector — a partially rebuilt request', () => {
+  test('renders the recovered messages and describes the list as incomplete', async () => {
+    getSessionHopRequest.mockResolvedValue({ success: true, response: envelope({ isPartial: true }) });
+    renderInspector();
+
+    expect(await screen.findByText('who are you?')).toBeInTheDocument();
+    expect(screen.getByRole('list')).toHaveAccessibleDescription(SessionsTraceI18nKey.InspectorRequestPartial);
+    expect(screen.queryByText(SessionsTraceI18nKey.InspectorLoadFailed)).toBeNull();
+  });
+
+  test('states nothing about completeness for a whole request', async () => {
+    renderInspector();
+
+    expect(await screen.findByText('who are you?')).toBeInTheDocument();
+    expect(screen.queryByText(SessionsTraceI18nKey.InspectorRequestPartial)).toBeNull();
+  });
+
+  test('describes the raw view of a partial request as incomplete', async () => {
+    const user = userEvent.setup();
+    getSessionHopRequest.mockResolvedValue({ success: true, response: envelope({ isPartial: true }) });
+    getSessionHopRawBody.mockResolvedValue({
+      success: true,
+      response: {
+        state: HopReadState.Available,
+        text: '{"raw":true}',
+        clamp: { isClamped: false, recordedBytes: 12, deliveredBytes: 12 },
+        isPartial: true,
+      },
+    });
+    renderInspector();
+
+    await user.click(await screen.findByRole('button', { name: SessionsTraceI18nKey.InspectorRaw }));
+
+    expect(
+      await screen.findByRole('group', { name: SessionsTraceI18nKey.InspectorRequest }),
+    ).toHaveAccessibleDescription(SessionsTraceI18nKey.InspectorRequestPartial);
   });
 });
 
@@ -697,7 +735,7 @@ describe('HopInspector — absence and entitlement', () => {
     await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Upstream unavailable',
+          title: 'SessionsTrace.InspectorLoadFailed',
           description: 'hop body read timed out',
           requestId: 'trace-1',
         }),
@@ -705,7 +743,7 @@ describe('HopInspector — absence and entitlement', () => {
     );
   });
 
-  test('a failed read falls back to its own title when the service supplied no header', async () => {
+  test('a failed read without a header is reported under its own title', async () => {
     getSessionHopRequest.mockResolvedValue({ success: false, status: 500, response: undefined });
     renderInspector();
 

@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { CatalogResolutionPolicy } from '@/src/types/analytics/import';
 import { ExportComponentType } from '@/src/types/export';
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -10,10 +11,10 @@ import { DeploymentImportPreviewResponse } from '@/src/models/deployments/previe
 import { ExportConfigComponentType } from '@/src/types/deployments/import';
 import { ImportFileType } from '@/src/types/import';
 
-const { mockPreview, mockShowNotification } = vi.hoisted(() => ({
+const { mockPreview } = vi.hoisted(() => ({
   mockPreview: vi.fn(),
-  mockShowNotification: vi.fn(),
 }));
+const { showNotification: mockShowNotification } = notificationMock;
 
 vi.mock('@/src/app/[lang]/import-config/actions', () => ({
   previewJsonConfigs: vi.fn(),
@@ -23,10 +24,6 @@ vi.mock('@/src/app/[lang]/import-config/actions', () => ({
 
 vi.mock('@/src/hooks/use-protected-request', () => ({
   useProtectedRequest: () => (fn: (body: unknown) => Promise<unknown>, body: unknown) => fn(body),
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: mockShowNotification }),
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -88,6 +85,7 @@ const renderPreview = () =>
       fileType={ImportFileType.ARCHIVE}
       configScope={ExportComponentType.DEPLOYMENTS}
       analyticsPolicy={CatalogResolutionPolicy.FAIL_IF_EXISTS}
+      isAccessIncluded={false}
       isReusedNamesAcknowledged={false}
       onChangeReusedNamesAcknowledged={vi.fn()}
       onImportFile={vi.fn()}

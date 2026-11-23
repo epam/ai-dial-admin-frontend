@@ -1,11 +1,15 @@
 import { describe, expect, test } from 'vitest';
 
 import { DialRoleResource } from '@/src/models/dial/resource';
+import { PickedEntity } from '@/src/components/Common/EntitySelectInput/models';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { PlatformRoleModelOption, PlatformSharingType } from '../models';
 import {
+  addApplicationLimits,
   addModelLimits,
   applySharingChange,
   clearModelLimits,
+  getApplicationLimitKey,
   getAssetSharingData,
   getAvailableModels,
   getDefaultPlaceholder,
@@ -246,5 +250,56 @@ describe('Platform role model limits', () => {
 
   test('removes a model entry only when the user removes the model', () => {
     expect(removeModelLimit({ modelA: {}, modelB: { week: 30 } }, 'modelA')).toEqual({ modelB: { week: 30 } });
+  });
+});
+
+const PUBLIC_APP: PickedEntity = {
+  source: AssetSource.Public,
+  name: 'public/team/app/1.0',
+  path: 'public/team/app/1.0',
+};
+const platformApp = (name: string): PickedEntity => ({ source: AssetSource.Platform, name });
+const configFileApp = (name: string): PickedEntity => ({ source: AssetSource.ConfigFile, name });
+
+describe('getApplicationLimitKey', () => {
+  test('keys a public application by its applications resource reference', () => {
+    expect(getApplicationLimitKey(PUBLIC_APP)).toBe('applications/public/team/app/1.0');
+  });
+
+  test('keys a platform application by its name', () => {
+    expect(getApplicationLimitKey(platformApp('platformApp'))).toBe('platformApp');
+  });
+
+  test('keys a config-file application by its name', () => {
+    expect(getApplicationLimitKey(configFileApp('fileApp'))).toBe('fileApp');
+  });
+});
+
+describe('addApplicationLimits', () => {
+  test('attaches each picked application under its key with empty limits', () => {
+    expect(
+      addApplicationLimits({ modelA: { day: 1 } }, [
+        { source: AssetSource.Public, name: 'public/app/1.0', path: 'public/app/1.0' },
+        platformApp('pa'),
+        configFileApp('fa'),
+      ]),
+    ).toEqual({
+      modelA: { day: 1 },
+      'applications/public/app/1.0': {},
+      pa: {},
+      fa: {},
+    });
+  });
+
+  test('keeps the limits of an application that is already attached', () => {
+    expect(addApplicationLimits({ pa: { minute: 5 } }, [platformApp('pa')])).toEqual({ pa: { minute: 5 } });
+  });
+
+  test('collapses the same name picked from the platform and config.json sources into one entry', () => {
+    expect(addApplicationLimits(undefined, [platformApp('pa'), configFileApp('pa')])).toEqual({ pa: {} });
+  });
+
+  test('leaves the limits unchanged for an empty pick', () => {
+    expect(addApplicationLimits({ modelA: {} }, [])).toEqual({ modelA: {} });
   });
 });

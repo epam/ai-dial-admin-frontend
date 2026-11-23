@@ -7,9 +7,7 @@ entirely from DIAL Core. Translators are flat platform resources with no folder 
 display-name field, no Roles tab, and no dependency on the admin backend. `in` and `out` select
 from the shared `DeploymentInterfaceType` values; Core validates the write and surfaces any
 rejection message verbatim. Created by archiving change `add-platform-translators`.
-
 ## Requirements
-
 ### Requirement: Catalog > Translators menu entry
 The system SHALL add a `Translators` menu item to the Catalog section of the admin menu, directly
 after `Interceptors`, linking to a new `/platform-translators` route.
@@ -19,37 +17,33 @@ after `Interceptors`, linking to a new `/platform-translators` route.
 - **THEN** `Translators` appears immediately after `Interceptors` and before `Routes`
 
 ### Requirement: Translator asset list is flat with create and delete actions
-The system SHALL render the translator asset list with flat `platform` and synthetic `file` roots, built on the shared asset list. The `platform` root SHALL retain create, delete, and bulk-delete actions; the `file` root SHALL list config-file-defined translators and expose no mutating or folder action.
+The system SHALL render the translator asset list with a flat Platform tab and a config.json tab, built on the shared tabbed listing. The Platform tab SHALL retain create (Create button) and delete actions; the config.json tab SHALL list config-file-defined translators and expose no mutating action.
 
 #### Scenario: List shows entries without a folder tree
 - **WHEN** a user opens `/platform-translators`
-- **THEN** all translator resources are shown as direct entries with no folder-expand affordance
+- **THEN** all translator resources are shown as direct grid rows with no folder-expand affordance
 
 #### Scenario: Translator resource list remains mutable
-- **WHEN** a user browses the `platform` root on `/platform-translators`
-- **THEN** create, delete, and bulk-delete actions remain available according to the user's permissions
+- **WHEN** a user browses the Platform tab on `/platform-translators`
+- **THEN** create and delete actions remain available according to the user's permissions
 
-#### Scenario: Translator file root is read-only
-- **WHEN** a user opens the `file` root on `/platform-translators`
-- **THEN** config-file translator names are listed and no create, delete, bulk-delete, duplicate, move, rename, or folder action is offered
+#### Scenario: Translator config.json tab is read-only
+- **WHEN** a user opens the config.json tab on `/platform-translators`
+- **THEN** config-file translator names are listed and no create, delete, duplicate, move, rename, or folder action is offered
 
 #### Scenario: No create-folder, move, or duplicate action is present
-- **WHEN** a user opens the translator asset list toolbar and row actions
+- **WHEN** a user opens the translator asset list header and row actions
 - **THEN** no create-folder, move-to-folder, or duplicate action is offered
 
 #### Scenario: Create action opens the translator create modal
-- **WHEN** a user activates the create action in the list toolbar
-- **THEN** a modal opens requesting only the translator's name — no display name or description
+- **WHEN** a user activates the Create button
+- **THEN** a modal opens requesting the translator's name, `in`, `out`, and `baseUrl` — no display name or description
   field, since `Translator` has neither — and submitting it creates the resource and navigates to its
   detail view
 
-#### Scenario: Bulk delete removes the selected translators
-- **WHEN** a user selects several translators and confirms bulk delete
-- **THEN** each selected translator is deleted and the list refreshes without them
-
 #### Scenario: A read-only admin is offered no mutating actions
 - **WHEN** a read-only admin opens the translator asset list
-- **THEN** no create, delete, or bulk-delete action is offered
+- **THEN** no create or delete action is offered
 
 ### Requirement: Translator asset list columns are metadata-only
 The system SHALL show name, author, created-at, and updated-at columns for translator assets, all
@@ -110,14 +104,31 @@ tab to bind to.
 - **THEN** no Roles tab is shown
 
 ### Requirement: Properties tab content
-The system SHALL render the translator asset's Properties tab with two fields sourced from the
-interface-type population, `in` and `out`, and one URL field, `baseUrl`, composed from the same
-individual controls other platform entities' Properties tabs use — no display name, description,
-icon, endpoint-list, or topics control, since none of those exist on `Translator`.
+The system SHALL render the translator asset's Properties tab with two fields sourced from the interface-type population, `in` and `out`, and one required `baseUrl` field offering Url and Plugin choices — no display name, description, icon, endpoint-list, or topics control, since none of those exist on `Translator`. The same base-URL choice and required validation SHALL be available in the standalone Translator create form. The field SHALL write the existing Core translator `baseUrl` property. Save, create, discard, read-only behavior and existing action success and error notifications SHALL remain unchanged.
 
 #### Scenario: Properties are editable and persist
 - **WHEN** a user edits `in`, `out`, or `baseUrl` and saves
 - **THEN** the value is stored on the translator resource and reappears on reload
+
+#### Scenario: Create a translator referencing a plugin
+- **WHEN** an admin selects `dial-plugin://example` as the required base URL in the standalone Translator create form and submits valid fields
+- **THEN** the Core translator write carries `baseUrl: "dial-plugin://example"` and the existing create success behavior occurs
+
+#### Scenario: Save a translator referencing a plugin
+- **WHEN** an admin selects a plugin in an existing standalone Translator and saves
+- **THEN** the existing `baseUrl` property is updated and reload displays Plugin mode with the saved reference
+
+#### Scenario: A required base URL is missing
+- **WHEN** an admin selects Plugin but does not select a plugin for a standalone Translator
+- **THEN** the base-URL field shows a required error and create or save is blocked
+
+#### Scenario: A read-only translator remains read-only
+- **WHEN** an admin opens a read-only standalone Translator with a plugin base URL
+- **THEN** the saved reference is visible without offering an editable source choice or selector
+
+#### Scenario: Core rejects a write
+- **WHEN** Core rejects creation or saving a translator with a plugin base URL
+- **THEN** the existing error notification shows Core's message and the user's edits remain available
 
 ### Requirement: `in`/`out` selects share the deployment interface-type population
 The system SHALL populate the `in` and `out` selects from the same `DeploymentInterfaceType` values

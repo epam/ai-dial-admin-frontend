@@ -1,13 +1,11 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Run } from '@/src/models/evaluation/run';
 import RunCancelModal from '../RunCancelModal';
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 describe('RunCancelModal', () => {
   const run: Run = { id: 'run-1' } as Run;

@@ -29,6 +29,9 @@ const InputPopup: FC<InputPopupProps> = ({
   onValueChange,
   collapseTagOverflow = false,
   iconBefore,
+  inputAriaLabel,
+  openAriaLabel,
+  required,
 }) => {
   const t = useI18n();
 
@@ -48,7 +51,12 @@ const InputPopup: FC<InputPopupProps> = ({
     if (disabled) return undefined;
 
     return (
-      <IconButton className="size-auto" icon={openIcon} aria-label={t(ButtonsI18nKey.Open)} onClick={onOpenPopup} />
+      <IconButton
+        className="size-auto"
+        icon={openIcon}
+        aria-label={openAriaLabel ?? t(ButtonsI18nKey.Open)}
+        onClick={onOpenPopup}
+      />
     );
   };
 
@@ -65,13 +73,14 @@ const InputPopup: FC<InputPopupProps> = ({
             error={errorText}
             collapseTagOverflow={collapseTagOverflow}
             fieldClassName={inputClassName}
+            tagClassName="h-6 rounded-md border border-secondary bg-layer-sunken"
           />
           {!disabled && (
             <div className="absolute right-2 top-1/2 -translate-y-1/2">
               <IconButton
                 className="size-auto"
                 icon={openIcon}
-                aria-label={t(ButtonsI18nKey.Open)}
+                aria-label={openAriaLabel ?? t(ButtonsI18nKey.Open)}
                 onClick={onOpenPopup}
               />
             </div>
@@ -84,6 +93,8 @@ const InputPopup: FC<InputPopupProps> = ({
       <OverflowValueTooltip text={String(text ?? '')}>
         <Input
           id={elementId}
+          aria-label={inputAriaLabel}
+          aria-required={required || undefined}
           value={text}
           placeholder={placeholder ?? emptyValueText}
           readOnly={!editable}

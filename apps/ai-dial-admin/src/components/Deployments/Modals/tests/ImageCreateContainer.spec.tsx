@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
@@ -18,13 +19,9 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   PopupSize: { Sm: 'sm', Md: 'md', Lg: 'lg' },
 }));
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ resourcesDefaults: {} }),
-}));
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ isValid: true }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ resourcesDefaults: {} }));
+});
 
 vi.mock('@/src/utils/deployments/containers', () => ({
   getContainerTemplate: () => ({}),

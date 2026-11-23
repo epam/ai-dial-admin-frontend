@@ -124,6 +124,25 @@ describe('MeasuresEditor', () => {
     expect(within(column).getByRole('option', { name: /usage_client_identity\.client_session_id/ })).toBeTruthy();
   });
 
+  test('does not offer a projection-only column', () => {
+    render(
+      <MeasuresEditor
+        measures={[{ name: 'total_price', fn: 'sum', column: 'deployment_price' }]}
+        fields={[...sourceFields, { ...field('request_body_full'), projection_only: true }]}
+        targetColumns={targetColumns}
+        functions={functions}
+        onChange={vi.fn()}
+      />,
+    );
+
+    const column = within(
+      screen.getByRole('group', { name: `${AnalyticsPipelinesI18nKey.MeasureColumn} 1` }),
+    ).getByRole('combobox');
+
+    expect(within(column).queryByRole('option', { name: /request_body_full/ })).toBeNull();
+    expect(within(column).getByRole('option', { name: /deployment_price/ })).toBeTruthy();
+  });
+
   // A column written in the JSON editor is not one the form may quietly drop.
   test('keeps a column the entity does not offer', async () => {
     const user = userEvent.setup();

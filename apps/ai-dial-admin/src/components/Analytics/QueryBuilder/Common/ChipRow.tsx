@@ -3,9 +3,10 @@
 import { FC, ReactNode, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
-import { GhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
-import { IconChevronDown, IconChevronUp, IconTrashX } from '@tabler/icons-react';
+import { ElementSize } from '@epam/ai-dial-ui-kit';
+import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -54,12 +55,7 @@ const ChipRow: FC<Props> = ({
   }, [expanded]);
 
   const removeButton = (
-    <GhostIconButton
-      size={ElementSize.Small}
-      aria-label={t(ButtonsI18nKey.Remove)}
-      icon={<IconTrashX size={16} className="text-error" />}
-      onClick={onRemove}
-    />
+    <RemoveButton size={ElementSize.Small} aria-label={t(ButtonsI18nKey.Remove)} onClick={onRemove} />
   );
 
   if (!expanded) {

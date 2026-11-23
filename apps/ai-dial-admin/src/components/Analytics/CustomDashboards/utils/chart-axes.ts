@@ -1,7 +1,13 @@
-import { getNumericColumns } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
+import { resolveYFields } from '@/src/components/Analytics/QueryBuilder/utils/chart-fields';
+import { getChartNumericColumns } from '@/src/components/Analytics/QueryBuilder/utils/chart-types';
 import { CHART_SLOT_DESCRIPTORS } from '@/src/constants/analytics/query-builder';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
-import { ChartColumnSource, ChartConfig, ExecutedQueryMeta } from '@/src/models/analytics/query-builder';
+import {
+  ChartColumnSource,
+  ChartConfig,
+  ExecutedQueryMeta,
+  ResolvedChartAxes,
+} from '@/src/models/analytics/query-builder';
 
 /**
  * The axes a stored chart configuration draws on, re-deriving an unset one from the result the way the
@@ -11,10 +17,8 @@ export const resolveChartAxes = (
   config: ChartConfig,
   result: StructuredQueryResult,
   meta: ExecutedQueryMeta,
-): Pick<ChartConfig, 'xField' | 'yField'> => {
-  const numericColumns = getNumericColumns(result.rows, [
-    ...new Set([...meta.dimensionColumns, ...meta.aggregateColumns]),
-  ]);
+): ResolvedChartAxes => {
+  const numericColumns = getChartNumericColumns(result.rows, meta);
   const columnsFor = (source: ChartColumnSource): string[] => {
     if (source === ChartColumnSource.Dimensions) return meta.dimensionColumns;
     if (source === ChartColumnSource.Aggregates) return meta.aggregateColumns;
@@ -25,6 +29,6 @@ export const resolveChartAxes = (
   const xOptions = columnsFor(descriptor.xSource);
   const yOptions = columnsFor(descriptor.ySource);
   const xField = config.xField ?? xOptions[0] ?? null;
-  const yField = config.yField ?? yOptions.find((column) => column !== xField) ?? yOptions[0] ?? null;
-  return { xField, yField };
+  const yFields = resolveYFields(config.yFields, yOptions, xField, descriptor.isMultiY);
+  return { xField, yFields };
 };

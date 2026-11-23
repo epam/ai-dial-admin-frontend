@@ -21,6 +21,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {children}
     </div>
   ),
+  EllipsisTooltip: ({ text }: { text: React.ReactNode }) => <span>{text}</span>,
   Badge: ({ label }: { label: string }) => <span>{label}</span>,
   BadgeVariant: { Outlined: 'outlined', Filled: 'filled' },
   BadgeColor: { Green: 'green', Red: 'red', Blue: 'blue' },
@@ -50,7 +51,6 @@ describe('OverallScoreOfLatestRunCard', () => {
       .getAllByRole('tooltip', { hidden: true })
       .find((node) => node.textContent?.includes(TestSuitesI18nKey.TrendsDeltaVsPrev));
     expect(deltaBadgeTooltip).toHaveAttribute('aria-hidden', 'true');
-    expect(screen.getByText(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod }),
     ).not.toBeInTheDocument();
@@ -97,6 +97,17 @@ describe('OverallScoreOfLatestRunCard', () => {
     expect(screen.getByText(TestSuitesI18nKey.OverallScoreMeanFormula)).toBeInTheDocument();
   });
 
+  test('shows the based-on method label with the info control instead of the static text', () => {
+    render(
+      <OverallScoreOfLatestRunCard
+        runOrder={runOrder.map((point) => ({ ...point, overallScoreMethod: { type: OverallScoreType.Mean } }))}
+      />,
+    );
+
+    expect(screen.getByText(TestSuitesI18nKey.TrendsBasedOnMethod)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod })).toBeInTheDocument();
+  });
+
   test('omits the info control when the latest run records no method', () => {
     render(
       <OverallScoreOfLatestRunCard runOrder={runOrder.map((point) => ({ ...point, overallScoreMethod: null }))} />,
@@ -105,5 +116,6 @@ describe('OverallScoreOfLatestRunCard', () => {
     expect(
       screen.queryByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod }),
     ).not.toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.TrendsBasedOnMethod)).not.toBeInTheDocument();
   });
 });

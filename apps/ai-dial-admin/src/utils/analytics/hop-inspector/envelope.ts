@@ -9,6 +9,7 @@ import {
   HopRequestEnvelope,
   HopToolCall,
   MessageRole,
+  RequestBodyRebuildStatus,
 } from '@/src/models/analytics/sessions-trace';
 
 const encoder = new TextEncoder();
@@ -147,6 +148,7 @@ interface EnvelopeInput {
   params: HopParams;
   messages: HopDialectMessage[];
   recordedBytes: number | null;
+  isPartial: boolean;
 }
 
 // Which tool each call id belongs to, across the whole message list. A result message carries only the id, so
@@ -173,6 +175,7 @@ export const buildRequestEnvelope = ({
   params,
   messages,
   recordedBytes,
+  isPartial,
 }: EnvelopeInput): HopRequestEnvelope => {
   let spent = 0;
   let isClamped = false;
@@ -221,8 +224,12 @@ export const buildRequestEnvelope = ({
     roleCounts: roleCountsOf(entries.map(({ role }) => role)),
     recordedBytes,
     isClamped,
+    isPartial,
   };
 };
+
+export const isRebuildPartial = (status: string | null | undefined): boolean =>
+  status === RequestBodyRebuildStatus.Partial;
 
 export const NO_CLAMP: HopClamp = { isClamped: false, recordedBytes: null, deliveredBytes: null };
 

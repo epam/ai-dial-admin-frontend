@@ -16,7 +16,6 @@ export enum SavedQueryTimeMode {
 
 export enum SavedQueryEditor {
   Builder = 'builder',
-  Json = 'json',
   Sql = 'sql',
 }
 
@@ -42,10 +41,16 @@ export interface SavedQueryAbsoluteTime {
 
 export type SavedQueryTime = SavedQueryRelativeTime | SavedQueryAbsoluteTime;
 
+export interface SavedQueryChartLegend {
+  visible?: boolean;
+  position?: string;
+}
+
 export interface SavedQueryChart {
   type: ChartType;
   x_field: string | null;
-  y_field: string | null;
+  y_field: string[] | null;
+  legend?: SavedQueryChartLegend;
 }
 
 export interface SavedQuery {
@@ -106,9 +111,7 @@ export interface SavedQueryCaptureInput {
   scope: SavedQueryScope;
   state: QueryBuilderState;
   sqlText?: string | null;
-  // A JSON buffer holding a body the visual builder cannot display. It is persisted verbatim, because
-  // the builder state was never hydrated from it and so does not describe the author's edits.
-  divergedJsonText?: string | null;
+  fallbackQuery?: StructuredQuery;
   time?: SavedQueryTimeIntentInput;
   resultView: QueryResultView;
   chartConfig?: ChartConfig;
@@ -130,10 +133,18 @@ export interface SavedQueryRestore {
   editor: SavedQueryEditor;
   state: QueryBuilderState;
   sqlText: string;
-  jsonText: string;
+  unloadedQuery?: StructuredQuery;
   time: SavedQueryTimeRestore;
   resultView: QueryResultView;
   chartConfig?: ChartConfig;
+}
+
+export interface StoredTimeBoundInput {
+  saved: SavedQuery;
+  fields: AnalyticsEntityField[];
+  functions: QueryFunction[];
+  knownPeriods: string[];
+  periodRange: (period: string) => TimeRange;
 }
 
 export interface SavedQueryRestoreInput {
@@ -141,4 +152,5 @@ export interface SavedQueryRestoreInput {
   fields: AnalyticsEntityField[];
   functions: QueryFunction[];
   knownPeriods: string[];
+  translatedSql?: string | null;
 }

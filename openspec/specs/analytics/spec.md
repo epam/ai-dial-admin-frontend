@@ -17,10 +17,12 @@ sub-capability; open the one row that answers the question rather than reading t
 
 | Sub-capability | Answers |
 | --- | --- |
-| `analytics/query-builder` | How a query is authored — the rail's four views (Form, JSON, SQL, AI) and the guarded transitions between them |
-| `analytics/query-viewer` | What a run produces — execution, the result grid, stat tiles, table and chart views |
-| `analytics/saved-queries` | Saved queries as addressable objects — storage contract, list page, CRUD, permission gating |
+| `analytics/query-builder` | How a query is authored — the draft and saved-query pages, the resizable builder area above the results with its two views (Builder chips, SQL), the assistant panel beside it, the chip popups, and the guarded transitions between views |
+| `analytics/query-viewer` | What a run produces — execution, the result count, the result grid, table and chart views, CSV export |
+| `analytics/saved-queries` | Saved queries as addressable objects — storage contract, saving a draft, Save as, edit and delete on the query page, permission gating |
+| `analytics/source-panel` | The Source panel beside the Query Builder — the tables tree with columns grouped by tag, the saved-queries list, how picking a row navigates, the unsaved-work guard |
 | `analytics/tables` | The tables catalog, column schema and enum columns, row writes, per-table roles, the Connect panel, backfill and ingest failures |
+| `analytics/sessions-source` | The instance-wide Sessions source — base table and role binding, where it is edited and stored, the default binding, how an unbound role degrades |
 | `analytics/sessions-listing` | The sessions log page — filters, provenance line, grid columns, ordering and filtering |
 | `analytics/session-trace-listing` | One session's page — route and guard, header, side panels, the trace listing |
 | `analytics/session-trace-detail` | A trace opened in place — span tree, Request/Response/Chat tabs, tiered body reads |
@@ -28,6 +30,7 @@ sub-capability; open the one row that answers the question rather than reading t
 | `analytics/dashboards` | The Dashboards page over the usage log — how it is reached, its requests, Compare, KPI row, heatmap, share donut, breakdown table |
 | `analytics/custom-dashboards` | User-built dashboards of saved-query widgets — the flag, dashboard and widget model, view and edit modes, the grid, the shared time range, composite SQL widgets |
 | `analytics/config-transfer` | Moving the catalog between environments — the Analytics scope of Export Config, table and pipeline selection, the export preview, the bundle download |
+| `analytics/app-routes` | The instance allowlist of application routes an enrichment pipeline may call — the pair, where it is edited and stored, its validation, how a refused write is reported |
 ## Requirements
 ### Requirement: ANALYTICS_ENABLED feature flag is surfaced on FeatureFlags
 
@@ -282,10 +285,14 @@ reports the same class of event in a different place from the rest of the consol
 failed table read and a failed sessions page all raise a notification — and it shifts the content it sits
 above as it arrives and leaves.
 
-**The notification SHALL carry what the service said.** Its title SHALL be the service's `errorHeader` and its
-body the service's `errorMessage`, and it SHALL carry the failed request's `requestId`. A fixed string this app
-wrote SHALL be used only as the title where the response supplied no header — never in place of a message the
-service did supply. An operator who cannot quote a request id cannot ask the team running the service about the
+**The notification SHALL name the failed action and carry what the service said.** Its title SHALL be this
+app's own translated string for the action that failed — "Query not saved", "Could not load pipelines" — and its
+body the service's `errorMessage`, and it SHALL carry the failed request's `requestId`. The service's
+`errorHeader` SHALL NOT be the title: the analytics service puts a machine code there (`bad_request`,
+`rule_validation_failed`), which names no action and reads as noise to an operator. The app's own string SHALL
+NOT replace a message the service did supply; where the service's message is withheld on purpose — an identity
+or visibility refusal that could disclose whether an object exists — the body MAY be this app's guidance for
+that code instead. An operator who cannot quote a request id cannot ask the team running the service about the
 failure.
 
 **The report SHALL persist until dismissed.** An error notification SHALL NOT auto-dismiss, because a failure
@@ -316,12 +323,13 @@ This requirement does NOT apply where:
 - **THEN** an error notification reports the failure
 - **AND** no sentence reporting that failure is inserted into the page's content flow
 
-#### Scenario: The notification states the service's header, message and request id
+#### Scenario: The notification names the failure and states the service's message and request id
 
 - **WHEN** a read fails and the response carries an error header, an error message and a request id
-- **THEN** the notification's title is that header, its body that message, and it carries that request id
+- **THEN** the notification's title is this app's own string for that failure, not the header
+- **AND** its body is the service's message, and it carries that request id
 
-#### Scenario: A response with no header falls back to a fixed title only
+#### Scenario: A response with no header is titled the same way
 
 - **WHEN** a read fails and the response carries a message but no error header
 - **THEN** the notification's title is this app's own string for that failure

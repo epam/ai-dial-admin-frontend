@@ -104,10 +104,23 @@ Prefer existing building blocks over custom HTML/components:
   what the current component and prop names are rather than working from a list, which goes stale on
   every version bump.
 - **Buttons:** use ui-kit button components; don't hand-roll buttons unless truly necessary.
+- **Shared equivalent first:** before writing a control that already has a shared component, use it; if
+  a variant is missing, add it to the shared component rather than copying its markup. Delete/remove is
+  the standing example — use `Common/RemoveButton` (borderless icon when icon-only, bordered danger
+  button when it has a `label`); never hand-roll a trash `IconButton`.
 - **Typography:** use ui-kit Typography font classes; avoid custom font styling.
 - **Tabular data:** use ag-grid (`GridView` → `AgGridWrapper`) — never build tables with CSS grid/flex.
 - **Common behaviors:** reuse existing deps — `re-resizable` (resizable panels), `react-dnd`
   (drag & drop). Don't reimplement these.
+- **Multi-step flows:** every wizard or multi-step modal uses the ui-kit `Steps` indicator (with
+  `getStepStatusLabels` from `Common/Steps/utils`) and `StepperModalButtons` for the footer, inside one
+  `Popup` that stays mounted across steps. Never swap a whole `Popup` per step, and never build a bespoke
+  step indicator. Derive each step's `status` from the validity of its fields (`useMemo`) rather than
+  syncing it through state. A trailing informative step — a result or a secret shown after the action
+  already ran — passes `isLastStepInformative` to `StepperModalButtons` (Finish on the step before it, Close
+  only on it) and marks the earlier steps `disabled`. Exemplar:
+  `TestSuites/Modals/Create/CreateTestSuite.tsx`; informative last step:
+  `Assets/Platform/Keys/CreateKeyModal.tsx`.
 - Follow existing patterns in `src/components/` when structuring a new feature.
 
 **Discovering what ui-kit offers:** query the `ai-dial-ui-kit` MCP server (declared in `.mcp.json`)
@@ -174,5 +187,6 @@ truncation rules (`break-all`, `EllipsisTooltip`, no duplicate AG Grid cell tool
 ## §12 Exemplars
 
 - Common building blocks: `src/components/Common/CopyButton`, `src/components/Common/Accordion`.
+- Multi-step modal: `src/components/TestSuites/Modals/Create/CreateTestSuite.tsx` (see §5).
 - Entity pattern: a `<Entity>/View/View.tsx` + `TabsContent` + `List/`.
 - Grid `isSkipRefresh`: `src/components/TestSuites/TestCaseSchema/SchemaManager.tsx`.

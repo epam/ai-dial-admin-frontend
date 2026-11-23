@@ -14,12 +14,12 @@ interface Props {
 
 const ComboTrendYAxis: FC<Props> = ({ ticks, formatTick }) => (
   <div
-    className="flex shrink-0 flex-col justify-between dial-tiny-text text-secondary"
+    className="flex shrink-0 flex-col items-end justify-between dial-tiny-text text-secondary"
     style={{ width: COMBO_TREND_Y_LABEL_WIDTH_PX, height: COMBO_TREND_PLOT_HEIGHT_PX }}
     aria-hidden
   >
     {ticks.map((tick, index) => (
-      <span key={`${tick}-${index}`} className="leading-4">
+      <span key={`${tick}-${index}`} className="whitespace-nowrap leading-4">
         {formatTick(tick)}
       </span>
     ))}

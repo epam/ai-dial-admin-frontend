@@ -262,7 +262,7 @@ describe('WidgetSettingsModal — view', () => {
       />,
     );
 
-    expect(screen.getByRole('combobox', { name: CustomDashboardsI18nKey.ValueColumn })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.ValueColumn}`) })).toBeTruthy();
 
     // Settings start from `initial` once, at mount, so the other view is a fresh modal.
     unmount();
@@ -291,7 +291,7 @@ describe('WidgetSettingsModal — view', () => {
       />,
     );
 
-    expect(screen.queryByRole('combobox', { name: CustomDashboardsI18nKey.ValueColumn })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.ValueColumn}`) })).toBeNull();
   });
 
   test('offers a currency once a Single value is written as money', async () => {
@@ -320,12 +320,14 @@ describe('WidgetSettingsModal — view', () => {
     );
     const user = userEvent.setup();
 
-    expect(screen.queryByRole('combobox', { name: CustomDashboardsI18nKey.Currency })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.Currency}`) })).toBeNull();
 
-    await user.click(screen.getByRole('combobox', { name: CustomDashboardsI18nKey.ValueFormat }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.ValueFormat}`) }));
     await user.click(await screen.findByRole('option', { name: CustomDashboardsI18nKey.FormatMoney }));
 
-    expect(await screen.findByRole('combobox', { name: CustomDashboardsI18nKey.Currency })).toBeTruthy();
+    expect(
+      await screen.findByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.Currency}`) }),
+    ).toBeTruthy();
   });
 
   test('hides the picker while there is no result to judge', () => {
@@ -405,7 +407,7 @@ describe('WidgetSettingsModal — source', () => {
     );
 
   const chooseSql = async (user: ReturnType<typeof userEvent.setup>) => {
-    await user.click(screen.getByRole('combobox', { name: CustomDashboardsI18nKey.Source }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.Source}`) }));
     await user.click(await screen.findByRole('option', { name: CustomDashboardsI18nKey.SourceSql }));
   };
 
@@ -419,7 +421,7 @@ describe('WidgetSettingsModal — source', () => {
     await user.click(await screen.findByRole('option', { name: PERSONAL.name }));
 
     const preview = await screen.findByRole('group', { name: CustomDashboardsI18nKey.QueryPreview });
-    expect(preview.textContent).toContain('SELECT model FROM usage');
+    expect(preview.textContent).toContain('SELECT\n  model\nFROM\n  usage');
     expect(within(preview).queryByRole('textbox')).toBeNull();
   });
 
@@ -524,6 +526,41 @@ describe('WidgetSettingsModal — source', () => {
       100,
       undefined,
     );
+  });
+
+  test('opens a stored SQL statement formatted', () => {
+    render(
+      <WidgetSettingsModal
+        header="Widget"
+        submitLabel={SUBMIT}
+        initial={{ ...INITIAL, source: WidgetSourceKind.Sql, sql: 'SELECT a, b FROM t', title: 'Spend' }}
+        isQueryPickable={false}
+        onSubmit={onSubmit}
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('textbox', { name: new RegExp(CustomDashboardsI18nKey.SqlStatement) })).toHaveValue(
+      'SELECT\n  a,\n  b\nFROM\n  t',
+    );
+  });
+
+  test('keeps an untouched SQL statement as it was stored', async () => {
+    render(
+      <WidgetSettingsModal
+        header="Widget"
+        submitLabel={SUBMIT}
+        initial={{ ...INITIAL, source: WidgetSourceKind.Sql, sql: 'SELECT a, b FROM t', title: 'Spend' }}
+        isQueryPickable={false}
+        onSubmit={onSubmit}
+        onClose={vi.fn()}
+      />,
+    );
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: SUBMIT }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ sql: 'SELECT a, b FROM t' }), 100, undefined);
   });
 
   test("drops the saved query's name from the Title placeholder for a SQL source", async () => {

@@ -241,3 +241,17 @@ identical placeholder, so a viewer cannot tell a deleted query from a forbidden 
 
 Additive and flag-gated: with `ANALYTICS_CUSTOM_DASHBOARDS_ENABLED` unset nothing renders differently.
 Rollback is unsetting the flag.
+
+## Decision: a picked chart lives in the widget's settings
+
+The service accepts a closed set of widget views and rejects any other, so a chart picked on a widget — Bar,
+Line or Scatter — is kept as `settings.chart.type` with no `view`, and read back before `view`. The axes
+are not stored: a chart of the type the query keeps uses the query's axes, any other takes the first
+column that is not an aggregate for X and, for Bar and Line, every other aggregate as a series. Alternative considered: a new
+`chart` view token in the service, which keeps `view` honest but needs a service release first.
+
+A widget on an inline copy of a pie query resolves to the Pie chart view, which draws the first category column
+by the first aggregate, not the pie's stored axes; a pie stored on other columns shows another figure once it
+is copied on publishing. Accepted for now: carrying the pie's value column into the Pie chart view is a
+follow-up.
+

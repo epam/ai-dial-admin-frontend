@@ -3,15 +3,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import Page from '@/src/app/[lang]/platform-catalog-schemas/[id]/page';
 
 vi.mock('@/src/server/logger', () => ({ errorObjLog: vi.fn() }));
-vi.mock('next/navigation', () => ({
-  notFound: vi.fn(() => {
-    throw new Error('NEXT_NOT_FOUND');
-  }),
-  redirect: vi.fn((url: string) => {
-    throw new Error(`NEXT_REDIRECT ${url}`);
-  }),
-}));
-
 vi.mock('@/src/app/[lang]/platform-catalog-schemas/actions', () => ({
   getCatalogSchema: vi.fn(),
   getConfigFileCatalogSchema: vi.fn(),

@@ -69,3 +69,9 @@ export interface WidgetRunState {
 }
 
 export type NewWidget = Omit<DashboardWidget, 'layout'>;
+
+export interface WidgetPieLayout {
+  sliceCount: number;
+  legendRowsPerColumn: number;
+  donutSize: number;
+}

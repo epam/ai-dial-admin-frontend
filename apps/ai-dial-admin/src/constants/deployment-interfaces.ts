@@ -10,6 +10,8 @@ export const MODEL_INTERFACE_TYPES: DeploymentInterfaceType[] = [
   DeploymentInterfaceType.OpenAIEmbeddings,
 ];
 
+export const ROUTER_INTERFACE_TYPES: DeploymentInterfaceType[] = MODEL_INTERFACE_TYPES;
+
 export const APPLICATION_INTERFACE_TYPES: DeploymentInterfaceType[] = [DeploymentInterfaceType.OpenAIChatCompletions];
 
 export const ASSET_APPLICATION_INTERFACE_TYPES: DeploymentInterfaceType[] = [

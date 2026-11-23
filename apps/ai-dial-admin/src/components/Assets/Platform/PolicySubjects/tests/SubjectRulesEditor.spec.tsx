@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import SubjectRulesEditor from '@/src/components/Assets/Platform/PolicySubjects/SubjectRulesEditor';
-import { PolicySubjectsI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey, PolicySubjectsI18nKey, StatusBadgeI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { PolicySubjectFunction, PolicySubjectRule } from '@/src/models/dial/policy';
 
@@ -53,6 +53,21 @@ describe('SubjectRulesEditor', () => {
     expect(onChange).toHaveBeenCalledWith([{ ...EQUAL_RULE, source: 'realm_access.roles' }]);
   });
 
+  test('marks a whitespace-only source invalid', () => {
+    renderEditor([{ ...EQUAL_RULE, source: '   ' }]);
+
+    expect(
+      screen.getByRole('textbox', { name: new RegExp(PolicySubjectsI18nKey.Source) }).getAttribute('aria-invalid'),
+    ).toBe('true');
+    expect(screen.getByText(ErrorI18nKey.EmptyField)).toBeInTheDocument();
+  });
+
+  test('marks an unrecognized function invalid', () => {
+    renderEditor([{ ...EQUAL_RULE, function: 'UNKNOWN' as PolicySubjectFunction }]);
+
+    expect(screen.getByText(StatusBadgeI18nKey.Invalid)).toBeTruthy();
+  });
+
   test('reports undefined, not an empty list, when the last rule is removed', async () => {
     const user = userEvent.setup();
     const onChange = renderEditor([EQUAL_RULE]);
@@ -76,6 +91,25 @@ describe('SubjectRulesEditor', () => {
     renderEditor([{ ...EQUAL_RULE, targets: [] }]);
 
     expect(screen.getByText(PolicySubjectsI18nKey.TargetsRequired)).toBeTruthy();
+  });
+
+  test('shows an error for an empty target among populated targets', () => {
+    renderEditor([{ ...EQUAL_RULE, targets: ['admin', ''] }]);
+
+    expect(screen.getByText(ErrorI18nKey.EmptyField)).toBeTruthy();
+  });
+
+  test('shows an error for a null target among populated targets', () => {
+    renderEditor([{ ...EQUAL_RULE, targets: ['admin', null as unknown as string] }]);
+
+    expect(screen.getByText(ErrorI18nKey.EmptyField)).toBeTruthy();
+  });
+
+  test('accepts a whitespace-only target', () => {
+    renderEditor([{ ...EQUAL_RULE, targets: [' '] }]);
+
+    expect(screen.queryByText(ErrorI18nKey.EmptyField)).toBeNull();
+    expect(screen.queryByText(PolicySubjectsI18nKey.TargetsRequired)).toBeNull();
   });
 
   test('shows no target error once a target is entered', () => {

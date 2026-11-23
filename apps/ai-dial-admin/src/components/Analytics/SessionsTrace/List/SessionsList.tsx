@@ -1,13 +1,12 @@
 'use client';
 
-import { CellClickedEvent, CellKeyDownEvent, GridReadyEvent, IDatasource } from 'ag-grid-community';
-import { useRouter } from 'next/navigation';
-import { FC, useCallback, useMemo } from 'react';
+import { GridReadyEvent, IDatasource } from 'ag-grid-community';
+import { FC, useMemo } from 'react';
 
 import SessionValueFilter from '@/src/components/Analytics/SessionsTrace/List/SessionValueFilter';
 import SessionValueFloatingFilter from '@/src/components/Analytics/SessionsTrace/List/SessionValueFloatingFilter';
+import { useSessionGridStorage } from '@/src/components/Analytics/SessionsTrace/List/use-session-grid-storage';
 import { sessionDetailHref } from '@/src/components/Analytics/SessionsTrace/utils';
-import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { infiniteGridOptions } from '@/src/constants/ag-grid';
 import {
@@ -15,7 +14,6 @@ import {
   SESSIONS_GROUP_HEADER_HEIGHT,
   SESSIONS_HEADER_HEIGHT,
   SESSIONS_ROW_HEIGHT,
-  SESSIONS_STORAGE_KEY,
   SESSION_VALUE_FILTER,
   SESSION_VALUE_FLOATING_FILTER,
 } from '@/src/constants/analytics/sessions-trace';
@@ -23,6 +21,7 @@ import { SESSIONS_TRACE_COLUMN_GROUPS } from '@/src/constants/grid-columns/grid-
 import { useI18n } from '@/src/locales/client';
 import { SessionGridContext, SessionRow } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 
 const GRID_COMPONENTS = {
   [SESSION_VALUE_FILTER]: SessionValueFilter,
@@ -34,42 +33,31 @@ interface Props {
   gridContext: SessionGridContext;
   onGridReady: (event: GridReadyEvent) => void;
   schemaFields?: AnalyticsEntityField[] | null;
+  source: SessionsSource;
   isColumnsPanelOpen: boolean;
   onToggleColumnsPanel: () => void;
 }
+
+const getSessionRowHref = (row: unknown): string | undefined => {
+  const sessionId = (row as SessionRow | undefined)?.client_session_id;
+  return sessionId ? sessionDetailHref(sessionId) : undefined;
+};
 
 const SessionsList: FC<Props> = ({
   datasource,
   gridContext,
   onGridReady,
   schemaFields,
+  source,
   isColumnsPanelOpen,
   onToggleColumnsPanel,
 }) => {
   const t = useI18n();
-  const router = useRouter();
+  const storageKey = useSessionGridStorage(source.baseTable);
 
-  const columnDefs = useMemo(() => SESSIONS_TRACE_COLUMN_GROUPS(t, schemaFields ?? []), [t, schemaFields]);
-
-  const onOpenSession = useCallback(
-    (chatId: string, event?: MouseEvent | null) => navigateEntityUrl(sessionDetailHref(chatId), router.push, event),
-    [router],
-  );
-
-  const onCellClicked = useCallback(
-    (e: CellClickedEvent<SessionRow>) => {
-      if (!e.data) return;
-      onOpenSession(e.data.client_session_id, e.event as MouseEvent | undefined);
-    },
-    [onOpenSession],
-  );
-
-  const onCellKeyDown = useCallback(
-    (e: CellKeyDownEvent<SessionRow>) => {
-      if ((e.event as KeyboardEvent | undefined)?.key !== 'Enter' || !e.data) return;
-      onOpenSession(e.data.client_session_id);
-    },
-    [onOpenSession],
+  const columnDefs = useMemo(
+    () => SESSIONS_TRACE_COLUMN_GROUPS(t, schemaFields ?? [], source),
+    [t, schemaFields, source],
   );
 
   return (
@@ -93,13 +81,11 @@ const SessionsList: FC<Props> = ({
           // Pinned so the view can offset its empty state by a header height it knows rather than one it
           // infers. The value matches AG Grid's own default, so the grid renders exactly as before.
           floatingFiltersHeight: SESSIONS_FLOATING_FILTER_HEIGHT,
-          onCellClicked,
-          onCellKeyDown,
-          rowClassRules: { 'cursor-pointer': ({ data }) => Boolean(data) },
         }}
         onGridReady={onGridReady}
         getRowId={({ data }) => data.client_session_id}
-        storageKey={SESSIONS_STORAGE_KEY}
+        getHref={getSessionRowHref}
+        storageKey={storageKey}
         isLiveData
         showColumnsPanel={isColumnsPanelOpen}
         toggleColumnsPanel={onToggleColumnsPanel}

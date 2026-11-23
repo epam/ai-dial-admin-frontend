@@ -34,11 +34,11 @@ interface FieldRowProps {
   isRecord?: boolean;
 }
 
-const GroupFieldRow: FC<FieldRowProps> = ({ field: { name, label, type, tag }, row, isRecord }) => {
+const GroupFieldRow: FC<FieldRowProps> = ({ field: { name, label, type, tag, description }, row, isRecord }) => {
   const entries = spanObjectEntries(row[name]);
 
   if (entries.length > 0) {
-    return <SpanObjectFactRow label={label} entries={entries} />;
+    return <SpanObjectFactRow label={label} entries={entries} hint={description} />;
   }
 
   // Absence is the shared predicate's call, never an empty formatted string: a metered zero formats as `0`,
@@ -48,7 +48,15 @@ const GroupFieldRow: FC<FieldRowProps> = ({ field: { name, label, type, tag }, r
 
   const value = isAbsent ? UNAVAILABLE_VALUE : spanFieldText(row[name], type, tag);
 
-  return <SpanFactRow label={label} value={value} isMono copyText={isAbsent || !isRecord ? undefined : value} />;
+  return (
+    <SpanFactRow
+      label={label}
+      value={value}
+      isMono
+      hint={description}
+      copyText={isAbsent || !isRecord ? undefined : value}
+    />
+  );
 };
 
 const SpanGroupPanel: FC<Props> = ({ group, row, isRecord, summaryFields, isOpen, onToggle }) => {

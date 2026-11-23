@@ -83,7 +83,9 @@ export const mergeFiles = <T extends DialFile>(
           name: file.name || getFolderName(file.path),
           items: newFiles?.length ? fillChildren(newFiles, file.items) : void 0,
         } as T;
-      } else if (file.items) {
+      } else if (file.items?.length) {
+        // A folder with no children cannot contain the target, and recursing into `[]` would hit the
+        // empty-list branch above and wrap the target in a brand-new root inside this folder.
         return {
           ...file,
           name: file.name || getFolderName(file.path),

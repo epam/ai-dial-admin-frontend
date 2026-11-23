@@ -2,11 +2,11 @@
 
 import { FC } from 'react';
 
-import BaseAssetList from '@/src/components/Assets/BaseAssetList/BaseAssetList';
+import TabbedAssetList from '@/src/components/Assets/TabbedAssetList/TabbedAssetList';
 import { ApplicationRoute } from '@/src/types/routes';
 
 const InterceptorsList: FC = () => {
-  return <BaseAssetList view={ApplicationRoute.PlatformInterceptors} />;
+  return <TabbedAssetList view={ApplicationRoute.PlatformInterceptors} />;
 };
 
 export default InterceptorsList;

@@ -8,7 +8,7 @@ import { SessionTraceGroup, SessionScope } from '@/src/models/analytics/sessions
 
 interface Params {
   scope: SessionScope;
-  projectId: string;
+  projectId: string | null;
   firstRequestTime: number | string | null;
   lastRequestTime: number | string | null;
 }

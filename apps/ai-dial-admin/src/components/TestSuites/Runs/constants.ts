@@ -22,3 +22,5 @@ export const RUN_IDS_FILTER = (runIds: string[]): FilterDto => ({
 export const VALID_FILTERS = [{ column: 'valid', operator: FilterOperatorDto.EQUALS, value: 'true' }];
 
 export const MIN_RUNS = 1;
+
+export const MIN_CONCURRENCY = 1;

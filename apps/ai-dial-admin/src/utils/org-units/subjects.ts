@@ -13,33 +13,39 @@ export interface ClassifiedSubject {
   label: string;
 }
 
-export const classifySubject = (subject: OrgUnitSubject, groupClaim: string): ClassifiedSubject => {
+/** Claim names that have a holder type of their own, so a custom claim cannot reuse them. */
+export const RESERVED_CLAIM_KEYS: readonly string[] = [EMAIL_SOURCE, ROLES_SOURCE, EVERYONE_SOURCE];
+
+export const classifySubject = (subject: OrgUnitSubject): ClassifiedSubject => {
   const targets = subject.targets ?? [];
   const joined = targets.join(', ');
   if (subject.function === OrgUnitSubjectFunction.TRUE && subject.source === EVERYONE_SOURCE && targets.length === 0) {
     return { kind: SubjectKind.EVERYONE, label: '' };
   }
-  if (subject.function === OrgUnitSubjectFunction.EQUAL) {
-    if (subject.source === EMAIL_SOURCE || (subject.source !== groupClaim && targets.some((t) => t.includes('@')))) {
+  if (subject.function === OrgUnitSubjectFunction.EQUAL && targets.length > 0) {
+    if (subject.source === EMAIL_SOURCE) {
       return { kind: SubjectKind.PERSON, label: joined };
     }
     if (subject.source === ROLES_SOURCE) {
       return { kind: SubjectKind.DIAL_ROLE, label: joined };
     }
-    if (subject.source === groupClaim) {
-      return { kind: SubjectKind.GROUP, label: joined };
-    }
+    return { kind: SubjectKind.CLAIM, label: `${subject.source}=${joined}` };
   }
   return { kind: SubjectKind.RAW, label: `${subject.source} = ${joined}` };
 };
 
-export const buildSubject = (kind: SubjectKind, value: string, groupClaim: string): OrgUnitSubject => {
+export const buildSubject = (kind: SubjectKind, value: string, claimKey?: string): OrgUnitSubject => {
   const trimmed = value.trim();
   switch (kind) {
     case SubjectKind.PERSON:
       return subjectOf(EMAIL_SOURCE, OrgUnitSubjectFunction.EQUAL, [trimmed]);
-    case SubjectKind.GROUP:
-      return subjectOf(groupClaim, OrgUnitSubjectFunction.EQUAL, [trimmed]);
+    case SubjectKind.CLAIM: {
+      const key = claimKey?.trim();
+      if (!key) {
+        throw new Error('Cannot build a claim subject without a claim name');
+      }
+      return subjectOf(key, OrgUnitSubjectFunction.EQUAL, [trimmed]);
+    }
     case SubjectKind.DIAL_ROLE:
       return subjectOf(ROLES_SOURCE, OrgUnitSubjectFunction.EQUAL, [trimmed]);
     case SubjectKind.EVERYONE:
@@ -63,6 +69,9 @@ export const isValidHolderValue = (value: string): boolean => {
   const trimmed = value.trim();
   return trimmed.length > 0 && trimmed.length <= MAX_HOLDER_LENGTH && !CONTROL_CHARS.test(trimmed);
 };
+
+export const isValidClaimKey = (value: string): boolean =>
+  isValidHolderValue(value) && !RESERVED_CLAIM_KEYS.includes(value.trim());
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

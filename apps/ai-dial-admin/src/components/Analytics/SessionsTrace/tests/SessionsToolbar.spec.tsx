@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import SessionsToolbar from '@/src/components/Analytics/SessionsTrace/Toolbar/SessionsToolbar';
-import { SessionsTraceI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { FeedbackFilter } from '@/src/models/analytics/sessions-trace';
 import { TimeRange } from '@/src/models/time-range';
 
@@ -24,7 +24,7 @@ const renderToolbar = (overrides: Partial<Parameters<typeof SessionsToolbar>[0]>
     onFeedbackChange: vi.fn(),
     ...overrides,
     // after the spread: `overrides` is a `Partial`, so it would otherwise widen these required props
-    isFeedbackCapped: overrides.isFeedbackCapped ?? false,
+    hasFeedbackFilter: overrides.hasFeedbackFilter ?? true,
     onToggleColumnsPanel: overrides.onToggleColumnsPanel ?? vi.fn(),
   };
 
@@ -75,6 +75,25 @@ describe('SessionsToolbar', () => {
     renderToolbar();
 
     expect(screen.getByText(SessionsTraceI18nKey.Feedback)).toBeInTheDocument();
+  });
+});
+
+describe('SessionsToolbar :: without a rating enrichment', () => {
+  test('offers no feedback filter', () => {
+    renderToolbar({ hasFeedbackFilter: false });
+
+    expect(screen.getByPlaceholderText(SessionsTraceI18nKey.SearchPlaceholder)).toBeInTheDocument();
+    expect(screen.queryByText(SessionsTraceI18nKey.Feedback)).not.toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: SessionsTraceI18nKey.FeedbackRated })).not.toBeInTheDocument();
+  });
+
+  test('keeps the columns control', async () => {
+    const user = userEvent.setup();
+    const { onToggleColumnsPanel } = renderToolbar({ hasFeedbackFilter: false });
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Columns }));
+
+    expect(onToggleColumnsPanel).toHaveBeenCalledOnce();
   });
 });
 

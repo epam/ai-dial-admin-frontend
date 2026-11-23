@@ -1,12 +1,12 @@
 # folders-core-api Specification
 
 ## Purpose
-Folder listing (cross-type merge), rules get/update (via Core publications create+approve), and folder delete/move (cross-type fan-out with unpublish-via-publication semantics) executed directly against DIAL Core, replacing the admin-BE proxy, while `FoldersStorage`/`RuleFolderContext`, routes, and the `folders-storage/actions.ts` signatures stay identical — created by archiving change `migrate-folders-to-core`. This is the capstone of the assets→Core migration: `FolderService` makes no direct Core calls of its own, instead fanning out to the five per-type Core clients and the Core publications client. Folders have zero remaining admin-BE dependency: `createFolderWithFiles` (Files view) is Core-native, and the unused `previewAppZip`/`previewToolsetZip` actions were deleted as dead code rather than migrated — completed by archiving change `finalize-assets-core-migration` alongside the original `migrate-folders-to-core`.
+Folder listing (cross-type merge), rules get/update (via Core publications create+approve), and folder delete/move (cross-type fan-out; delete removes items directly, with no publication) executed directly against DIAL Core, replacing the admin-BE proxy, while `FoldersStorage`/`RuleFolderContext`, routes, and the `folders-storage/actions.ts` signatures stay identical — created by archiving change `migrate-folders-to-core`. This is the capstone of the assets→Core migration: `FolderService` makes no direct Core calls of its own, instead fanning out to the five per-type Core clients and the Core publications client. Folders have zero remaining admin-BE dependency: `createFolderWithFiles` (Files view) is Core-native, and the unused `previewAppZip`/`previewToolsetZip` actions were deleted as dead code rather than migrated — completed by archiving change `finalize-assets-core-migration` alongside the original `migrate-folders-to-core`.
 
 ## Requirements
 
 ### Requirement: Folders served directly by DIAL Core via the per-type clients
-The system SHALL route folder listing, rules get/update, delete (unpublish), and move to DIAL Core unconditionally, built on the five per-type Core clients and the Core publications client — there is no admin-BE fallback and no feature flag. The cutover SHALL NOT change `FoldersStorage`/`RuleFolderContext`, the folder routes, or the `folders-storage/actions.ts` signatures.
+The system SHALL route folder listing, rules get/update, delete (direct per-item delete), and move to DIAL Core unconditionally, built on the five per-type Core clients and the Core publications client — there is no admin-BE fallback and no feature flag. The cutover SHALL NOT change `FoldersStorage`/`RuleFolderContext`, the folder routes, or the `folders-storage/actions.ts` signatures.
 
 #### Scenario: Folder operations call Core
 - **WHEN** any of `getFolders`, `getRules`, `updateRules`, `removeFolder`, `changeFolder` runs
@@ -54,16 +54,20 @@ The system SHALL read folder rules via a Core publication rule-list call and SHA
 - **WHEN** `updateRules(targetFolder, rules)` is called
 - **THEN** a publication targeting those rules is created and then immediately approved, with no separate approval step exposed to the caller
 
-### Requirement: Folder delete unpublishes only the targeted resource type
-The system SHALL delete a folder for a single caller-specified resource type by gathering every resource URL under it for that type only (recursively), creating and approving a DELETE-action publication for those URLs, and then best-effort deleting the folder from that type's own storage, swallowing errors during that best-effort cleanup step. The folder is left untouched for every other resource type.
+### Requirement: Folder delete removes items directly for the targeted resource type
+The system SHALL delete a folder for a single caller-specified resource type by gathering every resource URL under it for that type only (recursively, including the hidden `.dial_folder` marker resource of an otherwise-empty folder) and deleting each one directly through that type's Core client with an unconditional `If-Match: *`, one at a time and without creating or approving a publication. It SHALL NOT delete the folder path itself, because Core rejects a folder-path delete and folders are implicit for these types. The deletes SHALL stop at the first failure, returning that failure without rolling back items already deleted. The folder is left untouched for every other resource type.
 
 #### Scenario: Delete gathers resources recursively for the targeted type only
 - **WHEN** `removeFolder(path, resourceType)` is called on a folder containing nested subfolders with resources of multiple types
-- **THEN** every resource URL under that folder tree for `resourceType` is included in the unpublish operation, and resources of other types are left untouched
+- **THEN** every resource URL under that folder tree for `resourceType` is deleted directly, and resources of other types are left untouched
 
-#### Scenario: Best-effort cleanup does not fail the overall delete
-- **WHEN** a per-type storage delete fails during the post-unpublish cleanup step
-- **THEN** the overall folder delete still reports success, matching current behavior
+#### Scenario: Delete creates no publication
+- **WHEN** `removeFolder(path, resourceType)` deletes a folder's items
+- **THEN** no publication is created or approved
+
+#### Scenario: A failed item delete stops the folder delete
+- **WHEN** deleting one item under the folder fails
+- **THEN** `removeFolder` returns that failure, no further items are deleted, and items already deleted are not restored
 
 ### Requirement: Folder move validates existence, copies rules, then moves each type sequentially
 The system SHALL move a folder by first confirming it exists in every targeted resource type, then copying its rules to the destination path, then moving each type's resources one at a time — stopping at the first per-type failure without rolling back types already moved. For each resource found under the folder being moved (including the hidden `.dial_folder` marker resource representing an otherwise-empty folder), the system SHALL compute the resource's destination path by replacing only the `oldPath` folder prefix — matched as a full path-segment sequence, independent of whether `oldPath`/`newPath` carry a trailing slash — with `newPath`, preserving the remainder of the resource's path unchanged and joined with exactly one `/` separator. If a resource's path does not actually begin with `oldPath` as a segment-aligned prefix, the system SHALL fail that move rather than silently leaving the resource at its original path or writing it to a guessed location.

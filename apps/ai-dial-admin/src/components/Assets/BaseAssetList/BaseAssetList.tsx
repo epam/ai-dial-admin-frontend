@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  DialCopiedItem,
-  DialFile,
-  DialFileNodeType,
-  DialUploadFileItem,
-  FileManagerGridRow,
-} from '@epam/ai-dial-react-file-manager';
+import { DialCopiedItem, DialFile, DialFileNodeType, DialUploadFileItem } from '@epam/ai-dial-react-file-manager';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createProject, createProjectFolder } from '@/src/app/[lang]/projects/actions';
@@ -24,19 +18,16 @@ import {
   getVersionsPerName,
 } from '@/src/components/Assets/utils';
 import FileManager from '@/src/components/Common/FileManager/FileManager';
-import { isItemOpenable } from '@/src/components/Common/FileManager/utils';
-import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getFolderName } from '@/src/utils/files/folder';
 import { useImportProgress } from '@/src/hooks/use-import-progress';
-import { usePointerClickModifier } from '@/src/hooks/use-pointer-click-modifier';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { ROOT_FOLDER } from '@/src/constants/file';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import { DialAppRunnerResource, PlatformAsset } from '@/src/models/dial/resource';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -46,19 +37,12 @@ import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
-import {
-  getRootFolder,
-  isFileRootPath,
-  isNestedPlatformView,
-  isPlatformBucketView,
-  isPlatformBucketPath,
-  isPlatformDualBucketView,
-} from '@/src/utils/files/root-folder';
+import { hasPublicTree } from '@/src/utils/files/asset-sources';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
-import { excludeRecordsInFolders } from '@/src/utils/policies/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { appendUrlQuery, getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
+import { getAssetItemHref, getAssetItemUrl } from './asset-item-url';
 import Modals from './Modals';
 import { BaseAssetRoute, CreateAssetRoute, CrudAssetRoute, ModalType } from './types';
 import {
@@ -71,15 +55,9 @@ import {
   getEmptyStateContent,
   getFileManagerLabel,
   getGridColumns,
-  getFlatDuplicateDestination,
-  getPlatformAssetDuplicate,
   getResourceTypeByRoute,
   ImportAssetActionMap,
   MoveAssetActionMap,
-  PlatformBulkDeleteAssetActionMap,
-  RemoveCostObjectFolderActionMap,
-  PlatformCreateAssetActionMap,
-  PlatformGetAssetActionMap,
 } from './utils';
 import { extractNameAndVersion } from '@/src/server/publications/path';
 import { VERSIONED_RESOURCE_TYPES } from '@/src/constants/assets-core';
@@ -89,9 +67,10 @@ interface Props {
   view: ApplicationRoute;
   runners?: DialApplicationScheme[];
   translators?: ResourceInfo[];
+  isUnsafeImportEnabled?: boolean;
 }
 
-const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
+const BaseAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImportEnabled }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | null>(null);
   const [destinationFolder, setDestinationFolder] = useState<string | null>(null);
@@ -109,7 +88,6 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
   const router = useRouter();
   const { showNotification } = useNotification();
   const runImport = useImportProgress();
-  const pointerClickModifierRef = usePointerClickModifier();
 
   const getContext = useCallback(() => {
     return AssetFolderContextMap[view as BaseAssetRoute]();
@@ -138,27 +116,17 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
 
   const handleDuplicateModalOpen = useCallback(
     async (files?: DialFile[]) => {
-      if (isFileRootPath(filePath)) {
-        return;
-      }
-
       if (!files?.length) {
         return;
       }
 
       const { path } = files[0] as AssetWithVersion;
-      // Applications and Toolsets are the only views where the "get" call to make depends on which
-      // bucket the clicked row belongs to, not just on the view (design.md D2/
-      // `platform-applications`/`platform-toolsets`).
-      const getAsset = isPlatformDualBucketView(view, path)
-        ? PlatformGetAssetActionMap[view]!
-        : GetAssetActionMap[view as BaseAssetRoute];
-      const fullAsset = await getAsset(path, DEFAULT_ETAG);
+      const fullAsset = await GetAssetActionMap[view as BaseAssetRoute](path, DEFAULT_ETAG);
       setDuplicateItem(fullAsset?.response as AssetWithVersion);
       setIsModalOpen(true);
       setModalType(ModalType.duplicate);
     },
-    [view, filePath],
+    [view],
   );
 
   const handleImportModalOpen = useCallback((_?: string, currentFolder?: DialFile, preselectedItems?: File[]) => {
@@ -195,24 +163,6 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
     setDuplicateItem(null);
   }, []);
 
-  const handleGridItemClick = useCallback(
-    (file: FileManagerGridRow) => {
-      if (isItemOpenable(view, file.name)) {
-        const pointerEvent = pointerClickModifierRef.current;
-        pointerClickModifierRef.current = null;
-        const url = getUrnForEntity(view, file);
-        navigateEntityUrl(
-          isFileRootPath(filePath) && view !== ApplicationRoute.PlatformCatalogSchemas
-            ? appendUrlQuery(url, 'configFile=true')
-            : url,
-          router.push,
-          pointerEvent,
-        );
-      }
-    },
-    [view, router, pointerClickModifierRef, filePath],
-  );
-
   const handlePathChange = useCallback(
     (nextPath?: string) => {
       if (nextPath) {
@@ -243,8 +193,8 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
   );
 
   const columnDefs = useMemo(() => {
-    return getGridColumns(view, filePath);
-  }, [view, filePath]);
+    return getGridColumns(view, (item) => getAssetItemHref(view, item as { name?: string }));
+  }, [view]);
 
   const handleCreateFolder = useCallback(
     async (_: DialUploadFileItem | undefined, folderPath: string) => {
@@ -280,17 +230,11 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
 
   const handleCreateAsset = useCallback(
     async (asset: AssetWithVersion, path?: string, isCreateDuplicate?: boolean) => {
-      // A nested platform view's create modal asks for the cost object, so the folder it chose wins over
-      // the folder the list happens to be showing.
-      const chosenFolder = isNestedPlatformView(view) ? (asset as { folderId?: string }).folderId : undefined;
-      const folderPath = path || chosenFolder || destinationFolder || `${getRootFolder(view)}/`;
+      const folderPath = path || destinationFolder || `${ROOT_FOLDER}/`;
 
       // A real skill and its folder marker are different Core operations for this type (design D2),
       // so Skill is called directly here rather than through `CreateAssetActionMap`, whose single
-      // function per type every other entry can serve unmodified. Applications and Toolsets are the
-      // other exception: which "create" call to make depends on the destination bucket, not just
-      // the view (design.md D2/`platform-applications`/`platform-toolsets`) — the platform variant
-      // pins the path to the flat `platform` bucket regardless of the `folderId` passed here.
+      // function per type every other entry can serve unmodified.
       const createAsset =
         view === ApplicationRoute.Skills
           ? () => {
@@ -302,48 +246,25 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
                 const { name, description } = asset as unknown as { name?: string; description?: string };
                 return createProject(name || '', description || '', folderPath);
               }
-            : isPlatformDualBucketView(view, folderPath)
-              ? () => PlatformCreateAssetActionMap[view]!({ ...asset, folderId: folderPath })
-              : () => CreateAssetActionMap[view as CreateAssetRoute]({ ...asset, folderId: folderPath });
+            : () => CreateAssetActionMap[view as CreateAssetRoute]({ ...asset, folderId: folderPath });
 
       const res = await createAsset();
       if (res.success) {
         fetchFiles?.(folderPath);
-        if (isNestedPlatformView(view)) {
-          // A first record in a new cost object adds that folder to the root listing.
-          fetchFiles?.(`${getRootFolder(view)}/`);
-        }
         if (isCreateDuplicate) {
-          const isFlatAsset = isPlatformBucketView(view) || isPlatformDualBucketView(view, folderPath);
           // A versionless duplicate is identified by its plain name — no `__version` suffix.
-          let entityLabel: string;
-          if (isFlatAsset) {
-            entityLabel = asset.name || (asset as DialAppRunnerResource).$id || '';
-          } else if (isVersionlessAssetView(view)) {
-            entityLabel = asset.name || '';
-          } else {
-            entityLabel = `${asset.name}__${asset._metadata?.version}`;
-          }
+          const entityLabel = isVersionlessAssetView(view)
+            ? asset.name || ''
+            : `${asset.name}__${asset._metadata?.version}`;
           showNotification(
             getSuccessNotification(
               getCreateNotificationTitle(view, t),
               getCreateNotificationDescription(view, entityLabel, t),
             ),
           );
-          // `getPlatformAssetDuplicate` strips `folderId` from `asset` (Core's platform-bucket
-          // write doesn't want it) — harmless for the six genuinely flat views, whose
-          // `getEntityPath` case never reads `folderId`, but `AssetsApplications`/
-          // `AssetsToolsets` need it back here to recognize the redirect target as
-          // platform-bucket; otherwise `getEntityPath` falls through to the versioned-path
-          // branch and builds `?path=undefined{name}__` (design.md D5).
-          let redirectEntity: Parameters<typeof getUrnForEntity>[1];
-          if (isFlatAsset) {
-            redirectEntity = { ...asset, folderId: folderPath };
-          } else if (isVersionlessAssetView(view)) {
-            redirectEntity = { name: asset.name, folderId: folderPath };
-          } else {
-            redirectEntity = { name: asset.name, version: asset._metadata?.version, folderId: folderPath };
-          }
+          const redirectEntity: Parameters<typeof getUrnForEntity>[1] = isVersionlessAssetView(view)
+            ? { name: asset.name, folderId: folderPath }
+            : { name: asset.name, version: asset._metadata?.version, folderId: folderPath };
           router.push(getUrnForEntity(view, redirectEntity));
         }
       }
@@ -355,41 +276,25 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
 
   const handleDuplicate = useCallback(
     async (asset: AssetWithVersion | DialPrompt) => {
-      const platformAsset = asset as unknown as PlatformAsset;
-      // A platform-bucket application/toolset row duplicates the same flat, unversioned way the six
-      // other flat platform views already do (design.md D2/`platform-applications`/
-      // `platform-toolsets`) — the row's own `folderId` decides it (reliably `'platform/'` for a
-      // platform-bucket row since `fix-platform-bucket-folder-storage`; a `.path` fallback used to be
-      // needed here and was the cause of Issue #4420's `Modals.tsx` counterpart — `.path` never
-      // carries the bucket prefix, so it always won the `||` and made this check false for a
-      // platform-bucket row).
-      const isPlatformDualBucketDuplicate = isPlatformDualBucketView(view, asset.folderId);
-      let createRequest: Promise<ServerActionResponse>;
-      if (isPlatformBucketView(view) || isPlatformDualBucketDuplicate) {
-        const duplicate = getPlatformAssetDuplicate(view, platformAsset);
-        // `getRootFolder(view)`'s fallback (used when the second argument is omitted) resolves to
-        // `platform` for every genuinely flat view, but a dual-bucket view's own root is `public` —
-        // it serves both buckets — so a platform-bucket duplicate must pin its destination
-        // explicitly rather than relying on that fallback.
-        const flatDestinationFolder = getFlatDuplicateDestination(view, platformAsset, isPlatformDualBucketDuplicate);
-        createRequest = handleCreateAsset(duplicate as unknown as AssetWithVersion, flatDestinationFolder, true);
+      // A versionless duplicate is addressed by its plain path — no `__version` suffix.
+      let newAsset: AssetWithVersion | DialPrompt;
+      if (isVersionlessAssetView(view)) {
+        newAsset = { ...asset, path: `${asset.folderId}${asset.name}` };
       } else {
-        // A versionless duplicate is addressed by its plain path — no `__version` suffix.
-        let newAsset: AssetWithVersion | DialPrompt;
-        if (isVersionlessAssetView(view)) {
-          newAsset = { ...asset, path: `${asset.folderId}${asset.name}` };
-        } else {
-          newAsset = {
-            ...asset,
-            _metadata: {
-              ...asset._metadata,
-              path: `${asset._metadata?.folderId}${asset.name}__${asset._metadata?.version}`,
-            },
-          } as AssetWithVersion;
-        }
-        delete (newAsset as AssetApp).reference;
-        createRequest = handleCreateAsset(newAsset as AssetApp, asset._metadata?.folderId, true);
+        newAsset = {
+          ...asset,
+          _metadata: {
+            ...asset._metadata,
+            path: `${asset._metadata?.folderId}${asset.name}__${asset._metadata?.version}`,
+          },
+        } as AssetWithVersion;
       }
+      delete (newAsset as AssetApp).reference;
+      const createRequest: Promise<ServerActionResponse> = handleCreateAsset(
+        newAsset as AssetApp,
+        asset._metadata?.folderId,
+        true,
+      );
       handleModalClose();
       const res = await createRequest;
       if (!res.success) {
@@ -431,11 +336,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
           const filePaths = [];
           const newPath = file.destinationUrl.replaceAll('//', '/').split('/').slice(0, -1).join('/');
           filePaths.push(file.sourceUrl.replaceAll('//', '/'));
-          // A platform-bucket row (AssetsApplications/AssetsToolsets browsed under `platform/`) has
-          // no folder concept — Core has no move route for it. `DialCopiedItem` never carries
-          // `bucket` (it's a ui-kit drag-event payload, not a row model), so this reads the path
-          // directly rather than through `isPlatformBucketRow`.
-          if (moveAsset && !isPlatformBucketPath(file.sourceUrl)) {
+          if (moveAsset) {
             promises.push(
               moveAsset(filePaths, newPath, file?.overwrite, duplicateName).then((res) => {
                 setMovedItems((prev) => prev + filePaths.length);
@@ -478,7 +379,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
       _: string,
       ignorePaths?: boolean,
     ) => {
-      let importFolder = destinationFolder || `${getRootFolder(view)}/`;
+      let importFolder = destinationFolder || `${ROOT_FOLDER}/`;
       setFolderToRefetch(importFolder);
 
       const { body } = getFormDataForImport(
@@ -551,34 +452,16 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
         etag?: string;
       })[];
       const folders = deletedItems.filter((item) => item.nodeType === DialFileNodeType.FOLDER);
-      // Selection is already scoped to one folder (confirmed in design.md), so a batch is always
-      // single-bucket — resolving by the first asset's path is enough, no mixed-bucket case exists.
-      const bulkDeleteAsset = isPlatformDualBucketView(view, assets[0]?.path)
-        ? PlatformBulkDeleteAssetActionMap[view]!
-        : BulkDeleteAssetActionMap[view as BaseAssetRoute];
-
-      // A deleted cost object folder takes its records with it, so a record selected next to it is left to
-      // that pass: deleting it twice would fail the second time and report the whole delete as failed.
-      const assetsToDelete = isNestedPlatformView(view)
-        ? excludeRecordsInFolders(
-            assets,
-            folders.map((folder) => folder.path),
-          )
-        : assets;
+      const bulkDeleteAsset = BulkDeleteAssetActionMap[view as BaseAssetRoute];
 
       const promises = [];
-      if (assetsToDelete.length > 0) {
+      if (assets.length > 0) {
         // Only skills and projects use the optional listing etag for bulk deletion.
-        const assetsPaths = assetsToDelete.map((asset) => ({ path: asset.path, etag: asset.etag || DEFAULT_ETAG }));
+        const assetsPaths = assets.map((asset) => ({ path: asset.path, etag: asset.etag || DEFAULT_ETAG }));
         promises.push(bulkDeleteAsset(assetsPaths));
       }
       const resourceType = getResourceTypeByRoute(view);
-      const removeCostObjectFolder = RemoveCostObjectFolderActionMap[view];
-      if (removeCostObjectFolder) {
-        folders.forEach((folder) => {
-          promises.push(removeCostObjectFolder(folder.path));
-        });
-      } else if (resourceType) {
+      if (resourceType) {
         folders.forEach((folder) => {
           promises.push(removeFolder(folder.path, resourceType));
         });
@@ -601,12 +484,8 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
       return Promise.all(promises).then((result) => {
         const isSuccess = result.every((res) => res.success);
         if (isSuccess) {
-          const parentPath = destinationFolder || `${getRootFolder(view)}/`;
+          const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
           fetchFiles(parentPath);
-          if (isNestedPlatformView(view)) {
-            // Deleting the last record of a cost object folder removes the folder from the root listing too.
-            fetchFiles(`${getRootFolder(view)}/`);
-          }
           setFilePath(parentPath);
           removeSelection(deletedItems?.map((item) => item.path));
           const notifications = getDeleteNotificationContent(view, deletedItems as DialFile[], t);
@@ -640,21 +519,15 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
 
   const handleOpenInNewTab = useCallback(
     (file: DialFile) => {
-      const url = getUrnForEntity(view, file);
-      window.open(
-        isFileRootPath(filePath) && view !== ApplicationRoute.PlatformCatalogSchemas
-          ? appendUrlQuery(url, 'configFile=true')
-          : url,
-        '_blank',
-      );
+      window.open(getAssetItemUrl(view, file), '_blank');
     },
-    [view, filePath],
+    [view],
   );
 
   return (
     <>
       <FileManager
-        label={t(getFileManagerLabel(view))}
+        label={hasPublicTree(view) ? undefined : t(getFileManagerLabel(view))}
         columnDefs={columnDefs}
         getContext={getContext}
         view={view}
@@ -666,7 +539,6 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
         customDeleteItemsAction={handleDeleteModalOpen}
         onMoveItems={handleMoveItems}
         onOpenInNewTab={handleOpenInNewTab}
-        onTableFileClick={handleGridItemClick}
         onPathChange={handlePathChange}
         onSelectedPathsChange={handleSelectedPathsChange}
         selectedPaths={selectedPaths}
@@ -684,6 +556,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators }) => {
         names={names}
         runners={runners || []}
         translators={translators}
+        isUnsafeImportEnabled={isUnsafeImportEnabled}
         versionsMap={versionsMap}
         preselectedItems={dragAndDropsItems}
         duplicateItem={duplicateItem}

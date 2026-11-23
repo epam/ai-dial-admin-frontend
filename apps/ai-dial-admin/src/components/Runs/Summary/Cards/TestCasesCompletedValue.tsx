@@ -11,6 +11,7 @@ import { CompletionBreakdown } from '@/src/components/Runs/Summary/models';
 import { ErrorI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { NO_DATA_VALUE } from './constants';
+import { CardValueSection } from './models';
 
 const ICON_SIZE = 12;
 
@@ -37,13 +38,21 @@ interface Props {
   hasThreshold: boolean;
   /** Run name shown as the tooltip's first line, used in compare mode where two runs share a card. */
   tooltipTitle?: string;
+  section?: CardValueSection;
 }
 
-const TestCasesCompletedValue: FC<Props> = ({ breakdown, hasThreshold, tooltipTitle }) => {
+const TestCasesCompletedValue: FC<Props> = ({
+  breakdown,
+  hasThreshold,
+  tooltipTitle,
+  section = CardValueSection.Full,
+}) => {
   const t = useI18n();
 
   if (breakdown.total === 0) {
-    return <span className="dial-display2-text text-secondary">{NO_DATA_VALUE}</span>;
+    return section === CardValueSection.Footer ? null : (
+      <span className="dial-display2-text text-secondary">{NO_DATA_VALUE}</span>
+    );
   }
 
   const tooltip = (
@@ -79,21 +88,34 @@ const TestCasesCompletedValue: FC<Props> = ({ breakdown, hasThreshold, tooltipTi
     </div>
   );
 
+  const figure = (
+    <Tooltip tooltip={tooltip} asChild>
+      <button type="button" className="flex w-fit cursor-default items-baseline gap-1">
+        <span className="dial-display2-text text-primary">{breakdown.completed}</span>
+        <span className="dial-body-text text-secondary">/{breakdown.total}</span>
+      </button>
+    </Tooltip>
+  );
+  const footer = breakdown.errorOrNa > 0 && (
+    <span className="flex items-center gap-1 dial-small-text text-secondary">
+      <IconX size={ICON_SIZE} className="text-error" aria-hidden />
+      <span className="text-primary">{breakdown.errorOrNa}</span>
+      <span>{t(ErrorI18nKey.Error)}</span>
+    </span>
+  );
+
+  if (section === CardValueSection.Figure) {
+    return figure;
+  }
+
+  if (section === CardValueSection.Footer) {
+    return footer || null;
+  }
+
   return (
     <div className="flex flex-col gap-2">
-      <Tooltip tooltip={tooltip} asChild>
-        <button type="button" className="flex w-fit cursor-default items-baseline gap-1">
-          <span className="dial-display2-text text-primary">{breakdown.completed}</span>
-          <span className="dial-body-text text-secondary">/{breakdown.total}</span>
-        </button>
-      </Tooltip>
-      {breakdown.errorOrNa > 0 && (
-        <span className="flex items-center gap-1 dial-small-text text-secondary">
-          <IconX size={ICON_SIZE} className="text-error" aria-hidden />
-          <span className="text-primary">{breakdown.errorOrNa}</span>
-          <span>{t(ErrorI18nKey.Error)}</span>
-        </span>
-      )}
+      {figure}
+      {footer}
     </div>
   );
 };

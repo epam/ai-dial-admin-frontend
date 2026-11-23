@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
@@ -6,7 +7,8 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import PlatformToolsetView from '../View';
 
-vi.mock('@/src/context/assets/ToolsetsFolderContext', () => ({
+vi.mock('@/src/context/assets/ToolsetsFolderContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/context/assets/ToolsetsFolderContext')>()),
   useToolsetFolder: vi.fn(),
 }));
 
@@ -19,14 +21,14 @@ vi.mock('@/src/app/[lang]/assets-toolsets/actions', async (importOriginal) => ({
 }));
 
 const setEntityReadOnly = vi.fn();
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     setEntityReadOnly,
     featureFlags: { deploymentsEnabled: true, adminApiEnabled: true },
     isUnitMode: false,
     canWriteAt: () => true,
-  }),
-}));
+  }));
+});
 
 /**
  * Matches `Assets/Platform/Applications/tests/View.spec.tsx`'s scope: a render smoke test, not deep

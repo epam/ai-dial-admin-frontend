@@ -42,6 +42,7 @@ export enum FilterNodeKind {
 export enum FilterOperandKind {
   Literal = 'literal',
   Function = 'function',
+  Param = 'param',
 }
 
 // One condition. Its left operand is either a schema column (fn = null, named by `field`) or a
@@ -61,6 +62,13 @@ export interface FilterPredicateNode {
   rightKind: FilterOperandKind;
   rightFn: string | null;
   rightArgs: FnArgValue[];
+  rightParam: string | null;
+}
+
+export interface CallerValue {
+  name: string;
+  label: string;
+  description: string;
 }
 
 export interface FilterGroupNode {
@@ -74,6 +82,15 @@ export type FilterNode = FilterGroupNode | FilterPredicateNode;
 
 // A call standing in for an `expression` argument's value, with one `args` slot per the called
 // function's own catalog arguments.
+export interface TimeBinFunction {
+  fn: QueryFunction;
+  amountIndex: number;
+  unitIndex: number;
+  timestampIndex: number;
+  units: string[] | null;
+  minAmount: number;
+}
+
 export interface FnCallValue {
   fn: string;
   args: FnArgValue[];
@@ -171,6 +188,7 @@ export interface FieldOption {
   display_name?: string;
   description?: string;
   sensitive?: boolean;
+  isProjectionOnly?: boolean;
 }
 
 export interface FieldOptionGroup {
@@ -205,11 +223,20 @@ export interface CompactSelectOptionDescriptor {
   descriptionKey: QueryBuilderI18nKey;
 }
 
+export enum QuerySourceProblem {
+  Unavailable = 'unavailable',
+  SchemaFailed = 'schema-failed',
+}
+
+export enum QueryCopyMode {
+  SaveDraft = 'save-draft',
+  Duplicate = 'duplicate',
+  SaveCopy = 'save-copy',
+}
+
 export enum QueryBuilderView {
   Form = 'form',
-  Json = 'json',
   Sql = 'sql',
-  Ai = 'ai',
 }
 
 // A query run request. Structured (Form/JSON views) posts a StructuredQuery to /execute; SQL posts
@@ -230,13 +257,6 @@ export interface PartialExportNotice {
 export type QueryRunRequest =
   | { kind: QueryRequestKind.Structured; query: StructuredQuery }
   | { kind: QueryRequestKind.Sql; sql: string };
-
-export enum QueryBuilderWarning {
-  MissingGroupByField = 'MissingGroupByField',
-  EmptyAggregate = 'EmptyAggregate',
-  DroppedProjectionColumn = 'DroppedProjectionColumn',
-  DroppedCondition = 'DroppedCondition',
-}
 
 // The builder's own color language, mirroring how the same query reads in the Monaco JSON view:
 // fields/keys are teal, values blue, grouping brackets purple, keywords yellow, numbers orange.
@@ -267,12 +287,31 @@ export enum ChartType {
   Line = 'line',
   Pie = 'pie',
   Scatter = 'scatter',
+  Scorecard = 'scorecard',
+}
+
+export enum ChartLegendPosition {
+  Above = 'above',
+  Right = 'right',
+  Below = 'below',
+  Left = 'left',
+}
+
+export interface ChartLegendConfig {
+  isVisible: boolean;
+  position: ChartLegendPosition;
 }
 
 export interface ChartConfig {
   type: ChartType;
   xField: string | null;
-  yField: string | null;
+  yFields: string[] | null;
+  legend?: ChartLegendConfig;
+}
+
+export interface ResolvedChartAxes {
+  xField: string | null;
+  yFields: string[];
 }
 
 // Where a chart slot draws its column options from. Numeric means "any result column whose every
@@ -290,24 +329,21 @@ export enum ChartColumnSource {
 export interface ChartSlotDescriptor {
   xSource: ChartColumnSource;
   ySource: ChartColumnSource;
+  isMultiY: boolean;
   xLabelKey: QueryBuilderI18nKey;
   yLabelKey: QueryBuilderI18nKey;
 }
 
 // Result-derived context buildChartOptions needs beyond the two slot fields: pie localizes its
-// "Other" bucket, a category with no value gets a visible name instead of a blank label, scatter labels points by the row's dimension values, and axis titles/tooltips
-// show columns by their display label (see ExecutedQueryMeta.columnLabels).
+// "Other" bucket, scatter labels points by the row's dimension values, a split chart takes its series
+// from `splitField`, and axis titles/tooltips show columns by their display label (see
+// ExecutedQueryMeta.columnLabels).
 export interface ChartBuildContext {
   colors: ChartColors;
   dimensionColumns: string[];
   otherLabel: string;
-  emptyLabel: string;
   columnLabels: Record<string, string>;
-}
-
-export interface PieSlice {
-  name: string;
-  value: number;
+  splitField?: string | null;
 }
 
 // How a result cell renders its value. Resolved from the executed query, not from the live builder
@@ -330,6 +366,7 @@ export interface ExecutedQueryMeta {
   aggregateColumns: string[];
   columnLabels: Record<string, string>;
   columnValueClasses: Record<string, ResultValueClass>;
+  source?: string;
 }
 
 export interface ResultColumnClassification {

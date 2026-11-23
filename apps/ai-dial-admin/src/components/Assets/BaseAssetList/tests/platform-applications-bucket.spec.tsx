@@ -133,39 +133,28 @@ describe('BaseAssetList :: AssetsApplications bucket-aware branches', () => {
     vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof useRouter>);
   });
 
-  test.each([
-    ['confirm-duplicate-public', createApp],
-    ['confirm-duplicate-platform', createPlatformApplication],
-  ])('reports a failed duplicate for %s once', async (buttonName, createAction) => {
-    const user = userEvent.setup();
-    const { showNotification } = useNotification();
-    vi.mocked(createAction).mockResolvedValueOnce({
-      success: false,
-      errorHeader: 'Conflict',
-      errorMessage: 'Already exists',
-      requestId: 'request-123',
-    });
-    render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
+  test.each([['confirm-duplicate-public', createApp]])(
+    'reports a failed duplicate for %s once',
+    async (buttonName, createAction) => {
+      const user = userEvent.setup();
+      const { showNotification } = useNotification();
+      vi.mocked(createAction).mockResolvedValueOnce({
+        success: false,
+        errorHeader: 'Conflict',
+        errorMessage: 'Already exists',
+        requestId: 'request-123',
+      });
+      render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
 
-    await act(async () => {
-      await user.click(screen.getByRole('button', { name: buttonName }));
-    });
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: buttonName }));
+      });
 
-    expect(showNotification).toHaveBeenCalledOnce();
-    expect(showNotification).toHaveBeenCalledWith(getErrorNotification('Conflict', 'Already exists', 'request-123'));
-    expect(createAction).toHaveBeenCalledOnce();
-  });
-
-  test('Fetching a duplicate source on a platform-bucket row calls getPlatformApplication, not getApp', async () => {
-    render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
-
-    fireEvent.click(screen.getByText('fetch-duplicate-platform'));
-
-    await vi.waitFor(() =>
-      expect(getPlatformApplication).toHaveBeenCalledWith('platform/platform-app', expect.anything()),
-    );
-    expect(getApp).not.toHaveBeenCalled();
-  });
+      expect(showNotification).toHaveBeenCalledOnce();
+      expect(showNotification).toHaveBeenCalledWith(getErrorNotification('Conflict', 'Already exists', 'request-123'));
+      expect(createAction).toHaveBeenCalledOnce();
+    },
+  );
 
   test('Fetching a duplicate source on a public-bucket row calls getApp, not getPlatformApplication', async () => {
     render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
@@ -174,30 +163,6 @@ describe('BaseAssetList :: AssetsApplications bucket-aware branches', () => {
 
     await vi.waitFor(() => expect(getApp).toHaveBeenCalledWith('public/folder/app__1.0', expect.anything()));
     expect(getPlatformApplication).not.toHaveBeenCalled();
-  });
-
-  test('Confirming a duplicate of a platform-bucket asset calls createPlatformApplication, not createApp', async () => {
-    render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
-
-    fireEvent.click(screen.getByText('confirm-duplicate-platform'));
-
-    await vi.waitFor(() => expect(createPlatformApplication).toHaveBeenCalledOnce());
-    expect(createApp).not.toHaveBeenCalled();
-  });
-
-  // Regression: `getPlatformAssetDuplicate` strips `folderId`/`path` from the duplicated asset
-  // (Core's platform-bucket write doesn't want them) — the post-duplicate redirect must restore a
-  // bucket signal itself, or `getEntityPath` falls through to the versioned-path branch and builds
-  // `?path=undefined{name}__` instead of a bare, no-`?path=` platform URL (design.md D5).
-  test('Confirming a duplicate of a platform-bucket asset redirects to the bare name, with no ?path=', async () => {
-    const push = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>);
-
-    render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
-
-    fireEvent.click(screen.getByText('confirm-duplicate-platform'));
-
-    await vi.waitFor(() => expect(push).toHaveBeenCalledWith('/assets-applications/copy-of-platform-app'));
   });
 
   test('Confirming a duplicate of a public-bucket asset calls createApp, not createPlatformApplication', async () => {
@@ -209,15 +174,6 @@ describe('BaseAssetList :: AssetsApplications bucket-aware branches', () => {
     expect(createPlatformApplication).not.toHaveBeenCalled();
   });
 
-  test('Create targeting the platform bucket calls createPlatformApplication, not createApp', async () => {
-    render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
-
-    fireEvent.click(screen.getByText('create-platform'));
-
-    await vi.waitFor(() => expect(createPlatformApplication).toHaveBeenCalledOnce());
-    expect(createApp).not.toHaveBeenCalled();
-  });
-
   test('Create targeting the public bucket calls createApp, not createPlatformApplication', async () => {
     render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
 
@@ -225,16 +181,6 @@ describe('BaseAssetList :: AssetsApplications bucket-aware branches', () => {
 
     await vi.waitFor(() => expect(createApp).toHaveBeenCalledOnce());
     expect(createPlatformApplication).not.toHaveBeenCalled();
-  });
-
-  test('Bulk delete of platform-bucket rows calls bulkDeletePlatformApplications, not bulkDeleteApps', async () => {
-    render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
-
-    fireEvent.click(screen.getByText('select-delete-platform'));
-    fireEvent.click(screen.getByText('confirm-remove'));
-
-    await vi.waitFor(() => expect(bulkDeletePlatformApplications).toHaveBeenCalledOnce());
-    expect(bulkDeleteApps).not.toHaveBeenCalled();
   });
 
   test('Bulk delete of public-bucket rows calls bulkDeleteApps, not bulkDeletePlatformApplications', async () => {

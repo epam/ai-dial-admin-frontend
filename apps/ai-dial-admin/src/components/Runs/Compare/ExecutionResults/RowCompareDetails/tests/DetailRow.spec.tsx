@@ -1,4 +1,5 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import DetailRow from '../DetailRow';
@@ -142,5 +143,79 @@ describe('DetailRow run order', () => {
     );
 
     expect(getValueTexts(container)).toEqual(['No match', 'Berlin']);
+  });
+});
+
+describe('DetailRow overall score threshold', () => {
+  const scoreRow = (overrides: Partial<RowDetailField> = {}) =>
+    row('overallScore', { primaryRaw: '0.7', secondaryRaw: '0.7', ...overrides });
+
+  test('reads each run’s score against that run’s own threshold', () => {
+    const { container } = renderDetailRow(scoreRow({ primaryThreshold: 0.6, secondaryThreshold: 0.8 }));
+    const [primary, secondary] = getValueCells(container, 'overallScore');
+
+    expect(primary.querySelector('svg.text-score-abs-11')).toBeInTheDocument();
+    expect(primary).toHaveTextContent('Runs.TestCaseOverallScoreAboveThresholdTooltip');
+    expect(secondary.querySelector('svg.text-score-abs-00')).toBeInTheDocument();
+    expect(secondary).toHaveTextContent('Runs.TestCaseOverallScoreBelowThresholdTooltip');
+  });
+
+  test('shows no icon in a run without a threshold', () => {
+    const { container } = renderDetailRow(scoreRow({ primaryThreshold: 0.6 }));
+    const [, secondary] = getValueCells(container, 'overallScore');
+
+    expect(secondary.querySelector('svg.text-score-abs-11, svg.text-score-abs-00')).not.toBeInTheDocument();
+  });
+
+  test('shows no icon for a missing score', () => {
+    const { container } = renderDetailRow(scoreRow({ secondaryRaw: null, secondaryThreshold: 0.8 }));
+    const [, secondary] = getValueCells(container, 'overallScore');
+
+    expect(secondary.querySelector('svg')).not.toBeInTheDocument();
+  });
+
+  test('right-aligns the overall score cells', () => {
+    const { container } = renderDetailRow(scoreRow());
+    const [primary, secondary] = getValueCells(container, 'overallScore');
+
+    expect(primary).toHaveClass('text-right');
+    expect(secondary).toHaveClass('text-right');
+  });
+});
+
+describe('DetailRow copy', () => {
+  test('offers a copy button for each run that holds a text value, and copies that run’s value', async () => {
+    const user = userEvent.setup();
+    renderDetailRow(row('answer', { primaryRaw: 'Paris', secondaryRaw: 'Berlin' }));
+
+    const buttons = screen.getAllByRole('button', { name: 'copy answer' });
+    expect(buttons).toHaveLength(2);
+
+    await user.click(buttons[1]);
+
+    expect(await navigator.clipboard.readText()).toBe('Berlin');
+  });
+
+  test('offers no copy for the run that has no match', () => {
+    render(
+      <DetailRow
+        row={row('answer', { primaryRaw: 'Paris', secondaryRaw: null })}
+        hasComparedMatch={false}
+        noMatchLabel="No match"
+        failedLabel="Failed"
+        onOpenDiff={vi.fn()}
+        openDiffLabel="Open diff"
+        hideHighlights={false}
+        runs={runs}
+      />,
+    );
+
+    expect(screen.getAllByRole('button', { name: 'copy answer' })).toHaveLength(1);
+  });
+
+  test('offers no copy for a metric', () => {
+    renderDetailRow(row('precision', { isMetric: true, isScoreIndicator: true, primaryRaw: '0.5' }));
+
+    expect(screen.queryByRole('button', { name: /^copy/ })).toBeNull();
   });
 });

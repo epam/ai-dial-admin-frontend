@@ -22,7 +22,7 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
 }));
 
 const createAssetProps = vi.fn();
-vi.mock('@/src/components/Assets/Modals/CreateAsset', () => ({
+vi.mock('@/src/components/Assets/Modals/CreateSeededAsset', () => ({
   default: (props: any) => {
     createAssetProps(props);
     return <div>create-asset-modal</div>;
@@ -30,8 +30,6 @@ vi.mock('@/src/components/Assets/Modals/CreateAsset', () => ({
 }));
 
 vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-
 // The real dropdown keeps its items behind a floating overlay with no menu roles to query; flattening
 // them to buttons keeps these tests about the action rather than the ui-kit's popover.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -107,7 +105,7 @@ describe('App runner asset :: create asset application action', () => {
 
     expect(screen.getByText('create-asset-modal')).toBeInTheDocument();
     expect(createAssetProps).toHaveBeenCalledWith(
-      expect.objectContaining({ view: ApplicationRoute.AssetsApplications, isModalOpen: true }),
+      expect.objectContaining({ view: ApplicationRoute.AssetsApplications, isOpen: true }),
     );
   });
 

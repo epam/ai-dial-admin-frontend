@@ -2,9 +2,9 @@
 
 import { FC, useMemo } from 'react';
 import classNames from 'classnames';
-import { GhostIconButton, Input, Select, SelectOption } from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
+import { Input, Select, SelectOption } from '@epam/ai-dial-ui-kit';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
 import {
   getRowIssue,
@@ -20,9 +20,9 @@ import { operatorOptionsForType } from '@/src/components/Analytics/QueryBuilder/
 import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 import { OPERATOR_OPTION_DESCRIPTORS } from '@/src/constants/analytics/query-builder';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { isProjectionOnly } from '@/src/utils/analytics/entity-fields';
 
 interface Props {
   row: PipelineFilterRow;
@@ -61,7 +61,7 @@ const FilterConditionRow: FC<Props> = ({ row, index, fields, onChange, onDelete 
   const columnOptions = useMemo(
     () =>
       fields
-        .filter((candidate) => !UNCOMPARABLE_TYPES.includes(candidate.type))
+        .filter((candidate) => !UNCOMPARABLE_TYPES.includes(candidate.type) && !isProjectionOnly(candidate))
         .map((candidate) => ({ value: candidate.name, label: `${candidate.name} · ${candidate.type}` })),
     [fields],
   );
@@ -173,9 +173,8 @@ const FilterConditionRow: FC<Props> = ({ row, index, fields, onChange, onDelete 
         onChange={(next) => onChange({ operator: next as PipelineFilterOperator })}
       />
       {renderValue()}
-      <GhostIconButton
+      <RemoveButton
         className={classNames('shrink-0', isLabelled && 'mt-6')}
-        icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
         aria-label={t(ButtonsI18nKey.Delete)}
         onClick={onDelete}
       />

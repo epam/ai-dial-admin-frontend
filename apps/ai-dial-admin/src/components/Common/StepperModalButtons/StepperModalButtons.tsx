@@ -19,6 +19,7 @@ interface Props {
   onClose: () => void;
   onNextStep?: () => void;
   isLoading?: boolean;
+  isLastStepInformative?: boolean;
 }
 
 const StepperModalButtons: FC<Props> = ({
@@ -30,6 +31,7 @@ const StepperModalButtons: FC<Props> = ({
   onClose,
   onNextStep,
   isLoading,
+  isLastStepInformative,
 }) => {
   const t = useI18n();
 
@@ -45,14 +47,28 @@ const StepperModalButtons: FC<Props> = ({
     onChangeStep(steps[stepIndex - 1]?.id as string);
   };
 
+  const isInformativeStep = !!isLastStepInformative && currentStep?.id === steps.at(-1)?.id;
+  const finishStepId = isLastStepInformative ? steps.at(-2)?.id : steps.at(-1)?.id;
+  const isFinishStep = currentStep?.id === finishStepId;
+  const stepsToComplete = isLastStepInformative ? steps.slice(0, -1) : steps;
+  const isFirstStep = currentStep?.id === steps[0]?.id;
+
+  if (isInformativeStep) {
+    return (
+      <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
+        <PrimaryButton label={t(ButtonsI18nKey.Close)} onClick={onClose} />
+      </div>
+    );
+  }
+
   return (
     <div
       className={classNames(
         'flex flex-row items-center gap-2 px-6 py-4',
-        currentStep?.id !== steps[0]?.id ? 'justify-between' : 'justify-end',
+        isFirstStep ? 'justify-end' : 'justify-between',
       )}
     >
-      {currentStep?.id !== steps[0]?.id && (
+      {!isFirstStep && (
         <GhostButton
           label={t(ButtonsI18nKey.Back)}
           onClick={onPrevStep}
@@ -62,7 +78,7 @@ const StepperModalButtons: FC<Props> = ({
 
       <div className="flex gap-2">
         <OutlinedButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        {currentStep?.id !== steps.at(-1)?.id && (
+        {!isFinishStep && (
           <PrimaryButton
             label={t(ButtonsI18nKey.Next)}
             onClick={handleNextStep}
@@ -70,10 +86,10 @@ const StepperModalButtons: FC<Props> = ({
             disabled={currentStep?.status !== StepStatus.VALID || !!isLoading}
           />
         )}
-        {currentStep?.id === steps.at(-1)?.id && (
+        {isFinishStep && (
           <PrimaryButton
             label={finishButtonLabel || t(ButtonsI18nKey.Finish)}
-            disabled={steps.some((s) => s.status !== StepStatus.VALID) || !!isLoading}
+            disabled={stepsToComplete.some((s) => s.status !== StepStatus.VALID) || !!isLoading}
             onClick={onFinishClick}
           />
         )}

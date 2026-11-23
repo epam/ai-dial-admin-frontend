@@ -15,13 +15,12 @@ import { classifySubject } from '@/src/utils/org-units/subjects';
 interface Props {
   roles: OrgUnitRole[];
   holders: DraftHolder[];
-  groupClaim: string;
   isReadonly?: boolean;
   onAdd: (roleName: string, subject: OrgUnitSubject) => void;
   onRemove: (key: string) => void;
 }
 
-const UnitRolesCard: FC<Props> = ({ roles, holders, groupClaim, isReadonly, onAdd, onRemove }) => {
+const UnitRolesCard: FC<Props> = ({ roles, holders, isReadonly, onAdd, onRemove }) => {
   const t = useI18n();
 
   const sections = useMemo(() => {
@@ -50,7 +49,7 @@ const UnitRolesCard: FC<Props> = ({ roles, holders, groupClaim, isReadonly, onAd
                 <span className="dial-small-text text-secondary">{t(FoldersI18nKey.NoHolders)}</span>
               )}
               {roleHolders.map((holder) => {
-                const { kind, label } = classifySubject(holder.subject, groupClaim);
+                const { kind, label } = classifySubject(holder.subject);
                 const text = kind === SubjectKind.EVERYONE ? t(FoldersI18nKey.HolderEveryone) : label;
                 return (
                   <Tag
@@ -65,7 +64,7 @@ const UnitRolesCard: FC<Props> = ({ roles, holders, groupClaim, isReadonly, onAd
                 );
               })}
             </div>
-            {!isReadonly && <AddHolderForm roleName={role.name} groupClaim={groupClaim} onAdd={onAdd} />}
+            {!isReadonly && <AddHolderForm roleName={role.name} onAdd={onAdd} />}
           </section>
         );
       })}

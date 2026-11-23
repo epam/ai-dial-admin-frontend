@@ -3,12 +3,14 @@ import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { previewAnalyticsExportConfig } from '@/src/app/[lang]/export-config/actions';
 import {
+  ANALYTICS_EXPORT_PREVIEW_GRID_OPTIONS,
   getAnalyticsPreviewColDefs,
   getAnalyticsPreviewRows,
   getAnalyticsPreviewTabs,
 } from '@/src/components/ExportConfig/analytics-utils';
+import { AnalyticsExportPreviewRows } from '@/src/components/ExportConfig/Preview/models';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, ExportI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
@@ -26,13 +28,14 @@ const AnalyticsExportPreview: FC<Props> = ({ request, onPreviewResult }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
+  const tRef = useRef(t);
   const onPreviewResultRef = useRef(onPreviewResult);
   const getReqRef = useRef(useProtectedRequest());
 
-  const tabs = useMemo(() => getAnalyticsPreviewTabs(t), [t]);
-
   const [selectedTab, setSelectedTab] = useState<AnalyticsExportPreviewTab>(AnalyticsExportPreviewTab.OBJECTS);
-  const [rows, setRows] = useState<Record<AnalyticsExportPreviewTab, object[]>>();
+  const [rows, setRows] = useState<AnalyticsExportPreviewRows>();
+
+  const tabs = useMemo(() => getAnalyticsPreviewTabs(t, rows), [t, rows]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -43,10 +46,13 @@ const AnalyticsExportPreview: FC<Props> = ({ request, onPreviewResult }) => {
       setIsLoading(false);
 
       if (res.success && res.response) {
-        setRows(getAnalyticsPreviewRows(res.response));
+        setRows(getAnalyticsPreviewRows(res.response, tRef.current));
         onPreviewResultRef.current(true);
       } else {
-        showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        setRows(undefined);
+        showNotificationRef.current(
+          getErrorNotification(tRef.current(ExportI18nKey.PreviewUnavailable), res.errorMessage, res.requestId),
+        );
         onPreviewResultRef.current(false);
       }
     };
@@ -75,6 +81,7 @@ const AnalyticsExportPreview: FC<Props> = ({ request, onPreviewResult }) => {
           key={selectedTab}
           columnDefs={columnDefs}
           rowData={rows?.[selectedTab] ?? []}
+          additionalGridOptions={ANALYTICS_EXPORT_PREVIEW_GRID_OPTIONS}
           emptyDataProps={{ title: t(EntitiesI18nKey.NoEntities) }}
         />
       </div>

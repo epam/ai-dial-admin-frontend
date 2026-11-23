@@ -16,6 +16,7 @@ import { ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { IMPORT_CONFIG_STEPS } from '@/src/constants/import';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { useAnalyticsAccessGrant } from '@/src/hooks/use-analytics-access-grant';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { CatalogImportResult } from '@/src/models/analytics/catalog-import';
@@ -49,7 +50,14 @@ const ImportConfig: FC<Props> = ({ isAdminApiEnabled = true, deploymentsEnabled,
   const [isImporting, setIsImporting] = useState(false);
   const [analyticsPolicy, setAnalyticsPolicy] = useState(CatalogResolutionPolicy.FAIL_IF_EXISTS);
   const [isReusedNamesAcknowledged, setIsReusedNamesAcknowledged] = useState(false);
+  const [isAccessIncluded, setIsAccessIncluded] = useState(false);
   const [analyticsResult, setAnalyticsResult] = useState<CatalogImportResult>();
+
+  const canGrantAccess = useAnalyticsAccessGrant(configScope === ExportComponentType.ANALYTICS);
+
+  useEffect(() => {
+    if (!canGrantAccess) setIsAccessIncluded(false);
+  }, [canGrantAccess]);
 
   const [steps, setSteps] = useState(IMPORT_CONFIG_STEPS(t));
   const [currentStepId, setCurrentStep] = useState(steps[0].id);
@@ -63,13 +71,19 @@ const ImportConfig: FC<Props> = ({ isAdminApiEnabled = true, deploymentsEnabled,
         return importDeploymentConfig(fileBody, importBody.get('resolutionPolicy') as string);
       }
       case ExportComponentType.ANALYTICS:
-        return getReqRef.current(importAnalyticsConfig, importBody, analyticsPolicy, isReusedNamesAcknowledged);
+        return getReqRef.current(
+          importAnalyticsConfig,
+          importBody,
+          analyticsPolicy,
+          isReusedNamesAcknowledged,
+          isAccessIncluded,
+        );
       default:
         return fileType === ImportFileType.ARCHIVE
           ? getReqRef.current(importZipConfig, importBody)
           : getReqRef.current(importJsonConfigs, importBody);
     }
-  }, [configScope, importBody, analyticsPolicy, isReusedNamesAcknowledged, fileType]);
+  }, [configScope, importBody, analyticsPolicy, isReusedNamesAcknowledged, isAccessIncluded, fileType]);
 
   const onImportFile = useCallback(async () => {
     setIsImporting(true);
@@ -147,13 +161,14 @@ const ImportConfig: FC<Props> = ({ isAdminApiEnabled = true, deploymentsEnabled,
     setFiles([]);
     setFileType(ImportFileType.ARCHIVE);
     setAnalyticsPolicy(CatalogResolutionPolicy.FAIL_IF_EXISTS);
+    setIsAccessIncluded(false);
   }, []);
 
-  // A new file, policy or scope is a new import: the confirmation and any previous result no longer apply to it.
+  // A new file, policy, access choice or scope is a new import: the confirmation and any previous result no longer apply to it.
   useEffect(() => {
     setIsReusedNamesAcknowledged(false);
     setAnalyticsResult(undefined);
-  }, [files, analyticsPolicy, configScope]);
+  }, [files, analyticsPolicy, isAccessIncluded, configScope]);
 
   const onChangeFileType = useCallback(
     (value: string) => {
@@ -200,6 +215,9 @@ const ImportConfig: FC<Props> = ({ isAdminApiEnabled = true, deploymentsEnabled,
           isAnalyticsEnabled={isAnalyticsEnabled}
           analyticsPolicy={analyticsPolicy}
           onChangeAnalyticsPolicy={setAnalyticsPolicy}
+          isAccessIncluded={isAccessIncluded}
+          canGrantAccess={canGrantAccess}
+          onChangeAccessIncluded={setIsAccessIncluded}
           onChangeFileType={onChangeFileType}
           onChangeFiles={(files) => setFiles(files)}
           onChangeImportBody={onChangeImportBody}
@@ -216,6 +234,7 @@ const ImportConfig: FC<Props> = ({ isAdminApiEnabled = true, deploymentsEnabled,
           fileType={fileType}
           configScope={configScope}
           analyticsPolicy={analyticsPolicy}
+          isAccessIncluded={isAccessIncluded}
           analyticsResult={analyticsResult}
           isReusedNamesAcknowledged={isReusedNamesAcknowledged}
           onChangeReusedNamesAcknowledged={setIsReusedNamesAcknowledged}

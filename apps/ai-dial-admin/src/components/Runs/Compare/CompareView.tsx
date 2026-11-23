@@ -96,6 +96,11 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   detailPositionRef.current = detailPosition;
 
   const compareTabs = useMemo(() => getCompareViewTabs(t), [t]);
+  const { primaryThreshold, comparedThreshold } = tabState.executionResults;
+  const scoreThresholds = useMemo(
+    () => ({ primary: primaryThreshold, compared: comparedThreshold }),
+    [primaryThreshold, comparedThreshold],
+  );
   const fieldSchema = useMemo(() => {
     const primary = tabState.executionResults.results ?? [];
     const compared = tabState.executionResults.comparedResults ?? [];
@@ -301,6 +306,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           focusFieldKey={fieldKey}
           focusRequestId={focusRequestId}
           fieldSchema={fieldSchema}
+          scoreThresholds={scoreThresholds}
           metricGroupOrder={metricGroupOrder}
           initialDisplayTree={displayTreeRef.current}
           onDisplayTreeChange={persistDisplayTree}
@@ -319,6 +325,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           focusFieldKey={fieldKey}
           focusRequestId={focusRequestId}
           fieldSchema={fieldSchema}
+          scoreThresholds={scoreThresholds}
           metricGroupOrder={metricGroupOrder}
           initialDisplayTree={displayTreeRef.current}
           onDisplayTreeChange={persistDisplayTree}
@@ -337,6 +344,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
       switchToBottom,
       switchToSidebar,
       fieldSchema,
+      scoreThresholds,
       metricGroupOrder,
       persistDisplayTree,
       persistViewDifferencesOnly,

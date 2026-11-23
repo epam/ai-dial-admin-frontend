@@ -1,9 +1,10 @@
 'use client';
 
-import { Avatar, GhostButton } from '@epam/ai-dial-ui-kit';
-import { IconEdit, IconTrash } from '@tabler/icons-react';
+import { Avatar, EllipsisTooltip, GhostButton } from '@epam/ai-dial-ui-kit';
+import { IconEdit } from '@tabler/icons-react';
 import { FC, useMemo } from 'react';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import ContentWithLinks from '@/src/components/Common/ContentWithLinks/ContentWithLinks';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -34,7 +35,7 @@ const MetricCard: FC<Props> = ({ metric, onEdit, onDelete }) => {
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div className="flex flex-row items-center gap-2">
           <Avatar name={metric.name ?? ''} />
-          <span className="dial-body-semi min-w-0 flex-1 truncate text-primary">{metric.name}</span>
+          <EllipsisTooltip text={metric.name} />
         </div>
 
         {metric.description && (
@@ -65,12 +66,7 @@ const MetricCard: FC<Props> = ({ metric, onEdit, onDelete }) => {
       </div>
 
       <div className="flex shrink-0 flex-row gap-2">
-        <GhostButton
-          label={t(ButtonsI18nKey.Delete)}
-          className="text-error"
-          onClick={onDelete}
-          iconBefore={<IconTrash stroke={2} size={20} />}
-        />
+        <RemoveButton label={t(ButtonsI18nKey.Delete)} onClick={onDelete} />
         <GhostButton
           label={t(ButtonsI18nKey.Edit)}
           className="text-accent-primary"

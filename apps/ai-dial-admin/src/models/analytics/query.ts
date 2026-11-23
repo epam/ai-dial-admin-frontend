@@ -44,6 +44,12 @@ export enum QueryExprType {
   Value = 'value',
   Fn = 'fn',
   Array = 'array',
+  Param = 'param',
+}
+
+export enum CallerValueName {
+  UserHash = 'caller.user_hash',
+  Project = 'caller.project',
 }
 
 export enum QuerySortDirection {
@@ -85,7 +91,12 @@ export interface QueryArrayExpr {
   items: QueryValueExpr[];
 }
 
-export type QueryExpr = QueryFieldExpr | QueryValueExpr | QueryFnExpr | QueryArrayExpr;
+export interface QueryParamExpr {
+  type: QueryExprType.Param;
+  name: string;
+}
+
+export type QueryExpr = QueryFieldExpr | QueryValueExpr | QueryFnExpr | QueryArrayExpr | QueryParamExpr;
 
 export interface QueryPredicate {
   op: QueryOperator;

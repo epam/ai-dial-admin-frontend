@@ -30,12 +30,18 @@ export const updateRule = (
     return isTargetlessFunction(next.function) ? { ...next, targets: [] } : next;
   });
 
-/**
- * A rule needs a source, and at least one target unless its function takes none (`TRUE`/`FALSE`). Core
- * refuses a rule that cannot match, so the form does not let one be saved.
- */
+export const isSourceValid = (source?: string): boolean => !!source?.trim();
+
+export const isFunctionValid = (fn: PolicySubjectFunction): boolean =>
+  Object.values(PolicySubjectFunction).includes(fn);
+
+export const areTargetsValid = (rule: PolicySubjectRule): boolean =>
+  isTargetlessFunction(rule.function) ||
+  (!!rule.targets?.length && rule.targets.every((target) => target != null && target !== ''));
+
+/** Core requires a nonblank source, a recognized function and nonempty targets when the function uses them. */
 export const isRuleValid = (rule: PolicySubjectRule): boolean =>
-  !!rule.source?.trim() && (isTargetlessFunction(rule.function) || !!rule.targets?.length);
+  isSourceValid(rule.source) && isFunctionValid(rule.function) && areTargetsValid(rule);
 
 /** Every rule valid; an empty list is valid, since `subject` is optional and then omitted. */
 export const areRulesValid = (rules?: PolicySubjectRule[]): boolean => (rules ?? []).every(isRuleValid);

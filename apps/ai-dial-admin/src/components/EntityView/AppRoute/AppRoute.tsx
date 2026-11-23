@@ -145,6 +145,7 @@ const EntityRoutes: FC<Props> = ({
           {routes?.[activeRouteIndex as number] && (
             <RouteContent
               isAppRunnerView={isAppRunnerView}
+              isCoreRoleSource={false}
               route={routes?.[activeRouteIndex as number] || ({} as DialAppRoute)}
               roles={roles || []}
               parentRoles={!isPublicApp ? Object.keys(parentRoleLimits || {}) : roles?.map((r) => r.name as string)}

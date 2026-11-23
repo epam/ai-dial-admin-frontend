@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -10,7 +11,9 @@ const appContext = vi.hoisted(() => ({
   canWriteAt: vi.fn(),
   setEntityReadOnly: vi.fn(),
 }));
-vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => appContext }));
+beforeEach(() => {
+  appContextMock.use(() => appContext);
+});
 
 describe('useEntityReadOnlyAt', () => {
   beforeEach(() => {

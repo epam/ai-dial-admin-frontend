@@ -1,69 +1,51 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { getGridColumns } from '@/src/components/Assets/BaseAssetList/utils';
-import { getGridActionLabels, getToolbarOptionLabels } from '@/src/components/Assets/utils';
-import { FileManagerI18nKey } from '@/src/constants/i18n';
+import { getFlatAssetColumns } from '@/src/components/Assets/FlatAssetGrid/columns';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { ApplicationRoute } from '@/src/types/routes';
 import AppRunnersList from '../List';
 
-vi.mock('@/src/components/Assets/BaseAssetList/BaseAssetList', () => ({
+vi.mock('@/src/components/Assets/TabbedAssetList/TabbedAssetList', () => ({
   default: ({ view }: any) => <div>base-asset-list:{view}</div>,
 }));
 
 describe('AppRunnersList', () => {
-  test('Should render BaseAssetList scoped to the app runners view', () => {
+  test('Should render TabbedAssetList scoped to the app runners view', () => {
     render(<AppRunnersList />);
 
     expect(screen.getByText(`base-asset-list:${ApplicationRoute.PlatformAppRunners}`)).toBeInTheDocument();
   });
 });
 
-describe('AppRunnersList :: list affordances', () => {
-  test('Should offer a create action in the toolbar', () => {
-    const options = getToolbarOptionLabels(ApplicationRoute.PlatformAppRunners, false);
-
-    expect(options).toEqual([{ key: 'newItem', label: FileManagerI18nKey.AppRunner, icon: null }]);
-  });
-
-  test('Should offer no create action to a read-only admin', () => {
-    expect(getToolbarOptionLabels(ApplicationRoute.PlatformAppRunners, true)).toEqual([]);
-  });
-
-  test('Should offer duplicate, delete and open-in-new-tab as row actions — but no move or export', () => {
-    const actions = getGridActionLabels(ApplicationRoute.PlatformAppRunners, false);
-
-    expect(actions.map((action) => action.key)).toEqual(['duplicate', 'delete', 'openInNewTab']);
-  });
-
-  test('Should offer no row actions to a read-only admin', () => {
-    expect(getGridActionLabels(ApplicationRoute.PlatformAppRunners, true)).toEqual([]);
-  });
-});
-
 describe('AppRunnersList :: columns', () => {
-  const columns = () => getGridColumns(ApplicationRoute.PlatformAppRunners);
-  // Prompts are versionless now too, so the versioned contrast is a deployment-asset view.
-  const versioned = () => getGridColumns(ApplicationRoute.AssetsApplications);
+  const labels = { name: 'Name', costObject: 'Cost object' };
+  const platform = () =>
+    getFlatAssetColumns(ApplicationRoute.PlatformAppRunners, AssetSource.Platform, () => undefined, labels);
+  // Prompts are versionless now too, so the versioned contrast is not part of the flat grid at all.
+  const fieldsOf = () => platform().map((column) => column.field ?? column.colId);
 
   test('Should show four metadata-backed columns', () => {
-    expect(columns()).toHaveLength(4);
+    expect(platform()).toHaveLength(4);
   });
 
-  // Date columns are `(locale, options) => ColDef` factories the FileManager resolves, so `field`
-  // only exists once invoked.
-  const fieldsOf = (defs: any[]) =>
-    defs.map((column) => (typeof column === 'function' ? column('en-US', void 0).field : column.field));
-
   test('Should include the author and created-time columns', () => {
-    const fields = fieldsOf(columns());
-
-    expect(fields).toContain('author');
-    expect(fields).toContain('createdAt');
+    expect(fieldsOf()).toContain('author');
+    expect(fieldsOf()).toContain('createdAt');
   });
 
   test('Should not show a version column, unlike the versioned asset types', () => {
-    expect(fieldsOf(columns())).not.toContain('version');
-    expect(fieldsOf(versioned())).toContain('version');
+    expect(fieldsOf()).not.toContain('version');
+  });
+
+  test('Should list names only on the config.json tab', () => {
+    const columns = getFlatAssetColumns(
+      ApplicationRoute.PlatformAppRunners,
+      AssetSource.ConfigFile,
+      () => undefined,
+      labels,
+    );
+
+    expect(columns.map((column) => column.colId)).toEqual(['name']);
   });
 });

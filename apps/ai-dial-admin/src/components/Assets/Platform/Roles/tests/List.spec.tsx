@@ -4,12 +4,12 @@ import { render, screen } from '@testing-library/react';
 import { ApplicationRoute } from '@/src/types/routes';
 import RolesList from '../List';
 
-vi.mock('@/src/components/Assets/BaseAssetList/BaseAssetList', () => ({
+vi.mock('@/src/components/Assets/TabbedAssetList/TabbedAssetList', () => ({
   default: ({ view }: any) => <div>base-asset-list:{view}</div>,
 }));
 
 describe('RolesList', () => {
-  test('renders BaseAssetList scoped to the PlatformRoles view', () => {
+  test('renders TabbedAssetList scoped to the PlatformRoles view', () => {
     render(<RolesList />);
 
     expect(screen.getByText(`base-asset-list:${ApplicationRoute.PlatformRoles}`)).toBeInTheDocument();

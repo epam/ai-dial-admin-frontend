@@ -1,13 +1,8 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 
-const { showNotificationSpy } = vi.hoisted(() => ({
-  showNotificationSpy: vi.fn(),
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationSpy }),
-}));
+const { showNotification: showNotificationSpy } = notificationMock;
 
 type Listener = (event: { data?: unknown }) => void;
 
@@ -40,8 +35,6 @@ class MockEventSource {
     (this.listeners[name] || []).forEach((fn) => fn({ data }));
   }
 }
-
-vi.stubGlobal('EventSource', MockEventSource);
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   NoDataContent: ({ title }: any) => <div role="status">{title}</div>,
@@ -87,6 +80,7 @@ describe('PodView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     MockEventSource.instances = [];
+    vi.stubGlobal('EventSource', MockEventSource);
   });
 
   test('shows no-data placeholder when there are no logs', () => {

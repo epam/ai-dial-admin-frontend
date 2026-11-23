@@ -26,7 +26,7 @@ const decodePathSegment = (segment: string): string => {
   }
 };
 
-export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcrumb[] {
+export function getBreadcrumbs(pathname: string, currentLocale: string, isAdminApiEnabled = true): Breadcrumb[] {
   const segments = pathname.split('/').filter((segment) => segment);
   const isLocale = currentLocale?.includes(segments[0]);
   const locale = isLocale ? segments[0] : null;
@@ -38,17 +38,21 @@ export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcr
     return [];
   }
 
-  return pathSegments.map((pathSegment, index) => {
+  return pathSegments.flatMap((pathSegment, index) => {
     const configSegment = config.segments[index];
-    const translated = TRANSLATE_BREADCRUMBS[pathSegment as keyof typeof TRANSLATE_BREADCRUMBS];
-    const defaultHref =
-      configSegment.href !== false ? `/${[locale, ...pathSegments.slice(0, index + 1)].filter(Boolean).join('/')}` : '';
+    if (configSegment.isHidden) return [];
 
-    return {
-      key: translated ? (translated as unknown as MenuI18nKey) : configSegment.i18nKey,
-      name: decodePathSegment(pathSegment),
-      href: defaultHref,
-    };
+    const translated = TRANSLATE_BREADCRUMBS[pathSegment as keyof typeof TRANSLATE_BREADCRUMBS];
+    const hasLink = configSegment.href !== false && (isAdminApiEnabled || !configSegment.isAdminApiOnly);
+    const defaultHref = hasLink ? `/${[locale, ...pathSegments.slice(0, index + 1)].filter(Boolean).join('/')}` : '';
+
+    return [
+      {
+        key: translated ? (translated as unknown as MenuI18nKey) : configSegment.i18nKey,
+        name: decodePathSegment(pathSegment),
+        href: defaultHref,
+      },
+    ];
   });
 }
 

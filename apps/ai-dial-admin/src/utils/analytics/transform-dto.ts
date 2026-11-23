@@ -2,6 +2,7 @@ import {
   PipelineTransform,
   TransformOutput,
   TransformOutputSpec,
+  TransformPreset,
   TransformType,
   TransformVar,
 } from '@/src/models/analytics/pipeline';
@@ -10,7 +11,15 @@ import { trimmedString } from '@/src/utils/formatting/trimmed-string';
 
 // Rebuilt from the selected type on every save rather than carried over: the service answers 422 for an
 // llm-only member on a sql transform rather than ignoring it.
-const LLM_ONLY_MEMBERS = ['preset', 'model', 'params', 'request_template', 'inputs', 'response_schema'] as const;
+const LLM_ONLY_MEMBERS = [
+  'preset',
+  'model',
+  'route',
+  'params',
+  'request_template',
+  'inputs',
+  'response_schema',
+] as const;
 
 const LEGACY_OUTPUT_MEMBERS = ['output_vars', 'response_schema'] as const;
 
@@ -43,7 +52,13 @@ const fromOutputSpec = (name: string, spec: TransformOutputSpec, type: Transform
   // An output the console sent as `{}` comes back as `null`, so reading one has to survive it.
   if (!spec) return { name };
 
-  return { name, prose: spec.prose, values: spec.values, jsonata: withoutIdentity(name, spec.jsonata) };
+  return {
+    name,
+    prose: spec.prose,
+    values: spec.values,
+    jsonata: withoutIdentity(name, spec.jsonata),
+    source: withoutIdentity(name, spec.source),
+  };
 };
 
 /**
@@ -104,7 +119,9 @@ export const toTransformDraft = (transform: PipelineTransform): TransformDraft =
 export const getOutputText = (output: TransformOutput, type: TransformType): string =>
   (type === TransformType.Sql ? (output.sql ?? output.prose) : (output.prose ?? output.sql)) ?? '';
 
-const toOutputSpec = (output: TransformOutput, type: TransformType): TransformOutputSpec => {
+export const isRoutePreset = (preset?: TransformPreset): boolean => preset === TransformPreset.DialAppRoute;
+
+const toOutputSpec = (output: TransformOutput, type: TransformType, preset?: TransformPreset): TransformOutputSpec => {
   if (type === TransformType.Sql) {
     return trimmedString(output.sql ?? output.prose) ?? '';
   }
@@ -114,15 +131,18 @@ const toOutputSpec = (output: TransformOutput, type: TransformType): TransformOu
   // reach.
   const prose = trimmedString(output.prose ?? output.sql);
   const values = output.values?.filter((value) => trimmedString(value));
-  const jsonata = trimmedString(output.jsonata);
+  const expression = isRoutePreset(preset)
+    ? { source: trimmedString(output.source) }
+    : { jsonata: trimmedString(output.jsonata) };
+  const hasExpression = Object.values(expression).some(Boolean);
   const body = { ...(prose ? { prose } : {}) };
 
   // The form offers one refinement at a time, so both can only arrive from the JSON editor — where
   // picking one for the author would save something other than what they typed. Sent as written, the
   // service names the conflict.
-  if (values?.length && jsonata) return { ...body, values, jsonata };
+  if (values?.length && hasExpression) return { ...body, values, ...expression };
   if (values?.length) return { ...body, values };
-  if (jsonata) return { ...body, jsonata };
+  if (hasExpression) return { ...body, ...expression };
   return prose ? prose : {};
 };
 
@@ -163,13 +183,17 @@ export const buildTransformDto = (draft: TransformDraft, stored?: PipelineTransf
 
     dto.outputs = outputs.reduce<Record<string, TransformOutputSpec>>((map, output) => {
       // The name is the target column, so a stray space would bind to a column that does not exist.
-      map[trimmedString(output.name)] = toOutputSpec(output, draft.type);
+      map[trimmedString(output.name)] = toOutputSpec(output, draft.type, draft.preset);
       return map;
     }, {});
   }
 
   if (draft.type === TransformType.Sql) {
     LLM_ONLY_MEMBERS.forEach((key) => delete dto[key]);
+  }
+
+  if (!isRoutePreset(draft.preset)) {
+    delete dto.route;
   }
 
   Object.keys(dto).forEach((key) => {

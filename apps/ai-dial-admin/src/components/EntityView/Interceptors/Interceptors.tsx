@@ -173,18 +173,18 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
 
   const onAddInterceptors = useCallback(
     (interceptors: (DialInterceptor | InterceptorOption)[]) => {
+      const updatedInterceptors = [
+        ...new Set([...(entityInterceptors || []), ...interceptors.map((i) => i.name as string)]),
+      ];
       if (isAppRunnerView) {
         onChangeEntity({
           ...entity,
-          'dial:applicationTypeInterceptors': [
-            ...(entityInterceptors || []),
-            ...interceptors.map((i) => i.name as string),
-          ],
+          'dial:applicationTypeInterceptors': updatedInterceptors,
         });
       } else {
         onChangeEntity({
           ...entity,
-          interceptors: [...(entityInterceptors || []), ...interceptors.map((i) => i.name as string)],
+          interceptors: updatedInterceptors,
         });
       }
 
@@ -219,7 +219,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   // detail view, just under `Assets > Interceptors` instead of `Entities > Interceptors`.
   const onOpen = useMemo(
     () =>
-      hasConfigEntityOrigin(interceptors)
+      hasConfigEntityOrigin(interceptors) || !isFullAdmin
         ? void 0
         : (interceptor?: DialInterceptor & Partial<AssetInterceptorTagged>) => {
             const route =
@@ -228,10 +228,10 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
                 : ApplicationRoute.Interceptors;
             onOpenInNewTab(route, interceptor);
           },
-    [interceptors],
+    [interceptors, isFullAdmin],
   );
 
-  const rowData = getInterceptorsGridData(availableInterceptors, entityInterceptors);
+  const rowData = getInterceptorsGridData(availableInterceptors, entityInterceptors, !isFullAdmin);
 
   const addInterceptorColumns = useMemo(
     () => withAssetSourceColumn(BASE_ADD_INTERCEPTOR_COLUMNS, availableInterceptors),

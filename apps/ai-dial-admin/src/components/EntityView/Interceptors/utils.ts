@@ -13,11 +13,19 @@ import { AssetInterceptorOrigin, InterceptorOption } from './models';
 export const getInterceptorsGridData = <T extends { name?: string }>(
   interceptors?: T[],
   interceptorNames?: string[] | null,
+  /**
+   * A caller that cannot read the interceptor list (a unit admin) still holds the names Core stored on
+   * the entity; list those by name rather than dropping them.
+   */
+  shouldKeepUnresolved = false,
 ): T[] => {
   return (
     interceptorNames
-      ?.map((name) => interceptors?.find((interceptor) => interceptor.name === name) as T)
-      .filter(Boolean) || []
+      ?.map((name) => {
+        const interceptor = interceptors?.find((item) => item.name === name);
+        return interceptor ?? (shouldKeepUnresolved ? ({ name } as T) : undefined);
+      })
+      .filter((interceptor): interceptor is T => !!interceptor) || []
   );
 };
 

@@ -6,6 +6,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import {
+  applyToolsetClientSecrets,
   determineFilesType,
   getExistingFolderItems,
   getModalTitle,
@@ -37,9 +38,19 @@ interface Props {
   onClose: () => void;
   onApply?: (fileType: FileType, file: ImportData, resolution: string, path: string, ignorePaths?: boolean) => void;
   preselectedItems?: File[];
+  /** `ENABLE_UNSAFE_TOOLSET_IMPORT`: lets a toolset JSON import supply a client secret for its OAUTH toolsets. */
+  isUnsafeImportEnabled?: boolean;
 }
 
-const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, onApply, preselectedItems }) => {
+const ImportModal: FC<Props> = ({
+  isModalOpen,
+  route,
+  getAssetContext,
+  onClose,
+  onApply,
+  preselectedItems,
+  isUnsafeImportEnabled,
+}) => {
   const folderContext = getAssetContext?.();
   const t = useI18n();
 
@@ -70,6 +81,9 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
     }
     return fileType === FileType.JSON ? jsonFiles : separateFiles;
   }, [fileType, zipFile, jsonFiles, separateFiles]);
+
+  const shouldHandleClientSecrets =
+    !!isUnsafeImportEnabled && route === ApplicationRoute.AssetsToolsets && fileType === FileType.JSON;
 
   const totalFileSizeExceeded = useMemo(() => {
     if (fileType === FileType.ARCHIVE) {
@@ -208,8 +222,9 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
       onApply?.(fileType, zipFile as File, resolution, folderContext?.filePath as string, ignorePaths);
     } else if (fileType === FileType.JSON) {
       const map = editedFileMap.size ? editedFileMap : jsonFileMap;
+      const files = Array.from(map.values()).flatMap((value) => value.files as DialPrompt[]);
       const jsonFile = {
-        [getJsonFileName(route)]: Array.from(map.values()).flatMap((value) => value.files as DialPrompt[]),
+        [getJsonFileName(route)]: shouldHandleClientSecrets ? applyToolsetClientSecrets(files, resolution) : files,
       };
       onApply?.(fileType, jsonFile, resolution, folderContext?.filePath as string, ignorePaths);
     } else if (fileType === FileType.FILES) {
@@ -307,6 +322,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
             resolution={resolution}
             setResolution={setResolution}
             setStepsState={onChangeSteps}
+            withClientSecret={shouldHandleClientSecrets}
           />
         )}
       </div>

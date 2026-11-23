@@ -24,6 +24,8 @@ describe('buildComboYTicks', () => {
     expect(buildComboYTicks(20)).toEqual([20, 15, 10, 5, 0]);
     // ~117s in ms → step 30_000 → ceiling 120_000 (not 200_000)
     expect(buildComboYTicks(117_224)).toEqual([120_000, 90_000, 60_000, 30_000, 0]);
+    // 7m 18s → rough step 109_420 ms snaps to 120s, so the ceiling is 8m, not 13m 20s
+    expect(buildComboYTicks(437_680)).toEqual([480_000, 360_000, 240_000, 120_000, 0]);
   });
 
   test('returns a unit scale when max is missing or zero', () => {

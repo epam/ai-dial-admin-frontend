@@ -5,6 +5,7 @@ import { FC } from 'react';
 import CatalogPropertiesEditor from '@/src/components/CatalogProperties/CatalogPropertiesEditor';
 import { useCatalogProperties } from '@/src/components/CatalogProperties/use-catalog-properties';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
+import EvalTrendsTab from '@/src/components/EvalTrendsTab/EvalTrendsTab';
 import AssetRoles from '@/src/components/EntityView/Roles/AssetRoles';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -13,8 +14,10 @@ import { AssetModel } from '@/src/models/dial/deployment-asset';
 import { DialModelResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getModelDeploymentId } from '@/src/utils/models/deployment-id';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import ModelResourceFeatures from './Features';
 import InvalidModelBanner from './InvalidModelBanner';
@@ -29,6 +32,7 @@ interface Props {
   interceptors: DialInterceptor[];
   globalInterceptors?: string[];
   translators?: ResourceInfo[];
+  plugins?: PluginOptions;
   catalogSchemas?: CatalogSchemaOptions;
   onChange: (model: AssetModel) => void;
 }
@@ -41,11 +45,13 @@ const TabsContent: FC<Props> = ({
   interceptors,
   globalInterceptors,
   translators,
+  plugins,
   catalogSchemas,
   onChange,
 }) => {
   const resource = selectedModel as unknown as DialModelResource;
   const catalogProperties = useCatalogProperties(resource.catalogSchemaId, resource.catalogProperties);
+  const deploymentId = getModelDeploymentId(selectedModel.name);
 
   // Passed through whole, deliberately not merged over `selectedModel`. Every control here returns a
   // full copy, and a merge re-adds any key a control removed — which silently defeated clearing a
@@ -66,6 +72,7 @@ const TabsContent: FC<Props> = ({
           <ModelAssetProperties
             asset={resource}
             translators={translators}
+            plugins={plugins}
             catalogSchemas={catalogSchemas}
             onChange={onChangeResource}
           />
@@ -107,6 +114,8 @@ const TabsContent: FC<Props> = ({
       {activeTab === EntityViewTab.Audit && (
         <EntityAudit entity={selectedModel as unknown as BaseEntity} view={ApplicationRoute.PlatformModels} />
       )}
+
+      {activeTab === EntityViewTab.EvalTrends && deploymentId && <EvalTrendsTab deploymentId={deploymentId} />}
     </>
   );
 };

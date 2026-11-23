@@ -5,8 +5,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import EntitySelectInput from '../EntitySelectInput';
 import { EntitySelectType } from '../models';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
-
 vi.mock('@/src/components/Common/InputPopup/InputPopup', () => ({
   default: ({ selectedValue, onOpen, disabled, editable, children }: any) => (
     <div>

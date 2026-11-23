@@ -13,6 +13,7 @@ import {
   getCompareRowDurationMs,
   getExecutionStatusDelta,
   getMetricDelta,
+  getOverallScoreDeltaKind,
   hasCompareRowDiff,
   roundMetricValue,
 } from '../metric-utils';
@@ -414,6 +415,66 @@ describe('Runs Compare :: hasCompareRowDiff', () => {
     });
 
     expect(hasCompareRowDiff(row, { hiddenColIds })).toBe(true);
+  });
+});
+
+describe('Runs Compare :: overall score diffs', () => {
+  const SCORE_COL_IDS = ['overallScore', 'cmp_overallScore'];
+  const makeScoredRow = (primary: number | null | undefined, compared: number | null | undefined, hasCompared = true) =>
+    makeRow({
+      testCaseScore: primary,
+      _compared: hasCompared ? { ...makeRow(), testCaseScore: compared } : null,
+    });
+
+  test.each([
+    [0.5, 0.7, MetricDeltaKind.Changed],
+    [0.7, 0.7, MetricDeltaKind.Empty],
+    [0.7, null, MetricDeltaKind.Removed],
+    [null, 0.7, MetricDeltaKind.Added],
+    [null, null, MetricDeltaKind.Empty],
+    [0, 0.5, MetricDeltaKind.Changed],
+  ])('reads %s against %s as %s', (primary, compared, expected) => {
+    expect(getOverallScoreDeltaKind(makeScoredRow(primary, compared))).toBe(expected);
+  });
+
+  test('treats a test case absent from the other run as a removed score', () => {
+    expect(getOverallScoreDeltaKind(makeScoredRow(0.7, undefined, false))).toBe(MetricDeltaKind.Removed);
+  });
+
+  test('ignores differences below the rounding precision', () => {
+    expect(getOverallScoreDeltaKind(makeScoredRow(0.7, 0.70004))).toBe(MetricDeltaKind.Empty);
+  });
+
+  test('makes a row differ when only the shown score columns differ', () => {
+    const row = makeScoredRow(0.5, 0.7);
+
+    expect(hasCompareRowDiff(row, { hiddenColIds: new Set() })).toBe(true);
+    expect(hasCompareRowDiff(row, { hiddenColIds: new Set(['cmp_overallScore']) })).toBe(true);
+  });
+
+  test('does not make a row differ while the score columns are hidden', () => {
+    expect(hasCompareRowDiff(makeScoredRow(0.5, 0.7), { hiddenColIds: new Set(SCORE_COL_IDS) })).toBe(false);
+  });
+
+  test('counts a differing score once the columns are shown', () => {
+    expect(countCompareDiffs([makeScoredRow(0.5, 0.7)], { hiddenColIds: new Set() })).toEqual({
+      improved: 0,
+      changed: 1,
+      regressed: 0,
+    });
+    expect(countCompareDiffs([makeScoredRow(0.7, null)], { hiddenColIds: new Set() })).toEqual({
+      improved: 0,
+      changed: 0,
+      regressed: 1,
+    });
+  });
+
+  test('counts nothing for scores while the columns are hidden', () => {
+    expect(countCompareDiffs([makeScoredRow(0.5, 0.7)], { hiddenColIds: new Set(SCORE_COL_IDS) })).toEqual({
+      improved: 0,
+      changed: 0,
+      regressed: 0,
+    });
   });
 });
 

@@ -11,7 +11,7 @@ import { useI18n } from '@/src/locales/client';
 import { BooleanType } from '@/src/types/boolean';
 import { ParamsFields } from '@/src/types/parameters';
 import { ApplicationPropertyRow, UserParamRow } from './models';
-import { getAppPropertiesColumns, getDefaultValueForType, inferTypeFromValue } from './utils';
+import { getAppPropertiesColumns, getDefaultValueForType, inferTypeFromValue, resolveRowType } from './utils';
 
 interface Props {
   applicationProperties: Record<string, unknown>;
@@ -40,6 +40,10 @@ const TableView: FC<Props> = ({
       .map((key) => ({ key, type: inferTypeFromValue(applicationProperties[key]) })),
   );
 
+  // Active type of schema rows whose schema allows several; pinned on the first edit so clearing a
+  // number input (value '') does not flip the row's type to string.
+  const [schemeRowTypes, setSchemeRowTypes] = useState<Record<string, string>>({});
+
   const appPropsRef = useRef(applicationProperties);
   const orderedRowsRef = useRef(orderedUserRows);
   const schemePropsRef = useRef(schemeProperties);
@@ -58,13 +62,18 @@ const TableView: FC<Props> = ({
   }, [schemeProperties]);
 
   const rows = useMemo((): ApplicationPropertyRow[] => {
-    const schemeRows = schemeProperties.map((s) => ({
-      key: s.key,
-      value: applicationProperties[s.key] !== undefined ? applicationProperties[s.key] : s.value,
-      type: s.type,
-      required: s.required,
-      isFromScheme: true,
-    }));
+    const schemeRows = schemeProperties.map((s) => {
+      const value = applicationProperties[s.key] !== undefined ? applicationProperties[s.key] : s.value;
+      const allowedTypes = s.allowedTypes ?? [s.type];
+      return {
+        key: s.key,
+        value,
+        type: schemeRowTypes[s.key] ?? resolveRowType(allowedTypes, value),
+        allowedTypes,
+        required: s.required,
+        isFromScheme: true,
+      };
+    });
 
     const userRows = orderedUserRows.map(({ key, type }) => ({
       key,
@@ -75,7 +84,7 @@ const TableView: FC<Props> = ({
     }));
 
     return [...schemeRows, ...userRows];
-  }, [schemeProperties, orderedUserRows, applicationProperties]);
+  }, [schemeProperties, schemeRowTypes, orderedUserRows, applicationProperties]);
 
   const onValidityChangeRef = useRef(onValidityChange);
 
@@ -134,13 +143,15 @@ const TableView: FC<Props> = ({
   );
 
   const onChangeParam = useCallback(
-    (value: string, data: ApplicationPropertyRow, _field: string, index?: number) => {
-      const allKeys = [...schemePropsRef.current.map((s) => s.key), ...orderedRowsRef.current.map((r) => r.key)];
-      const key = allKeys[index as number];
+    (value: string, data: ApplicationPropertyRow) => {
+      const key = data.key;
       if (!key) return;
 
       const props = { ...appPropsRef.current };
       props[key] = data.type === DefaultItemType.number && value !== '' ? +value : value;
+      if (data.isFromScheme && (data.allowedTypes?.length ?? 0) > 1) {
+        setSchemeRowTypes((prev) => (prev[key] === data.type ? prev : { ...prev, [key]: data.type }));
+      }
       isSkipRefreshRef.current = true;
       onChangeProperties(props);
     },
@@ -162,7 +173,7 @@ const TableView: FC<Props> = ({
   );
 
   const onChangeSelect = useCallback(
-    (value: string, _data: unknown, field?: string, index?: number) => {
+    (value: string, data: unknown, field?: string, index?: number) => {
       const schemeCount = schemePropsRef.current.length;
       const userRowIndex = (index as number) - schemeCount;
       const allKeys = [...schemePropsRef.current.map((s) => s.key), ...orderedRowsRef.current.map((r) => r.key)];
@@ -173,6 +184,8 @@ const TableView: FC<Props> = ({
           const newRows = [...orderedRowsRef.current];
           newRows[userRowIndex] = { ...newRows[userRowIndex], type: value };
           setOrderedUserRows(newRows);
+        } else if (userRowIndex < 0 && key) {
+          setSchemeRowTypes((prev) => ({ ...prev, [key]: value }));
         }
         if (key) {
           const props = { ...appPropsRef.current };
@@ -186,7 +199,7 @@ const TableView: FC<Props> = ({
 
       const props = { ...appPropsRef.current };
       if (field === ParamsFields.VALUE) {
-        if (inferTypeFromValue(props[key]) === DefaultItemType.boolean) {
+        if ((data as ApplicationPropertyRow).type === DefaultItemType.boolean) {
           props[key] = value === BooleanType.true;
         }
       }

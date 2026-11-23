@@ -12,6 +12,7 @@ import { QueryFunctionArg, QueryFunctionArgKind } from '@/src/models/analytics/q
 const FIELD_OPTIONS: FieldOption[] = [
   { name: 'latency', type: 'long' },
   { name: 'deployment', type: 'string' },
+  { name: 'request_body_full', type: 'string', isProjectionOnly: true },
 ];
 
 const renderArg = (arg: QueryFunctionArg, onChange = vi.fn(), value: FnArgValue = {}, isNestingOffered = true) => {
@@ -47,6 +48,17 @@ describe('QueryBuilder :: FnArgEditor', () => {
     await user.click(screen.getByRole('option', { name: /latency/ }));
 
     expect(onChange).toHaveBeenCalledWith({ field: 'latency' });
+  });
+
+  test('expression argument does not offer a projection-only field', async () => {
+    const user = userEvent.setup();
+    renderArg({ name: 'column', kind: QueryFunctionArgKind.Expression });
+
+    await user.click(screen.getByRole('button', { name: 'column' }));
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Untagged/ }));
+
+    expect(screen.getByRole('option', { name: /latency/ })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /request_body_full/ })).toBeNull();
   });
 
   test('string literal with allowed_values renders a select of those values', async () => {

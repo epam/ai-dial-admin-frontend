@@ -55,14 +55,16 @@ const AddToDashboardModal: FC<Props> = ({ savedQuery, onClose }) => {
     const load = async () => {
       const res = await listDashboards();
       if (!res.success) {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        showNotification(
+          getErrorNotification(t(CustomDashboardsI18nKey.ListLoadFailed), res.errorMessage, res.requestId),
+        );
         return;
       }
       setDashboards(res.response?.dashboards ?? []);
       setCanCreate(res.response?.permissions.create_private ?? false);
     };
     void load();
-  }, [showNotification]);
+  }, [showNotification, t]);
 
   const options = useMemo(
     () =>
@@ -110,7 +112,7 @@ const AddToDashboardModal: FC<Props> = ({ savedQuery, onClose }) => {
     try {
       res = await addTo();
     } catch {
-      showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(ErrorI18nKey.TryAgainLater)));
+      showNotification(getErrorNotification(t(CustomDashboardsI18nKey.SaveFailed), t(ErrorI18nKey.TryAgainLater)));
       return;
     } finally {
       setIsSaving(false);

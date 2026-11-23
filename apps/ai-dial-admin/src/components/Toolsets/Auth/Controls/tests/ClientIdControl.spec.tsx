@@ -1,17 +1,11 @@
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ValidationActionType } from '@/src/context/SaveValidationContext';
 import ClientIdControl from '../ClientIdControl';
 
-const mockDispatch = vi.fn();
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({ dispatch: mockDispatch }),
-  ValidationActionType: {
-    SetField: 'SetField',
-  },
-}));
+const { dispatch: mockDispatch } = saveValidationMock;
 
 describe('ClientIdControl', () => {
   beforeEach(() => {

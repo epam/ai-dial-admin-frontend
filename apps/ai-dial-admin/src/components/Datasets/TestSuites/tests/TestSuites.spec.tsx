@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getDatasetTestSuitesPage } from '@/src/app/[lang]/datasets/actions';
-import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ActionMenuOperationI18nKey, DatasetsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import DatasetTestSuites from '../TestSuites';
 
@@ -15,6 +14,8 @@ const ROW = { id: 'suite-1', name: 'Suite 1' };
 
 const grid = vi.hoisted(() => ({
   options: undefined as any,
+  columnDefs: undefined as any,
+  getHref: undefined as any,
   datasource: undefined as any,
   onDatasourceSet: vi.fn(),
 }));
@@ -33,8 +34,10 @@ const mockGridApi = {
 vi.mock('@/src/components/Grid/GridView/GridView', async () => {
   const { useEffect } = await import('react');
   return {
-    default: ({ columnDefs, onGridReady, additionalGridOptions, emptyDataProps }: any) => {
+    default: ({ columnDefs, onGridReady, additionalGridOptions, emptyDataProps, getHref }: any) => {
       grid.options = additionalGridOptions;
+      grid.columnDefs = columnDefs;
+      grid.getHref = getHref;
       useEffect(() => {
         onGridReady?.({ api: mockGridApi });
       }, []);
@@ -121,19 +124,19 @@ describe('DatasetTestSuites', () => {
     expect(mockGridApi.showNoRowsOverlay).toHaveBeenCalledOnce();
   });
 
-  test('opens the test suite in a new tab when a row is clicked', () => {
+  test('links the test suite name to its details page', () => {
     render(<DatasetTestSuites datasetId="ds-1" />);
 
-    grid.options.onCellClicked({ colDef: { field: 'name' }, data: ROW, node: { setSelected: vi.fn() } });
+    const nameColumn = grid.columnDefs.find((col: any) => col.field === 'name');
 
-    expect(windowOpen).toHaveBeenCalledWith('/test-suites/suite-1', '_blank');
+    expect(nameColumn.cellRendererParams.getHref(ROW)).toBe('/test-suites/suite-1');
+    expect(grid.getHref(ROW)).toBe('/test-suites/suite-1');
   });
 
-  test('does not open a tab when the actions cell itself is clicked', () => {
+  test('does not navigate on a row click', () => {
     render(<DatasetTestSuites datasetId="ds-1" />);
 
-    grid.options.onCellClicked({ colDef: { field: ACTIONS_COLUMN_CEL_ID }, data: ROW, node: { setSelected: vi.fn() } });
-
+    expect(grid.options.onCellClicked).toBeUndefined();
     expect(windowOpen).not.toHaveBeenCalled();
   });
 

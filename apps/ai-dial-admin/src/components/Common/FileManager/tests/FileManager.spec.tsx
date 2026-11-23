@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import type { DialFileManager } from '@epam/ai-dial-react-file-manager';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -31,9 +32,9 @@ vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => {
 
 const { unitContext } = vi.hoisted(() => ({ unitContext: { isUnitMode: false, canWriteAt: vi.fn(() => true) } }));
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ isReadOnlyAdmin: false, ...unitContext }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ isReadOnlyAdmin: false, ...unitContext }));
+});
 
 const renderFileManager = (
   view: ApplicationRoute = ApplicationRoute.AssetsApplications,
@@ -45,9 +46,10 @@ const renderFileManager = (
   const files: never[] = [];
   const context = { files, fetchFiles } as unknown as AssetsFolderContextReader;
 
-  render(<FileManager view={view} label="label" columnDefs={[]} getContext={() => context} />);
+  const ui = () => <FileManager view={view} label="label" columnDefs={[]} getContext={() => context} />;
+  const { rerender } = render(ui());
 
-  return fetchFiles;
+  return Object.assign(fetchFiles, { rerender: () => rerender(ui()) });
 };
 
 describe('FileManager', () => {
@@ -55,14 +57,14 @@ describe('FileManager', () => {
     dialFileManagerPropsSpy.mockClear();
   });
 
-  test('fetches file, platform, and public roots on mount for a dual-bucket view', () => {
+  test('fetches only the public root on mount, for the Applications view too', () => {
     const fetchFiles = renderFileManager();
 
     expect(fetchFiles).toHaveBeenCalledOnce();
-    expect(fetchFiles).toHaveBeenCalledWith(['file/', 'platform/', 'public/']);
+    expect(fetchFiles).toHaveBeenCalledWith('public/');
   });
 
-  // Regression (4.4): conversation rows and the flat platform views have no folder concept, so
+  // Regression (4.4): conversation rows have no folder concept, so
   // drag-and-drop move must be withheld entirely rather than left to resolve as a silent no-op —
   // `handleMoveToFiles` reports success on an empty promise list (`Promise.all([]).every(...)` is
   // vacuously true).
@@ -72,26 +74,6 @@ describe('FileManager', () => {
     const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
     expect(props.onMoveToFiles).toBeUndefined();
   });
-
-  test('withholds onMoveToFiles for a flat platform view', () => {
-    renderFileManager(ApplicationRoute.PlatformModels);
-
-    const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
-    expect(props.onMoveToFiles).toBeUndefined();
-  });
-
-  // A cost object folder exists in Core only while it holds a record, so a policy record view has no folder
-  // marker to create, rename or move to.
-  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
-    'withholds onMoveToFiles and onCreateFolder for the nested platform view %s',
-    (view) => {
-      renderFileManager(view);
-
-      const props = dialFileManagerPropsSpy.mock.calls.at(-1)?.[0] as Record<string, unknown>;
-      expect(props.onMoveToFiles).toBeUndefined();
-      expect(props.onCreateFolder).toBeUndefined();
-    },
-  );
 
   test('still offers onCreateFolder for a foldered view', () => {
     renderFileManager(ApplicationRoute.AssetsApplications);
@@ -198,6 +180,73 @@ describe('FileManager — folder expansion', () => {
     expect(context.setFilePath).toHaveBeenCalledWith(folder);
     expect(context.setExpandedFolders).toHaveBeenCalledWith(new Set([root, folder]));
     expect(onPathChange).toHaveBeenCalledWith(folder);
+  });
+
+  test('selects the slash-terminated folder when a breadcrumb reports a path without one', () => {
+    const { context, onPathChange } = renderFolders({ expandedFolders: new Set([root]) });
+
+    act(() => lastProps().onPathChange?.('public/examples'));
+
+    expect(context.fetchFiles).toHaveBeenCalledWith(folder);
+    expect(context.setFilePath).toHaveBeenCalledWith(folder);
+    expect(context.setExpandedFolders).toHaveBeenCalledWith(new Set([root, folder]));
+    expect(onPathChange).toHaveBeenCalledWith(folder);
+  });
+});
+
+describe('FileManager — selected folder restore', () => {
+  const root = 'public/';
+  const nested = 'public/team/';
+
+  const renderRestore = (overrides: Partial<AssetsFolderContextReader> = {}) => {
+    // Stable `files`: the mount effect keys on it, so a fresh literal per render would repeat the load.
+    const context = {
+      files: [],
+      fetchFiles: vi.fn(),
+      fetchFolderHierarchy: vi.fn(),
+      filePath: nested,
+      fetchedFoldersData: {},
+      ...overrides,
+    } as unknown as AssetsFolderContextReader;
+
+    render(<FileManager view={ApplicationRoute.Prompts} label="label" columnDefs={[]} getContext={() => context} />);
+
+    return context;
+  };
+
+  test('loads the chain of an uncached nested selection instead of the roots', () => {
+    const context = renderRestore();
+
+    expect(context.fetchFolderHierarchy).toHaveBeenCalledOnce();
+    expect(context.fetchFolderHierarchy).toHaveBeenCalledWith(nested, true);
+    expect(context.fetchFiles).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ['cached nested', { filePath: nested, fetchedFoldersData: { [nested]: [] } }],
+    ['root', { filePath: root }],
+    ['empty', { filePath: '' }],
+  ])('loads the roots for a %s selection', (_, overrides) => {
+    const context = renderRestore(overrides);
+
+    expect(context.fetchFiles).toHaveBeenCalledOnce();
+    expect(context.fetchFiles).toHaveBeenCalledWith(root);
+    expect(context.fetchFolderHierarchy).not.toHaveBeenCalled();
+  });
+
+  test('loads the roots when the context cannot load a hierarchy', () => {
+    const context = renderRestore({ fetchFolderHierarchy: undefined });
+
+    expect(context.fetchFiles).toHaveBeenCalledOnce();
+    expect(context.fetchFiles).toHaveBeenCalledWith(root);
+  });
+
+  test('loads nothing when the tree is already populated', () => {
+    const files = [{ name: 'public', path: root, bucket: BucketType.Public, nodeType: DialFileNodeType.FOLDER }];
+    const context = renderRestore({ files } as Partial<AssetsFolderContextReader>);
+
+    expect(context.fetchFiles).not.toHaveBeenCalled();
+    expect(context.fetchFolderHierarchy).not.toHaveBeenCalled();
   });
 });
 
@@ -410,9 +459,9 @@ describe('FileManager — org units', () => {
     vi.mocked(useOrgUnits).mockReturnValue({
       units,
       unitsStatus: 'ready',
-      groupClaim: 'groups',
       ensureUnits: vi.fn(),
       refreshUnits: vi.fn(),
+      loadUnits: vi.fn(),
       getOwningUnit: vi.fn(),
     } as unknown as ReturnType<typeof useOrgUnits>);
 
@@ -421,10 +470,25 @@ describe('FileManager — org units', () => {
     withUnits({});
   });
 
-  test('asks for units on mount', () => {
-    renderFileManager();
+  test('reads the units again on mount for a view that can hold unit folders', () => {
+    renderFileManager(ApplicationRoute.AssetsToolsets);
 
-    expect(useOrgUnits().ensureUnits).toHaveBeenCalled();
+    expect(useOrgUnits().refreshUnits).toHaveBeenCalledOnce();
+    expect(useOrgUnits().ensureUnits).not.toHaveBeenCalled();
+  });
+
+  test('only makes sure the units are loaded for a view without a unit namespace', () => {
+    renderFileManager(ApplicationRoute.PlatformModels);
+
+    expect(useOrgUnits().ensureUnits).toHaveBeenCalledOnce();
+    expect(useOrgUnits().refreshUnits).not.toHaveBeenCalled();
+  });
+
+  test('does not read the units again when the same view re-renders', () => {
+    const fetchFiles = renderFileManager(ApplicationRoute.AssetsToolsets);
+    fetchFiles.rerender();
+
+    expect(useOrgUnits().refreshUnits).toHaveBeenCalledOnce();
   });
 
   test('gives only a unit folder a tree icon', () => {

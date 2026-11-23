@@ -164,11 +164,10 @@ The system SHALL provide a method that recursively deletes a Skills grouping fol
 contents via the existing (non-recursive) folder-listing method one level at a time, deleting every
 skill found at any depth, then every nested grouping-folder marker deepest-first, then the target
 folder itself. Every delete SHALL use Core's unconditional-etag convention (no `If-Match` header) rather
-than reading a real etag per item, matching how the cross-type `removeFolderCore`'s own folder-marker
-cleanup step already treats a folder delete as unconditional. This method SHALL be kept separate from
+than reading a real etag per item. This method SHALL be kept separate from
 the cross-type `removeFolderCore` used by the other five asset types, since Skills are folder-shaped
 resources with their own dedicated endpoints rather than flat resources addressable through the generic
-publication-based delete.
+per-item delete.
 
 #### Scenario: Every skill and nested folder is deleted before the target folder
 - **WHEN** a Skills grouping folder containing skills and nested folders is deleted

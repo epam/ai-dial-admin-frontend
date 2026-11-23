@@ -139,17 +139,6 @@ describe('BaseAssetList :: AssetsToolsets bucket-aware branches', () => {
     vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof useRouter>);
   });
 
-  test('Fetching a duplicate source on a platform-bucket row calls getPlatformToolset, not getToolset', async () => {
-    render(<BaseAssetList view={ApplicationRoute.AssetsToolsets} />);
-
-    fireEvent.click(screen.getByText('fetch-duplicate-platform'));
-
-    await vi.waitFor(() =>
-      expect(getPlatformToolset).toHaveBeenCalledWith('platform/platform-toolset', expect.anything()),
-    );
-    expect(getToolset).not.toHaveBeenCalled();
-  });
-
   test('Fetching a duplicate source on a public-bucket row calls getToolset, not getPlatformToolset', async () => {
     render(<BaseAssetList view={ApplicationRoute.AssetsToolsets} />);
 
@@ -157,47 +146,6 @@ describe('BaseAssetList :: AssetsToolsets bucket-aware branches', () => {
 
     await vi.waitFor(() => expect(getToolset).toHaveBeenCalledWith('public/folder/toolset__1.0', expect.anything()));
     expect(getPlatformToolset).not.toHaveBeenCalled();
-  });
-
-  test('Confirming a duplicate of a platform-bucket asset calls createPlatformToolset, not createToolset', async () => {
-    render(<BaseAssetList view={ApplicationRoute.AssetsToolsets} />);
-
-    fireEvent.click(screen.getByText('confirm-duplicate-platform'));
-
-    await vi.waitFor(() => expect(createPlatformToolset).toHaveBeenCalledOnce());
-    expect(createToolset).not.toHaveBeenCalled();
-  });
-
-  // Regression: `getPlatformAssetDuplicate` strips `folderId`/`path` from the duplicated asset
-  // (Core's platform-bucket write doesn't want them) — the post-duplicate redirect must restore a
-  // bucket signal itself, or `getEntityPath` falls through to the versioned-path branch and builds
-  // `?path=undefined{name}__` instead of a bare, no-`?path=` platform URL (design.md D5).
-  test('Confirming a duplicate of a platform-bucket asset redirects to the bare name, with no ?path=', async () => {
-    const push = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>);
-
-    render(<BaseAssetList view={ApplicationRoute.AssetsToolsets} />);
-
-    fireEvent.click(screen.getByText('confirm-duplicate-platform'));
-
-    await vi.waitFor(() => expect(push).toHaveBeenCalledWith('/assets-toolsets/copy-of-platform-toolset'));
-  });
-
-  test('Does not redirect when Core rejects a duplicate', async () => {
-    const push = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>);
-    vi.mocked(createPlatformToolset).mockResolvedValueOnce({
-      success: false,
-      errorHeader: 'Validation Failed',
-      errorMessage: "authType 'BEARER' requires a key",
-    });
-
-    render(<BaseAssetList view={ApplicationRoute.AssetsToolsets} />);
-
-    fireEvent.click(screen.getByText('confirm-duplicate-platform'));
-
-    await vi.waitFor(() => expect(createPlatformToolset).toHaveBeenCalledOnce());
-    expect(push).not.toHaveBeenCalled();
   });
 
   test('Confirming a duplicate of a public-bucket asset calls createToolset, not createPlatformToolset', async () => {
@@ -209,15 +157,6 @@ describe('BaseAssetList :: AssetsToolsets bucket-aware branches', () => {
     expect(createPlatformToolset).not.toHaveBeenCalled();
   });
 
-  test('Create targeting the platform bucket calls createPlatformToolset, not createToolset', async () => {
-    render(<BaseAssetList view={ApplicationRoute.AssetsToolsets} />);
-
-    fireEvent.click(screen.getByText('create-platform'));
-
-    await vi.waitFor(() => expect(createPlatformToolset).toHaveBeenCalledOnce());
-    expect(createToolset).not.toHaveBeenCalled();
-  });
-
   test('Create targeting the public bucket calls createToolset, not createPlatformToolset', async () => {
     render(<BaseAssetList view={ApplicationRoute.AssetsToolsets} />);
 
@@ -225,16 +164,6 @@ describe('BaseAssetList :: AssetsToolsets bucket-aware branches', () => {
 
     await vi.waitFor(() => expect(createToolset).toHaveBeenCalledOnce());
     expect(createPlatformToolset).not.toHaveBeenCalled();
-  });
-
-  test('Bulk delete of platform-bucket rows calls bulkDeletePlatformToolsets, not bulkDeleteToolsets', async () => {
-    render(<BaseAssetList view={ApplicationRoute.AssetsToolsets} />);
-
-    fireEvent.click(screen.getByText('select-delete-platform'));
-    fireEvent.click(screen.getByText('confirm-remove'));
-
-    await vi.waitFor(() => expect(bulkDeletePlatformToolsets).toHaveBeenCalledOnce());
-    expect(bulkDeleteToolsets).not.toHaveBeenCalled();
   });
 
   test('Bulk delete of public-bucket rows calls bulkDeleteToolsets, not bulkDeletePlatformToolsets', async () => {

@@ -2,14 +2,21 @@
 
 import { FC, useMemo } from 'react';
 
-import { Input, Label, Textarea, Tooltip, Select } from '@epam/ai-dial-ui-kit';
+import Link from 'next/link';
+
+import { Label, Textarea, Tooltip, Select } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
 
+import EnrichmentRouteFields from '@/src/components/Analytics/Common/EnrichmentRouteFields';
+import { useEnrichmentRouteSuggestions } from '@/src/components/Analytics/Common/use-enrichment-route-suggestions';
 import OutputsEditor from '@/src/components/Analytics/Pipelines/Enrich/OutputsEditor';
 import TransformParamsEditor from '@/src/components/Analytics/Pipelines/Enrich/TransformParamsEditor';
 import VariablesEditor from '@/src/components/Analytics/Pipelines/Enrich/VariablesEditor';
 import { EnrichFormState } from '@/src/components/Analytics/Pipelines/Enrich/use-enrich-form';
+import { useEnrichmentRouteAllowlist } from '@/src/components/Analytics/Pipelines/Enrich/use-enrichment-route-allowlist';
+import { useModelSuggestions } from '@/src/components/Analytics/Pipelines/Enrich/use-model-suggestions';
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
+import AutocompleteInput from '@/src/components/Common/AutocompleteInput/AutocompleteInput';
 import PlaceholderTokens from '@/src/components/Analytics/Common/PlaceholderTokens';
 import { PREVIEW_SECTION_ANCHORS } from '@/src/components/Analytics/Pipelines/Preview/constants';
 import { PreviewSection } from '@/src/components/Analytics/Pipelines/Preview/models';
@@ -21,10 +28,14 @@ import {
   PIPELINE_SELECT_DEFAULTS,
 } from '@/src/constants/analytics/pipelines';
 import { AnalyticsPipelinesI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
-import { TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
+import { useCurrentLocale, useI18n } from '@/src/locales/client';
+import { EnrichmentRoute, EnrichmentRoutesReadState } from '@/src/models/analytics/enrichment-routes';
+import { TransformPreset, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PlaceholderState, PlaceholderToken } from '@/src/models/analytics/pipeline-ui';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getRouteProblem, isRouteListed } from '@/src/utils/analytics/enrichment-routes';
 import { extractPlaceholders } from '@/src/utils/analytics/template-placeholders';
+import { isRoutePreset } from '@/src/utils/analytics/transform-dto';
 import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props {
@@ -61,6 +72,7 @@ const PLACEHOLDER_DESCRIPTION: Record<string, AnalyticsPipelinesI18nKey> = {
  */
 const TransformSection: FC<Props> = ({ form, isDisabled }) => {
   const t = useI18n();
+  const currentLocale = useCurrentLocale();
 
   const { transform, onTransformChange, isTransformReady, targetColumns } = form;
   const controlClassName = getControlClassName();
@@ -72,6 +84,32 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
     { value: TransformType.Llm, label: t(AnalyticsPipelinesI18nKey.TransformTypeLlm) },
     { value: TransformType.Sql, label: t(AnalyticsPipelinesI18nKey.TransformTypeSql) },
   ];
+
+  const presetOptions = [
+    { value: TransformPreset.ChatCompletion, label: t(AnalyticsPipelinesI18nKey.PresetChatCompletion) },
+    { value: TransformPreset.DialAppRoute, label: t(AnalyticsPipelinesI18nKey.PresetAppRoute) },
+  ];
+
+  const isRoute = !isSql && isRoutePreset(transform?.preset);
+  const model = transform?.model ?? '';
+  const route = transform?.route ?? '';
+  const allowlist = useEnrichmentRouteAllowlist(isRoute);
+  const routeSuggestions = useEnrichmentRouteSuggestions(!isSql);
+  const models = useModelSuggestions(!isSql && !isRoute);
+  const modelSuggestions = useMemo(
+    () => [...new Set([...models, ...routeSuggestions.deployments])].map((value) => ({ value, label: value })),
+    [models, routeSuggestions.deployments],
+  );
+  const isRouteNotAllowed =
+    allowlist.state !== EnrichmentRoutesReadState.Unknown &&
+    Boolean(model.trim() && route.trim()) &&
+    !isRouteListed(allowlist.routes, model, route);
+
+  const onRouteFieldsChange = (patch: Partial<EnrichmentRoute>) =>
+    onTransformChange({
+      ...(patch.deployment == null ? {} : { model: patch.deployment }),
+      ...(patch.route == null ? {} : { route: patch.route }),
+    });
 
   const templateObject = useMemo(() => asJsonObject(transform?.request_template), [transform?.request_template]);
 
@@ -121,14 +159,57 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
 
       {!isSql && (
         <>
-          <Input
-            id="transform-model"
-            labelProps={{ label: t(AnalyticsPipelinesI18nKey.Model) }}
-            value={transform?.model ?? ''}
+          <Select
+            {...PIPELINE_SELECT_DEFAULTS}
+            id="transform-preset"
+            labelProps={{ label: t(AnalyticsPipelinesI18nKey.Preset) }}
+            options={withStrandedOption(presetOptions, transform?.preset)}
+            value={transform?.preset ?? TransformPreset.ChatCompletion}
             disabled={isDisabled}
-            containerClassName={controlClassName}
-            onChange={(v) => onTransformChange({ model: v ?? '' })}
+            className={controlClassName}
+            onChange={(value) => onTransformChange({ preset: value as TransformPreset })}
           />
+
+          {isRoute ? (
+            <>
+              <EnrichmentRouteFields
+                idPrefix="transform"
+                deployment={model}
+                route={route}
+                suggestions={routeSuggestions}
+                problems={{ route: route.trim() ? getRouteProblem(route) : undefined }}
+                isDisabled={isDisabled}
+                className={controlClassName}
+                onChange={onRouteFieldsChange}
+              />
+              <p role="status" className={isRouteNotAllowed ? 'text-secondary dial-tiny-text' : 'sr-only'}>
+                {isRouteNotAllowed && (
+                  <>
+                    {t(AnalyticsPipelinesI18nKey.RouteNotAllowed)}{' '}
+                    <Link
+                      href={`/${currentLocale}${ApplicationRoute.SystemProperties}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent-primary underline"
+                    >
+                      {t(AnalyticsPipelinesI18nKey.RouteNotAllowedLink)}
+                    </Link>
+                  </>
+                )}
+              </p>
+            </>
+          ) : (
+            <AutocompleteInput
+              id="transform-model"
+              labelProps={{ label: t(AnalyticsPipelinesI18nKey.Model) }}
+              value={model}
+              suggestions={modelSuggestions}
+              openOnFocus
+              disabled={isDisabled}
+              className={controlClassName}
+              onChange={(value) => onTransformChange({ model: value })}
+            />
+          )}
 
           <section aria-label={t(AnalyticsPipelinesI18nKey.SectionParams)} className="flex flex-col gap-2">
             <h2 className="text-primary dial-small">{t(AnalyticsPipelinesI18nKey.SectionParams)}</h2>
@@ -160,6 +241,7 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
             />
 
             <PlaceholderTokens tokens={memberTokens} label={t(AnalyticsPipelinesI18nKey.TemplatePlaceholders)} />
+            <span className="text-secondary dial-tiny-text">{t(AnalyticsPipelinesI18nKey.PlaceholderJsonForm)}</span>
 
             {templateObject ? (
               <JsonEditorInput
@@ -228,6 +310,7 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
         <OutputsEditor
           outputs={transform?.outputs}
           type={transform?.type ?? TransformType.Llm}
+          preset={transform?.preset}
           columns={targetColumns}
           isReady={isTransformReady}
           isDisabled={isDisabled}

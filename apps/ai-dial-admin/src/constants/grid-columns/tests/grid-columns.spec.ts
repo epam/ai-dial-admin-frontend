@@ -25,6 +25,7 @@ import {
   USAGE_LOG_CONVERSATIONS_COLUMNS,
   USAGE_LOG_MCP_COLUMNS,
   USAGE_LOG_TOOLSET_TRACES_COLUMNS,
+  EVALUATION_TARGET_DEPLOYMENTS_COLUMNS,
   TEST_SUITES_COLUMN,
   RUNS_COLUMN,
   SUITE_RUNS_COLUMN,
@@ -54,6 +55,8 @@ vi.mock('@/src/constants/ag-grid', () => ({
   ACTION_COLUMN: vi.fn((actions) => ({ colId: 'actions', actions })),
   NO_BORDER_CLASS: 'NO_BORDER_CLASS',
   ACTIONS_COLUMN_CEL_ID: 'actionsColumn',
+  EXPANDER_COLUMN_CEL_ID: 'expanderColumn',
+  ACTIVITY_ID_COLUMN_ID: 'activityId',
 }));
 
 describe('Constants :: grid columns', () => {
@@ -845,5 +848,19 @@ describe('COMPARE_RUN_PICKER_COLUMN', () => {
 
     expect(getValue({ testSuiteId: 'suite-1', testSuiteName: 'Suite One' })).toBe('Suite One');
     expect(getValue({ testSuiteId: 'suite-1' })).toBe('suite-1');
+  });
+});
+
+describe('EVALUATION_TARGET_DEPLOYMENTS_COLUMNS', () => {
+  const description = EVALUATION_TARGET_DEPLOYMENTS_COLUMNS.find((col) => col.colId === 'description');
+  const getValue = (data: { description?: string | null }) =>
+    (description?.valueGetter as (params: { data: { description?: string | null } }) => unknown)({ data });
+
+  test('leaves a missing description blank, including the literal string the API sends', () => {
+    expect(getValue({ description: 'null' })).toBe('');
+    expect(getValue({ description: null })).toBe('');
+    expect(getValue({})).toBe('');
+    expect(getValue({ description: '' })).toBe('');
+    expect(getValue({ description: 'Answers questions' })).toBe('Answers questions');
   });
 });

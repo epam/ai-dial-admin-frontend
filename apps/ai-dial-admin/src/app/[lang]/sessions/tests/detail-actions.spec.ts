@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { analyticsDataApi } from '@/src/app/api/api';
+import { analyticsDataApi, sessionsSourceApi } from '@/src/app/api/api';
 import {
   getSessionDetail,
   getSessionFeedback,
@@ -9,13 +9,7 @@ import {
   getHopBodyGrants,
 } from '@/src/app/[lang]/sessions/actions';
 import { SESSION_FEEDBACK_LIMIT, SESSION_SPAN_LIMIT, USAGE_LOG_ENTITY } from '@/src/constants/analytics/sessions-trace';
-import {
-  QueryMode,
-  QueryOffsetPage,
-  QueryOperator,
-  QueryPredicate,
-  StructuredQuery,
-} from '@/src/models/analytics/query';
+import { QueryMode, QueryOffsetPage, QueryOperator, QueryPredicate } from '@/src/models/analytics/query';
 import { UsageLogField, SessionScope } from '@/src/models/analytics/sessions-trace';
 import { clearEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -59,14 +53,12 @@ const FEEDBACK_ROW = {
   comment_count: 0,
 };
 
-const COUNT_ROW = {
-  chat_id: CHAT_ID,
-  rating_up: 3,
-  rate_zero: 2,
-  rate_negative: 1,
-  rate_bool_false: 1,
-  rate_raw: 2,
-  rate_events: 6,
+const UNRESOLVED_COUNTS = {
+  rating_up: null,
+  rating_down: null,
+  provable_down: null,
+  captured_form: null,
+  rate_events: null,
 };
 
 const NO_COUNTS = { rating_up: 0, rating_down: 0, provable_down: 0, captured_form: 0, rate_events: 0 };
@@ -96,27 +88,109 @@ beforeEach(() => {
   getEntitySchema().mockResolvedValue({ success: true, response: { fields: [] } });
   (getIsEnableAuthToggle as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
   (getUserToken as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(TOKEN_MOCK);
+  vi.mocked(sessionsSourceApi.getSetting).mockResolvedValue({ success: true });
 });
 
+const SESSION_FIELDS = [
+  { name: 'client_session_id', type: 'string', source: 'client_session_id' },
+  { name: 'last_request_time', type: 'timestamp', source: 'last_request_time' },
+  { name: 'project_id', type: 'string', source: 'project_id' },
+  { name: 'total_price', type: 'decimal', source: 'total_price' },
+  { name: 'turn_count', type: 'long', source: 'turn_count' },
+];
+
+const SESSION_RATING_FIELDS = [
+  'rate_pos_count',
+  'rate_zero_count',
+  'rate_neg_count',
+  'rate_bool_false_count',
+  'rate_raw_count',
+  'rate_event_count',
+].map((name) => ({ name: `session_ratings.${name}`, type: 'long', source: name }));
+
+const RESPONSE_RATING = 'response_feedback';
+
+const RESPONSE_RATING_FIELDS = ['rate_pos_count', 'rate_zero_count', 'rate_neg_count', 'rate_event_count'].map(
+  (name) => ({ name: `${RESPONSE_RATING}.${name}`, type: 'long', source: name }),
+);
+
+const stubSchemas = (sessions: object[] = SESSION_FIELDS, usageLog: object[] = []) =>
+  getEntitySchema().mockImplementation((entity: string) =>
+    Promise.resolve({ success: true, response: { fields: entity === USAGE_LOG_ENTITY ? usageLog : sessions } }),
+  );
+
 describe('getSessionDetail', () => {
+  beforeEach(() => {
+    stubSchemas();
+  });
+
   test('queries the session by id with the user token', async () => {
     execute().mockResolvedValue({ success: true, response: { rows: [DETAIL_ROW], totalCount: 1 } });
 
     await getSessionDetail(CHAT_ID);
 
     expect(execute()).toHaveBeenCalledWith(expect.anything(), TOKEN_MOCK);
+    expect(call(0).entity).toBe('sessions');
     expect(call(0).mode).toBe(QueryMode.Row);
     expect((call(0).filter as QueryPredicate).op).toBe(QueryOperator.Eq);
     expect((call(0).page as QueryOffsetPage).limit).toBe(1);
   });
 
-  test('returns the single row', async () => {
+  test('returns the single row with unresolved rating figures where the schema has no rating enrichment', async () => {
     execute().mockResolvedValue({ success: true, response: { rows: [DETAIL_ROW], totalCount: 1 } });
 
     const result = await getSessionDetail(CHAT_ID);
 
     expect(result.success).toBe(true);
-    expect(result.response).toEqual({ session: DETAIL_ROW });
+    expect(result.response).toEqual({ session: { ...DETAIL_ROW, ...UNRESOLVED_COUNTS } });
+  });
+
+  test('composes the session rating counts from the rating enrichment fields', async () => {
+    stubSchemas([...SESSION_FIELDS, ...SESSION_RATING_FIELDS]);
+    execute().mockResolvedValue({
+      success: true,
+      response: {
+        rows: [
+          {
+            ...DETAIL_ROW,
+            'session_ratings.rate_pos_count': 3,
+            'session_ratings.rate_zero_count': 2,
+            'session_ratings.rate_neg_count': 1,
+            'session_ratings.rate_bool_false_count': 1,
+            'session_ratings.rate_raw_count': 2,
+            'session_ratings.rate_event_count': 6,
+          },
+        ],
+      },
+    });
+
+    const result = await getSessionDetail(CHAT_ID);
+
+    expect(result.response?.session).toMatchObject({
+      rating_up: 3,
+      rating_down: 3,
+      provable_down: 2,
+      captured_form: 2,
+      rate_events: 6,
+    });
+  });
+
+  test('states zero ratings for a session the rating enrichment has no row for', async () => {
+    stubSchemas([...SESSION_FIELDS, ...SESSION_RATING_FIELDS]);
+    execute().mockResolvedValue({ success: true, response: { rows: [DETAIL_ROW] } });
+
+    const result = await getSessionDetail(CHAT_ID);
+
+    expect(result.response?.session).toMatchObject(NO_COUNTS);
+  });
+
+  test('selects the rating enrichment fields the composed counts are read from', async () => {
+    stubSchemas([...SESSION_FIELDS, ...SESSION_RATING_FIELDS]);
+    execute().mockResolvedValue({ success: true, response: { rows: [DETAIL_ROW] } });
+
+    await getSessionDetail(CHAT_ID);
+
+    expect(JSON.stringify(call(0).select)).toContain('session_ratings.rate_pos_count');
   });
 
   // The route branches on this: a successful query with no rows is a missing session, and must stay
@@ -140,6 +214,15 @@ describe('getSessionDetail', () => {
     expect(result.response).toBeUndefined();
   });
 
+  test('a required role the schema does not report fails without a session query', async () => {
+    stubSchemas(SESSION_FIELDS.filter(({ name }) => name !== 'last_request_time'));
+
+    const result = await getSessionDetail(CHAT_ID);
+
+    expect(result.success).toBe(false);
+    expect(execute()).not.toHaveBeenCalled();
+  });
+
   test('passes an id containing path separators through unchanged', async () => {
     execute().mockResolvedValue({ success: true, response: { rows: [DETAIL_ROW], totalCount: 1 } });
     const pathLike = 'sessions/eRxsos/chathub-claude4__E2E';
@@ -151,100 +234,96 @@ describe('getSessionDetail', () => {
 });
 
 describe('getSessionFeedback', () => {
-  const stubFeedback = (list: object, counts: object = { success: true, response: { rows: [COUNT_ROW] } }) =>
-    execute().mockImplementation((query: StructuredQuery) =>
-      Promise.resolve(query.mode === QueryMode.Aggregate ? counts : list),
-    );
+  const FIRST = '2026-07-22T11:50:28.506Z';
+  const LAST = '2026-07-22T12:00:52.157Z';
+  const read = () => getSessionFeedback(SCOPE, FIRST, LAST);
 
-  test('queries the feedback rows with the shared limit and a total', async () => {
-    stubFeedback({ success: true, response: { rows: [FEEDBACK_ROW], totalCount: 6 } });
+  beforeEach(() => {
+    stubSchemas(SESSION_FIELDS, RESPONSE_RATING_FIELDS);
+  });
 
-    await getSessionFeedback(CHAT_ID);
+  test('reads the rated responses from the usage log rating enrichment with the user token', async () => {
+    execute().mockResolvedValue({ success: true, response: { rows: [FEEDBACK_ROW] } });
 
+    await read();
+
+    expect(execute()).toHaveBeenCalledOnce();
     expect(execute()).toHaveBeenCalledWith(expect.anything(), TOKEN_MOCK);
-
-    const listQuery = execute()
-      .mock.calls.map((args: unknown[]) => args[0] as StructuredQuery)
-      .find((query: StructuredQuery) => query.mode === QueryMode.Row);
-    const page = listQuery?.page as QueryOffsetPage;
-    expect(page.limit).toBe(SESSION_FEEDBACK_LIMIT);
-    expect(page.include_total).toBe(true);
+    expect(call(0).entity).toBe(USAGE_LOG_ENTITY);
+    expect(call(0).mode).toBe(QueryMode.Aggregate);
+    expect(JSON.stringify(call(0))).toContain(`${RESPONSE_RATING}.rate_pos_count`);
+    expect((call(0).page as QueryOffsetPage).limit).toBe(SESSION_FEEDBACK_LIMIT);
   });
 
-  test('returns the rows with the total so the panel can declare itself partial', async () => {
-    stubFeedback({ success: true, response: { rows: [FEEDBACK_ROW], totalCount: 6 } });
+  test('scopes the read to the session hops', async () => {
+    execute().mockResolvedValue({ success: true, response: { rows: [] } });
 
-    const result = await getSessionFeedback(CHAT_ID);
+    await read();
 
-    expect(result.response).toMatchObject({ rows: [FEEDBACK_ROW], total: 6 });
+    expect(JSON.stringify(call(0).filter)).toContain(CHAT_ID);
   });
 
-  test('resolves the direction figures from an aggregate rather than from the listed rows', async () => {
-    stubFeedback({ success: true, response: { rows: [FEEDBACK_ROW], totalCount: 240 } });
+  test('returns the rows with their count where the list came back short of the limit', async () => {
+    execute().mockResolvedValue({ success: true, response: { rows: [FEEDBACK_ROW] } });
 
-    const result = await getSessionFeedback(CHAT_ID);
+    const result = await read();
 
-    expect(result.response?.ratings).toEqual({
-      rating_up: 3,
-      rating_down: 3,
-      provable_down: 2,
-      captured_form: 2,
-      rate_events: 6,
+    expect(result.response).toEqual({
+      rows: [FEEDBACK_ROW],
+      total: 1,
+      isCommentTextReadable: false,
+      isAvailable: true,
     });
   });
 
-  test('issues the aggregate narrowed to the session by equality', async () => {
-    stubFeedback({ success: true, response: { rows: [] } });
+  test('reports no total where the list came back full, so the panel declares itself partial', async () => {
+    const rows = Array.from({ length: SESSION_FEEDBACK_LIMIT }, (_, index) => ({
+      ...FEEDBACK_ROW,
+      response_id: `r-${index}`,
+    }));
+    execute().mockResolvedValue({ success: true, response: { rows } });
 
-    await getSessionFeedback(CHAT_ID);
-
-    const countsQuery = execute()
-      .mock.calls.map((args: unknown[]) => args[0] as StructuredQuery)
-      .find((query: StructuredQuery) => query.mode === QueryMode.Aggregate);
-
-    expect(countsQuery?.entity).toBe('response_ratings');
-    expect((countsQuery?.filter as QueryPredicate).op).toBe(QueryOperator.Eq);
-  });
-
-  test('an absent total resolves to null rather than a guessed count', async () => {
-    stubFeedback({ success: true, response: { rows: [FEEDBACK_ROW] } });
-
-    const result = await getSessionFeedback(CHAT_ID);
+    const result = await read();
 
     expect(result.response?.total).toBeNull();
   });
 
-  test('no ratings resolves to an empty list and zeroed figures, not a failure', async () => {
-    stubFeedback({ success: true, response: { rows: [], totalCount: 0 } }, { success: true, response: { rows: [] } });
+  test('reports the comment text readable only where the schema offers it', async () => {
+    stubSchemas(SESSION_FIELDS, [
+      ...RESPONSE_RATING_FIELDS,
+      { name: `${RESPONSE_RATING}.comment_sample`, type: 'string', source: 'comment_sample' },
+    ]);
+    execute().mockResolvedValue({ success: true, response: { rows: [FEEDBACK_ROW] } });
 
-    const result = await getSessionFeedback(CHAT_ID);
+    const result = await read();
 
-    expect(result.success).toBe(true);
-    expect(result.response).toMatchObject({ rows: [], total: 0, ratings: NO_COUNTS });
+    expect(result.response?.isCommentTextReadable).toBe(true);
+    expect(JSON.stringify(call(0).select)).toContain(`${RESPONSE_RATING}.comment_sample`);
   });
 
-  test('a failed aggregate leaves the figures unresolved without taking the list down', async () => {
-    stubFeedback({ success: true, response: { rows: [FEEDBACK_ROW], totalCount: 1 } }, { success: false });
+  test('lists nothing and reads nothing where the usage log has no response rating enrichment', async () => {
+    stubSchemas(SESSION_FIELDS, []);
 
-    const result = await getSessionFeedback(CHAT_ID);
+    const result = await read();
 
-    expect(result.success).toBe(true);
-    expect(result.response?.rows).toEqual([FEEDBACK_ROW]);
-    expect(result.response?.ratings).toBeNull();
+    expect(execute()).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      success: true,
+      response: { rows: [], total: 0, isCommentTextReadable: false, isAvailable: false },
+    });
   });
 
-  test('reports the comment text unreadable when the schema does not offer it', async () => {
-    stubFeedback({ success: true, response: { rows: [FEEDBACK_ROW] } });
+  test('reads nothing for a session with no recorded window', async () => {
+    const result = await getSessionFeedback(SCOPE, null, null);
 
-    const result = await getSessionFeedback(CHAT_ID);
-
-    expect(result.response?.isCommentTextReadable).toBe(false);
+    expect(execute()).not.toHaveBeenCalled();
+    expect(result.response).toMatchObject({ rows: [], isAvailable: true });
   });
 
   test('a failed list query reports failure with no response', async () => {
-    stubFeedback({ success: false, errorMessage: 'boom' });
+    execute().mockResolvedValue({ success: false, errorMessage: 'boom' });
 
-    const result = await getSessionFeedback(CHAT_ID);
+    const result = await read();
 
     expect(result.success).toBe(false);
     expect(result.response).toBeUndefined();

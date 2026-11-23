@@ -1,8 +1,11 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { ActionMenuOperationI18nKey, ButtonsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, ButtonsI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { PickedEntity } from '@/src/components/Common/EntitySelectInput/models';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { DialRoleResource } from '@/src/models/dial/resource';
 import { ConfigEntityOrigin } from '@/src/types/config-file-entity';
 import RoleEntities from '../Entities';
@@ -15,12 +18,8 @@ const gridState = vi.hoisted(() => {
     updateGridOptions: vi.fn((options: Record<string, unknown>) => gridOptions.push(options)),
   };
 
-  return { api, gridOptions, isReadOnly: false };
+  return { api, gridOptions };
 });
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => gridState.isReadOnly,
-}));
 
 vi.mock('@/src/components/EntityView/AddEntitiesGrid', () => ({
   default: ({
@@ -33,6 +32,31 @@ vi.mock('@/src/components/EntityView/AddEntitiesGrid', () => ({
     <section aria-label="add models">
       <button type="button" onClick={() => onApply(entities)}>
         Apply models
+      </button>
+    </section>
+  ),
+}));
+
+vi.mock('../AddApplicationsPopup', () => ({
+  default: ({ onApply, onClose }: { onApply: (entities: PickedEntity[]) => void; onClose: () => void }) => (
+    <section aria-label="add applications">
+      <button
+        type="button"
+        onClick={() =>
+          onApply([
+            { source: AssetSource.Public, name: 'public/team/app/1.0', path: 'public/team/app/1.0' },
+            { source: AssetSource.Platform, name: 'platformApp' },
+            { source: AssetSource.ConfigFile, name: 'fileApp' },
+          ])
+        }
+      >
+        Apply applications
+      </button>
+      <button type="button" onClick={() => onApply([{ source: AssetSource.Platform, name: 'existing' }])}>
+        Apply existing application
+      </button>
+      <button type="button" onClick={onClose}>
+        Close applications
       </button>
     </section>
   ),
@@ -64,7 +88,7 @@ const role = (limits: DialRoleResource['limits'] = {}): DialRoleResource => ({
 
 describe('RoleEntities', () => {
   beforeEach(() => {
-    gridState.isReadOnly = false;
+    appContextMock.set({ isReadOnlyAdmin: false });
     gridState.gridOptions.length = 0;
     gridState.api.isDestroyed.mockClear();
     gridState.api.updateGridOptions.mockClear();
@@ -81,8 +105,10 @@ describe('RoleEntities', () => {
     expect(screen.getByText(`${TabsI18nKey.Entities}: 1`)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
+    await user.click(screen.getByText(RolesI18nKey.AddModels));
 
     expect(screen.getByRole('region', { name: 'add models' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'add applications' })).toBeNull();
 
     await user.click(screen.getByRole('button', { name: 'Apply models' }));
 
@@ -97,8 +123,87 @@ describe('RoleEntities', () => {
     );
   });
 
+  test('offers both add actions in the dropdown', async () => {
+    const user = userEvent.setup();
+
+    render(<RoleEntities selectedRole={role()} models={models} isSkipRefresh onChangeRole={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
+
+    expect(screen.getByText(RolesI18nKey.AddModels)).toBeInTheDocument();
+    expect(screen.getByText(RolesI18nKey.AddApplications)).toBeInTheDocument();
+  });
+
+  test('adds applications keyed by their root and closes the popup', async () => {
+    const user = userEvent.setup();
+    const onChangeRole = vi.fn();
+
+    render(
+      <RoleEntities
+        selectedRole={role({ modelA: { minute: 1 } })}
+        models={models}
+        isSkipRefresh
+        onChangeRole={onChangeRole}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
+    await user.click(screen.getByText(RolesI18nKey.AddApplications));
+
+    expect(screen.getByRole('region', { name: 'add applications' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'add models' })).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'Apply applications' }));
+
+    expect(onChangeRole).toHaveBeenCalledWith(
+      expect.objectContaining({
+        limits: {
+          modelA: { minute: 1 },
+          'applications/public/team/app/1.0': {},
+          platformApp: {},
+          fileApp: {},
+        },
+      }),
+    );
+    expect(screen.queryByRole('region', { name: 'add applications' })).toBeNull();
+  });
+
+  test('skips an application whose key is already attached and keeps its limits', async () => {
+    const user = userEvent.setup();
+    const onChangeRole = vi.fn();
+
+    render(
+      <RoleEntities
+        selectedRole={role({ existing: { minute: 5 } })}
+        models={models}
+        isSkipRefresh
+        onChangeRole={onChangeRole}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
+    await user.click(screen.getByText(RolesI18nKey.AddApplications));
+    await user.click(screen.getByRole('button', { name: 'Apply existing application' }));
+
+    expect(onChangeRole).toHaveBeenCalledWith(expect.objectContaining({ limits: { existing: { minute: 5 } } }));
+  });
+
+  test('closes the applications popup without changing the role', async () => {
+    const user = userEvent.setup();
+    const onChangeRole = vi.fn();
+
+    render(<RoleEntities selectedRole={role()} models={models} isSkipRefresh onChangeRole={onChangeRole} />);
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Add }));
+    await user.click(screen.getByText(RolesI18nKey.AddApplications));
+    await user.click(screen.getByRole('button', { name: 'Close applications' }));
+
+    expect(screen.queryByRole('region', { name: 'add applications' })).toBeNull();
+    expect(onChangeRole).not.toHaveBeenCalled();
+  });
+
   test('does not offer add or remove controls to a read-only admin', () => {
-    gridState.isReadOnly = true;
+    appContextMock.set({ isReadOnlyAdmin: true });
 
     render(<RoleEntities selectedRole={role({ modelA: {} })} models={models} isSkipRefresh onChangeRole={vi.fn()} />);
 

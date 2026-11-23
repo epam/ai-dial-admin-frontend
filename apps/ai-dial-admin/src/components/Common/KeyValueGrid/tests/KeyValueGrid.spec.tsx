@@ -20,6 +20,43 @@ describe('KeyValueGrid', () => {
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Value)).toBeInTheDocument();
   });
 
+  test('disables deletion of the only blank row', async () => {
+    const user = userEvent.setup();
+    render(<KeyValueGrid value={{}} onChange={mockOnChange} />);
+
+    const deleteButton = screen.getByRole('button', { name: 'Buttons.Delete' });
+    expect(deleteButton).toBeDisabled();
+    await user.click(deleteButton);
+    expect(mockOnChange).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    [EntityPlaceholdersI18nKey.Key, 'header'],
+    [EntityPlaceholdersI18nKey.Value, 'value'],
+  ])('allows deletion of a partial row with input in %s', async (placeholder, value) => {
+    const user = userEvent.setup();
+    render(<KeyValueGrid value={{}} onChange={mockOnChange} />);
+
+    await user.type(screen.getByPlaceholderText(placeholder), value);
+    const deleteButton = screen.getByRole('button', { name: 'Buttons.Delete' });
+    expect(deleteButton).toBeEnabled();
+    await user.click(deleteButton);
+    expect(mockOnChange).toHaveBeenLastCalledWith({});
+    expect(screen.getByRole('button', { name: 'Buttons.Delete' })).toBeDisabled();
+  });
+
+  test('allows deletion of a blank row when multiple rows exist', async () => {
+    const user = userEvent.setup();
+    render(<KeyValueGrid value={{}} onChange={mockOnChange} />);
+
+    await user.click(screen.getByRole('button', { name: 'Buttons.Add' }));
+    const deleteButtons = screen.getAllByRole('button', { name: 'Buttons.Delete' });
+    expect(deleteButtons[0]).toBeEnabled();
+    expect(deleteButtons[1]).toBeEnabled();
+    await user.click(deleteButtons[0]);
+    expect(screen.getByRole('button', { name: 'Buttons.Delete' })).toBeDisabled();
+  });
+
   test('renders an input row per entry, with key/value populated', () => {
     render(<KeyValueGrid value={{ 'x-dial-cache-policy': 'cache-priority' }} onChange={mockOnChange} />);
 

@@ -52,6 +52,21 @@ describe('ToolsetAssetProperties', () => {
     expect(screen.queryByRole('textbox', { name: /EntityFields.version/ })).toBeNull();
   });
 
+  test.each([
+    ['missing', undefined],
+    ['empty', ''],
+  ])('does not render the read-only Version when it is %s', (_case, version) => {
+    const toolset = {
+      ...baseToolset,
+      _metadata: { name: 'toolset-1', path: 'public/toolset-1', folderId: 'public/', author: 'Maintainer' },
+      version,
+    } as DialToolsetResource;
+    render(<ToolsetAssetProperties selectedToolset={toolset} onChange={vi.fn()} />);
+
+    expect(screen.queryByText(EntityFieldsI18nKey.version)).toBeNull();
+    expect(screen.getByText(EntityFieldsI18nKey.author)).toBeInTheDocument();
+  });
+
   test('edits and clears display version without changing path identity', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

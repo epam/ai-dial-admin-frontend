@@ -23,7 +23,8 @@ Things that cost time or fail silently if you don't know them:
   memory), not failed by a test.
 - **Two typecheck gates, both blocking, both at zero.** `npm run typecheck`
   (`tsc -p tsconfig.app.json`) covers app source; `npm run typecheck:specs`
-  (`tsc -p tsconfig.spec.json`) covers `*.spec.ts(x)` plus `test-setup.tsx`. Both run in
+  (`tsc -p tsconfig.spec.json`) covers `*.spec.ts(x)` plus `test-setup.tsx`, `test-reset.ts`, `test-models.ts`
+  and `test-mocks/`. Both run in
   `.husky/pre-commit` and in the blocking CI `typecheck` job. A green test run still says nothing about
   types — vitest strips them through esbuild and eslint ignores spec files — so the spec project is the
   only thing that catches a fixture drifting from its production type. Keep it at zero: the 726 errors it
@@ -33,6 +34,11 @@ Things that cost time or fail silently if you don't know them:
   not inline in a spec.
 - **`console.error` / `console.warn` are silenced globally in tests**, so React warnings never surface
   in output.
+- **Test files share one environment per worker (`isolate: false`), in a shuffled order.** `test-reset.ts`
+  gives each file fresh modules, an empty page and empty storages; anything else a spec changes — a global, an
+  env variable, a controlled module's mock — must go through Vitest or a `test-mocks/` controller, or it leaks into
+  the next file. `.claude/rules/testing.md` §10 has the rules, and `npm run lint:specs` enforces them. A test that
+  fails only in some orders is a leak: re-run it with the printed seed, don't retry it green.
 - **The `.cursor/rules` and `.github/instructions` entries are generated from `.claude/` sources** —
   `scripts/agent-mirrors.mjs` maps each one. Edit only the `.claude` file; pre-commit regenerates and
   stages the mirrors, `npm run sync:agent-mirrors` does it by hand, and `npm run validate:agent-docs`
@@ -43,10 +49,10 @@ Things that cost time or fail silently if you don't know them:
   it as a default project skills location, so both see the canonical files. The `openspec-*` entries
   under `.cursor/skills` and `.github/skills` are different — the openspec CLI generates a distinct
   variant per tool and owns them.
-- **Analytics is a root index plus eleven sub-capabilities** under `openspec/specs/analytics/` —
-  `query-builder`, `query-viewer`, `saved-queries`, `tables`, `sessions-listing`,
+- **Analytics is a root index plus fourteen sub-capabilities** under `openspec/specs/analytics/` —
+  `query-builder`, `query-viewer`, `saved-queries`, `source-panel`, `tables`, `sessions-source`, `sessions-listing`,
   `session-trace-listing`, `session-trace-detail`, `pipelines`, `dashboards`, `custom-dashboards`,
-  `config-transfer`. Address one as
+  `config-transfer`, `app-routes`. Address one as
   `analytics/<sub>`. `analytics/spec.md` is the index: it carries only what every Analytics page
   shares, plus a routing table naming what each sub-capability answers — add a row when you add one.
   Never create a top-level `analytics-*` spec folder.
@@ -76,7 +82,7 @@ Things that cost time or fail silently if you don't know them:
 - What a capability is specified to do → `openspec/specs/<capability>/spec.md` (`openspec list --specs`
   to find it). Why it was built that way → the archived change under `openspec/changes/archive/`;
   `proposal.md` holds the alternatives, `design.md` the accepted tradeoff.
-- Which commit/PR area owns a set of files → `.claude/reference/areas.md`
+- Which commit/PR area owns a set of files → `docs/areas.md`
 - What ui-kit offers and its real props → the `ai-dial-ui-kit` MCP server (`searchEntity`,
   `getEntityDetails`, `getMigrationGuides`), not a grep through `node_modules`
 

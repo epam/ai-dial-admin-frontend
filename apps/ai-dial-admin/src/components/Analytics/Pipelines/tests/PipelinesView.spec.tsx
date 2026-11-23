@@ -1,8 +1,10 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { deletePipeline, getPipelines } from '@/src/app/[lang]/pipelines/actions';
+import { pipelineDetailHref } from '@/src/components/Analytics/Pipelines/Common/utils';
 import PipelinesView from '@/src/components/Analytics/Pipelines/PipelinesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { PIPELINES_NO_RUNTIME_STORAGE_KEY } from '@/src/constants/analytics/pipelines';
@@ -11,8 +13,6 @@ import { ActionMenuOperationI18nKey, AnalyticsPipelinesI18nKey, ButtonsI18nKey }
 import { PipelineListItem, TriggerKind, PipelineKind, TransformType } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
@@ -21,10 +21,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   };
 });
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification }),
-}));
+const { showNotification } = notificationMock;
 
 interface MockActionItem {
   id: string;
@@ -38,23 +35,30 @@ interface MockColDef {
   hide?: boolean;
   sortable?: boolean;
   valueGetter?: (params: { data: PipelineListItem }) => unknown;
-  cellRendererParams?: { items?: MockActionItem[] };
+  cellRendererParams?: { items?: MockActionItem[]; getHref?: (row?: PipelineListItem) => string | undefined };
 }
+
+let lastPipelineColumns: MockColDef[] = [];
+let lastPipelineGetHref: ((row?: PipelineListItem) => string | undefined) | undefined;
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({
     rowData,
     columnDefs,
+    getHref,
     storageKey,
     showColumnsPanel,
     toggleColumnsPanel,
   }: {
     rowData?: PipelineListItem[];
     columnDefs?: MockColDef[];
+    getHref?: (row?: PipelineListItem) => string | undefined;
     storageKey?: string;
     showColumnsPanel?: boolean;
     toggleColumnsPanel?: () => void;
   }) => {
+    lastPipelineColumns = columnDefs ?? [];
+    lastPipelineGetHref = getHref;
     const items = columnDefs?.find((c) => c.field === ACTIONS_COLUMN_CEL_ID)?.cellRendererParams?.items ?? [];
     const versionColumn = columnDefs?.find((c) => c.colId === 'versionColumn');
     const triggerColumn = columnDefs?.find((c) => c.colId === 'trigger');
@@ -148,7 +152,7 @@ describe('Pipelines :: PipelinesView', () => {
     await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Upstream unavailable',
+          title: 'AnalyticsPipelines.PipelinesLoadFailed',
           description: 'registry timed out',
           requestId: 'trace-1',
         }),
@@ -158,7 +162,7 @@ describe('Pipelines :: PipelinesView', () => {
     expect(screen.getByText('rows: 0')).toBeInTheDocument();
   });
 
-  test('falls back to its own title when the seeded failure carries no header', async () => {
+  test('reports a seeded failure without a header under its own title', async () => {
     render(<PipelinesView initialPipelines={[]} loadFailure={{}} />);
 
     await vi.waitFor(() =>
@@ -173,6 +177,14 @@ describe('Pipelines :: PipelinesView', () => {
 
     await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
     expect(showNotification).toHaveBeenCalledOnce();
+  });
+
+  test('links the pipeline name to its detail page', () => {
+    render(<PipelinesView initialPipelines={[rule()]} />);
+
+    const nameColumn = lastPipelineColumns.find((c) => c.colId === 'name');
+    expect(nameColumn?.cellRendererParams?.getHref?.(rule())).toBe(pipelineDetailHref('turn-feedback-live'));
+    expect(lastPipelineGetHref?.(rule())).toBe(pipelineDetailHref('turn-feedback-live'));
   });
 
   test('renders the seeded rules and the specified columns', () => {
@@ -314,7 +326,10 @@ describe('Pipelines :: PipelinesView', () => {
 
     await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'rule_validation_failed', description: 'the rule is referenced elsewhere' }),
+        expect.objectContaining({
+          title: 'AnalyticsPipelines.ActionFailed',
+          description: 'the rule is referenced elsewhere',
+        }),
       ),
     );
     expect(screen.getByText('rows: 1')).toBeInTheDocument();
@@ -337,7 +352,7 @@ describe('Pipelines :: PipelinesView', () => {
     await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Upstream unavailable',
+          title: AnalyticsPipelinesI18nKey.PipelinesLoadFailed,
           description: 'registry timed out',
           requestId: 'trace-2',
         }),

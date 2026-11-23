@@ -7,10 +7,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TabsContent from '../TabsContent';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 const { onRenderEntityAudit } = vi.hoisted(() => ({
   onRenderEntityAudit: vi.fn<(props: { entity: AssetModel; view: ApplicationRoute }) => void>(),
 }));

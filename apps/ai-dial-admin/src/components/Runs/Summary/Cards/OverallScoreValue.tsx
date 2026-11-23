@@ -2,6 +2,8 @@
 
 import { FC } from 'react';
 
+import classNames from 'classnames';
+
 import { Tooltip } from '@epam/ai-dial-ui-kit';
 
 import { ChevronBadge } from '@/src/components/Common/ChevronBadge/ChevronBadge';
@@ -16,7 +18,7 @@ interface Props {
   score: number | null;
   /** The run's snapshotted threshold; no glyph and no value tooltip without one. */
   threshold?: number | null;
-  /** Renders the info control right after the score (compare); otherwise the card places it itself. */
+  /** Renders only the info control, at the end of the score row (compare); otherwise the card places the labelled method itself. */
   isInfoInline?: boolean;
   /** The method the info tooltip describes; the control is omitted when the run records none. */
   scoreMethod?: OverallScoreConfig | null;
@@ -38,7 +40,7 @@ const OverallScoreValue: FC<Props> = ({ score, threshold, isInfoInline, scoreMet
     threshold != null ? t(thresholdMessageKey, { threshold: formatThreshold(threshold) }) : undefined;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={classNames('flex items-center gap-2', { 'w-full': isInfoInline })}>
       {threshold != null && <ChevronBadge isPositive={isAbove} />}
       <Tooltip tooltip={thresholdMessage} hideTooltip={!thresholdMessage} asChild>
         <button type="button" className="cursor-default dial-display2-text text-primary">
@@ -46,7 +48,11 @@ const OverallScoreValue: FC<Props> = ({ score, threshold, isInfoInline, scoreMet
           {thresholdMessage && <span className="sr-only">{thresholdMessage}</span>}
         </button>
       </Tooltip>
-      {isInfoInline && scoreMethod && <OverallScoreInfo scoreMethod={scoreMethod} metricCount={metricCount} />}
+      {isInfoInline && scoreMethod && (
+        <span className="ml-auto">
+          <OverallScoreInfo scoreMethod={scoreMethod} metricCount={metricCount} />
+        </span>
+      )}
     </div>
   );
 };

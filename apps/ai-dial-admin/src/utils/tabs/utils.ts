@@ -1,7 +1,7 @@
 import { TabItem, TabStatus } from '@epam/ai-dial-ui-kit';
 
 import { ALLOW_ALL_DOMAINS } from '@/src/components/Deployments/Common/Whitelists/Whitelists';
-import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { SystemPropertiesI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
@@ -13,10 +13,13 @@ export enum EntityViewTab {
   Features = 'Features',
   Parameters = 'Parameters',
   Roles = 'Roles',
+  Target = 'Target',
   Interceptors = 'Interceptors',
   GlobalInterceptors = 'GlobalInterceptors',
   RateLimitSchedule = 'RateLimitSchedule',
   SpendingLimits = 'SpendingLimits',
+  SessionsSource = 'SessionsSource',
+  EnrichmentRoutes = 'EnrichmentRoutes',
   ErrorCodes = 'ErrorCodes',
   Keys = 'Keys',
   Entities = 'Entities',
@@ -59,6 +62,7 @@ export enum EntityViewTab {
   Summary = 'Summary',
   ExtractionResult = 'ExtractionResult',
   Trends = 'Trends',
+  EvalTrends = 'EvalTrends',
   Permissions = 'Permissions',
   Body = 'Body',
   Headers = 'Headers',
@@ -107,6 +111,11 @@ export const rolesTab = (t: (key: string) => string, warning?: boolean) => ({
   ...getTabStatusProps(t, warning ? TabStatus.Warning : undefined),
 });
 
+export const targetTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Target,
+  label: t(TabsI18nKey.Target),
+});
+
 export const interceptorsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Interceptors,
   label: t(TabsI18nKey.Interceptors),
@@ -125,6 +134,16 @@ export const rateLimitScheduleTab = (t: (key: string) => string) => ({
 export const spendingLimitsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.SpendingLimits,
   label: t(TabsI18nKey.SpendingLimits),
+});
+
+export const sessionsSourceTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.SessionsSource,
+  label: t(SystemPropertiesI18nKey.SessionsSourceTitle),
+});
+
+export const enrichmentRoutesTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.EnrichmentRoutes,
+  label: t(SystemPropertiesI18nKey.EnrichmentRoutesTitle),
 });
 
 export const parametersTab = (t: (key: string) => string) => ({
@@ -335,6 +354,11 @@ export const trendsTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Trends),
 });
 
+export const evalTrendsTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.EvalTrends,
+  label: t(TabsI18nKey.EvalTrends),
+});
+
 export const runsTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Runs,
   label: t(TabsI18nKey.Runs),
@@ -424,6 +448,7 @@ export const getApplicationTabs = (t: (key: string) => string, featureFlags?: Fe
     rolesTab(t),
     interceptorsTab(t),
     ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : []),
+    ...(featureFlags?.evaluationEnabled ? [evalTrendsTab(t)] : []),
   ];
 };
 
@@ -434,6 +459,7 @@ export const getModelsTabs = (t: (key: string) => string, featureFlags?: Feature
     rolesTab(t),
     interceptorsTab(t),
     ...(featureFlags?.adminApiEnabled ? [auditTab(t)] : []),
+    ...(featureFlags?.evaluationEnabled ? [evalTrendsTab(t)] : []),
   ];
 };
 
@@ -491,11 +517,15 @@ export const getUsageLogTabs = (t: (key: string) => string): TabItem[] => {
   return [tracesTab(t), conversationsTab(t), mcpTab(t), routesTab(t)];
 };
 
+const hasCoreAssetAudit = (featureFlags?: Partial<FeatureFlags>): boolean =>
+  Boolean((featureFlags?.dashboardEnabled && featureFlags?.adminApiEnabled) || featureFlags?.analyticsUsageEnabled);
+
 export const getTabsForAsset = (
   t: (key: string) => string,
   view: ApplicationRoute,
-  featureFlags?: FeatureFlags,
+  featureFlags?: Partial<FeatureFlags>,
   rolesWarning?: boolean,
+  hasParameters?: boolean,
 ): TabItem[] => {
   if (view === ApplicationRoute.AssetsApplications) {
     return [
@@ -507,24 +537,43 @@ export const getTabsForAsset = (
       appRouteTab(t),
       // Its only Audit entry is the usage dashboard (`getAuditTabs`), so the tab exists behind that flag.
       ...(featureFlags?.analyticsUsageEnabled ? [auditTab(t)] : []),
+      ...(featureFlags?.evaluationEnabled ? [evalTrendsTab(t)] : []),
     ];
   }
   if (view === ApplicationRoute.AssetsToolsets) {
     const tabs = [propertiesTab(t), toolsTab(t), catalogTab(t)];
-    if (featureFlags?.dashboardEnabled && featureFlags?.adminApiEnabled) {
+    if (hasCoreAssetAudit(featureFlags)) {
       tabs.push(auditTab(t));
     }
     return tabs;
+  }
+  // An alias has no features, parameters or catalog of its own — they are its target's — so only what it
+  // is listed as, what it forwards to and who may use it.
+  if (view === ApplicationRoute.AssetsAliases) {
+    return [propertiesTab(t), targetTab(t), rolesTab(t, rolesWarning)];
   }
   if (view === ApplicationRoute.Conversations) {
     return [propertiesTab(t), conversationTab(t)];
   }
   if (view === ApplicationRoute.PlatformModels) {
     const tabs = [propertiesTab(t), featuresTab(t), catalogTab(t), rolesTab(t, rolesWarning), interceptorsTab(t)];
-    if (featureFlags?.dashboardEnabled && featureFlags?.adminApiEnabled) {
+    if (hasCoreAssetAudit(featureFlags)) {
       tabs.push(auditTab(t));
     }
+    if (featureFlags?.evaluationEnabled) {
+      tabs.push(evalTrendsTab(t));
+    }
     return tabs;
+  }
+  if (view === ApplicationRoute.PlatformRouters) {
+    // `Parameters` edits `applicationProperties` against a picked app-type schema, or embeds the router's editor UI.
+    return [
+      propertiesTab(t),
+      featuresTab(t),
+      ...(hasParameters ? [parametersTab(t)] : []),
+      catalogTab(t),
+      rolesTab(t, rolesWarning),
+    ];
   }
   if (view === ApplicationRoute.PlatformAppRunners) {
     return [propertiesTab(t), featuresTab(t), parametersTab(t), appRouteTab(t), interceptorsTab(t)];
@@ -567,11 +616,14 @@ export const getAuditTabs = (
     return [dashboardTab(t)];
   }
 
-  if (featureFlags.dashboardEnabled) {
-    if (view === ApplicationRoute.AssetsToolsets || view === ApplicationRoute.PlatformModels) {
-      return [dashboardTab(t), tracesTab(t)];
-    }
+  if (
+    (view === ApplicationRoute.AssetsToolsets || view === ApplicationRoute.PlatformModels) &&
+    (featureFlags.dashboardEnabled || featureFlags.analyticsUsageEnabled)
+  ) {
+    return [dashboardTab(t), tracesTab(t)];
+  }
 
+  if (featureFlags.dashboardEnabled) {
     if (view === ApplicationRoute.Models || view === ApplicationRoute.Applications) {
       tabs.push(dashboardTab(t), tracesTab(t), conversationsTab(t));
     } else if (view === ApplicationRoute.Toolsets) {
@@ -626,8 +678,9 @@ export const getDeploymentsViewTabs = (
   ];
 };
 
-export const getSystemPropertiesTabs = (t: (key: string) => string): TabItem[] => {
-  return [globalInterceptorsTab(t), rateLimitScheduleTab(t), spendingLimitsTab(t)];
+export const getSystemPropertiesTabs = (t: (key: string) => string, isAnalyticsEnabled?: boolean): TabItem[] => {
+  const tabs = [globalInterceptorsTab(t), rateLimitScheduleTab(t), spendingLimitsTab(t)];
+  return isAnalyticsEnabled ? [...tabs, sessionsSourceTab(t), enrichmentRoutesTab(t)] : tabs;
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabItem[] => {

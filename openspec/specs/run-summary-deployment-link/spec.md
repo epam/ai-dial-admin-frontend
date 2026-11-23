@@ -119,7 +119,9 @@ On the Test Suite view Properties tab (non-modal), the Open Application control 
 `testSuite.deploymentRef.type` when present and SHALL NOT call unfiltered `GET /api/v1/deployments`
 or the admin catalog list for that control. When `type` is missing and `id` is present, the system
 SHALL resolve type with one `GET /api/v1/deployments/all/{id}` call. Navigation SHALL use type plus
-the `applications/` id-prefix fallback (empty catalog). The Application picker SHALL remain usable
+the `applications/` id-prefix fallback (empty catalog). A bare `dial-application` id SHALL open
+Assets Applications when Core has a platform-bucket application of that name, and Entities
+Applications only when that lookup misses. The Application picker SHALL remain usable
 without a Properties-level deployments list (CreateTestSuite loads its own data).
 
 #### Scenario: Properties Open with stored type
@@ -129,6 +131,13 @@ without a Properties-level deployments list (CreateTestSuite loads its own data)
 - **THEN** the system SHALL NOT call unfiltered deployments list or admin catalog for Open
 - **AND** SHALL NOT call `GET /api/v1/deployments/all/{id}`
 - **AND** the Open control SHALL navigate using the stored type
+
+#### Scenario: Properties Open for a platform application
+
+- **WHEN** the user views Test Suite Properties for a suite whose `deploymentRef` is a bare
+  `dial-application` id and Core has a platform-bucket application with that name
+- **THEN** the Open control SHALL navigate to that application's Assets Applications page
+- **AND** SHALL NOT navigate to Entities Applications
 
 #### Scenario: Properties Open with missing type
 
@@ -176,20 +185,6 @@ one call: `GET /api/v1/deployments/{type}/{id}` when `deploymentRef.type` is pre
 - **THEN** the system SHALL call `GET /api/v1/deployments/all/{id}` once
 - **AND** SHALL use the returned deployment as `selectedApplication`
 
-### Requirement: Conversations agent link uses eval by-id
-
-On Assets Conversations Properties, the agent external link SHALL resolve the conversation’s
-`model.id` with one `GET /api/v1/deployments/all/{id}` call and SHALL NOT call the admin catalog
-`GET /api/v1/deployments` list for that link. Navigation SHALL use the response `$type` and
-deployment id (plus `applications/` prefix fallback).
-
-#### Scenario: Conversations agent link from by-id
-
-- **WHEN** the user views a conversation whose `model.id` is set
-- **THEN** the system SHALL issue one `GET /api/v1/deployments/all/{model.id}` request
-- **AND** SHALL NOT call admin `getAllDeployments` for the agent link
-- **AND** the external-link control SHALL use the returned `$type` to build the target URL
-
 ### Requirement: Compare Summary shows the test suite of each run
 
 Compare Summary SHALL show a single Test Suite field when both runs belong to the same test suite, and
@@ -212,3 +207,49 @@ unavailable.
 
 - **WHEN** a run's suite name has not loaded
 - **THEN** that run's Test Suite entry shows the suite's id
+
+### Requirement: Conversations agent link uses the Core deployment lookup
+
+On Assets Conversations Properties, the agent external link SHALL resolve the conversation’s
+`model.id` with one DIAL Core `GET /v1/deployments/{model.id}` call, sending `model.id` as Core issued it
+(not re-encoded), and SHALL NOT call any deployments list for that link. Navigation SHALL use the
+response's `object` (`model` or `application`) and the conversation's `model.id`. An `applications/`-prefixed
+id SHALL link to Assets Applications with the prefix stripped; an unprefixed application id SHALL link to
+Applications. A model deployment SHALL wait for the Catalog-vs-Entities route probe before the link is
+offered, as test-suite links do, and SHALL show the loading state until the probe has resolved. A response
+with no mapped `object` SHALL link as the catalog-shaped record does, and a lookup that finds nothing SHALL
+offer no link.
+
+#### Scenario: Conversations agent link from by-id
+
+- **WHEN** the user views a conversation whose `model.id` is set
+- **THEN** the system SHALL issue one `GET /v1/deployments/{model.id}` request to DIAL Core
+- **AND** SHALL NOT call a deployments list for the agent link
+- **AND** the external-link control SHALL use the response's `object` to build the target URL
+
+#### Scenario: An encoded application id is looked up as is
+
+- **WHEN** the conversation's `model.id` is `applications/bucket/My%20App`
+- **THEN** the request path is `/v1/deployments/applications/bucket/My%20App`, with nothing encoded twice
+
+#### Scenario: A model deployment waits for the route probe
+
+- **WHEN** the lookup answers `object: "model"`
+- **THEN** the agent shows its loading state, with no link, until the Catalog-vs-Entities probe has resolved
+- **AND** the link then points at the route the probe picked
+
+#### Scenario: A custom application links to Assets Applications
+
+- **WHEN** the lookup answers `object: "application"` for `model.id` `applications/bucket/app`
+- **THEN** the link points at Assets Applications with path `bucket/app`
+
+#### Scenario: A config-defined application links to Applications
+
+- **WHEN** the lookup answers `object: "application"` for an unprefixed `model.id` such as `my-app`
+- **THEN** the link points at Applications for `my-app`, whether or not Core's `reference` equals the id
+
+#### Scenario: An unknown deployment offers no link
+
+- **WHEN** the lookup finds no deployment for `model.id`
+- **THEN** the external-link control is not offered
+

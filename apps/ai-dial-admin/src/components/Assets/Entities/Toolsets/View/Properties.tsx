@@ -58,12 +58,11 @@ const ToolsetAssetProperties: FC<Props> = ({
   const folderId = selectedToolset.folderId ?? selectedToolset._metadata?.folderId ?? '';
   const resourceName = selectedToolset.name || selectedToolset._metadata?.name || '';
 
-  const headerPrefix = !isPlatformBucketPath(folderId) ? (
-    <LabelledText
-      label={t(EntityFieldsI18nKey.version)}
-      text={selectedToolset._metadata?.version ?? selectedToolset.version ?? ''}
-    />
-  ) : undefined;
+  const version = selectedToolset._metadata?.version ?? selectedToolset.version ?? '';
+  const headerPrefix =
+    !isPlatformBucketPath(folderId) && version ? (
+      <LabelledText label={t(EntityFieldsI18nKey.version)} text={version} />
+    ) : undefined;
 
   const headerPostfix = useMemo(() => {
     return (

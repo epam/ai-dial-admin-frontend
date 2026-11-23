@@ -26,6 +26,19 @@ const assetRunner = {
   updatedAt: '1760000000000',
 } as ResourceInfo;
 
+describe('buildAppRunnerOptions — router schemas', () => {
+  it('lists a schema that declares no endpoints, since a router schema carries only properties', () => {
+    const routerSchema = {
+      $id: 'https://dial.test/router-type',
+      properties: { tier: { type: 'string' } },
+    } as unknown as DialApplicationScheme;
+
+    expect(buildAppRunnerOptions([routerSchema], []).map((option) => option.$id)).toEqual([
+      'https://dial.test/router-type',
+    ]);
+  });
+});
+
 describe('buildAppRunnerOptions', () => {
   it('references an entity runner by its bare $id', () => {
     const [option] = buildAppRunnerOptions([entityRunner], []);

@@ -2,21 +2,55 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, datasetsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
+import { assetApi, datasetsApi, runsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
+import {
+  buildTestSuitesForDeploymentQuery,
+  EVAL_TRENDS_SUITES_PAGE_SIZE,
+  toStoredDeploymentId,
+} from '@/src/components/EvalTrendsTab/build-suites-for-deployment-query';
+import {
+  chunkSuiteIds,
+  combineSuitePassRateSummaries,
+  EMPTY_SUITE_PASS_RATE_SUMMARY,
+  SuitePassRateSummary,
+} from '@/src/components/EvalTrendsTab/suite-pass-rate';
+import {
+  loadSuiteRecentRunAverages,
+  SuiteRecentRunAverage,
+} from '@/src/components/EvalTrendsTab/suite-recent-run-averages';
+import { collectEvaluationPages } from '@/src/components/ListView/Evaluation/utils/collect-evaluation-pages';
 import {
   buildTestSuitesQuery,
   mapTestSuitesQueryResult,
 } from '@/src/components/ListView/Evaluation/utils/test-suites-query';
-import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { DialRouteResource } from '@/src/models/dial/resource';
 import { DatasetVisibility } from '@/src/models/evaluation/dataset';
-import { TestSuite, TryOutVariablesByRequest } from '@/src/models/evaluation/test-suite';
+import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Metric } from '@/src/models/evaluation/metric';
+import {
+  DeploymentPeriodCosts,
+  EMPTY_DEPLOYMENT_COSTS,
+  RunTestSuiteParams,
+  SuitePassRateResponse,
+} from '@/src/models/evaluation/run';
+import { TestSuite, TryOutVariablesByRequest } from '@/src/models/evaluation/test-suite';
 import { FilterDto, SortDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+
+const mapSuitePassRateResponse = (response: SuitePassRateResponse | null): SuitePassRateSummary => {
+  if (!response) {
+    return { ...EMPTY_SUITE_PASS_RATE_SUMMARY };
+  }
+  return {
+    passRate: response.passRate ?? null,
+    previousPassRate: response.previousPassRate ?? null,
+    suiteCount: response.suiteCount,
+    previousSuiteCount: response.previousSuiteCount,
+  };
+};
 
 export async function removeTestSuite(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -52,9 +86,14 @@ export async function updateTestSuite(suite: TestSuite, etag: string) {
   return testSuitesApi.updateTestSuite(suite, etag, token);
 }
 
-export async function runTestSuite(id?: string, numberOfRuns?: number | string) {
+export async function runTestSuite(id?: string, params?: RunTestSuiteParams) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.runTestSuite(token, id, numberOfRuns);
+  return testSuitesApi.runTestSuite(token, id, params);
+}
+
+export async function getTestSuiteRunConfig() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.getTestSuiteRunConfig(token);
 }
 
 export async function getTestSuites(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
@@ -62,6 +101,73 @@ export async function getTestSuites(page: number, size: number, sorts: SortDto[]
   const query = buildTestSuitesQuery(page, size, sorts, filters);
   const result = await structuredQueryApi.execute(query, token);
   return mapTestSuitesQueryResult(result, page, size);
+}
+
+/** All test suites targeting a deployment or MCP deployment id (entity `name`), name-sorted. */
+export async function getTestSuitesForDeployment(deploymentId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+
+  return collectEvaluationPages(async (page) => {
+    const result = await structuredQueryApi.execute(
+      buildTestSuitesForDeploymentQuery(toStoredDeploymentId(deploymentId), page, EVAL_TRENDS_SUITES_PAGE_SIZE),
+      token,
+    );
+    return mapTestSuitesQueryResult(result, page, EVAL_TRENDS_SUITES_PAGE_SIZE);
+  });
+}
+
+/**
+ * Eval cost totals for a deployment over the current month-to-date window and the matching
+ * previous-month span. A failed GET for a window is treated as no usage for that window so the
+ * card can show an em dash (same as a successful empty body).
+ */
+export async function getDeploymentPeriodCosts(
+  deploymentId: string,
+  currentFromMs: number,
+  currentToMs: number,
+  previousFromMs: number,
+  previousToMs: number,
+): Promise<DeploymentPeriodCosts> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const [current, previous] = await Promise.all([
+    runsApi.getDeploymentCosts(deploymentId, currentFromMs, currentToMs, token),
+    runsApi.getDeploymentCosts(deploymentId, previousFromMs, previousToMs, token),
+  ]);
+
+  return {
+    current: current ?? EMPTY_DEPLOYMENT_COSTS,
+    previous: previous ?? EMPTY_DEPLOYMENT_COSTS,
+  };
+}
+
+/** Per-suite averages of overall score and cost over the latest up-to-10 runs. */
+export async function getSuiteRecentRunAverages(suiteIds: string[]): Promise<SuiteRecentRunAverage[]> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return loadSuiteRecentRunAverages(suiteIds, (query) => structuredQueryApi.execute(query, token));
+}
+
+/**
+ * Mean latest-run and previous-run pass rates across the given suite ids.
+ * Batches at 100 ids and combines with a suite-weighted mean. An empty list skips the API.
+ * A null batch response fails the whole call so the card never shows a partial average.
+ */
+export async function getSuitePassRate(suiteIds: string[]): Promise<SuitePassRateSummary> {
+  const batches = chunkSuiteIds(suiteIds);
+  if (batches.length === 0) {
+    return { ...EMPTY_SUITE_PASS_RATE_SUMMARY };
+  }
+
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const summaries = await Promise.all(
+    batches.map(async (batch) => {
+      const response = await runsApi.getSuitePassRate({ suiteIds: batch }, token);
+      if (!response) {
+        throw new Error('Suite pass-rate request failed');
+      }
+      return mapSuitePassRateResponse(response);
+    }),
+  );
+  return combineSuitePassRateSummaries(summaries);
 }
 
 export async function getTestSuiteByName(name: string) {

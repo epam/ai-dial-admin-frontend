@@ -9,9 +9,7 @@ so the whole feature is opt-in behind `POLICIES_ENABLED`. Policies are read and 
 through the admin backend. They nest exactly one folder level, the cost object: a policy is global or
 belongs to one cost object. Core stays the validator; the client adds only shape checks and shows Core's own
 messages. Created by archiving change `add-platform-policies`.
-
 ## Requirements
-
 ### Requirement: POLICIES_ENABLED switches the policies feature on
 The system SHALL read the `POLICIES_ENABLED` environment variable through a single function and expose
 the result as `featureFlags.policiesEnabled`. The variable SHALL be off when unset or falsy per
@@ -53,38 +51,19 @@ when `featureFlags.policiesEnabled` is `true`.
 - **WHEN** `POLICIES_ENABLED` is off
 - **THEN** `Policies` is absent from the Governance group and the other Governance items are unchanged
 
-### Requirement: Policy list is a one-level folder tree of cost objects
-The system SHALL render the policy list on the shared asset list under the `platform` root, where root
-entries are global policies and each folder is a cost object holding that cost object's project policies.
-A cost-object folder exists in Core only while it holds a record, so the list SHALL NOT offer
-create-folder, rename-folder, or move-to-folder, and SHALL NOT allow a folder inside a folder.
-
-#### Scenario: Global and project policies are shown
-- **WHEN** a user opens `/platform-policies` and Core holds `daily-cap` and `team-a/team-cap`
-- **THEN** `daily-cap` is a root entry and `team-cap` is shown inside the `team-a` folder
-
-#### Scenario: Folder actions are not offered
-- **WHEN** a user opens the toolbar or row actions at the root or inside a cost-object folder
-- **THEN** no create-folder, rename-folder, or move action is offered
-
-#### Scenario: Read-only admin sees no mutating actions
-- **WHEN** a read-only admin opens the policy list
-- **THEN** no create, delete, bulk-delete, or duplicate action is offered
-
 ### Requirement: Policy list columns are metadata-only
-The system SHALL show name, author, created-at, and updated-at columns for policies, sourced from
-Core's resource metadata, and SHALL NOT fetch each row's content to populate the list.
+The system SHALL show name, cost object, author, created-at, and updated-at columns for policies, sourced
+from Core's resource metadata and the policy's path, and SHALL NOT fetch each row's content to populate the list.
 
 #### Scenario: Listing issues no per-row content request
 - **WHEN** the policy list loads
 - **THEN** only metadata requests are issued, with no content request per row
 
 ### Requirement: Policy create modal
-The system SHALL open a create modal from the list toolbar requesting the policy name, an optional
+The system SHALL open a create modal from the Create button requesting the policy name, an optional
 **Cost object**, and the budget fields Core requires on every write (priority, what the policy applies to,
 and a cost limit). A blank cost object SHALL create a global policy; a value SHALL create a project policy in
-the folder of that cost object. When the list is showing a cost-object folder the field SHALL be
-pre-filled with it. The name and the cost object SHALL follow Core's entity-name rule. After success the system
+the folder of that cost object. The name and the cost object SHALL follow Core's entity-name rule. After success the system
 SHALL show the existing success notification and navigate to the policy detail view.
 
 #### Scenario: Blank cost object makes a global policy
@@ -99,9 +78,9 @@ SHALL show the existing success notification and navigate to the policy detail v
 - **WHEN** the priority is empty or no cost window is set in the create modal
 - **THEN** Create is unavailable and the field shows its inline error
 
-#### Scenario: The current folder pre-fills the cost object
-- **WHEN** a user opens the create modal while the list shows the `team-a` folder
-- **THEN** Cost object shows `team-a`
+#### Scenario: Cost object starts blank
+- **WHEN** a user opens the create modal from the header
+- **THEN** Cost object is empty and editable
 
 #### Scenario: Invalid name blocks create
 - **WHEN** the name is empty or contains a character Core's entity-name rule rejects
@@ -200,30 +179,6 @@ and a bulk-delete action over selected policies.
 - **WHEN** a user bulk-deletes several policies and Core refuses one with 409
 - **THEN** deletion stops at that policy, those before it are deleted, and an error notification shows Core's message
 
-### Requirement: Deleting a cost object folder deletes its policies
-The system SHALL let a user delete a cost object folder from the policy list. Core keeps no marker for such a
-folder, which exists only while it holds a policy, so deleting it SHALL delete every policy under it, and the
-folder disappears with the last one. The system SHALL address the folder with a trailing slash when listing
-it, SHALL NOT offer to delete the root, and SHALL delete a policy selected next to the folder only once. A
-refusal from Core, such as a policy an assignment still references, SHALL be shown as an error notification
-with Core's message and SHALL stop the deletion at that policy.
-
-#### Scenario: Deleting a folder removes its policies and the folder
-- **WHEN** a user deletes the `team-a` folder that holds two policies and confirms
-- **THEN** both policies are deleted and `team-a` is no longer listed
-
-#### Scenario: A policy selected with its folder is deleted once
-- **WHEN** a user selects the `team-a` folder and one of its policies and confirms the delete
-- **THEN** the policy is deleted by the folder deletion alone and the delete reports success
-
-#### Scenario: The root cannot be deleted as a folder
-- **WHEN** a delete is requested for the platform root
-- **THEN** nothing is deleted and an error is returned
-
-#### Scenario: Core refuses a policy of the folder
-- **WHEN** Core answers 409 for a policy in the folder because an assignment references it
-- **THEN** an error notification shows Core's message and the deletion stops at that policy
-
 ### Requirement: Core validates a write; the client adds only shape checks
 The system SHALL send policy writes to Core and SHALL NOT re-implement Core's semantic rules
 (cost-object folder matching, priority ties, referenced-policy checks). The system SHALL render Core's
@@ -245,3 +200,53 @@ Core's config-file population for them.
 #### Scenario: No admin-backend request
 - **WHEN** a user lists, opens, saves, or deletes a policy
 - **THEN** no request is made to the admin backend
+
+### Requirement: Policy create modal presents Details and Subjects as steps
+
+The policy create modal SHALL present two steps through `Steps`: **Details** (the existing name, cost object, and
+budget fields) and **Subjects** (the subject rule list). The Details step footer SHALL offer Cancel and Next, with Next
+unavailable while the details are invalid. The Subjects step footer SHALL offer Back, Cancel, and Finish labeled
+**Create**, unavailable while the details or any subject rule is invalid. Values entered on Details SHALL survive going
+back from Subjects. Validation, the create call, the success notification, and navigation to the policy detail view
+SHALL be unchanged.
+
+#### Scenario: Both steps are visible
+
+- **WHEN** a user opens the policy create modal
+- **THEN** the modal shows the Details and Subjects steps with Details current
+
+#### Scenario: Next waits for valid details
+
+- **WHEN** the policy name or budget fields are invalid
+- **THEN** Next is unavailable and the Subjects step cannot be selected in the indicator
+
+#### Scenario: Create on the last step
+
+- **WHEN** the user is on the Subjects step with valid details and valid rules
+- **THEN** the footer shows Back, Cancel, and Create
+- **AND** Create writes the policy and opens its detail view
+
+#### Scenario: Going back keeps the entered details
+
+- **WHEN** the user moves from Subjects back to Details
+- **THEN** the previously entered values are still present
+
+### Requirement: Policy list is a flat grid with a cost-object column
+
+The system SHALL render the policy list as the Platform tab's flat grid: every policy is one row, global policies
+have an empty **Cost object** cell, and each project policy shows its cost object in the Cost object cell. Core keeps a
+cost-object folder only while it holds a record, so the list SHALL NOT render cost-object folders as rows or tree
+nodes, and SHALL NOT offer create-folder, rename-folder, move-to-folder or delete-folder.
+
+#### Scenario: Global and project policies are shown as rows
+- **WHEN** a user opens `/platform-policies` and Core holds `daily-cap` and `team-a/team-cap`
+- **THEN** two rows are shown, `daily-cap` with an empty Cost object cell and `team-cap` with `team-a` in its Cost object cell
+
+#### Scenario: Folder actions are not offered
+- **WHEN** a user opens the header or row actions
+- **THEN** no create-folder, rename-folder, move or delete-folder action is offered
+
+#### Scenario: Read-only admin sees no mutating actions
+- **WHEN** a read-only admin opens the policy list
+- **THEN** no create, delete, or duplicate action is offered
+

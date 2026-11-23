@@ -4,6 +4,8 @@ import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { ICellRendererParams } from 'ag-grid-community';
 import { FC } from 'react';
 
+import { sessionDetailHref } from '@/src/components/Analytics/SessionsTrace/utils';
+import EntityLinkCell from '@/src/components/Grid/CellRenderers/EntityLinkCell';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { SessionRow } from '@/src/models/analytics/sessions-trace';
 import { sessionTitle } from '@/src/utils/analytics/session-detail-fields';
@@ -17,14 +19,27 @@ const SessionCellRenderer: FC<ICellRendererParams<SessionRow>> = ({ data }) => {
   }
 
   const title = sessionTitle(data);
+  const href = sessionDetailHref(data.client_session_id);
 
   return (
     <div className="flex flex-col justify-center h-full min-w-0">
       <span className="text-primary dial-small-semi-text">
-        {title ? <EllipsisTooltip text={title} /> : UNAVAILABLE_VALUE}
+        {title ? (
+          <EntityLinkCell href={href}>
+            <EllipsisTooltip text={title} />
+          </EntityLinkCell>
+        ) : (
+          UNAVAILABLE_VALUE
+        )}
       </span>
       <span className="text-secondary dial-tiny-text">
-        <EllipsisTooltip text={data.client_session_id} />
+        {title ? (
+          <EllipsisTooltip text={data.client_session_id} />
+        ) : (
+          <EntityLinkCell href={href}>
+            <EllipsisTooltip text={data.client_session_id} />
+          </EntityLinkCell>
+        )}
       </span>
     </div>
   );

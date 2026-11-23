@@ -5,7 +5,7 @@ import { FC, useCallback } from 'react';
 import ComboTrendChart from '@/src/components/TestSuites/Trends/CostRuntime/ComboTrendChart';
 import { COMBO_TREND_LINE_HEX } from '@/src/components/TestSuites/Trends/constants';
 import { ComboTrendPoint } from '@/src/components/TestSuites/Trends/models';
-import { formatComboRuntimeSeconds } from '@/src/components/TestSuites/Trends/utils/format';
+import { formatRunDuration } from '@/src/components/Runs/utils/run-list-values';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -18,13 +18,8 @@ interface Props {
 const RuntimeTrendCard: FC<Props> = ({ points, isLoading, sourceKind }) => {
   const t = useI18n();
 
-  const formatValue = useCallback((value: number | null) => {
-    if (value == null || !Number.isFinite(value)) {
-      return '—';
-    }
-    return formatComboRuntimeSeconds(value);
-  }, []);
-  const formatTick = useCallback((value: number) => formatComboRuntimeSeconds(value), []);
+  const formatValue = useCallback((value: number | null) => formatRunDuration(value) ?? '—', []);
+  const formatTick = useCallback((value: number) => formatRunDuration(value) ?? '—', []);
 
   return (
     <ComboTrendChart

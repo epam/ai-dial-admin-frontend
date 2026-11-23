@@ -2,16 +2,13 @@ import { timeRangePredicates } from '@/src/components/Analytics/QueryBuilder/uti
 import {
   ARRAY_VALUE_PAGE_SIZE,
   CHAT_ID_SESSION_SOURCE,
-  SESSIONS_ENTITY,
   SESSION_FIELD_VALUE_COUNT_ALIAS,
   SESSION_FIELD_VALUE_LIMIT,
   SESSION_FIELD_VALUE_TYPE,
   SESSION_FILTER_QUERY_OPERATOR,
-  FEEDBACK_CANDIDATE_LIMIT,
-  FEEDBACK_ENTITY,
   OPTIONAL_DETAIL_SELECT_FIELDS,
-  OPTIONAL_FEEDBACK_FIELDS,
   RATING_COUNT_EXCLUSIVE_MIN,
+  SESSION_RATING_SELECT_FIELDS,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/sessions-trace';
 import {
@@ -27,7 +24,6 @@ import {
   SessionSortKey,
   SessionTotalsField,
   SessionsField,
-  FeedbackField,
   FeedbackFilter,
   ResponseRatingsField,
   SessionScope,
@@ -44,6 +40,7 @@ import {
   StructuredQuery,
 } from '@/src/models/analytics/query';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import { TimeRange } from '@/src/models/time-range';
 import {
   aggregateQuery,
@@ -61,7 +58,6 @@ import {
   inValues,
   isNull,
   le,
-  ne,
   offsetPage,
   or,
   predicate,
@@ -71,17 +67,47 @@ import {
 } from '@/src/utils/analytics/query-build';
 import { availableSelectFields, sessionFields } from '@/src/utils/analytics/session-column-catalog';
 import { toMillis } from '@/src/utils/analytics/session-formatting';
-import { insightColumnsOf } from '@/src/utils/analytics/session-insights';
+import { enrichmentPanelsOf } from '@/src/utils/analytics/session-insights';
+import {
+  defaultSessionsSource,
+  resolveSessionsSource,
+  roleBoundFields,
+  sourceFieldOf,
+} from '@/src/utils/analytics/sessions-source';
 
-const emptyString = value(QueryValueType.String, '');
-
-const searchPredicates = (search: string): QueryFilterNode[] => {
+const searchPredicates = (search: string, source: SessionsSource): QueryFilterNode[] => {
   const term = search.trim();
   if (!term) {
     return [];
   }
 
-  return [or([SessionsField.ChatId, SessionsField.ProjectId].map((fieldName) => ico(fieldName, term)))];
+  const fields = [source.sessionId, source.project].filter((name): name is string => name !== null);
+
+  return [or(fields.map((fieldName) => ico(fieldName, term)))];
+};
+
+const ratingField = (namespace: string, fieldName: string): string => `${namespace}.${fieldName}`;
+
+const ratePredicates = (feedback: FeedbackFilter, namespace: string | null): QueryFilterNode[] => {
+  if (feedback === FeedbackFilter.All || !namespace) {
+    return [];
+  }
+
+  const threshold = value(QueryValueType.Integer, String(RATING_COUNT_EXCLUSIVE_MIN));
+  const positive = gt(ratingField(namespace, ResponseRatingsField.RatePosCount), threshold);
+  const nonPositive = [
+    gt(ratingField(namespace, ResponseRatingsField.RateZeroCount), threshold),
+    gt(ratingField(namespace, ResponseRatingsField.RateNegCount), threshold),
+  ];
+
+  switch (feedback) {
+    case FeedbackFilter.Positive:
+      return [positive];
+    case FeedbackFilter.Negative:
+      return [or(nonPositive)];
+    case FeedbackFilter.Rated:
+      return [or([positive, ...nonPositive])];
+  }
 };
 
 const fieldValueType = (fieldName: string, declared?: QueryValueType): QueryValueType => {
@@ -92,9 +118,13 @@ const fieldValueType = (fieldName: string, declared?: QueryValueType): QueryValu
   return valueType;
 };
 
-const columnFilterPredicate = (filter: SessionColumnFilter): QueryFilterNode => {
-  const { field: fieldName, valueType: declared } = filter;
-  const valueType = fieldValueType(fieldName, declared);
+const boundFieldName = (source: SessionsSource, fieldName: string): string =>
+  sourceFieldOf(source, fieldName) ?? fieldName;
+
+const columnFilterPredicate = (filter: SessionColumnFilter, source: SessionsSource): QueryFilterNode => {
+  const { valueType: declared } = filter;
+  const valueType = fieldValueType(filter.field, declared);
+  const fieldName = boundFieldName(source, filter.field);
 
   if (filter.operator === SessionFilterOperator.In) {
     return inValues(fieldName, valueType, filter.values);
@@ -114,8 +144,8 @@ const columnFilterPredicate = (filter: SessionColumnFilter): QueryFilterNode => 
   return predicate(queryOperator, fieldName, value(valueType, filter.value));
 };
 
-const columnFilterPredicates = (columnFilters: SessionColumnFilter[]): QueryFilterNode[] =>
-  columnFilters.map(columnFilterPredicate);
+const columnFilterPredicates = (columnFilters: SessionColumnFilter[], source: SessionsSource): QueryFilterNode[] =>
+  columnFilters.map((filter) => columnFilterPredicate(filter, source));
 
 const ARRAY_HAS = 'array_has';
 const ARRAY_HAS_ANY = 'array_has_any';
@@ -188,8 +218,9 @@ const arrayFilterPredicates = (arrayFilters: SessionArrayFilter[]): QueryFilterN
 
 interface SessionFilterParams {
   range: TimeRange;
+  source?: SessionsSource;
   search?: string;
-  chatIds?: string[];
+  feedback?: FeedbackFilter;
   columnFilters?: SessionColumnFilter[];
   arrayFilters?: SessionArrayFilter[];
 }
@@ -197,25 +228,28 @@ interface SessionFilterParams {
 // The list and the totals share one filter, so a pill can never disagree with the rows beneath it.
 const sessionFilter = ({
   range,
+  source = defaultSessionsSource(),
   search = '',
-  chatIds = [],
+  feedback = FeedbackFilter.All,
   columnFilters = [],
   arrayFilters = [],
 }: SessionFilterParams): QueryFilterNode =>
   and([
-    ...timeRangePredicates(SessionsField.LastRequestTime, range),
-    ...searchPredicates(search),
-    ...(chatIds.length ? [inValues(SessionsField.ChatId, QueryValueType.String, chatIds)] : []),
-    ...columnFilterPredicates(columnFilters),
+    ...timeRangePredicates(source.time, range),
+    ...searchPredicates(search, source),
+    ...ratePredicates(feedback, source.ratingEnrichment),
+    ...columnFilterPredicates(columnFilters, source),
     ...arrayFilterPredicates(arrayFilters),
   ]);
 
-const sessionSort = (sort: SessionSortKey[] = []): QuerySortItem[] => {
-  const callerKeys = sort.map(({ field: fieldName, direction }) => sortItem(fieldName, direction, QuerySortNulls.Last));
+const sessionSort = (source: SessionsSource, sort: SessionSortKey[] = []): QuerySortItem[] => {
+  const callerKeys = sort.map(({ field: fieldName, direction }) =>
+    sortItem(boundFieldName(source, fieldName), direction, QuerySortNulls.Last),
+  );
 
   return [
-    ...(callerKeys.length ? callerKeys : [sortItem(SessionsField.LastRequestTime, QuerySortDirection.Desc)]),
-    sortItem(SessionsField.ChatId, QuerySortDirection.Asc),
+    ...(callerKeys.length ? callerKeys : [sortItem(source.time, QuerySortDirection.Desc)]),
+    sortItem(source.sessionId, QuerySortDirection.Asc),
   ];
 };
 
@@ -228,12 +262,6 @@ interface SessionListQueryParams extends SessionFilterParams {
   sourceFields?: string[];
   visibleEnrichmentFields?: string[];
 }
-
-// Read outside any cell renderer — the grid keys its rows by it, a row click navigates by it, and the loaded
-// set is mapped by it — so a row is unusable without it whatever the column state. Every other field a
-// column reads is renderer-scoped and therefore reaches the query through the cost buckets instead. Sorting
-// and filtering need nothing here: both are resolved server-side by field name, not from the projected row.
-const IDENTITY_SELECT_FIELDS: SessionsField[] = [SessionsField.ChatId];
 
 // Named only when the caller has no schema to classify from — the base rollup columns, which is what the
 // curated columns still render in that state. With a schema in hand every one of these arrives through
@@ -254,11 +282,26 @@ const SCHEMALESS_SELECT_FIELDS: SessionsField[] = [
 // Both incoming sets are resolved from the entity schema by `projectableSchemaFields`, so a field the
 // instance does not carry never reaches here. Only the single-session query, which enumerates a
 // frontend enum rather than the schema, has to intersect for itself.
-const sessionSelect = (sourceFields: string[] = [], visibleEnrichmentFields: string[] = []): string[] => {
-  const core = sourceFields.length ? IDENTITY_SELECT_FIELDS : SCHEMALESS_SELECT_FIELDS;
-  const named = new Set<string>(core);
+const sessionSelect = (
+  source: SessionsSource,
+  sourceFields: string[] = [],
+  visibleEnrichmentFields: string[] = [],
+): string[] => {
+  const schemaless = sourceFields.length
+    ? []
+    : SCHEMALESS_SELECT_FIELDS.map((fieldName) => sourceFieldOf(source, fieldName));
+  const ratings = source.ratingEnrichment
+    ? SESSION_RATING_SELECT_FIELDS.map((fieldName) => ratingField(source.ratingEnrichment as string, fieldName))
+    : [];
+  const requested = [...sourceFields, ...visibleEnrichmentFields].map((fieldName) => sourceFieldOf(source, fieldName));
 
-  return [...core, ...sourceFields.filter((fieldName) => !named.has(fieldName)), ...visibleEnrichmentFields];
+  return [
+    ...new Set(
+      [...roleBoundFields(source), ...schemaless, ...requested, ...ratings].filter(
+        (fieldName): fieldName is string => fieldName !== null,
+      ),
+    ),
+  ];
 };
 
 // No `include_total`: the totals query resolves the same count under the same filter, and the service runs
@@ -270,13 +313,14 @@ export const buildSessionListQuery = ({
   sort,
   sourceFields,
   visibleEnrichmentFields,
+  source = defaultSessionsSource(),
   ...filters
 }: SessionListQueryParams): StructuredQuery =>
   rowQuery({
-    entity: SESSIONS_ENTITY,
-    select: sessionSelect(sourceFields, visibleEnrichmentFields).map((fieldName) => col(field(fieldName))),
-    filter: sessionFilter(filters),
-    sort: sessionSort(sort),
+    entity: source.baseTable,
+    select: sessionSelect(source, sourceFields, visibleEnrichmentFields).map((fieldName) => col(field(fieldName))),
+    filter: sessionFilter({ ...filters, source }),
+    sort: sessionSort(source, sort),
     page: offsetPage(offset, limit),
   });
 
@@ -318,19 +362,23 @@ interface SessionFieldValuesParams extends SessionFilterParams {
 // opened column's own predicate does not — including it collapses the list to what is already selected, and
 // a selection could then never be widened without first being cleared.
 export const buildSessionFieldValuesQuery = ({
-  field: fieldName,
+  field: requestedField,
   columnFilters = [],
   arrayFilters = [],
+  source = defaultSessionsSource(),
   ...filters
-}: SessionFieldValuesParams): StructuredQuery =>
-  aggregateQuery({
-    entity: SESSIONS_ENTITY,
+}: SessionFieldValuesParams): StructuredQuery => {
+  const fieldName = boundFieldName(source, requestedField);
+
+  return aggregateQuery({
+    entity: source.baseTable,
     groupBy: [fieldName],
     select: [col(field(fieldName)), col(fn('count'), SESSION_FIELD_VALUE_COUNT_ALIAS)],
     filter: sessionFilter({
       ...filters,
-      columnFilters: columnFilters.filter((filter) => filter.field !== fieldName),
-      arrayFilters: arrayFilters.filter((filter) => filter.field !== fieldName),
+      source,
+      columnFilters: columnFilters.filter((filter) => filter.field !== requestedField),
+      arrayFilters: arrayFilters.filter((filter) => filter.field !== requestedField),
     }),
     // The value breaks a tie on the count, so two equally frequent values keep a stable order between
     // openings rather than swapping places under the operator's pointer.
@@ -340,64 +388,53 @@ export const buildSessionFieldValuesQuery = ({
     ],
     page: offsetPage(0, SESSION_FIELD_VALUE_LIMIT),
   });
+};
 
-// The curated columns the view has always read, plus **every** column the insight enrichment exposes. The
-// second half is discovered from the schema rather than enumerated: the enrichment is provisioned per
+// The curated columns the view has always read, plus **every** column each enrichment exposes. The
+// enrichment half is discovered from the schema rather than enumerated: an enrichment is provisioned per
 // instance and supersedes its own columns, so a list here would name a replaced column that comes back null
 // while never asking for the one that replaced it.
 //
 // The curated half still passes through `availableSelectFields`, which is what keeps an optional column out
 // of the select on an instance that does not report it — the service rejects a whole query for one unknown
 // field.
-export const buildSessionDetailQuery = (chatId: string, schemaFields?: AnalyticsEntityField[]): StructuredQuery => {
-  const curated = availableSelectFields(
-    Object.values(SessionsField),
-    OPTIONAL_DETAIL_SELECT_FIELDS,
-    schemaFields?.map(({ name }) => name),
+export const buildSessionDetailQuery = (
+  chatId: string,
+  schemaFields?: AnalyticsEntityField[],
+  source: SessionsSource = resolveSessionsSource(null, schemaFields).source ?? defaultSessionsSource(),
+): StructuredQuery => {
+  const bound = Object.values(SessionsField)
+    .map((fieldName) => sourceFieldOf(source, fieldName))
+    .filter((fieldName): fieldName is string => fieldName !== null);
+  const optional = OPTIONAL_DETAIL_SELECT_FIELDS.map((fieldName) => sourceFieldOf(source, fieldName)).filter(
+    (fieldName): fieldName is string => fieldName !== null,
   );
-  // Everything else the schema reports for the record, so the dump and the metadata groups read the full
-  // available record rather than the columns this frontend happens to know.
+  const curated = [
+    ...new Set(
+      availableSelectFields(
+        bound,
+        optional,
+        schemaFields?.map(({ name }) => name),
+      ),
+    ),
+  ];
   const discovered = sessionFields(schemaFields).names.filter((name) => !curated.includes(name));
   const named = new Set([...curated, ...discovered]);
-  const insights = insightColumnsOf(schemaFields)
-    .map(({ name }) => name)
+  const enriched = enrichmentPanelsOf(schemaFields)
+    .flatMap(({ fields }) => fields.map(({ name }) => name))
     .filter((name) => !named.has(name));
+  const reported = schemaFields ? new Set(schemaFields.map(({ name }) => name)) : null;
+  const ratings = source.ratingEnrichment
+    ? SESSION_RATING_SELECT_FIELDS.map((fieldName) => ratingField(source.ratingEnrichment as string, fieldName)).filter(
+        (name) => !named.has(name) && (!reported || reported.has(name)),
+      )
+    : [];
 
   return rowQuery({
-    entity: SESSIONS_ENTITY,
-    select: [...curated, ...discovered, ...insights].map((fieldName) => col(field(fieldName))),
-    filter: eq(SessionsField.ChatId, value(QueryValueType.String, chatId)),
+    entity: source.baseTable,
+    select: [...curated, ...discovered, ...enriched, ...ratings].map((fieldName) => col(field(fieldName))),
+    filter: eq(source.sessionId, value(QueryValueType.String, chatId)),
     page: offsetPage(0, 1, true),
-  });
-};
-
-export const buildSessionFeedbackQuery = (
-  chatId: string,
-  limit: number,
-  schemaFieldNames?: string[],
-): StructuredQuery => {
-  const selectable = availableSelectFields(
-    [
-      ResponseRatingsField.ResponseId,
-      ResponseRatingsField.FirstRateTime,
-      ResponseRatingsField.LastRateTime,
-      ResponseRatingsField.RatePosCount,
-      ResponseRatingsField.RateZeroCount,
-      ResponseRatingsField.RateNegCount,
-      ResponseRatingsField.RateDistinctCount,
-      ResponseRatingsField.CommentCount,
-      ResponseRatingsField.CommentSample,
-    ],
-    OPTIONAL_FEEDBACK_FIELDS,
-    schemaFieldNames,
-  );
-
-  return rowQuery({
-    entity: FEEDBACK_ENTITY,
-    select: selectable.map((fieldName) => col(field(fieldName))),
-    filter: eq(ResponseRatingsField.ChatId, value(QueryValueType.String, chatId)),
-    sort: [sortItem(ResponseRatingsField.LastRateTime, QuerySortDirection.Desc)],
-    page: offsetPage(0, limit, true),
   });
 };
 
@@ -457,7 +494,7 @@ const sessionScopePredicate = ({ id, source }: SessionScope, hasClientSessionId?
 
 export const buildSessionTracePageQuery = (
   scope: SessionScope,
-  projectId: string,
+  projectId: string | null,
   window: SessionTraceWindow,
   offset: number,
   limit: number,
@@ -473,7 +510,7 @@ export const buildSessionTracePageQuery = (
     ],
     filter: and([
       sessionScopePredicate(scope, hasClientSessionId),
-      eq(UsageLogField.ProjectId, value(QueryValueType.String, projectId)),
+      ...(projectId ? [eq(UsageLogField.ProjectId, value(QueryValueType.String, projectId))] : []),
       ...traceWindowPredicates(window),
     ]),
     sort: [
@@ -611,103 +648,87 @@ export const buildSessionHopBodyQuery = (
 
 // Takes the period, not a filter object: a search or column predicate reaching here would silently make the
 // pills a summary of the filtered result again, which is the behaviour this replaced.
-export const buildSessionTotalsQuery = (range: TimeRange): StructuredQuery =>
+export const buildSessionTotalsQuery = (
+  range: TimeRange,
+  source: SessionsSource = defaultSessionsSource(),
+): StructuredQuery =>
   aggregateQuery({
-    entity: SESSIONS_ENTITY,
+    entity: source.baseTable,
     select: [
       col(fn('count'), SessionTotalsField.Sessions),
-      col(fn('sum', [field(SessionsField.TotalPrice)]), SessionTotalsField.Cost),
+      ...(source.cost ? [col(fn('sum', [field(source.cost)]), SessionTotalsField.Cost)] : []),
     ],
-    filter: and(timeRangePredicates(SessionsField.LastRequestTime, range)),
+    filter: and(timeRangePredicates(source.time, range)),
   });
-
-const ratePredicates = (feedback: FeedbackFilter): QueryFilterNode[] => {
-  const threshold = value(QueryValueType.Integer, String(RATING_COUNT_EXCLUSIVE_MIN));
-  const positive = gt(ResponseRatingsField.RatePosCount, threshold);
-  const nonPositive = [
-    gt(ResponseRatingsField.RateZeroCount, threshold),
-    gt(ResponseRatingsField.RateNegCount, threshold),
-  ];
-
-  switch (feedback) {
-    case FeedbackFilter.Positive:
-      return [positive];
-    case FeedbackFilter.Negative:
-      return [or(nonPositive)];
-    case FeedbackFilter.Rated:
-      return [or([positive, ...nonPositive])];
-    case FeedbackFilter.All:
-      return [];
-  }
-};
 
 interface FeedbackQueryParams {
   range: TimeRange;
   feedback: FeedbackFilter;
+  source?: SessionsSource;
 }
 
-export const buildSessionRatingTotalsQuery = ({ range, feedback }: FeedbackQueryParams): StructuredQuery =>
+export const buildSessionRatingTotalsQuery = ({
+  range,
+  feedback,
+  source = defaultSessionsSource(),
+}: FeedbackQueryParams): StructuredQuery =>
   aggregateQuery({
-    entity: FEEDBACK_ENTITY,
-    select: [col(fn('count', [field(ResponseRatingsField.ChatId)], true), SessionRatingTotalsField.Sessions)],
-    filter: and([
-      ...timeRangePredicates(ResponseRatingsField.LastRateTime, range),
-      ne(ResponseRatingsField.ChatId, emptyString),
-      ...ratePredicates(feedback),
-    ]),
+    entity: source.baseTable,
+    select: [col(fn('count'), SessionRatingTotalsField.Sessions)],
+    filter: and([...timeRangePredicates(source.time, range), ...ratePredicates(feedback, source.ratingEnrichment)]),
   });
 
-export const buildRatedSessionIdsQuery = ({ range, feedback }: FeedbackQueryParams): StructuredQuery =>
-  aggregateQuery({
-    entity: FEEDBACK_ENTITY,
-    groupBy: [ResponseRatingsField.ChatId],
-    select: [
-      col(field(ResponseRatingsField.ChatId)),
-      col(fn('max', [field(ResponseRatingsField.LastRateTime)]), FeedbackField.LastRated),
-    ],
-    filter: and([
-      ...timeRangePredicates(ResponseRatingsField.LastRateTime, range),
-      ne(ResponseRatingsField.ChatId, emptyString),
-      ...ratePredicates(feedback),
-    ]),
-    sort: [
-      sortItem(FeedbackField.LastRated, QuerySortDirection.Desc),
-      sortItem(ResponseRatingsField.ChatId, QuerySortDirection.Asc),
-    ],
-    page: offsetPage(0, FEEDBACK_CANDIDATE_LIMIT),
-  });
+interface RatedResponsesQueryParams {
+  scope: SessionScope;
+  window: SessionTraceWindow;
+  namespace: string;
+  limit: number;
+  isCommentTextReadable: boolean;
+  hasClientSessionId?: boolean;
+}
 
-const ratingSums = () => [
-  col(fn('sum', [field(ResponseRatingsField.RatePosCount)]), FeedbackField.RatingUp),
-  col(fn('sum', [field(ResponseRatingsField.RateZeroCount)]), FeedbackField.RateZero),
-  col(fn('sum', [field(ResponseRatingsField.RateNegCount)]), FeedbackField.RateNegative),
-  col(fn('sum', [field(ResponseRatingsField.RateBoolFalseCount)]), FeedbackField.RateBoolFalse),
-  col(fn('sum', [field(ResponseRatingsField.RateRawCount)]), FeedbackField.RateRaw),
-  col(fn('sum', [field(ResponseRatingsField.RateEventCount)]), FeedbackField.RateEvents),
+const RATED_RESPONSE_MAX_FIELDS: ResponseRatingsField[] = [
+  ResponseRatingsField.FirstRateTime,
+  ResponseRatingsField.LastRateTime,
+  ResponseRatingsField.RatePosCount,
+  ResponseRatingsField.RateZeroCount,
+  ResponseRatingsField.RateNegCount,
+  ResponseRatingsField.RateDistinctCount,
+  ResponseRatingsField.CommentCount,
 ];
 
-interface RatingsQueryParams {
-  range: TimeRange;
-  chatIds: string[];
-}
+export const buildSessionRatedResponsesQuery = ({
+  scope,
+  window,
+  namespace,
+  limit,
+  isCommentTextReadable,
+  hasClientSessionId,
+}: RatedResponsesQueryParams): StructuredQuery => {
+  const maxFields = [
+    ...RATED_RESPONSE_MAX_FIELDS,
+    ...(isCommentTextReadable ? [ResponseRatingsField.CommentSample] : []),
+  ];
 
-export const buildSessionRatingsQuery = ({ range, chatIds }: RatingsQueryParams): StructuredQuery =>
-  aggregateQuery({
-    entity: FEEDBACK_ENTITY,
-    groupBy: [ResponseRatingsField.ChatId],
-    select: [col(field(ResponseRatingsField.ChatId)), ...ratingSums()],
+  return aggregateQuery({
+    entity: USAGE_LOG_ENTITY,
+    groupBy: [UsageLogField.ResponseId],
+    select: [
+      col(field(UsageLogField.ResponseId)),
+      ...maxFields.map((fieldName) => col(fn('max', [field(ratingField(namespace, fieldName))]), fieldName)),
+    ],
     filter: and([
-      ...timeRangePredicates(ResponseRatingsField.LastRateTime, range),
-      inValues(ResponseRatingsField.ChatId, QueryValueType.String, chatIds),
+      sessionScopePredicate(scope, hasClientSessionId),
+      ...traceWindowPredicates(window),
+      gt(
+        ratingField(namespace, ResponseRatingsField.RateEventCount),
+        value(QueryValueType.Integer, String(RATING_COUNT_EXCLUSIVE_MIN)),
+      ),
     ]),
-    page: offsetPage(0, Math.max(chatIds.length, 1)),
+    sort: [
+      sortItem(ResponseRatingsField.LastRateTime, QuerySortDirection.Desc),
+      sortItem(UsageLogField.ResponseId, QuerySortDirection.Asc),
+    ],
+    page: offsetPage(0, limit),
   });
-
-export const buildSessionRatingCountsQuery = (chatId: string): StructuredQuery =>
-  aggregateQuery({
-    entity: FEEDBACK_ENTITY,
-    groupBy: [ResponseRatingsField.ChatId],
-    select: [col(field(ResponseRatingsField.ChatId)), ...ratingSums()],
-    filter: eq(ResponseRatingsField.ChatId, value(QueryValueType.String, chatId)),
-    page: offsetPage(0, 1),
-  });
+};

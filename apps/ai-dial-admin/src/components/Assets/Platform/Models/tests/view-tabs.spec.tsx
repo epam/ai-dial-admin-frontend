@@ -1,9 +1,9 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { TabItem } from '@epam/ai-dial-ui-kit';
 
-import { AppContextType } from '@/src/context/AppContext';
 import { AssetModel } from '@/src/models/dial/deployment-asset';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -13,12 +13,9 @@ interface SimpleHeaderMockProps {
   tabs?: TabItem[];
 }
 
-const { useAppContextMock, simpleHeaderSpy } = vi.hoisted(() => ({
-  useAppContextMock: vi.fn<() => Pick<AppContextType, 'featureFlags' | 'setEntityReadOnly'>>(),
+const { simpleHeaderSpy } = vi.hoisted(() => ({
   simpleHeaderSpy: vi.fn<(props: SimpleHeaderMockProps) => void>(),
 }));
-
-vi.mock('@/src/context/AppContext', () => ({ useAppContext: useAppContextMock }));
 
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
   default: (props: SimpleHeaderMockProps) => {
@@ -27,11 +24,13 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
   },
 }));
 
-vi.mock('@/src/context/assets/ModelsFolderContext', () => ({
+vi.mock('@/src/context/assets/ModelsFolderContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/context/assets/ModelsFolderContext')>()),
   useModelsFolder: () => ({ fetchFiles: vi.fn() }),
 }));
 
-vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
+vi.mock('@/src/app/[lang]/platform-models/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/platform-models/actions')>()),
   updateModel: vi.fn(),
   removeModel: vi.fn(),
 }));
@@ -54,7 +53,7 @@ describe('ModelView — Audit tab wiring', () => {
   });
 
   const renderTabIds = (isDashboardEnabled: boolean, isAdminApiEnabled = true): EntityViewTab[] => {
-    useAppContextMock.mockReturnValue({
+    appContextMock.set({
       featureFlags: {
         dashboardEnabled: isDashboardEnabled,
         adminApiEnabled: isAdminApiEnabled,

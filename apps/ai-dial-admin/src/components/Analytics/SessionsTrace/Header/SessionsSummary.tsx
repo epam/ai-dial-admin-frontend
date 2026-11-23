@@ -62,9 +62,11 @@ interface Props {
   period: SessionPeriodSummary | null;
   periodLabel: string;
   isPending?: boolean;
+  hasCost?: boolean;
+  hasRatings?: boolean;
 }
 
-const SessionsSummary: FC<Props> = ({ period, periodLabel, isPending = false }) => {
+const SessionsSummary: FC<Props> = ({ period, periodLabel, isPending = false, hasCost = true, hasRatings = true }) => {
   const t = useI18n();
 
   // No pill tracks the grid's filters, so each states on its face the period it covers.
@@ -100,32 +102,38 @@ const SessionsSummary: FC<Props> = ({ period, periodLabel, isPending = false }) 
         hint={sessionCount === null ? absentHint : periodHint}
         scope={periodLabel}
       />
-      <SummaryPill
-        value={isRatedUnavailable ? UNAVAILABLE_VALUE : `${rated}`}
-        label={t(SessionsTraceI18nKey.SummaryRated)}
-        valueClassName="text-success"
-        hint={isRatedUnavailable ? absentHint : periodHint}
-        scope={periodLabel}
-      />
-      <SummaryPill
-        value={negative === null ? UNAVAILABLE_VALUE : `${negative}`}
-        label={
-          <>
-            {t(SessionsTraceI18nKey.SummaryWith)}
-            <IconThumbDownFilled size={ICON_SIZE} className="text-error" aria-hidden />
-          </>
-        }
-        valueClassName="text-error"
-        hint={negative === null ? absentHint : periodHint}
-        scope={periodLabel}
-      />
-      <SummaryPill
-        value={cost === null ? UNAVAILABLE_VALUE : `$${formatNumberByDelimiter(cost.toString(), ',', '0')}`}
-        label={t(SessionsTraceI18nKey.SummaryCost)}
-        valueClassName="text-success"
-        hint={cost === null ? absentHint : periodHint}
-        scope={periodLabel}
-      />
+      {hasRatings && (
+        <>
+          <SummaryPill
+            value={isRatedUnavailable ? UNAVAILABLE_VALUE : `${rated}`}
+            label={t(SessionsTraceI18nKey.SummaryRated)}
+            valueClassName="text-success"
+            hint={isRatedUnavailable ? absentHint : periodHint}
+            scope={periodLabel}
+          />
+          <SummaryPill
+            value={negative === null ? UNAVAILABLE_VALUE : `${negative}`}
+            label={
+              <>
+                {t(SessionsTraceI18nKey.SummaryWith)}
+                <IconThumbDownFilled size={ICON_SIZE} className="text-error" aria-hidden />
+              </>
+            }
+            valueClassName="text-error"
+            hint={negative === null ? absentHint : periodHint}
+            scope={periodLabel}
+          />
+        </>
+      )}
+      {hasCost && (
+        <SummaryPill
+          value={cost === null ? UNAVAILABLE_VALUE : `$${formatNumberByDelimiter(cost.toString(), ',', '0')}`}
+          label={t(SessionsTraceI18nKey.SummaryCost)}
+          valueClassName="text-success"
+          hint={cost === null ? absentHint : periodHint}
+          scope={periodLabel}
+        />
+      )}
     </div>
   );
 };

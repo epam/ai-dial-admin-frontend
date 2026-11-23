@@ -42,6 +42,8 @@ export interface AnalyticsResult extends ResultDto {
   requestBody?: Record<string, unknown>;
   responseBody?: Record<string, unknown>;
   grafanaTraceUrl?: string;
+  /** Client-only, never sent by the backend: the test case's overall score, joined in from `test_case_eval_scores`. */
+  testCaseScore?: number | null;
 }
 
 export enum ExtractionResultStatus {
@@ -130,4 +132,52 @@ export interface RunTotalCosts {
 
 export interface RunsTotalCostsRequest {
   runIds: string[];
+}
+
+/** Limits from `GET /api/v1/test-suite-runs/config` used to bound run-form inputs. */
+export interface TestSuiteRunConfig {
+  maxConcurrencyLevel: number;
+}
+
+/** Arguments for starting a test suite run. */
+export interface RunTestSuiteParams {
+  numberOfRuns?: number | string;
+  concurrencyLevel?: number | string;
+}
+
+/**
+ * `GET /api/v1/costs/deployment/{id}` totals for one `[from, to]` window.
+ * A phase is `null` when dial-adas has no matching usage rows (not the same as `$0`).
+ */
+export interface DeploymentCosts {
+  totalTestCaseCost: number | null;
+  totalMetricEvalCost: number | null;
+}
+
+/** Empty / unknown period — both phases missing, same shape as a successful “no usage” response. */
+export const EMPTY_DEPLOYMENT_COSTS: DeploymentCosts = {
+  totalTestCaseCost: null,
+  totalMetricEvalCost: null,
+};
+
+/** Current and previous month-to-date windows from `getDeploymentPeriodCosts`. */
+export interface DeploymentPeriodCosts {
+  current: DeploymentCosts;
+  previous: DeploymentCosts;
+}
+
+/** Body for `POST /api/v1/analytics/test-suites/pass-rate`. */
+export interface SuitePassRateRequest {
+  suiteIds: string[];
+}
+
+/**
+ * Summary from `POST /api/v1/analytics/test-suites/pass-rate`.
+ * Rates are 0–1; a missing rate is omitted by the API and mapped to null here.
+ */
+export interface SuitePassRateResponse {
+  passRate?: number | null;
+  previousPassRate?: number | null;
+  suiteCount: number;
+  previousSuiteCount: number;
 }

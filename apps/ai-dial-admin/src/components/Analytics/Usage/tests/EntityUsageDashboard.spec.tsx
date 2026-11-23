@@ -21,10 +21,6 @@ vi.mock('@/src/app/[lang]/dashboards/actions', () => ({
   getUsageCallerSource: () => callerSourceMock(),
 }));
 
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn(), removeNotification: vi.fn() }),
-}));
-
 // AG Grid and ECharts are the heavy children; this spec is about the dashboard's wiring.
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({ default: () => <div role="grid" /> }));
 vi.mock('@/src/components/Common/HeatMap/HeatMapGrid', () => ({ default: () => <div role="grid" /> }));
@@ -54,16 +50,18 @@ describe('EntityUsageDashboard', () => {
     const user = userEvent.setup();
     renderModel();
 
-    await user.click(await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+    await user.click(
+      await screen.findByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) }),
+    );
 
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([AnalyticsUsageI18nKey.ViewLlm]);
-    expect(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.CompareLabel}`) })).toBeTruthy();
   });
 
   test('leaves out the tab that would rank the model against itself', async () => {
     renderModel();
 
-    await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel });
+    await screen.findByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) });
 
     expect(screen.queryByText(AnalyticsUsageI18nKey.BreakdownTabModels)).toBeNull();
     expect(screen.getAllByText(AnalyticsUsageI18nKey.BreakdownTabApplications).length).toBeGreaterThan(0);
@@ -186,7 +184,9 @@ describe('EntityUsageDashboard on an application', () => {
     );
 
   const optionsOf = async (user: ReturnType<typeof userEvent.setup>) => {
-    await user.click(await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel }));
+    await user.click(
+      await screen.findByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) }),
+    );
 
     return screen.getAllByRole('option').map((option) => option.textContent);
   };
@@ -255,7 +255,7 @@ describe('EntityUsageDashboard on an application', () => {
   test('offers no cost on its heatmap, whose hours count its own calls', async () => {
     renderApplication();
 
-    await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel });
+    await screen.findByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) });
 
     expect(screen.queryByText(AnalyticsUsageI18nKey.HeatmapMetricCost)).toBeNull();
   });
@@ -275,7 +275,9 @@ describe('EntityUsageDashboard — an entity the log cannot name', () => {
 
     render(<EntityUsageDashboard route={ApplicationRoute.AssetsToolsets} entity={entity as never} />);
 
-    expect(await screen.findByRole('combobox', { name: AnalyticsUsageI18nKey.ViewByLabel })).toBeTruthy();
+    expect(
+      await screen.findByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) }),
+    ).toBeTruthy();
     await settled();
 
     expect(screen.queryByText(AnalyticsUsageI18nKey.EntityUnmatchedTitle)).toBeNull();

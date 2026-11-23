@@ -60,6 +60,25 @@ describe('GroupKeysEditor', () => {
     expect(optionsOf(columnSelect())).toContain('usage_client_identity.client_session_id');
   });
 
+  test('does not offer a projection-only column', () => {
+    renderEditor(
+      [{ column: 'deployment' }],
+      [...FIELDS, { ...field('request_body_full', AnalyticsFieldType.String), projection_only: true }],
+    );
+
+    expect(optionsOf(columnSelect())).not.toContain('request_body_full');
+    expect(optionsOf(columnSelect())).toContain('deployment');
+  });
+
+  test('keeps a projection-only column a saved declaration already names', () => {
+    renderEditor(
+      [{ column: 'request_body_full' }],
+      [...FIELDS, { ...field('request_body_full', AnalyticsFieldType.String), projection_only: true }],
+    );
+
+    expect(columnSelect()).toHaveValue('request_body_full');
+  });
+
   test('keeps a column the entity does not offer', () => {
     renderEditor([{ column: 'written_by_hand.value' }]);
 

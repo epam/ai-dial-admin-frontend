@@ -1,3 +1,5 @@
+import { notificationMock } from '@/test-mocks/notification';
+import { navigationMock } from '@/test-mocks/navigation';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -31,13 +33,8 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
 
-const push = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
-
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification }),
-}));
+const { push } = navigationMock.router;
+const { showNotification } = notificationMock;
 
 const enrichment: AnalyticsTable = {
   name: 'turn_feedback',

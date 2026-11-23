@@ -11,6 +11,8 @@ export enum ResourceType {
   CATALOG_SCHEMA = 'CATALOG_SCHEMA',
   INTERCEPTOR = 'INTERCEPTOR',
   TRANSLATOR = 'TRANSLATOR',
+  PLUGIN = 'PLUGIN',
+  ROUTER = 'ROUTER',
   /**
    * Read-only here: registered so the metadata route can list the API-written half of Core's role
    * population. No asset surface writes it through `AssetApi`.
@@ -20,4 +22,5 @@ export enum ResourceType {
   PROJECT_KEY = 'PROJECT_KEY',
   POLICY = 'POLICY',
   POLICY_ASSIGNMENT = 'POLICY_ASSIGNMENT',
+  ALIAS = 'ALIAS',
 }

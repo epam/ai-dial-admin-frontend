@@ -20,12 +20,15 @@ import { WidgetResultOptions } from '@/src/components/Analytics/CustomDashboards
 import SingleValueWidget from '@/src/components/Analytics/CustomDashboards/Widget/SingleValueWidget';
 import { useWidgetSparkline } from '@/src/components/Analytics/CustomDashboards/Widget/use-widget-sparkline';
 import WidgetResult from '@/src/components/Analytics/CustomDashboards/Widget/WidgetResult';
+import { getWidgetPieLayout } from '@/src/components/Analytics/CustomDashboards/utils/pie-slices';
 import DashboardCard from '@/src/components/Analytics/Usage/Card/DashboardCard';
 import UsageEmptyState from '@/src/components/Analytics/Usage/Empty/UsageEmptyState';
 import { MAX_WIDGET_ROWS, WIDGET_MENU_SIZES } from '@/src/constants/analytics/dashboards';
 import {
   isComparingView,
   getFittingViews,
+  getWidgetView,
+  hasQueryView,
   resolveWidgetView,
 } from '@/src/components/Analytics/CustomDashboards/utils/widget-views';
 import { ComparePeriod } from '@/src/components/Analytics/Usage/models';
@@ -66,6 +69,7 @@ interface Props {
   range: TimeRange;
   period?: string;
   compare: ComparePeriod;
+  refreshToken?: number;
   isEditing: boolean;
   isFirst: boolean;
   isLast: boolean;
@@ -75,6 +79,7 @@ interface Props {
   onResize: (id: string, size: WidgetSize) => void;
   // Told whenever the widget becomes, or stops being, unavailable to its viewer.
   onDeniedChange?: (id: string, isDenied: boolean) => void;
+  onLoadingChange?: (id: string, isLoading: boolean) => void;
   // Resolves the widget's query again when resolving it failed.
   onRetryQuery?: (widget: DashboardWidget) => void;
 }
@@ -85,6 +90,7 @@ const WidgetCard: FC<Props> = ({
   range,
   period,
   compare,
+  refreshToken,
   isEditing,
   isFirst,
   isLast,
@@ -93,16 +99,19 @@ const WidgetCard: FC<Props> = ({
   onMove,
   onResize,
   onDeniedChange,
+  onLoadingChange,
   onRetryQuery,
 }) => {
   const t = useI18n();
   const router = useRouter();
   const isComposite = widgetQuery?.kind === WidgetQueryKind.CompositeSql;
   const savedQuery = getWidgetQuerySource(widgetQuery);
+  const storedView = getWidgetView(widget);
+  const isQueryViewOffered = hasQueryView(widget, savedQuery);
 
   // Decided from the stored view, before the result says whether it fits: a view that stopped fitting
   // costs one unused run rather than a second round trip after the first answer.
-  const isComparing = compare !== ComparePeriod.Off && !isComposite && isComparingView(widget.view, savedQuery);
+  const isComparing = compare !== ComparePeriod.Off && !isComposite && isComparingView(storedView, savedQuery);
   const previousRange = useMemo(
     () => (isComparing ? buildComparedWindows(range, compare).previous : undefined),
     [isComparing, range, compare],
@@ -121,7 +130,13 @@ const WidgetCard: FC<Props> = ({
     range: isHeatmap ? heatmapWeek : range,
     period: isHeatmap ? undefined : period,
     previousRange,
+    refreshToken,
   });
+
+  useEffect(() => {
+    onLoadingChange?.(widget.id, isLoading);
+  }, [onLoadingChange, widget.id, isLoading]);
+  useEffect(() => () => onLoadingChange?.(widget.id, false), [onLoadingChange, widget.id]);
 
   useEffect(() => {
     onDeniedChange?.(widget.id, isDenied);
@@ -136,10 +151,12 @@ const WidgetCard: FC<Props> = ({
   // Until the first answer there is nothing to judge, so the stored view stands: settings opened that early
   // must not offer only the query's own view and write the stored one away.
   const fittingViews = useMemo(() => {
-    if (result && meta) return getFittingViews(meta, result.rows, isComposite);
-    return widget.view && widget.view !== WidgetView.Query ? [WidgetView.Query, widget.view] : [WidgetView.Query];
-  }, [result, meta, isComposite, widget.view]);
-  const view = resolveWidgetView(widget.view, fittingViews);
+    if (result && meta) return getFittingViews(meta, result.rows, isComposite, isQueryViewOffered);
+    const queryViews = isQueryViewOffered ? [WidgetView.Query] : [];
+    if (storedView && storedView !== WidgetView.Query) return [...queryViews, storedView];
+    return isQueryViewOffered ? queryViews : [WidgetView.Table];
+  }, [result, meta, isComposite, isQueryViewOffered, storedView]);
+  const view = resolveWidgetView(storedView, fittingViews, savedQuery);
   useEffect(() => {
     if (isHeatmap && result && view !== WidgetView.Heatmap) setIsHeatmapRefused(true);
   }, [isHeatmap, result, view]);
@@ -151,6 +168,7 @@ const WidgetCard: FC<Props> = ({
     range,
     period,
     isEnabled: widget.view === WidgetView.SingleValue,
+    refreshToken,
   });
 
   const resultOptions = useMemo(
@@ -305,6 +323,7 @@ const WidgetCard: FC<Props> = ({
         valueFormat={widget.settings?.value_format}
         currency={widget.settings?.currency}
         isRiseGood={widget.change_direction !== ChangeDirection.LowerIsBetter}
+        pieLayout={getWidgetPieLayout(widget.layout)}
       />
     );
   };
@@ -314,6 +333,7 @@ const WidgetCard: FC<Props> = ({
     <DashboardCard
       title={title}
       subtitle={widget.description}
+      isSubtitleSingleLine
       className="size-full min-h-0 overflow-hidden"
       headerClassName={classNames(isEditing && [WIDGET_DRAG_HANDLE_CLASS, 'cursor-move'])}
       titleActions={

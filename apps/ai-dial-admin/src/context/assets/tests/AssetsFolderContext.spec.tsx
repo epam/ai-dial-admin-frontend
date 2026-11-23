@@ -1,8 +1,11 @@
-import { AssetListItem, BucketType, EntitySource } from '@/src/models/dial/asset-list-item';
+import { useOrgUnits } from '@/src/context/OrgUnitsContext';
+import { AssetListItem, BucketType } from '@/src/models/dial/asset-list-item';
 import { DialFile, DialFileNodeType } from '@/src/models/dial/file';
+import { OrgUnit } from '@/src/models/dial/org-unit';
+import { toUnitMap } from '@/src/utils/org-units/units';
 import { StrictMode } from 'react';
 import { act, render } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { AssetsFolderContext, createFolderContext } from '../AssetsFolderContext';
 
 vi.unmock('@/src/context/assets/AssetsFolderContext');
@@ -24,12 +27,8 @@ const createDeferred = <T,>() => {
   return { promise, resolve };
 };
 
-const renderProviderWithCapture = (
-  getFiles: (path: string) => Promise<AssetListItem[] | null | undefined>,
-  getConfigFileNames?: () => Promise<string[] | null | undefined>,
-  getFolderRows?: (path: string) => Promise<AssetListItem[]>,
-) => {
-  const { Provider, useFolderContext } = createFolderContext(getFiles, 'testFolder', getConfigFileNames, getFolderRows);
+const renderProviderWithCapture = (getFiles: (path: string) => Promise<AssetListItem[] | null | undefined>) => {
+  const { Provider, useFolderContext } = createFolderContext(getFiles, 'testFolder');
 
   let captured: AssetsFolderContext<AssetListItem> | null = null;
 
@@ -106,138 +105,6 @@ describe('createFolderContext initial and fetched state', () => {
     });
 
     expect(get().hasFetchError).toBe(false);
-  });
-});
-
-describe('createFolderContext fetchFiles with multiple root paths', () => {
-  test('fetches every given root and orders them as given in files', async () => {
-    const platformItems: AssetListItem[] = [
-      { name: 'runner-1', path: 'platform/runner-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
-    ];
-    const publicItems: AssetListItem[] = [
-      { name: 'app-1', path: 'public/app-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
-    ];
-    const getFiles = vi.fn((path: string) => Promise.resolve(path === 'platform/' ? platformItems : publicItems));
-    const get = renderProviderWithCapture(getFiles);
-
-    await act(async () => {
-      get().fetchFiles(['platform/', 'public/']);
-    });
-
-    expect(getFiles).toHaveBeenCalledWith('platform/');
-    expect(getFiles).toHaveBeenCalledWith('public/');
-    expect(get().files).toHaveLength(2);
-    expect(get().files[0].path).toBe('platform/');
-    expect(get().files[1].path).toBe('public/');
-    expect(get().fetchedFoldersData['platform/']).toEqual(platformItems);
-    expect(get().fetchedFoldersData['public/']).toEqual(publicItems);
-  });
-
-  test('loads file names with physical roots and reuses the cached file list', async () => {
-    const platformItems: AssetListItem[] = [
-      { name: 'runner-1', path: 'platform/runner-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
-    ];
-    const publicItems: AssetListItem[] = [
-      { name: 'app-1', path: 'public/app-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
-    ];
-    const getFiles = vi.fn((path: string) => Promise.resolve(path === 'platform/' ? platformItems : publicItems));
-    const getConfigFileNames = vi.fn().mockResolvedValue(['file-app']);
-    const get = renderProviderWithCapture(getFiles, getConfigFileNames);
-
-    await act(async () => {
-      get().fetchFiles(['file/', 'platform/', 'public/']);
-    });
-
-    expect(getConfigFileNames).toHaveBeenCalledOnce();
-    expect(getFiles).toHaveBeenCalledWith('platform/');
-    expect(getFiles).toHaveBeenCalledWith('public/');
-    expect(getFiles).not.toHaveBeenCalledWith('file/');
-    expect(get().fetchedFoldersData['file/']).toMatchObject([
-      { name: 'file-app', path: 'file-app', nodeType: DialFileNodeType.ITEM, entitySource: 'file' },
-    ]);
-    expect(get().filePath).toBe('public/');
-
-    await act(async () => {
-      get().toggleFolder(get().files[0]);
-    });
-
-    expect(getConfigFileNames).toHaveBeenCalledOnce();
-    expect(get().filePath).toBe('file/');
-    expect(get().fetchedFoldersData['file/']).toHaveLength(1);
-  });
-
-  test('keeps physical roots available when the file names request fails', async () => {
-    const platformItems: AssetListItem[] = [
-      { name: 'runner-1', path: 'platform/runner-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
-    ];
-    const publicItems: AssetListItem[] = [
-      { name: 'app-1', path: 'public/app-1', nodeType: DialFileNodeType.ITEM } as AssetListItem,
-    ];
-    const getFiles = vi.fn((path: string) => Promise.resolve(path === 'platform/' ? platformItems : publicItems));
-    const getConfigFileNames = vi.fn().mockResolvedValue(undefined);
-    const get = renderProviderWithCapture(getFiles, getConfigFileNames);
-
-    await act(async () => {
-      get().fetchFiles(['file/', 'platform/', 'public/']);
-    });
-
-    expect(get().files.map((file) => file.path)).toEqual(['file/', 'platform/', 'public/']);
-    expect(get().fetchedFoldersData['platform/']).toEqual(platformItems);
-    expect(get().fetchedFoldersData['public/']).toEqual(publicItems);
-    expect(get().fetchedFoldersData[get().filePath]).toEqual(publicItems);
-
-    await act(async () => {
-      get().toggleFolder(get().files[0]);
-    });
-
-    expect(getConfigFileNames).toHaveBeenCalledOnce();
-  });
-  test('opens the last physical root by default, keeping file-first views on the existing resource view', async () => {
-    const getFiles = vi.fn().mockResolvedValue([]);
-    const getConfigFileNames = vi.fn().mockResolvedValue([]);
-    const get = renderProviderWithCapture(getFiles, getConfigFileNames);
-
-    await act(async () => {
-      get().fetchFiles(['file/', 'platform/', 'public/']);
-    });
-
-    expect(get().filePath).toBe('public/');
-    expect(get().fetchedFoldersData['public/']).toEqual([]);
-  });
-
-  test('flags an error when any root fetch resolves undefined', async () => {
-    const getFiles = vi.fn((path: string) => Promise.resolve(path === 'platform/' ? undefined : []));
-    const get = renderProviderWithCapture(getFiles);
-
-    await act(async () => {
-      get().fetchFiles(['platform/', 'public/']);
-    });
-
-    expect(get().hasFetchError).toBe(true);
-  });
-
-  test('isFetchingFiles reflects the combined multi-root fetch, not just one root', async () => {
-    let resolvePlatform: (value: AssetListItem[]) => void = () => {};
-    const getFiles = vi.fn((path: string) =>
-      path === 'platform/'
-        ? new Promise<AssetListItem[]>((resolve) => {
-            resolvePlatform = resolve;
-          })
-        : Promise.resolve([]),
-    );
-    const get = renderProviderWithCapture(getFiles);
-
-    act(() => {
-      get().fetchFiles(['platform/', 'public/']);
-    });
-
-    expect(get().isFetchingFiles).toBe(true);
-
-    await act(async () => {
-      resolvePlatform([]);
-    });
-
-    expect(get().isFetchingFiles).toBe(false);
   });
 });
 
@@ -430,145 +297,181 @@ describe('createFolderContext fetchFolderHierarchy', () => {
 });
 
 describe('createFolderContext toggleFolder', () => {
-  const renderWithRoots = async () => {
-    const getFiles = vi.fn().mockResolvedValue([createItem('platform/runner')]);
+  const renderWithRoot = async () => {
+    const getFiles = vi.fn().mockResolvedValue([createItem('public/app')]);
     const get = renderProviderWithCapture(getFiles);
 
     await act(async () => {
-      get().fetchFiles(['platform/', 'public/']);
+      get().fetchFiles('public/');
     });
     getFiles.mockClear();
 
     return { get, getFiles };
   };
 
-  test('expands a cached folder from the cache without fetching', async () => {
-    const { get, getFiles } = await renderWithRoots();
+  test('opens the loaded root and selects it', async () => {
+    const { get } = await renderWithRoot();
+
+    expect(get().expandedFolders.has('public/')).toBe(true);
+    expect(get().filePath).toBe('public/');
+  });
+
+  test('collapses an expanded folder and keeps its cached items', async () => {
+    const { get } = await renderWithRoot();
 
     await act(async () => {
       get().toggleFolder(get().files[0]);
     });
 
+    expect(get().expandedFolders.has('public/')).toBe(false);
+    expect(get().filePath).toBe('public/');
+    expect(get().fetchedFoldersData['public/']).toEqual([createItem('public/app')]);
+  });
+
+  test('expands a collapsed folder from the cache without fetching', async () => {
+    const { get, getFiles } = await renderWithRoot();
+
+    await act(async () => {
+      get().toggleFolder(get().files[0]);
+    });
+    await act(async () => {
+      get().toggleFolder(get().files[0]);
+    });
+
     expect(getFiles).not.toHaveBeenCalled();
-    expect(get().expandedFolders.has('platform/')).toBe(true);
-    expect(get().filePath).toBe('platform/');
+    expect(get().expandedFolders.has('public/')).toBe(true);
   });
 
   test('fetches a folder that is not cached yet', async () => {
-    const { get, getFiles } = await renderWithRoots();
+    const { get, getFiles } = await renderWithRoot();
 
     await act(async () => {
-      get().toggleFolder(createFolder('platform/new/'));
+      get().toggleFolder(createFolder('public/new/'));
     });
 
-    expect(getFiles).toHaveBeenCalledWith('platform/new/');
-    expect(get().expandedFolders.has('platform/new/')).toBe(true);
-  });
-
-  test('collapses an expanded folder and shows its cached items again', async () => {
-    const { get } = await renderWithRoots();
-
-    await act(async () => {
-      get().toggleFolder(get().files[0]);
-    });
-    await act(async () => {
-      get().toggleFolder(get().files[0]);
-    });
-
-    expect(get().expandedFolders.has('platform/')).toBe(false);
-    expect(get().filePath).toBe('platform/');
+    expect(getFiles).toHaveBeenCalledWith('public/new/');
+    expect(get().expandedFolders.has('public/new/')).toBe(true);
   });
 
   test('selects and expands without fetching when skipFetch is set', async () => {
-    const { get, getFiles } = await renderWithRoots();
+    const { get, getFiles } = await renderWithRoot();
+
     await act(async () => {
-      get().toggleFolder(createFolder('platform/new/'), true);
+      get().toggleFolder(createFolder('public/new/'), true);
     });
 
     expect(getFiles).not.toHaveBeenCalled();
-    expect(get().expandedFolders.has('platform/new/')).toBe(true);
-    expect(get().filePath).toBe('platform/new/');
+    expect(get().expandedFolders.has('public/new/')).toBe(true);
+    expect(get().filePath).toBe('public/new/');
   });
 
   test('collapses every other folder when collapseAll is set', async () => {
-    const { get } = await renderWithRoots();
+    const { get } = await renderWithRoot();
 
     expect([...get().expandedFolders]).toEqual(['public/']);
 
     await act(async () => {
-      get().toggleFolder(get().files[0], false, true);
+      get().toggleFolder(createFolder('public/new/'), true, true);
     });
 
-    expect([...get().expandedFolders]).toEqual(['platform/']);
-  });
-
-  test('flags an error for a config-file root whose names failed to load, without refetching them', async () => {
-    const getConfigFileNames = vi.fn().mockResolvedValue(undefined);
-    const get = renderProviderWithCapture(vi.fn().mockResolvedValue([]), getConfigFileNames);
-
-    await act(async () => {
-      get().fetchFiles(['file/', 'platform/', 'public/']);
-    });
-    await act(async () => {
-      get().toggleFolder(get().files[0]);
-    });
-
-    expect(get().hasFetchError).toBe(true);
-    expect(getConfigFileNames).toHaveBeenCalledOnce();
+    expect([...get().expandedFolders]).toEqual(['public/new/']);
   });
 });
 
-describe('createFolderContext config-file root', () => {
-  test('maps the file names to read-only platform items', async () => {
-    const get = renderProviderWithCapture(vi.fn().mockResolvedValue([]), vi.fn().mockResolvedValue(['one', 'two']));
+const createUnit = (folder: string, displayName?: string): OrgUnit => {
+  const name = decodeURIComponent(folder).split('/').filter(Boolean).at(-1) ?? '';
+  return { id: name, name, displayName: displayName ?? name, path: folder.replace(/\/$/, ''), folder };
+};
 
-    await act(async () => {
-      get().fetchFiles(['file/', 'platform/']);
-    });
+const setUnits = (units: OrgUnit[], loadUnits?: () => Promise<Record<string, OrgUnit>>) => {
+  const map = toUnitMap(units);
+  const loadUnitsMock = vi.fn(loadUnits ?? (async () => map));
+  vi.mocked(useOrgUnits).mockReturnValue({
+    units: map,
+    unitsStatus: 'ready',
+    ensureUnits: vi.fn(),
+    refreshUnits: vi.fn(async () => map),
+    loadUnits: loadUnitsMock,
+    getOwningUnit: vi.fn(),
+  } as unknown as ReturnType<typeof useOrgUnits>);
+  return loadUnitsMock;
+};
 
-    expect(get().fetchedFoldersData['file/']).toEqual([
-      expect.objectContaining({
-        name: 'one',
-        path: 'one',
-        nodeType: DialFileNodeType.ITEM,
-        bucket: BucketType.Platform,
-        entitySource: EntitySource.File,
-      }),
-      expect.objectContaining({ name: 'two', path: 'two' }),
-    ]);
+const renderUnitContext = (
+  getFiles: (path: string) => Promise<AssetListItem[] | null | undefined>,
+  includeUnits = true,
+) => {
+  const { Provider, useFolderContext } = createFolderContext(getFiles, 'testFolder', includeUnits);
+  let captured: AssetsFolderContext<AssetListItem> | null = null;
+  const Capture = () => {
+    captured = useFolderContext();
+    return null;
+  };
+  const ui = () => (
+    <Provider>
+      <Capture />
+    </Provider>
+  );
+  const { rerender } = render(ui());
+  return { get: () => captured as AssetsFolderContext<AssetListItem>, rerender: () => rerender(ui()) };
+};
+
+const childPaths = (node?: AssetListItem | DialFile) => getChildren(node)?.map((child) => child.path);
+
+describe('createFolderContext org units', () => {
+  beforeEach(() => {
+    setUnits([]);
   });
 
-  test('has no config-file items when the view supplies no names loader', async () => {
-    const get = renderProviderWithCapture(vi.fn().mockResolvedValue([]));
-
-    await act(async () => {
-      get().fetchFiles(['file/', 'platform/']);
-    });
-
-    expect(get().fetchedFoldersData['file/']).toEqual([]);
+  afterEach(() => {
+    setUnits([]);
   });
-});
 
-describe('createFolderContext folder rows from another source', () => {
-  test('shows a folder that only the extra source has and keeps items type-only', async () => {
-    const getFiles = vi.fn().mockResolvedValue([createItem('public/prompt-1')]);
-    const getFolderRows = vi.fn().mockResolvedValue([createFolder('public/Acme/')]);
-    const get = renderProviderWithCapture(getFiles, undefined, getFolderRows);
+  test('shows a unit the listing has no folder for, shaped like a folder row, and keeps items type-only', async () => {
+    setUnits([createUnit('public/Acme/')]);
+    const { get } = renderUnitContext(vi.fn().mockResolvedValue([createItem('public/prompt-1')]));
 
     await act(async () => {
       get().fetchFiles('public/');
     });
 
-    expect(getFolderRows).toHaveBeenCalledWith('public/');
-    expect(getChildren(get().files[0])?.map((child) => child.path)).toEqual(['public/Acme/', 'public/prompt-1']);
+    expect(childPaths(get().files[0])).toEqual(['public/Acme/', 'public/prompt-1']);
+    expect(getChildren(get().files[0])?.[0]).toMatchObject({
+      name: 'Acme',
+      path: 'public/Acme/',
+      folderId: 'public/',
+      nodeType: DialFileNodeType.FOLDER,
+      bucket: BucketType.Public,
+    });
     expect(get().fetchedFoldersData['public/']).toEqual([createItem('public/prompt-1')]);
   });
 
-  test('shows a folder present in both sources once, keeping the listing own node', async () => {
+  test('adds only the units directly below the loaded path', async () => {
+    setUnits([createUnit('public/Acme/'), createUnit('public/Acme/Risk/')]);
+    const { get } = renderUnitContext(vi.fn().mockResolvedValue([]));
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+
+    expect(childPaths(get().files[0])).toEqual(['public/Acme/']);
+  });
+
+  test('shows a decoded name and path for a unit whose folder is url-encoded', async () => {
+    setUnits([createUnit('public/US%20Risk/')]);
+    const { get } = renderUnitContext(vi.fn().mockResolvedValue([]));
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+
+    expect(getChildren(get().files[0])?.[0]).toMatchObject({ name: 'US Risk', path: 'public/US Risk/' });
+  });
+
+  test('shows a folder that is both a unit and in the listing once, keeping the listing own node', async () => {
+    setUnits([createUnit('public/Shared/')]);
     const own = { ...createFolder('public/Shared/'), author: 'own' };
-    const getFiles = vi.fn().mockResolvedValue([own]);
-    const getFolderRows = vi.fn().mockResolvedValue([createFolder('public/Shared/')]);
-    const get = renderProviderWithCapture(getFiles, undefined, getFolderRows);
+    const { get } = renderUnitContext(vi.fn().mockResolvedValue([own]));
 
     await act(async () => {
       get().fetchFiles('public/');
@@ -579,27 +482,24 @@ describe('createFolderContext folder rows from another source', () => {
     expect(children[0]).toMatchObject({ path: 'public/Shared/', author: 'own' });
   });
 
-  test('shows the extra folders when the listing answers nothing for the path', async () => {
-    const getFiles = vi.fn().mockResolvedValue(null);
-    const getFolderRows = vi.fn().mockResolvedValue([createFolder('public/Acme/')]);
-    const get = renderProviderWithCapture(getFiles, undefined, getFolderRows);
+  test('shows the units when the listing answers nothing for the path', async () => {
+    setUnits([createUnit('public/Acme/')]);
+    const { get } = renderUnitContext(vi.fn().mockResolvedValue(null));
 
     await act(async () => {
       get().fetchFiles('public/');
     });
 
     expect(get().hasFetchError).toBe(false);
-    expect(getChildren(get().files[0])?.map((child) => child.path)).toEqual(['public/Acme/']);
+    expect(childPaths(get().files[0])).toEqual(['public/Acme/']);
   });
 
-  test('loads the children of an extra-only folder on expand', async () => {
+  test('loads the children of a unit-only folder on expand and merges the units below it', async () => {
+    setUnits([createUnit('public/Acme/'), createUnit('public/Acme/Risk/')]);
     const getFiles = vi.fn((path: string) =>
       Promise.resolve(path === 'public/' ? [] : [createItem('public/Acme/prompt-1')]),
     );
-    const getFolderRows = vi.fn((path: string) =>
-      Promise.resolve(path === 'public/' ? [createFolder('public/Acme/')] : []),
-    );
-    const get = renderProviderWithCapture(getFiles, undefined, getFolderRows);
+    const { get } = renderUnitContext(getFiles);
 
     await act(async () => {
       get().fetchFiles('public/');
@@ -609,26 +509,50 @@ describe('createFolderContext folder rows from another source', () => {
     });
 
     const acme = getChildren(get().files[0])?.find((child) => child.path === 'public/Acme/');
-    expect(getChildren(acme)?.map((child) => child.path)).toEqual(['public/Acme/prompt-1']);
+    expect(childPaths(acme)).toEqual(['public/Acme/prompt-1', 'public/Acme/Risk/']);
   });
 
-  test('keeps the listing folders when the extra source fails', async () => {
-    const getFiles = vi.fn().mockResolvedValue([createFolder('public/own/')]);
-    const getFolderRows = vi.fn().mockRejectedValue(new Error('boom'));
-    const get = renderProviderWithCapture(getFiles, undefined, getFolderRows);
+  test('shows a unit folder empty, without an error, when the listing has nothing under it', async () => {
+    setUnits([createUnit('public/Acme/')]);
+    const { get } = renderUnitContext(vi.fn().mockResolvedValue(null));
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+    await act(async () => {
+      get().toggleFolder(createFolder('public/Acme/'));
+    });
+
+    expect(get().hasFetchError).toBe(false);
+    expect(get().fetchedFoldersData['public/Acme/']).toEqual([]);
+  });
+
+  test('keeps the listing folders when the units read rejects', async () => {
+    setUnits([createUnit('public/Acme/')], () => Promise.reject(new Error('boom')));
+    const { get } = renderUnitContext(vi.fn().mockResolvedValue([createFolder('public/own/')]));
 
     await act(async () => {
       get().fetchFiles('public/');
     });
 
     expect(get().hasFetchError).toBe(false);
-    expect(getChildren(get().files[0])?.map((child) => child.path)).toEqual(['public/own/']);
+    expect(childPaths(get().files[0])).toEqual(['public/own/']);
   });
 
-  test('reports the usual fetch error when the listing fails, even if the extra source has folders', async () => {
-    const getFiles = vi.fn().mockResolvedValue(undefined);
-    const getFolderRows = vi.fn().mockResolvedValue([createFolder('public/Acme/')]);
-    const get = renderProviderWithCapture(getFiles, undefined, getFolderRows);
+  test('keeps the listing rows when org units are off', async () => {
+    setUnits([]);
+    const { get } = renderUnitContext(vi.fn().mockResolvedValue([createFolder('public/own/')]));
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+
+    expect(childPaths(get().files[0])).toEqual(['public/own/']);
+  });
+
+  test('reports the usual fetch error when the listing fails, even if units are available', async () => {
+    setUnits([createUnit('public/Acme/')]);
+    const { get } = renderUnitContext(vi.fn().mockResolvedValue(undefined));
 
     await act(async () => {
       get().fetchFiles('public/');
@@ -638,39 +562,136 @@ describe('createFolderContext folder rows from another source', () => {
     expect(get().files).toEqual([]);
   });
 
-  test('does not read the extra source outside the public bucket', async () => {
-    const getFolderRows = vi.fn().mockResolvedValue([createFolder('platform/x/')]);
-    const get = renderProviderWithCapture(vi.fn().mockResolvedValue([]), undefined, getFolderRows);
+  test('does not wait for units outside the public bucket', async () => {
+    const loadUnits = setUnits([createUnit('public/Acme/')]);
+    const { get } = renderUnitContext(vi.fn().mockResolvedValue([]));
 
     await act(async () => {
       get().fetchFiles('platform/');
     });
 
-    expect(getFolderRows).not.toHaveBeenCalled();
+    expect(loadUnits).not.toHaveBeenCalled();
   });
 
-  test('reads the extra source for the public root only when several roots are loaded', async () => {
-    const getFolderRows = vi.fn().mockResolvedValue([]);
-    const getConfigFileNames = vi.fn().mockResolvedValue(['one']);
-    const get = renderProviderWithCapture(vi.fn().mockResolvedValue([]), getConfigFileNames, getFolderRows);
-
-    await act(async () => {
-      get().fetchFiles(['file/', 'platform/', 'public/']);
-    });
-
-    expect(getFolderRows).toHaveBeenCalledOnce();
-    expect(getFolderRows).toHaveBeenCalledWith('public/');
-  });
-
-  test('does not read anything extra when no source is supplied', async () => {
-    const getFiles = vi.fn().mockResolvedValue([createFolder('public/own/')]);
-    const get = renderProviderWithCapture(getFiles);
+  test('adds nothing and does not wait for units when the context does not opt in', async () => {
+    const loadUnits = setUnits([createUnit('public/Acme/')]);
+    const { get } = renderUnitContext(vi.fn().mockResolvedValue([createFolder('public/own/')]), false);
 
     await act(async () => {
       get().fetchFiles('public/');
     });
 
-    expect(getChildren(get().files[0])?.map((child) => child.path)).toEqual(['public/own/']);
+    expect(loadUnits).not.toHaveBeenCalled();
+    expect(childPaths(get().files[0])).toEqual(['public/own/']);
+  });
+
+  test('builds the first tree from the units of a read that was still in flight', async () => {
+    const deferred = createDeferred<Record<string, OrgUnit>>();
+    setUnits([], () => deferred.promise);
+    const { get } = renderUnitContext(vi.fn().mockResolvedValue([]));
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+    expect(get().files).toEqual([]);
+
+    await act(async () => {
+      deferred.resolve(toUnitMap([createUnit('public/Fresh/')]));
+    });
+
+    expect(childPaths(get().files[0])).toEqual(['public/Fresh/']);
+  });
+});
+
+describe('createFolderContext tree follows the set of units', () => {
+  beforeEach(() => {
+    setUnits([createUnit('public/Acme/')]);
+  });
+
+  afterEach(() => {
+    setUnits([]);
+  });
+
+  const renderBuiltTree = async (includeUnits = true) => {
+    const rendered = renderUnitContext(vi.fn().mockResolvedValue([]), includeUnits);
+    await act(async () => {
+      rendered.get().fetchFiles('public/');
+    });
+    return rendered;
+  };
+
+  test('drops the built tree when the set of unit folders changes and keeps the selected folder', async () => {
+    const { get, rerender } = await renderBuiltTree();
+    expect(get().files).toHaveLength(1);
+
+    setUnits([createUnit('public/Acme/'), createUnit('public/New/')]);
+    await act(async () => {
+      rerender();
+    });
+
+    expect(get().files).toEqual([]);
+    expect(get().fetchedFoldersData).toEqual({});
+    expect([...get().expandedFolders]).toEqual([]);
+    expect(get().filePath).toBe('public/');
+  });
+
+  test('rebuilds from the new units when the tree is loaded again', async () => {
+    const { get, rerender } = await renderBuiltTree();
+    setUnits([createUnit('public/Acme/'), createUnit('public/New/')]);
+    await act(async () => {
+      rerender();
+    });
+
+    await act(async () => {
+      get().fetchFiles('public/');
+    });
+
+    expect(childPaths(get().files[0])).toEqual(['public/Acme/', 'public/New/']);
+  });
+
+  test('drops the tree when the last unit disappears', async () => {
+    const { get, rerender } = await renderBuiltTree();
+
+    setUnits([]);
+    await act(async () => {
+      rerender();
+    });
+
+    expect(get().files).toEqual([]);
+  });
+
+  test('keeps the tree when only a display name changes', async () => {
+    const { get, rerender } = await renderBuiltTree();
+
+    setUnits([createUnit('public/Acme/', 'Acme Corp')]);
+    await act(async () => {
+      rerender();
+    });
+
+    expect(get().files).toHaveLength(1);
+  });
+
+  test('has nothing to drop when no tree was built from units yet', async () => {
+    const { get, rerender } = renderUnitContext(vi.fn().mockResolvedValue([]));
+
+    setUnits([createUnit('public/Acme/'), createUnit('public/New/')]);
+    await act(async () => {
+      rerender();
+    });
+
+    expect(get().files).toEqual([]);
+    expect(get().filePath).toBe('');
+  });
+
+  test('keeps the tree of a context that does not use units', async () => {
+    const { get, rerender } = await renderBuiltTree(false);
+
+    setUnits([createUnit('public/Acme/'), createUnit('public/New/')]);
+    await act(async () => {
+      rerender();
+    });
+
+    expect(get().files).toHaveLength(1);
   });
 });
 
@@ -810,11 +831,11 @@ describe('createFolderContext when a fetch throws', () => {
     expect(get().fetchedFoldersData).toEqual({});
   });
 
-  test('flags an error and goes idle when a multi-root fetch rejects', async () => {
+  test('flags an error and goes idle when a root fetch rejects', async () => {
     const get = renderProviderWithCapture(vi.fn().mockRejectedValue(new Error('session expired')));
 
     await act(async () => {
-      get().fetchFiles(['platform/', 'public/']);
+      get().fetchFiles('public/');
     });
 
     expect(get().hasFetchError).toBe(true);

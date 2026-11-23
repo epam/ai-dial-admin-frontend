@@ -5,8 +5,8 @@ import { ResultDto } from '@/src/models/evaluation/run';
 /**
  * The `Execution` columns whose default visibility follows the data. Three deliberate absences:
  * `Total requests` and `Total turns` start hidden whatever they hold — a denominator is context for a
- * position, not a reading of its own — and `HTTP` and `Duration` stay visible whatever they hold, since
- * an all-`200` run is still worth seeing.
+ * position, not a reading of its own — and `Overall score`, `HTTP` and `Duration` stay visible whatever
+ * they hold, since an all-`200` run is still worth seeing.
  */
 export enum ExecutionIndexField {
   RunIndex = 'runIndex',
@@ -31,6 +31,13 @@ export const getUniformExecutionFields = (results: ResultDto[]): Set<string> =>
   results.length === 0
     ? new Set<string>()
     : new Set<string>(EXECUTION_INDEX_FIELDS.filter((field) => isUniformField(results, field)));
+
+/**
+ * Grouping by test case is useful exactly when at least one execution index is useful as a visible
+ * column. An empty result set has nothing to group.
+ */
+export const hasVaryingExecutionIndices = (results: ResultDto[]): boolean =>
+  results.length > 0 && getUniformExecutionFields(results).size < EXECUTION_INDEX_FIELDS.length;
 
 /** Only ever hides: a column a builder already hid stays hidden, whatever its values do. */
 export const hideUniformColumns = (columns: ColDef[], uniformFields: Set<string>): ColDef[] =>

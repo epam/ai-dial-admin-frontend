@@ -60,10 +60,13 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       items: [
         { key: MenuI18nKey.PlatformModels, href: ApplicationRoute.PlatformModels },
         { key: MenuI18nKey.Toolsets, href: ApplicationRoute.AssetsToolsets },
+        { key: MenuI18nKey.PlatformRouters, href: ApplicationRoute.PlatformRouters },
         {
           key: MenuI18nKey.PlatformTranslators,
           href: ApplicationRoute.PlatformTranslators,
         },
+        { key: MenuI18nKey.PlatformPlugins, href: ApplicationRoute.PlatformPlugins },
+        { key: MenuI18nKey.PlatformAliases, href: ApplicationRoute.AssetsAliases },
         { key: MenuI18nKey.PlatformRoutes, href: ApplicationRoute.PlatformRoutes },
         { key: MenuI18nKey.Applications, href: ApplicationRoute.AssetsApplications },
         {

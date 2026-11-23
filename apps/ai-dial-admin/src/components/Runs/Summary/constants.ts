@@ -19,8 +19,6 @@ export const METRIC_EVAL_DURATION_MS_FIELD = 'metric_eval_duration_ms';
 
 /** Aggregate output aliases requested from the query. */
 export const COUNT_ALIAS = 'count';
-export const AVG_DURATION_ALIAS = 'avg_duration_ms';
-export const AVG_METRIC_EVAL_DURATION_ALIAS = 'avg_metric_eval_duration_ms';
 export const TOTAL_DURATION_ALIAS = 'total_duration_ms';
 export const TOTAL_METRIC_EVAL_DURATION_ALIAS = 'total_metric_eval_duration_ms';
 
@@ -64,11 +62,11 @@ export const SUMMARY_PANELS_GRID_CLASS =
 
 export const ANALYTICS_KPI_GRID_CLASS = 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-row';
 
-/** Card with a footer pinned to the bottom (Overall Score's "Based on completed test cases"). */
-export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1 flex flex-col justify-between';
-
-/** Card whose content sits right under the title however tall the row is stretched by its neighbours. */
-export const ANALYTICS_KPI_CARD_TOP_CLASS = 'min-w-0 xl:flex-1 flex flex-col justify-start gap-2';
+/**
+ * Every card is title / figure / footer: the kit card pins its `description` slot to the bottom, so with one
+ * shared gap the three levels line up across the row however tall the row is stretched by its neighbours.
+ */
+export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1 gap-2';
 
 export const COST_FETCH_POLL_INTERVAL_MS = 5_000;
 
@@ -82,6 +80,7 @@ export const COST_FETCH_POLL_INTERVAL_MS = 5_000;
  */
 export const COST_FETCH_MAX_WAIT_MS = 15 * 60 * 1_000;
 
-export const DISTRIBUTION_STAT_CARDS_GRID_CLASS = 'grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+export const DISTRIBUTION_STAT_CARDS_GRID_CLASS =
+  'grid grid-cols-[repeat(auto-fill,minmax(min(12rem,100%),1fr))] gap-3';
 
 export const DISTRIBUTION_STAT_CARD_CLASS = 'min-w-0';

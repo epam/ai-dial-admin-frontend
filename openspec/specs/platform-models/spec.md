@@ -10,28 +10,20 @@ The system SHALL add a `Models` menu item as the first entry in the Assets secti
 - **THEN** `Models` is its first item, appearing before App Runners/Apps/Toolsets/Conversations/Prompts/Files
 
 ### Requirement: Model asset list is flat with create and delete actions
-The system SHALL render the model asset list as a single, non-nested list of entries under the `platform` root, built on the shared asset list, exposing create, delete, and bulk-delete actions and no folder-create, rename-folder, or move-into-folder controls — unlike the Apps asset list, which supports arbitrary nested folders.
+The system SHALL render the model asset list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (Create button) and delete actions and no folder-create, rename-folder, or move-into-folder controls — unlike the Apps Public tab, which supports arbitrary nested folders.
 
 The shared create dispatch SHALL remove its transient `folderId` and merged-read `_metadata` fields before it invokes the model create server action. All remaining model content and identity fields SHALL be preserved for the server action's existing Core payload transformation.
 
 #### Scenario: List shows entries without a folder tree
 - **WHEN** a user opens the `/assets-models` list
-- **THEN** all model resources are shown as direct entries with no folder-expand affordance
+- **THEN** all model resources are shown as direct grid rows with no folder-expand affordance
 
 #### Scenario: No create-folder or move action is present
-- **WHEN** a user opens the model asset list toolbar and row actions
-- **THEN** neither a create-folder action nor a move-to-folder action is offered, unlike the Apps asset list
-
-#### Scenario: The folder tree offers no folder actions
-- **WHEN** a user opens the context menu on the model asset folder tree's root
-- **THEN** no add-sibling, add-child, rename, move, or manage-permissions action is offered, since the namespace is flat and a folder create would submit a placeholder asset Core cannot store
-
-#### Scenario: A rejected folder create never fails silently
-- **WHEN** a folder-create submission for this resource kind is rejected
-- **THEN** the rejection is surfaced to the user as an error, rather than the pending tree node disappearing with no message
+- **WHEN** a user opens the model asset list header and row actions
+- **THEN** neither a create-folder action nor a move-to-folder action is offered, unlike the Apps Public tab
 
 #### Scenario: Create action opens the model create modal
-- **WHEN** a user activates the create action in the list toolbar
+- **WHEN** a user activates the Create button
 - **THEN** a modal opens requesting the model's name, and submitting it creates the model resource and navigates to its detail view
 
 #### Scenario: A created model with a colon in its name opens through an encoded detail route
@@ -42,13 +34,9 @@ The shared create dispatch SHALL remove its transient `folderId` and merged-read
 - **WHEN** the shared asset-list create dispatch invokes a flat platform create action with `folderId` and `_metadata` present
 - **THEN** the delegated model create server action receives neither field and retains the model's content and identity fields
 
-#### Scenario: Bulk delete removes the selected models
-- **WHEN** a user selects several model resources and confirms bulk delete
-- **THEN** each selected model is deleted and the list refreshes without them
-
 #### Scenario: A read-only admin is offered no mutating actions
 - **WHEN** a read-only admin opens the model asset list
-- **THEN** no create, delete, or bulk-delete action is offered
+- **THEN** no create or delete action is offered
 
 ### Requirement: Model asset list columns are metadata-only
 The system SHALL show name, author, created-at, and updated-at columns for model assets, all sourced from Core's resource metadata, and SHALL NOT fetch each row's content to populate the list.
@@ -67,10 +55,11 @@ The system SHALL show name, author, created-at, and updated-at columns for model
 
 ### Requirement: Model asset detail view tab set
 
-The system SHALL render a model asset's detail view with `Properties`, `Features`, `Roles`, and
-`Interceptors`, in that order, and SHALL append `Audit` as a fifth and last tab when the
-`dashboardEnabled` feature flag is set. When that flag is unset the tab set SHALL remain exactly the
-first four tabs.
+The system SHALL render a model asset's detail view with `Properties`, `Features`, `Catalog`, `Roles`,
+and `Interceptors`, in that order, and SHALL append `Audit` after them when the Audit gate is open.
+The gate is open when `dashboardEnabled` is set together with `adminApiEnabled`, or when
+`analyticsUsageEnabled` is set, per `admin-api-availability`. When the gate is closed the tab set
+SHALL remain exactly those five tabs.
 
 There SHALL be no revision link, no rollback control, and no Core-sync banner, because DIAL Core
 exposes no audit, revision, history, or snapshot surface for config resources — the rationale that
@@ -80,41 +69,40 @@ query the analytics service and depend on nothing Core stores. There SHALL be no
 Dependencies tab.
 
 `dashboardEnabled` is derived once per request in `apps/ai-dial-admin/src/app/[lang]/layout.tsx` from
-`DISABLE_MENU_ITEMS` not containing `dashboard`, and is the same flag that already gates the
-`Assets ▸ Toolsets` Audit tab. No new flag or environment variable is introduced.
+`DISABLE_MENU_ITEMS` not containing `dashboard`; `analyticsUsageEnabled` requires both
+`ANALYTICS_ENABLED` and `ANALYTICS_USAGE_ENABLED`. The same gate governs the `Assets ▸ Toolsets`
+Audit tab. No new flag or environment variable is introduced.
 
 Gating the tab's *presence* is a known and accepted divergence from `Entities ▸ Models`, which lists
 `Audit` unconditionally and, with `dashboardEnabled` unset, still shows it carrying only its
 `Activities` sub-tab. `Catalog ▸ Models` has no `Activities` sub-tab to fall back on (see the Audit
-requirement below), so an unconditional tab would be empty here. Consistency with `Entities ▸ Models`
-therefore holds wherever the dashboard feature is enabled — the default — and the flag-unset
-four-tab state below is deliberate, not an oversight to be "fixed" by rendering the tab always.
+requirement below), so an unconditional tab would be empty here. The closed-gate tab set below is
+deliberate, not an oversight to be "fixed" by rendering the tab always.
 
 Two scenario headings below are retained from the previous wording of this requirement, because a
 scenario's name is the identity a delta rewrites content under: `Detail view renders exactly four
-tabs` is now the `dashboardEnabled`-unset case rather than the only case, and `No Audit tab or sync
-banner` now prohibits only the revision/rollback/Core-sync surface it used to bundle the tab with.
+tabs` is now the closed-gate case, and `No Audit tab or sync banner` now prohibits only the
+revision/rollback/Core-sync surface it used to bundle the tab with.
 
 #### Scenario: Audit is the fifth tab when the dashboard feature is enabled
 
 - **WHEN** a user opens a model asset's detail view (`/platform-models/[id]`) in a deployment whose
-  `dashboardEnabled` flag is set
-- **THEN** the tab list reads `Properties`, `Features`, `Roles`, `Interceptors`, `Audit`, in that
-  order
+  Audit gate is open
+- **THEN** the tab list reads `Properties`, `Features`, `Catalog`, `Roles`, `Interceptors`, `Audit`,
+  in that order
 
 #### Scenario: Detail view renders exactly four tabs
 
-Rescoped: the four-tab set is what a deployment with the dashboard feature disabled shows.
+Rescoped: the base tab set is what a deployment with the Audit gate closed shows.
 
-- **WHEN** a user opens a model asset's detail view in a deployment whose `dashboardEnabled` flag is
-  unset (`DISABLE_MENU_ITEMS` includes `dashboard`)
-- **THEN** the tab list contains exactly `Properties`, `Features`, `Roles`, and `Interceptors`, in
-  that order, and no `Audit` tab is shown
+- **WHEN** a user opens a model asset's detail view in a deployment whose Audit gate is closed
+- **THEN** the tab list contains exactly `Properties`, `Features`, `Catalog`, `Roles`, and
+  `Interceptors`, in that order, and no `Audit` tab is shown
 
 #### Scenario: No Audit tab or sync banner
 
 Rescoped: the prohibition now covers the revision/rollback/Core-sync surface only. The `Audit` tab
-itself is prohibited only while `dashboardEnabled` is unset, per the scenario above.
+itself is prohibited only while the Audit gate is closed, per the scenario above.
 
 - **WHEN** a user opens a model asset's detail view, with the `Audit` tab present or absent
 - **THEN** no revision link, rollback control, or Core-sync status banner is rendered
@@ -154,6 +142,45 @@ Controls that already exist for the entity surfaces SHALL be reused or extracted
 #### Scenario: There is no source field
 - **WHEN** a user opens a model asset's Properties tab
 - **THEN** no container/adapter/endpoints source selector is offered, since Core's model resource carries no `source` property
+
+### Requirement: Properties exposes the model provider and lifecycle dates
+The model asset's Properties tab SHALL expose DIAL Core's optional, informational `provider`, `deprecationDate` and `endOfService` fields, with `provider` after the intro control and the two date fields on one row below it. `provider` SHALL be a free-text input. `deprecationDate` and `endOfService` SHALL be date fields whose stored value is the `YYYY-MM-DD` string Core holds. The fields SHALL be read and written in camelCase, exactly as the model resource carries them. The tab SHALL NOT validate them, warn about a past date, or relate one date to the other, because Core treats them as informational.
+
+#### Scenario: Provider is editable
+- **WHEN** a user types a value into the Provider input
+- **THEN** the model resource's `provider` holds that value and saving persists it
+
+#### Scenario: A date is picked and stored as a plain date string
+- **WHEN** a user picks 30 June 2027 in the Deprecation date field
+- **THEN** the model resource's `deprecationDate` is `2027-06-30`, regardless of the viewer's timezone
+
+#### Scenario: A stored date is shown in its field
+- **WHEN** a model resource with `endOfService` `2027-12-31` is opened
+- **THEN** the End of service field shows 31 December 2027
+
+#### Scenario: A date can be cleared
+- **WHEN** a date field holds a date and the user activates its clear button
+- **THEN** the field shows its placeholder, the clear button is no longer offered, and the saved resource omits that date
+
+#### Scenario: No clear button on an empty date field
+- **WHEN** a date field has no value
+- **THEN** no clear button is offered for it
+
+#### Scenario: A malformed stored date is preserved
+- **WHEN** a model resource whose `deprecationDate` is not a `YYYY-MM-DD` date is opened and saved without touching that field
+- **THEN** the field shows its placeholder and the stored value is written back unchanged
+
+#### Scenario: An untouched model gains no fields
+- **WHEN** a model with none of the three fields is opened and saved without editing them
+- **THEN** the written resource contains none of `provider`, `deprecationDate` or `endOfService`
+
+#### Scenario: A read-only admin cannot edit them
+- **WHEN** a read-only admin opens a model asset's Properties tab
+- **THEN** the Provider, Deprecation date and End of service fields and their clear buttons are disabled
+
+#### Scenario: The listing and alias views are unchanged
+- **WHEN** the platform models list or an alias's Target tab is shown
+- **THEN** neither displays provider or lifecycle dates, because Core does not return them there
 
 ### Requirement: Responses defaults are shown when the model can serve the Responses API
 The system SHALL render the responses-defaults editor when the model declares support for the OpenAI Responses interface — an `openaiResponses` entry with a base URL in `interfaces`, or a set `responsesEndpoint` — mirroring the condition DIAL Core itself evaluates. The entity view's source-type-derived condition SHALL NOT be ported, since Core's model resource has no source.
@@ -277,11 +304,15 @@ to all by omission.
 - **THEN** the tab shows zero granted roles and the "not available to any end-users" notification is shown
 
 ### Requirement: Interceptors tab
-The system SHALL provide an Interceptors tab on the model asset detail view, editing the resource's `interceptors`, with a `Source` column distinguishing the two Core populations an option can come from, matching the same column on `Assets > App Runners`.
+The system SHALL provide an Interceptors tab on the model asset detail view, editing the resource's `interceptors`, with a `Source` column distinguishing the two Core populations an option can come from, matching the same column on `Assets > App Runners`. Adding interceptors SHALL retain only the first occurrence of each reference, preserving their order.
 
 #### Scenario: Interceptor selection round-trips on the model resource
 - **WHEN** a user selects interceptors on a model asset and saves
 - **THEN** the selection persists to the resource's `interceptors` and is rendered as selected when the view is reopened
+
+#### Scenario: Re-adding an existing interceptor
+- **WHEN** a user adds an interceptor that is already selected, alongside a new interceptor
+- **THEN** each reference occurs once in the model's selection, with the original order preserved and new references appended
 
 #### Scenario: An unresolvable interceptor reference is reported
 - **WHEN** a save is rejected by Core because a selected interceptor does not resolve in the merged config
@@ -422,3 +453,4 @@ labelled to cover tools, functions and skills. The value SHALL be stored in snak
 #### Scenario: Toggling persists the flag
 - **WHEN** a user turns `skills_supported` on and saves
 - **THEN** the payload carries `features.skills_supported: true`
+

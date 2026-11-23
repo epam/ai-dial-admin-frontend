@@ -232,55 +232,49 @@ const buildSegmentThresholdMarkLine = (
   thresholdColor: string,
   runCount: number,
   plotWidth?: number,
-) => {
-  const labeledValues = new Set<number>();
-
-  return {
-    ...THRESHOLD_MARK_LINE_INTERACTION,
-    symbol: 'none' as const,
-    label: { show: false },
-    lineStyle: {
-      color: thresholdColor,
-      width: 1,
-      type: 'dashed' as const,
-    },
-    data: segments.map((segment) => {
-      if (segment.kind === 'horizontal') {
-        const shouldShowLabel = !labeledValues.has(segment.y);
-        labeledValues.add(segment.y);
-        const caption = thresholdCaption(thresholdShortLabel, segment.y);
-        const isAnchoredToEnd = isLabelClippedAtRightEdge(segment, caption, runCount, plotWidth);
-        return [
-          {
-            coord: [segment.x0, segment.y],
-            label: {
-              show: shouldShowLabel,
-              position: thresholdLabelPosition(segment.y, isAnchoredToEnd),
-              formatter: caption,
-              color: palette['text-primary'],
-              fontSize: 10,
-            },
-            tooltip: buildThresholdTooltip(thresholdLabel, segment.y),
-          },
-          { coord: [segment.x1, segment.y] },
-        ];
-      }
+) => ({
+  ...THRESHOLD_MARK_LINE_INTERACTION,
+  symbol: 'none' as const,
+  label: { show: false },
+  lineStyle: {
+    color: thresholdColor,
+    width: 1,
+    type: 'dashed' as const,
+  },
+  data: segments.map((segment) => {
+    if (segment.kind === 'horizontal') {
+      const caption = thresholdCaption(thresholdShortLabel, segment.y);
+      const isAnchoredToEnd = isLabelClippedAtRightEdge(segment, caption, runCount, plotWidth);
       return [
         {
-          coord: [segment.x, segment.y0],
-          label: { show: false },
-          tooltip: { show: false },
-          lineStyle: {
-            color: thresholdColor,
-            width: 1,
-            type: THRESHOLD_VERTICAL_DASH,
+          coord: [segment.x0, segment.y],
+          label: {
+            show: true,
+            position: thresholdLabelPosition(segment.y, isAnchoredToEnd),
+            formatter: caption,
+            color: palette['text-primary'],
+            fontSize: 10,
           },
+          tooltip: buildThresholdTooltip(thresholdLabel, segment.y),
         },
-        { coord: [segment.x, segment.y1] },
+        { coord: [segment.x1, segment.y] },
       ];
-    }),
-  };
-};
+    }
+    return [
+      {
+        coord: [segment.x, segment.y0],
+        label: { show: false },
+        tooltip: { show: false },
+        lineStyle: {
+          color: thresholdColor,
+          width: 1,
+          type: THRESHOLD_VERTICAL_DASH,
+        },
+      },
+      { coord: [segment.x, segment.y1] },
+    ];
+  }),
+});
 
 export const buildOverallScoreChartOptions = (
   palette: ThemePalette,

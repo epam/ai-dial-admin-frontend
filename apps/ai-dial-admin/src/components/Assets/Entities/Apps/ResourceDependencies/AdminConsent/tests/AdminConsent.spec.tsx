@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { ComponentProps } from 'react';
 
 import { render, screen } from '@testing-library/react';
@@ -5,16 +6,13 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey, ResourceDependenciesI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { AdminConsentStatus, ResourceAccess, ResourceDependency } from '@/src/models/dial/resource-dependency';
 import AdminConsent from '../AdminConsent';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn(() => false) }));
 
 const makeDependency = (path: string, access = [ResourceAccess.Read]): ResourceDependency => ({
   kind: 'dial.resourceLink',
   link_id: path,
-  target: { path },
+  target: { url: path },
   access,
   required: false,
 });
@@ -46,7 +44,7 @@ describe('AdminConsent', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     onApprove.mockResolvedValue(undefined);
     onRevoke.mockResolvedValue(undefined);
   });
@@ -145,7 +143,9 @@ describe('AdminConsent', () => {
 
       await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Approve }));
 
-      expect(screen.getByText(ResourceDependenciesI18nKey.ApproveTitle)).toBeTruthy();
+      const title = screen.getByRole('heading', { name: ResourceDependenciesI18nKey.ApproveTitle });
+      expect(screen.getByRole('dialog', { name: ResourceDependenciesI18nKey.ApproveTitle })).toBeTruthy();
+      expect(title).toHaveClass('truncate');
       expect(screen.getByText('skills/{current-user}/ (READ, WRITE)')).toBeTruthy();
       expect(screen.getByText('files/public/folder/ (READ)')).toBeTruthy();
       expect(onApprove).not.toHaveBeenCalled();
@@ -178,7 +178,9 @@ describe('AdminConsent', () => {
 
       await user.click(screen.getByRole('button', { name: ResourceDependenciesI18nKey.ReApprove }));
 
-      expect(screen.getByText(ResourceDependenciesI18nKey.ApproveTitle)).toBeTruthy();
+      const title = screen.getByRole('heading', { name: ResourceDependenciesI18nKey.ApproveTitle });
+      expect(screen.getByRole('dialog', { name: ResourceDependenciesI18nKey.ApproveTitle })).toBeTruthy();
+      expect(title).toHaveClass('truncate');
     });
 
     test('revoke lists what is currently approved, not the saved declaration', async () => {
@@ -205,7 +207,7 @@ describe('AdminConsent', () => {
 
   describe('AdminConsent — read-only admin', () => {
     test('shows the state without any button', () => {
-      vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+      appContextMock.set({ isReadOnlyAdmin: true });
 
       renderConsent({ status: STALE });
 

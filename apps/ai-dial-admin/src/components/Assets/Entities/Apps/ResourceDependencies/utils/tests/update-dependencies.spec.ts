@@ -16,7 +16,7 @@ import {
 const makeDependency = (linkId: string, overrides: Partial<ResourceDependency> = {}): ResourceDependency => ({
   kind: 'dial.resourceLink',
   link_id: linkId,
-  target: { path: `files/public/${linkId}/` },
+  target: { url: `files/public/${linkId}/` },
   access: [ResourceAccess.Read],
   required: false,
   ...overrides,
@@ -34,7 +34,7 @@ describe('toDependency', () => {
     expect(toDependency(values)).toEqual({
       kind: 'dial.resourceLink',
       link_id: 'docs',
-      target: { path: 'skills/{current-user}/' },
+      target: { url: 'skills/{current-user}/' },
       access: ['READ', 'WRITE'],
       required: true,
     });

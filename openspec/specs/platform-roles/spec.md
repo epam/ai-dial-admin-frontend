@@ -3,9 +3,7 @@
 The `Assets > Roles` admin surface: a flat, unversioned list and Properties-only detail view over
 DIAL Core's `roles/platform` config resources, read and written directly through Core rather than the
 admin backend.
-
 ## Requirements
-
 ### Requirement: Assets > Roles menu entry
 The system SHALL add a `Roles` menu item to the Assets section of the admin menu, directly after
 `Routes`, linking to a new `/assets-roles` route.
@@ -15,30 +13,25 @@ The system SHALL add a `Roles` menu item to the Assets section of the admin menu
 - **THEN** `Roles` appears immediately after `Routes`
 
 ### Requirement: Role asset list is flat with create and delete actions
-The system SHALL render the role asset list as a single, non-nested list of entries under the
-`platform` root, built on the shared asset list, exposing create, delete, and bulk-delete actions and
+The system SHALL render the role asset list as the Platform tab's flat grid of entries, with a config.json tab beside it, exposing create (Create button) and delete actions and
 no folder-create, rename-folder, or move-into-folder controls.
 
 #### Scenario: List shows entries without a folder tree
 - **WHEN** a user opens `/assets-roles`
-- **THEN** all role resources are shown as direct entries with no folder-expand affordance
+- **THEN** all role resources are shown as direct grid rows with no folder-expand affordance
 
 #### Scenario: No create-folder or move action is present
-- **WHEN** a user opens the role asset list toolbar and row actions
+- **WHEN** a user opens the role asset list header and row actions
 - **THEN** neither a create-folder action nor a move-to-folder action is offered
 
 #### Scenario: Create action opens the role create modal
-- **WHEN** a user activates the create action in the list toolbar
+- **WHEN** a user activates the Create button
 - **THEN** a modal opens requesting only the role's name — no display name or description field,
   since `Role` has neither — and submitting it creates the resource and navigates to its detail view
 
-#### Scenario: Bulk delete removes the selected roles
-- **WHEN** a user selects several roles and confirms bulk delete
-- **THEN** each selected role is deleted and the list refreshes without them
-
 #### Scenario: A read-only admin is offered no mutating actions
 - **WHEN** a read-only admin opens the role asset list
-- **THEN** no create, delete, or bulk-delete action is offered
+- **THEN** no create or delete action is offered
 
 ### Requirement: Role asset list columns are metadata-only
 The system SHALL show name, author, created-at, and updated-at columns for role assets, all sourced
@@ -206,41 +199,88 @@ under the new name.
 ### Requirement: Entities tab shows attached models with a count and an add action
 
 The system SHALL render the role asset's Entities tab with a header reading `Entities: {n}`, where `n`
-is the number of models currently keyed in the role's `limits` map, and an `+Add` action that opens a
-model-selection popup.
+is the number of entries currently keyed in the role's `limits` map, and an `Add` dropdown action offering
+`Add models` and `Add applications`. `Add models` SHALL open the model-selection popup and `Add applications`
+SHALL open the application-selection popup.
 
-#### Scenario: Header reflects the attached-model count
+#### Scenario: Header reflects the attached-entry count
 
-- **WHEN** a user opens the Entities tab of a role with three models keyed in `limits`
+- **WHEN** a user opens the Entities tab of a role with three entries keyed in `limits`
 - **THEN** the header reads `Entities: 3`
+
+#### Scenario: The add action offers models and applications
+
+- **WHEN** a user opens the `Add` dropdown on the Entities tab
+- **THEN** it lists `Add models` and `Add applications`
 
 #### Scenario: A read-only admin sees no add action
 
 - **WHEN** a read-only admin opens the Entities tab
-- **THEN** no `+Add` action is offered
+- **THEN** no `Add` action is offered
 
-### Requirement: Add-model popup offers only models, from both Core populations
+### Requirement: Add-models popup offers only models, from both Core populations
 
-The system SHALL populate the add-model popup exclusively with DIAL Core models — drawn from both the
+The system SHALL populate the popup opened by `Add models` exclusively with DIAL Core models — drawn from both the
 `platform` population and the config-file population already merged for `Assets > Models` — and SHALL
 exclude every other entity type (applications, routes, toolsets, keys). The popup SHALL allow selecting
 several models before applying, and SHALL exclude any model already keyed in the role's `limits` map.
 
 #### Scenario: Popup lists platform and config-file models only
 
-- **WHEN** a user opens the add-model popup
+- **WHEN** a user opens the add-models popup
 - **THEN** every row is a model sourced from either the platform or config-file population, and no
   application, route, toolset, or key row is shown
 
 #### Scenario: Already-attached models are not offered again
 
-- **WHEN** a user opens the add-model popup for a role with two models already in `limits`
+- **WHEN** a user opens the add-models popup for a role with two models already in `limits`
 - **THEN** neither of those two models appears as a selectable row
 
 #### Scenario: Selecting several models and applying attaches all of them
 
 - **WHEN** a user selects three models in the popup and applies
 - **THEN** all three appear as new rows in the Entities grid after the popup closes
+
+### Requirement: Add-applications popup attaches applications by root-dependent key
+
+The system SHALL open, for `Add applications`, a multi-select popup with the tabs described by
+`tabbed-asset-listings` (a Public tree, and Platform and config.json grids) and offers only application entries as
+selectable (grouping folders are browsable but never selectable). Applying SHALL add one entry to the role's
+`limits` map per selected application, each with an empty limits object. The entry's key SHALL be the application's
+`name` when it was picked from the Platform or config.json tab, and `applications/{path}` when it was picked from
+the Public tab. A selected application whose key is already in `limits` SHALL be skipped silently and keep its
+existing limits. Apply SHALL be disabled while nothing is selected, and a cancelled pick SHALL NOT carry into the
+next open.
+
+#### Scenario: A platform or config.json application is keyed by its name
+
+- **WHEN** a user selects an application on the Platform or config.json tab and applies
+- **THEN** `limits` gains an entry keyed by that application's name and it appears as a row in the Entities grid
+
+#### Scenario: A public application is keyed with the applications prefix
+
+- **WHEN** a user selects an application on the Public tab and applies
+- **THEN** `limits` gains an entry keyed `applications/{path}` for it
+
+#### Scenario: Several applications are attached at once
+
+- **WHEN** a user selects three applications across the tabs and applies
+- **THEN** three entries are added and the popup closes
+
+#### Scenario: An already-attached application is skipped
+
+- **WHEN** a user applies a selection containing an application whose key is already in `limits`
+- **THEN** no duplicate row appears and the existing entry keeps its token limits
+
+#### Scenario: Nothing selected disables Apply
+
+- **WHEN** the popup is open with no application selected
+- **THEN** the Apply action is disabled
+
+#### Scenario: Cancelling discards the pick
+
+- **WHEN** a user selects an application, cancels, and reopens the popup
+- **THEN** no application is shown as selected and Apply is disabled
 
 ### Requirement: Entities grid shows name and four token-limit columns
 
@@ -333,3 +373,4 @@ The system SHALL render all four editable token-limit cells without a triangle i
 
 - **WHEN** an attached model row renders
 - **THEN** its Tokens per minute, Tokens per day, Tokens per week, and Tokens per month cells have no triangle indicator
+

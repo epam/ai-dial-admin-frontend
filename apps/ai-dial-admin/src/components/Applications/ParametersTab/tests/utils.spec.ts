@@ -2,6 +2,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test, vi } from 'vitest';
 import { ParamsView } from '@/src/types/parameters';
 import {
+  getApplicationDeploymentId,
   getAppRunner,
   getCorrectConfig,
   getFrameConfig,
@@ -9,11 +10,13 @@ import {
   getTargetUrl,
   generateViewItems,
   convertJsonSchema,
-  getTypeFromUnion,
+  getTypesFromUnion,
+  resolveRowType,
   convertAppPropertiesToArray,
   validateAppProperties,
   inferTypeFromValue,
-} from '../utils';
+  getAppPropertiesColumns,
+} from '@/src/components/Applications/ParametersTab/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { DialSchemePropertyType } from '@/src/models/dial/scheme';
 import { DialApplicationResource } from '@/src/models/dial/resource';
@@ -24,7 +27,48 @@ import {
   TypeEntity,
 } from '@/src/models/dial/application';
 import { UserSession } from '@/src/models/auth';
-import { ApplicationPropertyRow } from '../models';
+import { ApplicationPropertyRow } from '@/src/components/Applications/ParametersTab/models';
+import { ICellRendererParams } from 'ag-grid-community';
+import StringEditorCellRenderer from '@/src/components/Grid/CellRenderers/StringEditorCellRenderer';
+import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
+import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import { ParamsFields } from '@/src/types/parameters';
+
+describe('getAppPropertiesColumns', () => {
+  const onChange = vi.fn();
+  const getValueColumn = (isReadOnly = false) =>
+    getAppPropertiesColumns(vi.fn(), vi.fn(), onChange, vi.fn(), vi.fn(), (key) => key, isReadOnly).find(
+      (column) => column.field === ParamsFields.VALUE,
+    )!;
+  const selectRenderer = (row: ApplicationPropertyRow, isReadOnly = false) =>
+    getValueColumn(isReadOnly).cellRendererSelector!({ data: row } as ICellRendererParams);
+
+  test.each([false, true])('selects the string editor for named rows with isFromScheme=%s', (isFromScheme) => {
+    const row = { key: 'prompt', value: 'text', type: TypeEntity.STRING, required: true, isFromScheme };
+
+    expect(selectRenderer(row)).toMatchObject({
+      component: StringEditorCellRenderer,
+      params: { label: 'prompt', onChange, disabled: false },
+    });
+    expect(selectRenderer(row, true)).toMatchObject({ params: { disabled: true } });
+  });
+
+  test.each([
+    [TypeEntity.NUMBER, EditableCellRenderer],
+    [TypeEntity.BOOLEAN, SelectCellRenderer],
+    [TypeEntity.OBJECT, JsonEditorCellRenderer],
+  ])('retains the existing renderer for %s rows', (type, component) => {
+    expect(selectRenderer({ key: 'other', value: '', type, required: false })).toMatchObject({ component });
+  });
+
+  test('keeps a pending empty-key row read-only rather than selecting the string editor', () => {
+    expect(selectRenderer({ key: '', value: '', type: TypeEntity.STRING, required: false })).toMatchObject({
+      component: EditableCellRenderer,
+      params: { isReadonly: true },
+    });
+  });
+});
 
 describe('getFrameConfig', () => {
   test('returns config for DialApplicationScheme', () => {
@@ -266,6 +310,7 @@ describe('convertJsonSchema', () => {
         key: 'field1',
         value: 'value1',
         type: TypeEntity.STRING,
+        allowedTypes: [TypeEntity.STRING],
         required: true,
         isFromScheme: true,
       },
@@ -273,6 +318,7 @@ describe('convertJsonSchema', () => {
         key: 'field2',
         value: 'value2',
         type: TypeEntity.STRING,
+        allowedTypes: [TypeEntity.STRING],
         required: false,
         isFromScheme: true,
       },
@@ -297,7 +343,8 @@ describe('convertJsonSchema', () => {
       {
         key: 'field1',
         value: 'value1',
-        type: TypeEntity.OBJECT,
+        type: TypeEntity.STRING,
+        allowedTypes: [TypeEntity.STRING, TypeEntity.NUMBER],
         required: false,
         isFromScheme: true,
       },
@@ -322,11 +369,48 @@ describe('convertJsonSchema', () => {
       {
         key: 'field1',
         value: true,
-        type: TypeEntity.OBJECT,
+        type: TypeEntity.BOOLEAN,
+        allowedTypes: [TypeEntity.STRING, TypeEntity.BOOLEAN],
         required: false,
         isFromScheme: true,
       },
     ]);
+  });
+
+  test('should expose every allowed type of an object|string union and pick the one matching the value', () => {
+    const schema: DialApplicationScheme = {
+      properties: {
+        field1: { anyOf: [{ type: TypeEntity.OBJECT }, { type: TypeEntity.STRING }] },
+      },
+      required: [],
+    };
+
+    expect(convertJsonSchema(schema, { field1: {} })).toEqual([
+      {
+        key: 'field1',
+        value: {},
+        type: TypeEntity.OBJECT,
+        allowedTypes: [TypeEntity.OBJECT, TypeEntity.STRING],
+        required: false,
+        isFromScheme: true,
+      },
+    ]);
+    expect(convertJsonSchema(schema, { field1: 'text' })[0].type).toBe(TypeEntity.STRING);
+  });
+
+  test('should treat an integer property as a number', () => {
+    const schema: DialApplicationScheme = {
+      properties: {
+        plain: { type: TypeEntity.INTEGER },
+        union: { anyOf: [{ type: TypeEntity.INTEGER }, { type: TypeEntity.STRING }] },
+      },
+      required: [],
+    };
+
+    const [plain, union] = convertJsonSchema(schema, { plain: 3, union: 'x' });
+
+    expect(plain).toMatchObject({ type: TypeEntity.NUMBER, allowedTypes: [TypeEntity.NUMBER] });
+    expect(union).toMatchObject({ type: TypeEntity.STRING, allowedTypes: [TypeEntity.NUMBER, TypeEntity.STRING] });
   });
 
   test('should handle array type schema correctly', () => {
@@ -348,6 +432,7 @@ describe('convertJsonSchema', () => {
         key: 'field1',
         value: ['value1', 'value2'],
         type: TypeEntity.OBJECT,
+        allowedTypes: [TypeEntity.OBJECT],
         required: false,
         isFromScheme: true,
       },
@@ -388,6 +473,7 @@ describe('convertJsonSchema', () => {
         key: 'field1',
         value: 'value1',
         type: TypeEntity.STRING,
+        allowedTypes: [TypeEntity.STRING],
         required: false,
         isFromScheme: true,
       },
@@ -395,6 +481,7 @@ describe('convertJsonSchema', () => {
         key: 'field2',
         value: 123,
         type: TypeEntity.NUMBER,
+        allowedTypes: [TypeEntity.NUMBER],
         required: false,
         isFromScheme: true,
       },
@@ -402,77 +489,65 @@ describe('convertJsonSchema', () => {
   });
 });
 
-describe('getTypeFromUnion', () => {
-  test('should return STRING for a STRING type', () => {
-    const types: DialSchemePropertyType[] = [{ type: TypeEntity.STRING }];
-    const result = getTypeFromUnion(types);
-    expect(result).toBe(TypeEntity.STRING);
+describe('getTypesFromUnion', () => {
+  test.each([
+    [TypeEntity.STRING, TypeEntity.STRING],
+    [TypeEntity.NUMBER, TypeEntity.NUMBER],
+    [TypeEntity.BOOLEAN, TypeEntity.BOOLEAN],
+    [TypeEntity.OBJECT, TypeEntity.OBJECT],
+    [TypeEntity.ARRAY, TypeEntity.OBJECT],
+    [TypeEntity.INTEGER, TypeEntity.NUMBER],
+  ])('maps a single %s option to %s', (type, expected) => {
+    expect(getTypesFromUnion([{ type }])).toEqual([expected]);
   });
 
-  test('should return NUMBER for a NUMBER type', () => {
-    const types: DialSchemePropertyType[] = [{ type: TypeEntity.NUMBER }];
-    const result = getTypeFromUnion(types);
-    expect(result).toBe(TypeEntity.NUMBER);
+  test('merges integer and number into a single number type', () => {
+    expect(getTypesFromUnion([{ type: TypeEntity.INTEGER }, { type: TypeEntity.NUMBER }])).toEqual([TypeEntity.NUMBER]);
   });
 
-  test('should return BOOLEAN for a BOOLEAN type', () => {
-    const types: DialSchemePropertyType[] = [{ type: TypeEntity.BOOLEAN }];
-    const result = getTypeFromUnion(types);
-    expect(result).toBe(TypeEntity.BOOLEAN);
+  test('maps a $ref option to object', () => {
+    expect(getTypesFromUnion([{ $ref: 'SomeRef' }])).toEqual([TypeEntity.OBJECT]);
   });
 
-  test('should return OBJECT for an ARRAY type', () => {
-    const types: DialSchemePropertyType[] = [{ type: TypeEntity.ARRAY }];
-    const result = getTypeFromUnion(types);
-    expect(result).toBe(TypeEntity.OBJECT);
+  test('keeps every distinct type in schema order', () => {
+    expect(getTypesFromUnion([{ type: TypeEntity.OBJECT }, { type: TypeEntity.STRING }])).toEqual([
+      TypeEntity.OBJECT,
+      TypeEntity.STRING,
+    ]);
   });
 
-  test('should return NULL type handling (remove NULL from types)', () => {
-    const types: DialSchemePropertyType[] = [{ type: TypeEntity.NULL }];
-    const result = getTypeFromUnion(types);
-    expect(result).toBe(TypeEntity.OBJECT);
+  test('collapses duplicates such as array and $ref', () => {
+    expect(getTypesFromUnion([{ type: TypeEntity.ARRAY }, { $ref: 'SomeRef' }])).toEqual([TypeEntity.OBJECT]);
   });
 
-  test('should return OBJECT for a $ref type', () => {
-    const types: DialSchemePropertyType[] = [{ $ref: 'SomeRef' }];
-    const result = getTypeFromUnion(types);
-    expect(result).toBe(TypeEntity.OBJECT);
+  test('drops null from a nullable union', () => {
+    expect(getTypesFromUnion([{ type: TypeEntity.STRING }, { type: TypeEntity.NULL }])).toEqual([TypeEntity.STRING]);
   });
 
-  test('should return the correct type for multiple types', () => {
-    const types: DialSchemePropertyType[] = [{ type: TypeEntity.STRING }, { type: TypeEntity.NUMBER }];
-    const result = getTypeFromUnion(types);
-    expect(result).toBe(TypeEntity.OBJECT);
+  test('falls back to object for an empty or null-only union', () => {
+    expect(getTypesFromUnion([])).toEqual([TypeEntity.OBJECT]);
+    expect(getTypesFromUnion([{ type: TypeEntity.NULL }])).toEqual([TypeEntity.OBJECT]);
+  });
+});
+
+describe('resolveRowType', () => {
+  const allowed = [TypeEntity.OBJECT, TypeEntity.STRING];
+
+  test('returns the only allowed type regardless of the value', () => {
+    expect(resolveRowType([TypeEntity.STRING], 5)).toBe(TypeEntity.STRING);
   });
 
-  test('should return the correct type when combining types with $ref', () => {
-    const types: DialSchemePropertyType[] = [{ type: TypeEntity.STRING }, { $ref: 'SomeRef' }];
-    const result = getTypeFromUnion(types);
-    expect(result).toBe(TypeEntity.OBJECT);
+  test('returns the type matching the current value', () => {
+    expect(resolveRowType(allowed, 'text')).toBe(TypeEntity.STRING);
+    expect(resolveRowType(allowed, {})).toBe(TypeEntity.OBJECT);
   });
 
-  test('should return OBJECT for a combination of NULL and other types', () => {
-    const types: DialSchemePropertyType[] = [{ type: TypeEntity.STRING }, { type: TypeEntity.NULL }];
-    const result = getTypeFromUnion(types);
-    expect(result).toBe(TypeEntity.STRING);
+  test('returns the first allowed type when the value is missing', () => {
+    expect(resolveRowType([TypeEntity.STRING, TypeEntity.NUMBER], undefined)).toBe(TypeEntity.STRING);
   });
 
-  test('should handle an empty array and return OBJECT', () => {
-    const types: DialSchemePropertyType[] = [];
-    const result = getTypeFromUnion(types);
-    expect(result).toBe(TypeEntity.OBJECT);
-  });
-
-  test('should return OBJECT if only NULL is present', () => {
-    const types: DialSchemePropertyType[] = [{ type: TypeEntity.NULL }];
-    const result = getTypeFromUnion(types);
-    expect(result).toBe(TypeEntity.OBJECT);
-  });
-
-  test('should return OBJECT if both $ref and NULL are present', () => {
-    const types: DialSchemePropertyType[] = [{ $ref: 'SomeRef' }, { type: TypeEntity.NULL }];
-    const result = getTypeFromUnion(types);
-    expect(result).toBe(TypeEntity.OBJECT);
+  test('returns the first allowed type when the value matches none of them', () => {
+    expect(resolveRowType(allowed, true)).toBe(TypeEntity.OBJECT);
   });
 });
 
@@ -731,6 +806,28 @@ describe('getCorrectConfig', () => {
     const result = getCorrectConfig(placeholderScheme as any, application as any, 'dark', session);
 
     expect(result?.host).toBe('https://code-app-editor.com');
+  });
+});
+
+describe('getApplicationDeploymentId', () => {
+  test('returns applications/<path> for a public-bucket asset application', () => {
+    const application = { _metadata: { path: 'folder/my-app__1.0.0' }, name: 'my-app' } as any;
+    expect(getApplicationDeploymentId(ApplicationRoute.AssetsApplications, application)).toBe(
+      'applications/folder/my-app__1.0.0',
+    );
+  });
+
+  test('returns the application name for a platform-bucket application', () => {
+    const application = { _metadata: { path: 'platform/my-app' }, name: 'my-app' } as any;
+    expect(getApplicationDeploymentId(ApplicationRoute.AssetsApplications, application)).toBe('my-app');
+  });
+
+  test('returns the application name for Entities applications', () => {
+    expect(getApplicationDeploymentId(ApplicationRoute.Applications, { name: 'my-app' } as any)).toBe('my-app');
+  });
+
+  test('returns undefined when a public-bucket asset application has no path', () => {
+    expect(getApplicationDeploymentId(ApplicationRoute.AssetsApplications, { name: 'my-app' } as any)).toBeUndefined();
   });
 });
 

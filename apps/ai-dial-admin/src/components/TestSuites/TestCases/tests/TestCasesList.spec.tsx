@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as actions from '@/src/app/[lang]/datasets/actions';
 import { CONTENT_FIT_COLUMN_IDS, VALIDITY_STATUS_COLUMN_ID } from '@/src/components/TestSuites/utils/columns';
-import { BasicI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, DatasetsI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import * as AppContext from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
@@ -33,7 +33,6 @@ let capturedOnCellChange: ((data: Record<string, unknown>, field: string, value:
 let capturedRowData: Record<string, unknown>[] | null = null;
 let capturedOnGridReady: ((event: { api: unknown }) => void) | null = null;
 let capturedListLabel: unknown = null;
-let capturedDatasetTag: unknown = null;
 let capturedOnToggleExpand: ((groupKey: string) => void) | null = null;
 let capturedTurnActionHandlers: Record<string, (row: any) => void> | null = null;
 let capturedDuplicateOperation: ActionMenuOperationDeclaration<GroupedGridRow> | undefined;
@@ -100,13 +99,12 @@ vi.mock('@/src/components/TestSuites/utils/columns', async (importOriginal) => (
 
 vi.mock('@/src/components/TestSuites/TestCases/Header', () => ({
   default: ({ selectedTestSuiteId, datasetTag, testCaseCount }: any) => {
-    capturedDatasetTag = datasetTag;
     capturedTestCaseCount = testCaseCount;
     return (
       <div>
         <div>Header Buttons</div>
         <div>Test Suite ID: {selectedTestSuiteId}</div>
-        <div data-testid="dataset-tag">{datasetTag}</div>
+        {datasetTag}
       </div>
     );
   },
@@ -165,7 +163,6 @@ describe('TestCasesList', () => {
     capturedRowData = null;
     capturedOnGridReady = null;
     capturedListLabel = null;
-    capturedDatasetTag = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
     capturedDuplicateOperation = undefined;
@@ -297,7 +294,6 @@ describe('TestCasesList — dirty tracking', () => {
     capturedRowData = null;
     capturedOnGridReady = null;
     capturedListLabel = null;
-    capturedDatasetTag = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
     capturedDuplicateOperation = undefined;
@@ -387,7 +383,6 @@ describe('TestCasesList — header and included-only filter', () => {
     capturedRowData = null;
     capturedOnGridReady = null;
     capturedListLabel = null;
-    capturedDatasetTag = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
     capturedDuplicateOperation = undefined;
@@ -422,7 +417,19 @@ describe('TestCasesList — header and included-only filter', () => {
     expect(toolbar.getByRole('button', { name: TestSuitesI18nKey.OpenDataset })).toBeInTheDocument();
     expect(toolbar.getByRole('button', { name: TestSuitesI18nKey.DetachFromDataset })).toBeInTheDocument();
     expect(toolbar.getByRole('button', { name: TestSuitesI18nKey.ChangeDataset })).toBeInTheDocument();
-    expect(screen.getByTestId('dataset-tag').textContent).toBe('');
+    expect(screen.queryByText(DatasetsI18nKey.VisibilityPrivate)).toBeNull();
+  });
+
+  test('shows the private tag for a private dataset', async () => {
+    render(
+      <TestCasesList
+        selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1' }}
+        onChange={mockOnChange}
+        dataset={{ id: 'ds-1', name: 'CaseCollection_Eta', visibility: DatasetVisibility.PRIVATE }}
+      />,
+    );
+
+    expect(await screen.findByText(DatasetsI18nKey.VisibilityPrivate)).toBeInTheDocument();
   });
 
   test('renders included-only switch addon', async () => {
@@ -595,7 +602,6 @@ describe('TestCasesList — multi-turn grouping', () => {
     capturedRowData = null;
     capturedOnGridReady = null;
     capturedListLabel = null;
-    capturedDatasetTag = null;
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
     capturedDuplicateOperation = undefined;

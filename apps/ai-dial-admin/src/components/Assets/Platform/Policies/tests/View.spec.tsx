@@ -1,3 +1,4 @@
+import { navigationMock } from '@/test-mocks/navigation';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -47,9 +48,7 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
 
 vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
 
-const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
-
+const { refresh } = navigationMock.router;
 const POLICY = {
   name: 'team-cap',
   priority: 10,

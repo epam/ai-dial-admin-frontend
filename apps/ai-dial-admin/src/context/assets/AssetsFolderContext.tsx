@@ -6,30 +6,25 @@ import {
   SetStateAction,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
   useRef,
   useState,
 } from 'react';
 
+import { OrgUnitMap, useOrgUnits } from '@/src/context/OrgUnitsContext';
 import { createInitialFolderState, folderReducer, toggleFolderState } from '@/src/context/assets/folder-reducer';
 import { FolderActionType } from '@/src/context/assets/models';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { getFolderItems, mergeFolderRows } from '@/src/utils/files/folder';
 import { loadFolderHierarchy } from '@/src/utils/files/folder-hierarchy';
-import { buildRootNodes, toConfigFileItems } from '@/src/utils/files/folder-nodes';
-import { isFileRootPath, isPublicPath } from '@/src/utils/files/root-folder';
+import { isPublicPath } from '@/src/utils/files/root-folder';
+import { getChildUnitRows, getUnitSetSignature } from '@/src/utils/org-units/units';
 
 export interface AssetsFolderContext<T extends AssetListItem> {
   isFetchingFiles: boolean;
-  /**
-   * `path` is a single folder for every view but Applications (see `getRootFolders`), which fetches
-   * both the `platform` and `public` roots on mount. An array bypasses the single-root `mergeFiles`
-   * wrapping and constructs both top-level nodes directly, in the given order, in one state update —
-   * `mergeFiles`'s empty-existing-files branch only ever produces one root, and two fetches racing
-   * independently into it would have the later one silently overwrite the earlier.
-   */
-  fetchFiles: (path: string | string[], refreshData?: boolean, resetFolder?: boolean) => void;
+  fetchFiles: (path: string, refreshData?: boolean, resetFolder?: boolean) => void;
   fetchFolderHierarchy?: (path: string, fullTree?: boolean) => void;
   files: T[];
   expandedFolders: Set<string>;
@@ -55,24 +50,27 @@ export type AssetsFolderContextReader<T extends AssetListItem = AssetListItem> =
 >;
 
 /**
- * `getFolderRows` lets a tree borrow another source's folders (Files, for the resource types that
- * share its public tree). Its rows join the listing of every `public/` folder load, folders only and
- * deduplicated by path with the listing's own rows winning; a failed read adds nothing and never
- * fails `getFilesFunc`.
+ * `includeUnits` adds the org units to the tree: a folder row for every unit directly below the loaded
+ * path joins the listing of every `public/` folder load, deduplicated by path with the listing's own rows
+ * winning. A unit with no content of the type has no folder in that type's tree, so without this it would
+ * be invisible. The units read never fails or rejects `getFilesFunc`'s outcome: no units, no extra rows.
+ *
+ * A tree built from one set of units is dropped when the set of unit folders changes, so the listing
+ * rebuilds it the next time it loads.
  */
 export function createFolderContext<T extends AssetListItem>(
   getFilesFunc: (path: string) => Promise<T[] | null | undefined>,
   contextName: string,
-  getConfigFileNames?: () => Promise<string[] | null | undefined>,
-  getFolderRows?: (path: string) => Promise<T[]>,
+  includeUnits?: boolean,
 ) {
   const Context = createContext<AssetsFolderContext<T> | undefined>(undefined);
 
   const Provider = ({ children }: { children: ReactNode }) => {
     const [state, dispatch] = useReducer(folderReducer<T>, undefined, createInitialFolderState<T>);
     const { files, filePath, expandedFolders, fetchedFoldersData, hasFetchError } = state;
+    const { units, loadUnits } = useOrgUnits();
+    const builtUnitSignatureRef = useRef<string | null>(null);
     const [inFlightCount, setInFlightCount] = useState(0);
-    const failedFilePathsRef = useRef<Set<string>>(new Set());
     const latestRequestIdRef = useRef(0);
     // Handlers outlive the render that created them, so they read the committed state from here.
     const stateRef = useRef(state);
@@ -99,23 +97,33 @@ export function createFolderContext<T extends AssetListItem>(
       [],
     );
 
-    const fetchByPath = useCallback(async (path: string): Promise<T[] | null | undefined> => {
-      if (!isFileRootPath(path)) {
-        if (!getFolderRows || !isPublicPath(path)) {
+    const fetchByPath = useCallback(
+      async (path: string): Promise<T[] | null | undefined> => {
+        if (!includeUnits || !isPublicPath(path)) {
           return getFilesFunc(path);
         }
 
-        const [own, folderRows] = await Promise.all([getFilesFunc(path), getFolderRows(path).catch((): T[] => [])]);
-        return own === undefined ? undefined : mergeFolderRows(own ?? [], folderRows);
-      }
+        const [own, unitMap] = await Promise.all([getFilesFunc(path), loadUnits().catch((): OrgUnitMap => ({}))]);
+        builtUnitSignatureRef.current = getUnitSetSignature(unitMap);
+        // Unit rows are shaped like a folder row of any type; the type only differs in optional fields.
+        return own === undefined
+          ? undefined
+          : mergeFolderRows(own ?? [], getChildUnitRows(unitMap, path) as unknown as T[]);
+      },
+      [loadUnits],
+    );
 
-      if (!getConfigFileNames) {
-        return undefined;
-      }
+    const unitSignature = useMemo(() => getUnitSetSignature(units), [units]);
 
-      const names = await getConfigFileNames();
-      return names ? (toConfigFileItems(names) as T[]) : undefined;
-    }, []);
+    useEffect(() => {
+      const builtSignature = builtUnitSignatureRef.current;
+      if (!includeUnits || builtSignature == null || builtSignature === unitSignature) {
+        return;
+      }
+      // Cleared so a tree that is not shown is invalidated once; the next build records its own signature.
+      builtUnitSignatureRef.current = null;
+      dispatch({ type: FolderActionType.TreeInvalidated });
+    }, [unitSignature]);
 
     const fetchFolderHierarchy = useCallback(
       (fullPath?: string, fullTree?: boolean) => {
@@ -145,58 +153,6 @@ export function createFolderContext<T extends AssetListItem>(
             request.finish();
           }
         })();
-      },
-      [fetchByPath, startRequest],
-    );
-
-    const fetchRoots = useCallback(
-      async (paths: string[], refreshData?: boolean, resetFolder?: boolean) => {
-        const request = startRequest();
-        try {
-          const results = await Promise.all(paths.map((rootPath) => fetchByPath(rootPath)));
-          const hasPhysicalRootFailure = results.some(
-            (result, index) => !isFileRootPath(paths[index]) && result === undefined,
-          );
-          if (hasPhysicalRootFailure) {
-            if (request.isLatest()) {
-              dispatch({ type: FolderActionType.FetchFailed });
-            }
-            return;
-          }
-
-          const failedFilePaths = new Set(
-            paths.filter((rootPath, index) => isFileRootPath(rootPath) && results[index] === undefined),
-          );
-          if (refreshData) {
-            failedFilePathsRef.current = failedFilePaths;
-          } else {
-            failedFilePaths.forEach((path) => failedFilePathsRef.current.add(path));
-          }
-
-          const newFetchedFoldersData: Record<string, T[]> = {};
-          paths.forEach((rootPath, index) => {
-            newFetchedFoldersData[rootPath] = getFolderItems(results[index] ?? []);
-          });
-
-          // The last physical root keeps the pre-existing initial view. A synthetic file root is
-          // already populated but remains collapsed until the user explicitly opens it.
-          const openPath = paths.findLast((rootPath) => !isFileRootPath(rootPath)) ?? paths[0];
-          dispatch({
-            type: FolderActionType.RootsLoaded,
-            files: buildRootNodes<T>(paths, results),
-            fetchedFoldersData: newFetchedFoldersData,
-            openPath,
-            refreshData,
-            resetFolder,
-            isLatestRequest: request.isLatest(),
-          });
-        } catch {
-          if (request.isLatest()) {
-            dispatch({ type: FolderActionType.FetchFailed });
-          }
-        } finally {
-          request.finish();
-        }
       },
       [fetchByPath, startRequest],
     );
@@ -236,20 +192,15 @@ export function createFolderContext<T extends AssetListItem>(
     );
 
     const fetchFiles = useCallback(
-      (path: string | string[], refreshData?: boolean, resetFolder?: boolean) => {
-        if (Array.isArray(path)) {
-          void fetchRoots(path, refreshData, resetFolder);
-          return;
-        }
-
+      (path: string, refreshData?: boolean, resetFolder?: boolean) => {
         void fetchFolder(path, refreshData, resetFolder);
       },
-      [fetchRoots, fetchFolder],
+      [fetchFolder],
     );
 
     const toggleFolder = useCallback(
       (folder: T, skipFetch?: boolean, collapseAll?: boolean) => {
-        const options = { skipFetch, collapseAll, failedPaths: new Set(failedFilePathsRef.current) };
+        const options = { skipFetch, collapseAll, failedPaths: new Set<string>() };
         const { shouldFetch } = toggleFolderState(stateRef.current, folder.path, options);
 
         dispatch({ type: FolderActionType.FolderToggled, folderPath: folder.path, options });

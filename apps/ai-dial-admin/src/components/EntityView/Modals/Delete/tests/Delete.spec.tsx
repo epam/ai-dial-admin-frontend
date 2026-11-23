@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import userEvent from '@testing-library/user-event';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
@@ -6,10 +7,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ApplicationRoute } from '@/src/types/routes';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 // The global `t()` mock returns the key as-is and drops interpolation params — override it here so
 // the notification description embeds `entityId`, the only way to assert which key was passed.
@@ -51,6 +49,35 @@ describe('DeleteConfirmationModal :: platform-bucket notification', () => {
       expect(notification.description).toContain('pl_Ts');
     },
   );
+
+  test.each([
+    ['platform/assistant-v1', 'assistant-v1', 'platform/'],
+    ['public/search-v1', 'search-v1', 'public/'],
+  ])('deletes the alias at %s and shows its plain name, never the bucket path', async (path, name, folderId) => {
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn(), refresh: vi.fn() } as unknown as ReturnType<
+      typeof useRouter
+    >);
+    const onRemoveEntity = vi.fn().mockResolvedValue({ success: true });
+
+    render(
+      <DeleteConfirmationModal
+        view={ApplicationRoute.AssetsAliases}
+        entity={{ name, _metadata: { name, path, folderId } } as never}
+        onRemoveEntity={onRemoveEntity}
+        onCloseModal={vi.fn()}
+      />,
+    );
+
+    confirmDelete();
+
+    // Like every flat entity here, the etag is dropped: the modal reads `''` from a name with no `__` as a version
+    // that differs from the entity's own (none).
+    await vi.waitFor(() => expect(onRemoveEntity).toHaveBeenCalledExactlyOnceWith(path, undefined));
+    await vi.waitFor(() => expect(showNotification).toHaveBeenCalled());
+    const notification = showNotification.mock.calls[0][0];
+    expect(notification.description).toContain(name);
+    expect(notification.description).not.toContain(path);
+  });
 
   test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
     'deletes only the opened metadata path with its etag for %s',

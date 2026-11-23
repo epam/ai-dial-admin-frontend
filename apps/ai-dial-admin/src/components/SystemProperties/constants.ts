@@ -1,4 +1,5 @@
 import { SystemPropertiesI18nKey } from '@/src/constants/i18n';
+import { SessionsRole } from '@/src/models/analytics/sessions-source';
 import { RateLimitSchedule, SpendingLimitMode, SpendingLimits, WeekDay } from '@/src/models/system-properties';
 
 /** Core's implicit values when `rateLimitSchedule` is omitted from the settings blob. */
@@ -43,4 +44,13 @@ export const SPENDING_LIMIT_MODE_I18N_KEYS: Record<
     label: SystemPropertiesI18nKey.SpendingLimitModeEnforce,
     hint: SystemPropertiesI18nKey.SpendingLimitModeEnforceHint,
   },
+};
+
+export const SESSIONS_ROLE_I18N_KEYS: Record<SessionsRole, SystemPropertiesI18nKey> = {
+  [SessionsRole.SessionId]: SystemPropertiesI18nKey.SessionsSourceRoleSessionId,
+  [SessionsRole.Time]: SystemPropertiesI18nKey.SessionsSourceRoleTime,
+  [SessionsRole.Project]: SystemPropertiesI18nKey.SessionsSourceRoleProject,
+  [SessionsRole.Title]: SystemPropertiesI18nKey.SessionsSourceRoleTitle,
+  [SessionsRole.Cost]: SystemPropertiesI18nKey.SessionsSourceRoleCost,
+  [SessionsRole.Turns]: SystemPropertiesI18nKey.SessionsSourceRoleTurns,
 };

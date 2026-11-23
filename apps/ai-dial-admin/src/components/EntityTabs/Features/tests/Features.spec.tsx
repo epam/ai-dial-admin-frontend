@@ -5,10 +5,6 @@ import EntityFeatures from '../Features';
 import { FeaturesI18nKey } from '@/src/constants/i18n';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => false,
-}));
-
 vi.mock('@/src/components/BaseControls/Endpoint/Endpoint', () => ({ default: () => null }));
 vi.mock('@/src/components/EntityTabs/Features/ReasoningEffortsInput', () => ({ default: () => null }));
 

@@ -4,35 +4,31 @@ import {
   Spinner,
   Notification,
   NotificationType,
-  NumberInput,
-  Label,
-  NeutralIconButton,
-  ButtonAppearance,
-  DIAL_ICON_SIZE,
-  ElementSize,
   NotificationVariant,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
-import { IconMinus, IconPlus } from '@tabler/icons-react';
 
+import NumberStepper from '@/src/components/Common/NumberStepper/NumberStepper';
 import { getFormPopupButtons } from '@/src/components/Common/FormPopup/utils';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getDataset, getTestCases } from '@/src/app/[lang]/datasets/actions';
+import { getTestSuiteRunConfig } from '@/src/app/[lang]/test-suites/actions';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
+import { RunTestSuiteParams } from '@/src/models/evaluation/run';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { useIncludedIds } from '../TestCases/RunCondition/use-included-ids';
-import { MIN_RUNS, VALID_FILTERS } from './constants';
+import { MIN_CONCURRENCY, MIN_RUNS, VALID_FILTERS } from './constants';
 
 interface Props {
   isModalOpen: boolean;
   selectedTestSuite: TestSuite;
   onClose: () => void;
-  onRun: (value?: number | string) => void | Promise<unknown>;
+  onRun: (params: RunTestSuiteParams) => void | Promise<unknown>;
 }
 
 const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose }) => {
@@ -40,6 +36,8 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
 
   const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState<string | number | undefined>(1);
+  const [concurrency, setConcurrency] = useState<string | number | undefined>(1);
+  const [maxConcurrencyLevel, setMaxConcurrencyLevel] = useState<number | undefined>();
   const [allRuns, setAllRuns] = useState<number | undefined>();
   const [validRows, setValidRows] = useState<DatasetTestCase[]>([]);
   const [schema, setSchema] = useState<TestCaseSchema[] | undefined>();
@@ -55,12 +53,17 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
       const dataset = selectedTestSuite.datasetId
         ? getDataset(selectedTestSuite.datasetId, DEFAULT_ETAG)
         : Promise.resolve(null);
-      Promise.all([validTestCases, allTestCases, dataset]).then(([validRes, allRes, datasetRes]) => {
-        setAllRuns(allRes?.totalElements || 0);
-        setValidRows((validRes?.content || []) as DatasetTestCase[]);
-        setSchema((datasetRes?.response as Dataset | undefined)?.testCaseSchema);
-        setIsLoading(false);
-      });
+      const runConfig = getTestSuiteRunConfig().catch(() => null);
+      Promise.all([validTestCases, allTestCases, dataset, runConfig]).then(
+        ([validRes, allRes, datasetRes, configRes]) => {
+          setAllRuns(allRes?.totalElements || 0);
+          setValidRows((validRes?.content || []) as DatasetTestCase[]);
+          setSchema((datasetRes?.response as Dataset | undefined)?.testCaseSchema);
+          const max = (configRes?.response as { maxConcurrencyLevel?: number } | undefined)?.maxConcurrencyLevel;
+          setMaxConcurrencyLevel(typeof max === 'number' && max >= MIN_CONCURRENCY ? max : undefined);
+          setIsLoading(false);
+        },
+      );
     }
   }, [selectedTestSuite.datasetId, allRuns]);
 
@@ -74,19 +77,16 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
       ? t(TestSuitesI18nKey.AllTestCasesCount, { count: totalRuns })
       : t(TestSuitesI18nKey.SelectedTestCasesCount, { selected: validRuns, total: totalRuns });
 
-  const onIncrement = useCallback(() => {
-    setValue((current) => {
-      const runs = Number(current);
-      return Number.isFinite(runs) && runs >= MIN_RUNS ? Math.floor(runs) + 1 : MIN_RUNS;
-    });
-  }, []);
-
-  const onDecrement = useCallback(() => {
-    setValue((current) => {
-      const runs = Number(current);
-      return Number.isFinite(runs) && runs > MIN_RUNS ? Math.ceil(runs) - 1 : MIN_RUNS;
-    });
-  }, []);
+  const isConcurrencyAboveMax =
+    maxConcurrencyLevel != null && concurrency != null && concurrency !== '' && +concurrency > maxConcurrencyLevel;
+  const isConcurrencyInvalid = !concurrency || +concurrency < MIN_CONCURRENCY || isConcurrencyAboveMax;
+  const concurrencyCaption =
+    maxConcurrencyLevel != null
+      ? t(TestSuitesI18nKey.ParallelTestCasesMaximum, { max: maxConcurrencyLevel })
+      : undefined;
+  const concurrencyError = isConcurrencyAboveMax
+    ? t(TestSuitesI18nKey.ParallelTestCasesAboveMaximum, { max: maxConcurrencyLevel })
+    : undefined;
 
   const onSubmit = useCallback(() => {
     if (isSubmittingRef.current) {
@@ -94,11 +94,11 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
     }
     isSubmittingRef.current = true;
     setIsSubmitting(true);
-    void Promise.resolve(onRun(value)).finally(() => {
+    void Promise.resolve(onRun({ numberOfRuns: value, concurrencyLevel: concurrency })).finally(() => {
       isSubmittingRef.current = false;
       setIsSubmitting(false);
     });
-  }, [onRun, value]);
+  }, [onRun, value, concurrency]);
 
   return (
     <Popup
@@ -110,43 +110,38 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
       mainButtons={getFormPopupButtons({
         cancelLabel: t(ButtonsI18nKey.Cancel),
         submitLabel: t(ButtonsI18nKey.Run),
-        isSubmitDisabled: isLoading || isSubmitting || !value || +value <= 0 || validRuns === 0,
+        isSubmitDisabled: isLoading || isSubmitting || !value || +value <= 0 || isConcurrencyInvalid || validRuns === 0,
         onCancel: onClose,
         onSubmit: onSubmit,
       })}
     >
-      <div className="flex flex-col gap-6 p-6 h-[300px]">
+      <div className="flex min-h-[300px] flex-col gap-6 p-6">
         {isLoading ? (
-          <Spinner size={30} fullWidth />
+          <Spinner size={30} className="m-auto" />
         ) : (
           <>
             <LabelledText label={t(TestSuitesI18nKey.SelectedTestCases)} text={selectedCountText} />
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="numberOfRuns" label={t(TestSuitesI18nKey.NumberOfRuns)} />
-              <div className="flex items-center gap-2">
-                <NeutralIconButton
-                  appearance={ButtonAppearance.Outlined}
-                  size={ElementSize.Small}
-                  icon={<IconMinus size={DIAL_ICON_SIZE.SM} aria-hidden />}
-                  aria-label={t(TestSuitesI18nKey.DecreaseRuns)}
-                  onClick={onDecrement}
-                />
-                <NumberInput
-                  id="numberOfRuns"
-                  integer
-                  value={value}
-                  containerClassName="w-[90px]"
-                  onChange={setValue}
-                />
-                <NeutralIconButton
-                  appearance={ButtonAppearance.Outlined}
-                  size={ElementSize.Small}
-                  icon={<IconPlus size={DIAL_ICON_SIZE.SM} aria-hidden />}
-                  aria-label={t(TestSuitesI18nKey.IncreaseRuns)}
-                  onClick={onIncrement}
-                />
-              </div>
-            </div>
+            <NumberStepper
+              id="numberOfRuns"
+              label={t(TestSuitesI18nKey.NumberOfRuns)}
+              value={value}
+              onChange={setValue}
+              min={MIN_RUNS}
+              decreaseAriaLabel={t(TestSuitesI18nKey.DecreaseRuns)}
+              increaseAriaLabel={t(TestSuitesI18nKey.IncreaseRuns)}
+            />
+            <NumberStepper
+              id="concurrencyLevel"
+              label={t(TestSuitesI18nKey.NumberOfParallelTestCases)}
+              value={concurrency}
+              onChange={setConcurrency}
+              min={MIN_CONCURRENCY}
+              max={maxConcurrencyLevel}
+              caption={concurrencyCaption}
+              error={concurrencyError}
+              decreaseAriaLabel={t(TestSuitesI18nKey.DecreaseParallelTestCases)}
+              increaseAriaLabel={t(TestSuitesI18nKey.IncreaseParallelTestCases)}
+            />
             <Notification
               type={NotificationType.SectionMessage}
               variant={NotificationVariant.Info}

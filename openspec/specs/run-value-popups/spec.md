@@ -62,19 +62,25 @@ no value. A run without a match in a comparison SHALL show the no-match text ins
 
 ### Requirement: Score popup shows reason and logs
 
-Below the Score card each column SHALL show a `reason` card and a `logs` card. `reason` is the metric
-leaf's `reason` from the run's metric info and `logs` is its `verbose_logs`. Each card SHALL be collapsible,
-SHALL show a size label and a Copy button, and its body SHALL show the text with line numbers and syntax
-highlighting for its language. No card SHALL have a fullscreen button. The `reason` card SHALL be open when
-the popup opens and the `logs` card
-closed. Only one card SHALL be open at a time: opening one closes the other, in every column. A run with
-nothing under a card SHALL get no such card. For a failed metric that has no reason of its own, the first
-card SHALL be titled `Error` and SHALL show the metric's error message: the one on the metric's own info entry,
-or, when it has none, the one on its metric group.
+Below the Score card each column SHALL show a `reason` card, one card per details field and a `logs` card, in
+that order. `reason` is the metric leaf's `reason` from the run's metric info and `logs` is its `verbose_logs`.
+The details fields are every other key of that leaf's metric info entry: each key SHALL get a card of its own,
+titled with the key and in the order of the entry, whose body is the key's value. A string value SHALL be shown
+as plain text and any other value as indented JSON. A leaf entry that is not an object of keys (a plain string,
+a list) has no fields and SHALL be shown as is in a single `details` card. A key whose value is `0`, `false`,
+an empty string or an empty list SHALL still be shown. Each card SHALL be collapsible, SHALL show a size label
+and a Copy button, and its body SHALL show the text with line numbers and syntax highlighting for its language.
+No card SHALL have a fullscreen button. The `reason` card SHALL be open when the popup opens and the others
+closed, except that when no column has a `reason` the first card any column has SHALL be open instead. Only one
+card SHALL be open at a time: opening one closes the others, in every column; a field card is matched across
+columns by its key. A run with nothing under a card SHALL get no such card. For a failed metric that has no
+reason of its own, the first card SHALL be titled `Error` and SHALL show the metric's error message: the one on
+the metric's own info entry, or, when it has none, the one on its metric group. The message SHALL NOT also
+appear among the details fields.
 
 #### Scenario: Reason is open by default
-- **WHEN** the score popup opens for a metric that has a reason and logs
-- **THEN** the `reason` card is expanded and the `logs` card is collapsed
+- **WHEN** the score popup opens for a metric that has a reason, details fields and logs
+- **THEN** the `reason` card is expanded and the field cards and the `logs` card are collapsed
 
 #### Scenario: Opening a card closes the other
 - **WHEN** the `reason` card is open and the user opens the `logs` card
@@ -84,9 +90,41 @@ or, when it has none, the one on its metric group.
 - **WHEN** a run has no `verbose_logs`
 - **THEN** its column shows no `logs` card
 
+#### Scenario: Metric-specific keys each get a card
+- **WHEN** a metric's info entry holds `tp`, `fp`, `fn`, `true_positives`, `false_positives` and
+  `false_negatives` and no `reason`
+- **THEN** the popup shows six cards titled with those keys, in that order, with `0` counts and empty lists
+  included
+
+#### Scenario: Field value is shown by its type
+- **WHEN** a metric's info entry holds `verdict: "correct"` and `missing: ["rust"]`
+- **THEN** the `verdict` card shows `correct` as plain text and the `missing` card shows the list as indented
+  JSON
+
+#### Scenario: First field is open when there is no reason
+- **WHEN** the score popup opens for a metric that has details fields and no reason in any column
+- **THEN** the first field card is expanded and the other field cards are collapsed
+
+#### Scenario: Fields are shown in every surface
+- **WHEN** a metric cell with extra info keys is opened from the side panel, the bottom drawer, or a comparison
+- **THEN** the score popup shows a card for each of those keys
+
+#### Scenario: Reserved keys are not repeated among the fields
+- **WHEN** a metric's info entry holds `reason`, `verbose_logs` and `tp`
+- **THEN** the popup shows a `reason` card, a `logs` card and a `tp` card, and no field card titled `reason` or
+  `verbose_logs`
+
+#### Scenario: Non-object entry is shown as is
+- **WHEN** a metric's info entry is a plain string or a list
+- **THEN** a single `details` card shows that entry
+
+#### Scenario: Field present in one run only
+- **WHEN** a comparison's first run has the keys `tp` and `fp` and its second run only `tp`
+- **THEN** the second run's column shows a `tp` card and no `fp` card
+
 #### Scenario: Failed metric shows the metric's own error
 - **WHEN** a metric failed and its own info entry holds an error message and no reason
-- **THEN** the Score card shows `Error` and an `Error` card shows that message
+- **THEN** the Score card shows `Error` and an `Error` card shows that message, and no field card repeats it
 
 #### Scenario: Failed metric shows the group error
 - **WHEN** a metric failed and its metric group holds an error message and no reason of its own
@@ -97,8 +135,8 @@ or, when it has none, the one on its metric group.
 - **THEN** the card's text is copied and the copy is announced
 
 #### Scenario: Expanding in a comparison expands every column
-- **WHEN** the user expands the `logs` card in one column of a comparison
-- **THEN** the `logs` card is expanded in the other columns too
+- **WHEN** the user expands the `logs` card, or a field card, in one column of a comparison
+- **THEN** that card is expanded in the other columns that have it too
 
 ### Requirement: Comparison score popup highlights differing reasons
 

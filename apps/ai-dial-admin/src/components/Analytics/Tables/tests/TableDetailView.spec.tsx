@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -25,9 +26,9 @@ import { AnalyticsTable, AnalyticsTableType, PartitionGranularity, TableStatus }
 // The view is only reachable with analytics on in practice, so that is the default here; the flag-off
 // case is asserted explicitly below.
 const featureFlags = { analyticsEnabled: true };
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags }));
+});
 
 // The Audit tab's own contract (the projected entity, the view and the view mode it hands EntityAudit)
 // is covered in TableAudit.spec.tsx; here it stands in for "the activities list rendered", and its
@@ -65,8 +66,6 @@ vi.mock('@/src/components/Common/JsonEditorBase/JsonEditorBase', () => ({
 }));
 
 vi.mock('@/src/app/[lang]/tables/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
 // Mock the ellipsis tooltip so the delete confirmation's Name value is plain, assertable text.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
@@ -84,6 +83,7 @@ const permissions = {
   canModify: true,
   canChangeSensitive: true,
   isRowsRestricted: false,
+  isColumnsRestricted: false,
 };
 vi.mock('@/src/hooks/use-analytics-table-permissions', () => ({
   useAnalyticsTablePermissions: () => permissions,
@@ -211,6 +211,7 @@ const setPerms = (over: Partial<typeof permissions>) =>
       canModify: false,
       canChangeSensitive: false,
       isRowsRestricted: false,
+      isColumnsRestricted: false,
     },
     over,
   );
@@ -226,6 +227,7 @@ beforeEach(() => {
     canModify: true,
     canChangeSensitive: true,
     isRowsRestricted: false,
+    isColumnsRestricted: false,
   });
   Object.assign(accessState, { isTabOffered: true });
   // An enrichment table looks up its source table (see TableDetailView's grain-key-metadata effect);
@@ -236,7 +238,7 @@ beforeEach(() => {
   // exercise the header aren't tripped by an unhandled promise.
   vi.mocked(getTableAccess).mockResolvedValue({
     success: true,
-    response: { get: [], read: [], sensitive: [], write: [], modify: [] },
+    response: { generation: 0, roles: {}, ineffective_grants: [] },
   });
 });
 
@@ -1366,5 +1368,25 @@ describe('TableDetailView Rows restricted badge', () => {
     render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     expect(screen.queryByText(AnalyticsTableAccessI18nKey.RowsRestricted)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.ColumnsRestricted)).not.toBeInTheDocument();
+  });
+});
+
+describe('TableDetailView Columns restricted badge', () => {
+  test('is shown in the header when the service reports the viewer limited to some columns', () => {
+    permissions.isColumnsRestricted = true;
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.ColumnsRestricted)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.RowsRestricted)).not.toBeInTheDocument();
+  });
+
+  test('stands beside the Rows restricted badge when both limits apply', () => {
+    permissions.isRowsRestricted = true;
+    permissions.isColumnsRestricted = true;
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.RowsRestricted)).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.ColumnsRestricted)).toBeInTheDocument();
   });
 });

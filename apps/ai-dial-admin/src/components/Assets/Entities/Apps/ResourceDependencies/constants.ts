@@ -5,7 +5,18 @@ export const MAX_DECLARED_DEPENDENCIES = 100;
 
 export const CURRENT_USER_PLACEHOLDER = '{current-user}';
 
-export const DECLARABLE_TYPE_ROOTS = ['files', 'prompts', 'conversations', 'applications', 'toolsets', 'skills'];
+export const DECLARABLE_TYPE_ROOTS = [
+  'files',
+  'prompts',
+  'conversations',
+  'applications',
+  'toolsets',
+  'skills',
+  'projects',
+];
+
+// Core rejects Write on these types: they are only ever read as dependencies.
+export const WRITE_FORBIDDEN_TYPE_ROOTS = ['applications', 'toolsets'];
 
 export const PERSONAL_TARGET_FORM = `{type}/${CURRENT_USER_PLACEHOLDER}/…`;
 

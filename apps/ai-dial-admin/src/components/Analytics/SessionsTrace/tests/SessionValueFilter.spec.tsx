@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CustomComponentContext, CustomFilterProps } from 'ag-grid-react';
@@ -33,10 +34,8 @@ const MANY_VALUES: SessionFieldValue[] = Array.from({ length: 12 }, (_, i) => ({
 
 const requestFieldValues = vi.fn();
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
+
 const onModelChange = vi.fn();
 
 // The grid normally owns the filter lifecycle: it collects the component's callbacks through this context
@@ -311,7 +310,7 @@ describe('SessionValueFilter', () => {
     await vi.waitFor(() =>
       expect(showNotification).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: 'Upstream unavailable',
+          title: 'SessionsTrace.ValuesLoadFailed',
           description: 'value read timed out',
           requestId: 'trace-1',
         }),

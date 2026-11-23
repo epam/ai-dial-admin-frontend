@@ -1,17 +1,21 @@
 import { buildComparisonSections, valuesAreEqual } from '@/src/components/Runs/Details/BottomDrawer/utils';
 import { CompareDiffCounts } from '@/src/components/Runs/Compare/ExecutionResults/models';
 import { EXECUTION_STATUS_FIELD_KEY } from '@/src/components/Runs/Details/BottomDrawer/constants';
+import { OVERALL_SCORE_HEADER } from '@/src/components/Runs/constants';
+import { getRoundedTestCaseScore } from '@/src/components/Runs/utils/test-case-scores';
 import {
   ROW_DETAIL_DURATION_FIELD_KEY,
   ROW_DETAIL_EXECUTION_SECTION_KEY,
   ROW_DETAIL_HTTP_FIELD_KEY,
   ROW_DETAIL_HTTP_LABEL,
+  ROW_DETAIL_OVERALL_SCORE_FIELD_KEY,
   ROW_DETAIL_RUN_NUMBER_FIELD_KEY,
   ROW_DETAIL_RUN_NUMBER_LABEL,
 } from '@/src/components/Runs/Details/RowDetails/constants';
 import {
   RowDetailField,
   RowDetailFieldSchema,
+  RowDetailScoreThresholds,
   RowDetailSection,
 } from '@/src/components/Runs/Details/RowDetails/models';
 import { getMetricDelta, MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
@@ -59,11 +63,23 @@ const isScoreIndicatorRaw = (raw: string | null, isNumeric: boolean): boolean =>
   return value != null && isScoreIndicatorValue(value);
 };
 
-const buildExecutionMetaFields = (primary: AnalyticsResult, compared: AnalyticsResult | null): RowDetailField[] => {
+/** `testCaseScore` is attached by the caller (the detail endpoint does not return it); a missing one reads as no value. */
+const getScoreRaw = (result: AnalyticsResult | null): string | null => {
+  const score = getRoundedTestCaseScore(result?.testCaseScore);
+  return score == null ? null : String(score);
+};
+
+const buildExecutionMetaFields = (
+  primary: AnalyticsResult,
+  compared: AnalyticsResult | null,
+  scoreThresholds?: RowDetailScoreThresholds,
+): RowDetailField[] => {
   const hasCompared = compared != null;
 
   const runPrimary = primary.runIndex != null ? String(primary.runIndex + 1) : null;
   const runSecondary = hasCompared && compared.runIndex != null ? String(compared.runIndex + 1) : null;
+  const scorePrimary = getScoreRaw(primary);
+  const scoreSecondary = hasCompared ? getScoreRaw(compared) : null;
   const httpPrimary = primary.responseStatusCode != null ? String(primary.responseStatusCode) : null;
   const httpSecondary = hasCompared && compared.responseStatusCode != null ? String(compared.responseStatusCode) : null;
 
@@ -75,6 +91,18 @@ const buildExecutionMetaFields = (primary: AnalyticsResult, compared: AnalyticsR
       secondaryRaw: runSecondary,
       diffKind: MetricDeltaKind.Empty,
       isNumeric: false,
+      isScoreIndicator: false,
+      isMetric: false,
+    },
+    {
+      fieldKey: ROW_DETAIL_OVERALL_SCORE_FIELD_KEY,
+      label: OVERALL_SCORE_HEADER,
+      primaryRaw: scorePrimary,
+      secondaryRaw: scoreSecondary,
+      primaryThreshold: scoreThresholds?.primary,
+      secondaryThreshold: scoreThresholds?.compared,
+      diffKind: getFieldDiffKind(scorePrimary, scoreSecondary, true, hasCompared),
+      isNumeric: true,
       isScoreIndicator: false,
       isMetric: false,
     },
@@ -91,7 +119,7 @@ const buildExecutionMetaFields = (primary: AnalyticsResult, compared: AnalyticsR
   ];
 };
 
-/** Status → Run number → HTTP → Duration (+ any other execution rows). */
+/** Status → Run number → Overall score → HTTP → Duration (+ any other execution rows). */
 const orderExecutionFields = (rows: RowDetailField[], metaFields: RowDetailField[]): RowDetailField[] => {
   const byKey = new Map(rows.map((row) => [row.fieldKey, row]));
   const status = byKey.get(EXECUTION_STATUS_FIELD_KEY);
@@ -154,6 +182,7 @@ export const buildRowDetailSections = (
   compared: AnalyticsResult | null,
   metricGroupOrder: readonly string[] = [],
   fieldSchema?: RowDetailFieldSchema,
+  scoreThresholds?: RowDetailScoreThresholds,
 ): RowDetailSection[] => {
   const hasCompared = compared != null;
   const comparisonSections = buildComparisonSections(primary, compared, {}, [], {}, undefined, undefined, fieldSchema);
@@ -187,7 +216,7 @@ export const buildRowDetailSections = (
       label: section.label,
       rows:
         section.key === ROW_DETAIL_EXECUTION_SECTION_KEY
-          ? orderExecutionFields(rows, buildExecutionMetaFields(primary, compared))
+          ? orderExecutionFields(rows, buildExecutionMetaFields(primary, compared, scoreThresholds))
           : rows,
     };
   });

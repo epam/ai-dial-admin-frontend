@@ -53,22 +53,30 @@ vi.mock('@/src/components/Analytics/CustomDashboards/Widget/WidgetCard', () => (
   default: ({
     widget,
     widgetQuery,
+    refreshToken,
     isEditing,
     onRemove,
     onDeniedChange,
+    onLoadingChange,
   }: {
     widget: DashboardWidget;
     widgetQuery?: WidgetQuery;
+    refreshToken?: number;
     isEditing: boolean;
     onRemove: (id: string) => void;
     onDeniedChange?: (id: string, isDenied: boolean) => void;
+    onLoadingChange?: (id: string, isLoading: boolean) => void;
   }) => {
     const isDenied = widgetQuery?.kind === WidgetQueryKind.Unavailable;
+    const isLoading = widget.title === 'Loading';
     useEffect(() => {
       onDeniedChange?.(widget.id, isDenied);
     }, [onDeniedChange, widget.id, isDenied]);
+    useEffect(() => {
+      onLoadingChange?.(widget.id, isLoading);
+    }, [onLoadingChange, widget.id, isLoading]);
     return (
-      <section aria-label={widget.title}>
+      <section aria-label={widget.title} data-refresh-token={refreshToken}>
         {isEditing && (
           <button type="button" onClick={() => onRemove(widget.id)}>
             {`remove ${widget.title}`}
@@ -146,6 +154,23 @@ describe('CustomDashboardView', () => {
     expect(screen.getByText('Where agents spend')).toBeTruthy();
   });
 
+  test('re-runs every widget on Refresh', async () => {
+    renderView();
+    const user = userEvent.setup();
+
+    expect(screen.getByRole('region', { name: 'Spend' }).dataset.refreshToken).toBe('0');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Refresh }));
+
+    expect(screen.getByRole('region', { name: 'Spend' }).dataset.refreshToken).toBe('1');
+    expect(screen.getByRole('region', { name: 'Latency' }).dataset.refreshToken).toBe('1');
+  });
+
+  test('disables Refresh while a widget is loading', () => {
+    renderView({ ...DASHBOARD, widgets: [{ ...WIDGETS[0], title: 'Loading' }, WIDGETS[1]] });
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Refresh })).toBeDisabled();
+  });
+
   test('leaves the address alone when the dashboard opens in view mode', () => {
     renderView();
 
@@ -160,7 +185,7 @@ describe('CustomDashboardView', () => {
     await editLayout(user);
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
 
-    await user.click(screen.getByRole('combobox', { name: AnalyticsUsageI18nKey.CompareLabel }));
+    await user.click(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.CompareLabel}`) }));
     await user.click(await screen.findByRole('option', { name: AnalyticsUsageI18nKey.ComparePreviousMonth }));
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeEnabled();
@@ -170,7 +195,7 @@ describe('CustomDashboardView', () => {
     renderView();
 
     // The switcher names the open dashboard; there is no separate name heading.
-    expect(screen.getByRole('combobox', { name: CustomDashboardsI18nKey.Switcher })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: new RegExp(`^${CustomDashboardsI18nKey.Switcher}`) })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Costs' })).toBeNull();
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Edit })).toBeNull();
     expect(screen.queryByRole('button', { name: CustomDashboardsI18nKey.AddWidget })).toBeNull();

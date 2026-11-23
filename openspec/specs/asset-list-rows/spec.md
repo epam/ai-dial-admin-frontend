@@ -2,9 +2,7 @@
 
 ## Purpose
 TBD
-
 ## Requirements
-
 ### Requirement: One unified asset row model with an explicit bucket
 The system SHALL serve every asset folder-tree row — prompts, conversations, files, skills, asset
 applications and toolsets in both buckets, and the flat platform views — through one client row
@@ -88,7 +86,7 @@ platform) without casting its list action's return type into a shared union.
   behavior that presuppose a folder tree are not exercised for these views
 
 ### Requirement: Row action handling resolves the bucket explicitly
-Move, delete, update, and open-in-new-tab handling SHALL resolve a row's bucket from the row's explicit `bucket` field, and SHALL resolve the browsed surface from the existing view-level helpers (`isFlatPlatformView`, `isPlatformDualBucketView`) when the view and current path are in scope — never by inferring either from a `folderId` value. Public application/toolset row selection and action handling SHALL identify each resource by its complete path, without same-name version aggregation or sibling-version expansion.
+Move, delete, update, and open-in-new-tab handling SHALL resolve a row's bucket from the row's explicit `bucket` field, and SHALL resolve the browsed surface from the active listing tab (Public, Platform or config.json) — never by inferring either from a `folderId` value or a path prefix. Public application/toolset row selection and action handling SHALL identify each resource by its complete path, without same-name version aggregation or sibling-version expansion.
 
 #### Scenario: Delete shaping reads the bucket
 - **WHEN** a delete confirmation grid or success toast is shaped for a row
@@ -126,3 +124,4 @@ files included — arrives with the same field provenance.
 - **WHEN** a files listing returns rows
 - **THEN** each row carries the movable flavor's required root-level `folderId` alongside `bucket`,
   derived server-side from the raw DTO, and participates in move flows like any movable row
+

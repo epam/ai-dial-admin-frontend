@@ -34,6 +34,7 @@ describe('Import config actions :: Analytics', () => {
       body,
       CatalogResolutionPolicy.SKIP_IF_EXISTS,
       false,
+      false,
       TOKEN_MOCK,
     );
     expect(result).toBe(response);
@@ -49,8 +50,23 @@ describe('Import config actions :: Analytics', () => {
       body,
       CatalogResolutionPolicy.FAIL_IF_EXISTS,
       true,
+      false,
       TOKEN_MOCK,
     );
     expect(result).toBe(response);
+  });
+
+  test('importAnalyticsConfig passes the access choice through', async () => {
+    vi.mocked(analyticsDataApi.importCatalog).mockResolvedValue({ success: true });
+
+    await importAnalyticsConfig(body, CatalogResolutionPolicy.SKIP_IF_EXISTS, false, true);
+
+    expect(analyticsDataApi.importCatalog).toHaveBeenCalledWith(
+      body,
+      CatalogResolutionPolicy.SKIP_IF_EXISTS,
+      false,
+      true,
+      TOKEN_MOCK,
+    );
   });
 });

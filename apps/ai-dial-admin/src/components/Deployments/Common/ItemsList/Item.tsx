@@ -100,7 +100,7 @@ const Item = forwardRef<HTMLLIElement, Props>(
           disabled={disabled}
         />
         <div className="w-[40px] shrink-0">
-          <RemoveButton onClick={() => onRemove(index)} disabled={disabled} />
+          <RemoveButton onClick={() => onRemove(index)} disabled={disabled || isPlaceholder} />
         </div>
       </li>
     );

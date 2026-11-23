@@ -13,6 +13,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialTranslatorResource } from '@/src/models/dial/resource';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -24,10 +25,11 @@ import TabsContent from './TabsContent';
 interface Props {
   etag: string;
   originalTranslator: DialTranslatorResource;
+  plugins?: PluginOptions;
   isConfigFileSource?: boolean;
 }
 
-const TranslatorAssetView: FC<Props> = ({ etag, originalTranslator, isConfigFileSource }) => {
+const TranslatorAssetView: FC<Props> = ({ etag, originalTranslator, isConfigFileSource, plugins }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.PlatformTranslators);
   const router = useRouter();
@@ -118,7 +120,12 @@ const TranslatorAssetView: FC<Props> = ({ etag, originalTranslator, isConfigFile
             setIsChanged={setIsChanged}
           />
         ) : (
-          <TabsContent activeTab={activeTab} selectedTranslator={selectedTranslator} onChange={setSelectedTranslator} />
+          <TabsContent
+            activeTab={activeTab}
+            selectedTranslator={selectedTranslator}
+            plugins={plugins}
+            onChange={setSelectedTranslator}
+          />
         )}
       </div>
     </div>

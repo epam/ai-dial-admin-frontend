@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { listIngestFailures, listTableBackfillRuns } from '@/src/app/[lang]/tables/actions';
+import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import TablesView from '@/src/components/Analytics/Tables/TablesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import {
@@ -19,8 +20,6 @@ import { IngestFailureState } from '@/src/models/analytics/ingest-failure';
 import { TableBackfillRun, TableBackfillState } from '@/src/models/analytics/table-backfill';
 
 vi.mock('@/src/app/[lang]/tables/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
 // Mock the ellipsis tooltip so the delete confirmation's Name value is plain, assertable text.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
@@ -51,6 +50,7 @@ const permissions = {
   canModify: true,
   canChangeSensitive: true,
   isRowsRestricted: false,
+  isColumnsRestricted: false,
 };
 
 // The grid is a stand-in, so a cell renderer is reached through the column defs it was handed.
@@ -153,6 +153,22 @@ describe('TablesView — Rows restricted badge', () => {
     renderNameCell(TABLES[0]);
 
     expect(screen.queryByText(AnalyticsTableAccessI18nKey.RowsRestricted)).toBeNull();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.ColumnsRestricted)).toBeNull();
+  });
+
+  test('shows the Columns restricted badge for a table that limits the viewer to some columns', () => {
+    renderNameCell({ ...TABLES[0], permissions: { columns_restricted: true } as AnalyticsTable['permissions'] });
+
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.ColumnsRestricted)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.RowsRestricted)).toBeNull();
+  });
+
+  test('links the name to the table detail page and keeps the badge outside the link', () => {
+    renderNameCell({ ...TABLES[0], permissions: { rows_restricted: true } as AnalyticsTable['permissions'] });
+
+    const link = screen.getByRole('link', { name: 'dial_usage_log' });
+    expect(link).toHaveAttribute('href', tableDetailHref('dial_usage_log'));
+    expect(link).not.toHaveTextContent(AnalyticsTableAccessI18nKey.RowsRestricted);
   });
 });
 

@@ -17,4 +17,7 @@ export interface InputPopupProps {
   onValueChange?: (value: string) => void;
   collapseTagOverflow?: boolean;
   iconBefore?: ReactNode;
+  inputAriaLabel?: string;
+  openAriaLabel?: string;
+  required?: boolean;
 }

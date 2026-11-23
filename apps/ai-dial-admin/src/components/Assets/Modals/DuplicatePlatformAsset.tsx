@@ -54,6 +54,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
   const hasDisplayName =
     isSchemaResource ||
     view === ApplicationRoute.PlatformModels ||
+    view === ApplicationRoute.PlatformRouters ||
     view === ApplicationRoute.PlatformInterceptors ||
     isDualBucketAsset;
 

@@ -21,7 +21,10 @@ const refresh = vi.fn();
 const fetchFiles = vi.fn();
 const showNotification = vi.mocked(useNotification().showNotification);
 
-vi.mock('@/src/context/assets/AppsFolderContext', () => ({ useAppsFolder: vi.fn() }));
+vi.mock('@/src/context/assets/AppsFolderContext', () => ({
+  useAppsFolder: vi.fn(),
+  AppsFolderProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 vi.mock('@/src/hooks/use-protected-request', () => ({ useProtectedRequest: () => vi.fn() }));
 vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   removePlatformApplication: vi.fn(),

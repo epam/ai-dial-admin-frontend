@@ -3,12 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { MenuI18nKey } from '@/src/constants/i18n';
+import { navigationMock } from '@/test-mocks/navigation';
 import Breadcrumbs from '../Breadcrumbs';
 
-// The router is one shared object, like the real one: `Breadcrumbs` lists it as an effect dependency, so
-// a new object per render would re-run that effect on every render.
-const { navigation, appsFolder } = vi.hoisted(() => ({
-  navigation: { pathname: '/models/1', search: '', router: { push: vi.fn() } },
+const { appsFolder } = vi.hoisted(() => ({
   appsFolder: {
     filePath: '',
     setFilePath: vi.fn(),
@@ -18,12 +16,6 @@ const { navigation, appsFolder } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('next/navigation', () => ({
-  usePathname: () => navigation.pathname,
-  useRouter: () => navigation.router,
-  useSearchParams: () => new URLSearchParams(navigation.search),
-}));
-
 vi.mock('@/src/context/assets/AppsFolderContext', () => ({
   useAppsFolder: () => appsFolder,
 }));
@@ -31,8 +23,8 @@ vi.mock('@/src/context/assets/AppsFolderContext', () => ({
 describe('Components - Breadcrumbs', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    navigation.pathname = '/models/1';
-    navigation.search = '';
+    navigationMock.setPathname('/models/1');
+    navigationMock.setSearchParams('');
     appsFolder.filePath = '';
     appsFolder.fetchedFoldersData = {};
   });
@@ -49,7 +41,7 @@ describe('Components - Breadcrumbs', () => {
 
     await user.click(screen.getByRole('link', { name: MenuI18nKey.Models }));
 
-    expect(navigation.router.push).toHaveBeenCalledWith('/models');
+    expect(navigationMock.router.push).toHaveBeenCalledWith('/models');
   });
 
   test('Should render breadcrumbs for mobile', () => {
@@ -60,7 +52,7 @@ describe('Components - Breadcrumbs', () => {
 
   describe('Components - Breadcrumbs - folders on the list page', () => {
     test('Should show only the section, leaving the folder path to the list', () => {
-      navigation.pathname = '/assets-applications';
+      navigationMock.setPathname('/assets-applications');
       appsFolder.filePath = 'public/team/';
 
       render(<Breadcrumbs mobile={false} />);
@@ -71,8 +63,8 @@ describe('Components - Breadcrumbs', () => {
 
   describe('Components - Breadcrumbs - folders on a details page', () => {
     beforeEach(() => {
-      navigation.pathname = '/assets-applications/MyApp';
-      navigation.search = 'path=public%2Fteam%2FMyApp__1.0';
+      navigationMock.setPathname('/assets-applications/MyApp');
+      navigationMock.setSearchParams('path=public%2Fteam%2FMyApp__1.0');
     });
 
     test('Should show the entity folders between the section and the entity', () => {
@@ -87,7 +79,7 @@ describe('Components - Breadcrumbs', () => {
     });
 
     test('Should show only the section and the entity when the entity has no folder', () => {
-      navigation.search = '';
+      navigationMock.setSearchParams('');
 
       render(<Breadcrumbs mobile={false} />);
 
@@ -104,7 +96,7 @@ describe('Components - Breadcrumbs', () => {
       await user.click(screen.getByRole('button', { name: 'team' }));
 
       expect(appsFolder.setFilePath).toHaveBeenCalledWith('public/team/');
-      expect(navigation.router.push).toHaveBeenCalledWith('/assets-applications');
+      expect(navigationMock.router.push).toHaveBeenCalledWith('/assets-applications');
     });
 
     test('Should load and expand the whole folder chain of the clicked folder', async () => {
@@ -118,7 +110,7 @@ describe('Components - Breadcrumbs', () => {
     });
 
     test('Should collapse the middle of a deep trail behind a menu', () => {
-      navigation.search = 'path=public%2Fteam%2Fsub%2FMyApp__1.0';
+      navigationMock.setSearchParams('path=public%2Fteam%2Fsub%2FMyApp__1.0');
 
       render(<Breadcrumbs mobile={false} />);
 

@@ -28,7 +28,7 @@ openspec show <capability>                # one spec
 grep -rl "<term>" openspec/specs/         # when you don't know the capability name
 ```
 
-`.claude/reference/areas.md` maps routes and component folders to areas, which is usually the
+`docs/areas.md` maps routes and component folders to areas, which is usually the
 fastest way from a file you're editing to the capability that governs it.
 
 **Analytics is a folder of sub-capabilities**, not one spec. `openspec/specs/analytics/spec.md` is a
@@ -84,5 +84,5 @@ When a change alters behavior one of these sources describes, update it in the s
 
 - Behavior change → the capability's delta spec, folded into `openspec/specs/<capability>/spec.md`
 - New or renamed env var → `docs/INFRA-CHANGELOG.md`
-- Menu change → `docs/MENU-DOCUMENTATION.md` **and** `.claude/reference/areas.md`, which mirrors the
+- Menu change → `docs/MENU-DOCUMENTATION.md` **and** `docs/areas.md`, which mirrors the
   menu and is what tooling reads

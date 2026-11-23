@@ -14,6 +14,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { Image, ImageGroup, ImageSource, ImageVersion } from '@/src/models/deployments/images';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { compareVersions } from '@/src/utils/entities/versions';
+import { normalizeAllowedDomains } from '@/src/utils/deployments/entity';
 
 export const METADATA_ONLY_IMAGE_FIELDS: readonly (keyof Image)[] = ['description', 'author', 'topics'] as const;
 
@@ -78,7 +79,10 @@ export const isValidVersion = (imageData?: ImageGroup): boolean => {
 export function validateImageChanged(originalImage: Image, updatedImage: Image) {
   const { updatedAt: __originalUpdatedAt, buildStatus: __originalBuiltStatus, ...original } = originalImage;
   const { updatedAt: __updatedUpdatedAt, buildStatus: __updatedBuiltStatus, ...updated } = updatedImage;
-  return !isEqualSkippingUndefined(original, updated);
+  return !isEqualSkippingUndefined(
+    { ...original, allowedDomains: normalizeAllowedDomains(original.allowedDomains) },
+    { ...updated, allowedDomains: normalizeAllowedDomains(updated.allowedDomains) },
+  );
 }
 
 export const getVersionsList = (versions: ImageVersion[]): SelectOption[] => {

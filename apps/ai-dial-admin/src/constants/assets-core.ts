@@ -12,11 +12,14 @@ export type VersionedResourceType = Exclude<
   | ResourceType.CATALOG_SCHEMA
   | ResourceType.INTERCEPTOR
   | ResourceType.TRANSLATOR
+  | ResourceType.PLUGIN
+  | ResourceType.ROUTER
   | ResourceType.ROLE
   | ResourceType.ROUTE
   | ResourceType.PROJECT_KEY
   | ResourceType.POLICY
   | ResourceType.POLICY_ASSIGNMENT
+  | ResourceType.ALIAS
   | ResourceType.CONVERSATION
   | ResourceType.PROMPT
 >;
@@ -24,8 +27,8 @@ export type VersionedResourceType = Exclude<
 export const VERSIONED_RESOURCE_TYPES: VersionedResourceType[] = [ResourceType.APPLICATION, ResourceType.TOOLSET];
 
 /**
- * Versionless resource types that nest in folders (prompt, conversation, and the policy records, whose
- * one folder level is the cost object). Their paths parse with folder semantics — name = last `/`
+ * Versionless resource types that nest in folders (prompt, conversation, the policy records, whose
+ * one folder level is the cost object, and aliases, whose one level is the bucket). Their paths parse with folder semantics — name = last `/`
  * segment, folderId = the rest — and a `__` in the name is never split into name + version.
  */
 export const FOLDER_NESTED_VERSIONLESS_TYPES: ReadonlySet<ResourceType> = new Set([
@@ -33,6 +36,7 @@ export const FOLDER_NESTED_VERSIONLESS_TYPES: ReadonlySet<ResourceType> = new Se
   ResourceType.PROMPT,
   ResourceType.POLICY,
   ResourceType.POLICY_ASSIGNMENT,
+  ResourceType.ALIAS,
 ]);
 
 /**
@@ -68,11 +72,14 @@ export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
   [ResourceType.CATALOG_SCHEMA]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]}`,
   [ResourceType.INTERCEPTOR]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
   [ResourceType.TRANSLATOR]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.TRANSLATOR]}`,
+  [ResourceType.PLUGIN]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PLUGIN]}`,
+  [ResourceType.ROUTER]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTER]}`,
   [ResourceType.ROLE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
   [ResourceType.ROUTE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTE]}`,
   [ResourceType.PROJECT_KEY]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
   [ResourceType.POLICY]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY]}`,
   [ResourceType.POLICY_ASSIGNMENT]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY_ASSIGNMENT]}`,
+  [ResourceType.ALIAS]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ALIAS]}`,
 };
 
 /** `v1/metadata/{prefix}` metadata endpoint per resource type. `SKILL`'s and `PROJECT`'s entries are unreachable — see `CORE_RESOURCE_URL`. */
@@ -89,11 +96,14 @@ export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
   [ResourceType.CATALOG_SCHEMA]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]}`,
   [ResourceType.INTERCEPTOR]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
   [ResourceType.TRANSLATOR]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.TRANSLATOR]}`,
+  [ResourceType.PLUGIN]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PLUGIN]}`,
+  [ResourceType.ROUTER]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTER]}`,
   [ResourceType.ROLE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
   [ResourceType.ROUTE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTE]}`,
   [ResourceType.PROJECT_KEY]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
   [ResourceType.POLICY]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY]}`,
   [ResourceType.POLICY_ASSIGNMENT]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY_ASSIGNMENT]}`,
+  [ResourceType.ALIAS]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ALIAS]}`,
 };
 
 /** Backend default list path — only Conversation and Prompt default an omitted path (`ConversationService`/`PromptService`). */
@@ -116,6 +126,8 @@ export const PLATFORM_BUCKET_RESOURCE_TYPES: ReadonlySet<ResourceType> = new Set
   ResourceType.CATALOG_SCHEMA,
   ResourceType.INTERCEPTOR,
   ResourceType.TRANSLATOR,
+  ResourceType.PLUGIN,
+  ResourceType.ROUTER,
   ResourceType.ROLE,
   ResourceType.ROUTE,
   ResourceType.PROJECT_KEY,

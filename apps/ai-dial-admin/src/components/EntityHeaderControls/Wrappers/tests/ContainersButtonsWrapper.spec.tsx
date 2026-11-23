@@ -14,7 +14,6 @@ import {
 } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 vi.mock('@/src/hooks/use-is-mobile-screen', () => ({ useIsMobileScreen: () => false }));
 vi.mock('@/src/hooks/use-is-tablet-screen', () => ({ useIsOnlyTabletScreen: () => false }));
 
@@ -29,11 +28,19 @@ vi.mock('@/src/components/EntityListView/CreateEntity/CreateEntity', () => ({
     </div>
   ),
 }));
-vi.mock('@/src/components/Assets/Modals/CreateAsset', () => ({
-  default: ({ view, shouldOpenOnPlatform }: any) => (
+vi.mock('@/src/components/Assets/Modals/CreateSeededAsset', () => ({
+  default: ({ view, defaultDestination }: any) => (
     <div>
       <span>asset-view:{view}</span>
-      <span>asset-opens-on-platform:{String(!!shouldOpenOnPlatform)}</span>
+      <span>asset-default-destination:{defaultDestination}</span>
+    </div>
+  ),
+}));
+vi.mock('@/src/components/Assets/Platform/CreatePlatformEntity', () => ({
+  default: ({ view, names }: any) => (
+    <div>
+      <span>modal-route:{view}</span>
+      <span>modal-names:{names?.join(',')}</span>
     </div>
   ),
 }));
@@ -175,7 +182,7 @@ describe('ContainersButtonsWrapper Core asset option', () => {
     await user.click(adminOption(EntitiesI18nKey.AssetApplication));
 
     expect(screen.getByText(`asset-view:${ApplicationRoute.AssetsApplications}`)).toBeInTheDocument();
-    expect(screen.getByText('asset-opens-on-platform:true')).toBeInTheDocument();
+    expect(screen.getByText('asset-default-destination:platform')).toBeInTheDocument();
   });
 
   test('labels the adapter container asset option as a model', () => {

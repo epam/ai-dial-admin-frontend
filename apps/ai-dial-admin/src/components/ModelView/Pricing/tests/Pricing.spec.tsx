@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -5,12 +6,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { DialModelPricing, PricingOperator, PricingRate, PricingRateNode, PricingType } from '@/src/models/dial/model';
 import Pricing from '../Pricing';
-
-const isReadOnlyAdminMock = vi.fn(() => false);
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => isReadOnlyAdminMock(),
-}));
 
 // Only the select is replaced — the real NumberInput is kept so the price fields behave as they
 // do in the app (a cleared field emits null, which is what distinguishes "unset" from "0").
@@ -55,7 +50,7 @@ describe('Pricing', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    isReadOnlyAdminMock.mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 
   test('renders every rate field without an asset-specific prop', () => {
@@ -136,7 +131,7 @@ describe('Pricing', () => {
   });
 
   test('disables the cache rate fields for a read-only administrator', () => {
-    isReadOnlyAdminMock.mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderPricing(tokenPricing);
 
     expect(cacheReadField()).toBeDisabled();
@@ -309,7 +304,7 @@ describe('Pricing', () => {
   });
 
   test('renders an open prompt tree fully disabled for a read-only administrator', () => {
-    isReadOnlyAdminMock.mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderPricing({ unit: PricingType.Token, prompt: treeCacheWrite });
 
     expect(screen.queryByRole('button', { name: ModelViewI18nKey.UseFlatRate })).toBeNull();

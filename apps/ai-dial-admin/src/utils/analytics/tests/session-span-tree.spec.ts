@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'vitest';
 
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
-  SessionFeedbackRow,
   SessionSpanRow,
+  SpanFieldGroup,
   HopFactsShape,
   HopNodeKind,
   HopOutcomeFilter,
@@ -12,6 +13,9 @@ import {
 import {
   attributeFeedbackToSpans,
   buildHopTree,
+  isSpanCommentTextReadable,
+  spanFeedbackOf,
+  spanRatingNamespaceOf,
   countMatchingNodes,
   countMatchableNodes,
   flattenHopTree,
@@ -437,40 +441,133 @@ describe('flattenHopTree', () => {
   });
 });
 
-describe('attributeFeedbackToSpans', () => {
-  const RATED = { response_id: 'resp-rated' } as SessionFeedbackRow;
-  const BY_RESPONSE_ID = new Map([['resp-rated', RATED]]);
+const NS = 'response_feedback';
 
-  test('places a rating on the span that recorded its response id', () => {
+const rated = (overrides: Record<string, unknown> = {}): Partial<SessionSpanRow> =>
+  ({
+    [`${NS}.rate_pos_count`]: 1,
+    [`${NS}.rate_zero_count`]: 0,
+    [`${NS}.rate_neg_count`]: 0,
+    [`${NS}.rate_distinct_count`]: 1,
+    [`${NS}.comment_count`]: 0,
+    [`${NS}.first_rate_time`]: 5000,
+    [`${NS}.last_rate_time`]: 5000,
+    ...overrides,
+  }) as Partial<SessionSpanRow>;
+
+const group = (names: string[]): SpanFieldGroup => ({
+  tag: 'feedback',
+  fields: names.map((name) => ({ name, label: name, type: AnalyticsFieldType.Integer, tag: 'feedback' })),
+});
+
+describe('spanRatingNamespaceOf', () => {
+  test('finds the namespace carrying the rating signature among the span fields', () => {
+    const groups = [
+      group(['trace_id']),
+      group([`${NS}.rate_pos_count`, `${NS}.rate_zero_count`, `${NS}.rate_neg_count`]),
+    ];
+
+    expect(spanRatingNamespaceOf(groups)).toBe(NS);
+  });
+
+  test('reports none where no namespace carries the full signature', () => {
+    expect(spanRatingNamespaceOf([group([`${NS}.rate_pos_count`, `${NS}.rate_neg_count`])])).toBeNull();
+  });
+
+  test('reports none for no field groups', () => {
+    expect(spanRatingNamespaceOf()).toBeNull();
+    expect(spanRatingNamespaceOf([])).toBeNull();
+  });
+});
+
+describe('isSpanCommentTextReadable', () => {
+  test('is readable where the span fields carry the comment sample', () => {
+    expect(isSpanCommentTextReadable([group([`${NS}.comment_sample`])], NS)).toBe(true);
+  });
+
+  test('is not readable where the caller schema withholds the comment sample', () => {
+    expect(isSpanCommentTextReadable([group([`${NS}.comment_count`])], NS)).toBe(false);
+  });
+
+  test('is not readable without a rating enrichment', () => {
+    expect(isSpanCommentTextReadable([group([`${NS}.comment_sample`])], null)).toBe(false);
+  });
+});
+
+describe('spanFeedbackOf', () => {
+  test('reads the rating from the span row own enrichment fields', () => {
+    const span = hop('entry', { response_id: 'resp-1', ...rated({ [`${NS}.comment_sample`]: 'great' }) });
+
+    expect(spanFeedbackOf(span, NS)).toEqual({
+      response_id: 'resp-1',
+      first_rate_time: 5000,
+      last_rate_time: 5000,
+      rate_pos_count: 1,
+      rate_zero_count: 0,
+      rate_neg_count: 0,
+      rate_distinct_count: 1,
+      comment_count: 0,
+      comment_sample: 'great',
+    });
+  });
+
+  test('leaves the comment sample out where the row does not carry it', () => {
+    const feedback = spanFeedbackOf(hop('entry', { response_id: 'resp-1', ...rated() }), NS);
+
+    expect(feedback).not.toHaveProperty('comment_sample');
+  });
+
+  test('reports no rating for a row the enrichment has no value for', () => {
+    expect(spanFeedbackOf(hop('entry', { response_id: 'resp-1' }), NS)).toBeNull();
+  });
+});
+
+describe('attributeFeedbackToSpans', () => {
+  test('places a rating on the span whose own row carries it', () => {
     const tree = buildHopTree([
-      hop('entry', { response_id: 'resp-rated' }),
+      hop('entry', { response_id: 'resp-rated', ...rated() }),
       hop('model', { core_parent_span_id: 'entry', response_id: 'resp-upstream' }),
     ]);
 
-    expect([...attributeFeedbackToSpans(tree, BY_RESPONSE_ID)]).toEqual([['entry', RATED]]);
+    expect([...attributeFeedbackToSpans(tree, NS).keys()]).toEqual(['entry']);
+  });
+
+  test('places a rating carried only by a nested span on that span', () => {
+    const tree = buildHopTree([
+      hop('entry', { response_id: 'resp-entry' }),
+      hop('model', { core_parent_span_id: 'entry', response_id: 'resp-rated', ...rated() }),
+    ]);
+
+    expect([...attributeFeedbackToSpans(tree, NS).keys()]).toEqual(['model']);
   });
 
   test('places a relayed response id on the shallowest span only', () => {
     const tree = buildHopTree([
-      hop('model', { core_parent_span_id: 'entry', response_id: 'resp-rated', request_time: 1100 }),
-      hop('entry', { response_id: 'resp-rated', request_time: 1000 }),
+      hop('model', { core_parent_span_id: 'entry', response_id: 'resp-rated', request_time: 1100, ...rated() }),
+      hop('entry', { response_id: 'resp-rated', request_time: 1000, ...rated() }),
     ]);
 
-    expect([...attributeFeedbackToSpans(tree, BY_RESPONSE_ID).keys()]).toEqual(['entry']);
+    expect([...attributeFeedbackToSpans(tree, NS).keys()]).toEqual(['entry']);
   });
 
   test('places a response id shared by siblings on the earliest', () => {
     const tree = buildHopTree([
-      hop('later', { response_id: 'resp-rated', request_time: 2000 }),
-      hop('earlier', { response_id: 'resp-rated', request_time: 1000 }),
+      hop('later', { response_id: 'resp-rated', request_time: 2000, ...rated() }),
+      hop('earlier', { response_id: 'resp-rated', request_time: 1000, ...rated() }),
     ]);
 
-    expect([...attributeFeedbackToSpans(tree, BY_RESPONSE_ID).keys()]).toEqual(['earlier']);
+    expect([...attributeFeedbackToSpans(tree, NS).keys()]).toEqual(['earlier']);
   });
 
-  test('places nothing without ratings to join', () => {
-    const tree = buildHopTree([hop('entry', { response_id: 'resp-rated' })]);
+  test('places nothing on a span that recorded no response id', () => {
+    const tree = buildHopTree([hop('entry', { response_id: null, ...rated() })]);
 
-    expect(attributeFeedbackToSpans(tree).size).toBe(0);
+    expect(attributeFeedbackToSpans(tree, NS).size).toBe(0);
+  });
+
+  test('places nothing without a rating enrichment', () => {
+    const tree = buildHopTree([hop('entry', { response_id: 'resp-rated', ...rated() })]);
+
+    expect(attributeFeedbackToSpans(tree, null).size).toBe(0);
   });
 });

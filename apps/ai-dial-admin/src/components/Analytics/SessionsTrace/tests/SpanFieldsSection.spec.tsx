@@ -184,4 +184,46 @@ describe('SpanFieldsSection', () => {
     expect(screen.getByText(SessionsTraceI18nKey.SpanFieldsUnavailable)).toBeInTheDocument();
     expect(screen.queryByRole('button')).toBeNull();
   });
+
+  test('offers the description of a described field as a hint beside its label', async () => {
+    const described: SpanFieldGroup = {
+      ...CLIENT,
+      fields: [{ ...CLIENT.fields[0], description: 'Client that originated the request.' }],
+    };
+    renderSection([described]);
+
+    await userEvent.setup().click(headerFor(SessionsTraceI18nKey.SpanTagClient));
+
+    expect(screen.getByRole('button', { name: 'Client that originated the request.' })).toBeInTheDocument();
+  });
+
+  test('offers the description of a described object field as a hint beside its label', async () => {
+    const group: SpanFieldGroup = {
+      tag: SpanFieldTag.Client,
+      fields: [
+        {
+          name: 'scores',
+          label: 'Scores',
+          type: AnalyticsFieldType.Object,
+          tag: SpanFieldTag.Client,
+          description: 'Per-criterion scores.',
+        },
+      ],
+    };
+    renderSection([group], { scores: { clarity: 4 } } as unknown as SpanFieldRow);
+
+    await userEvent.setup().click(headerFor(SessionsTraceI18nKey.SpanTagClient));
+
+    expect(screen.getByText('clarity')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Per-criterion scores.' })).toBeInTheDocument();
+  });
+
+  test('offers no hint for a field the schema does not describe', async () => {
+    renderSection([CLIENT]);
+
+    await userEvent.setup().click(headerFor(SessionsTraceI18nKey.SpanTagClient));
+
+    expect(screen.getByText('chat')).toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+  });
 });

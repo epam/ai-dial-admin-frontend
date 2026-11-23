@@ -2,7 +2,7 @@
 
 import { FC, ReactNode } from 'react';
 
-import { BreakdownPart } from './models';
+import { BreakdownPart, CardValueSection } from './models';
 
 interface Props {
   total: ReactNode;
@@ -10,12 +10,13 @@ interface Props {
   parts: BreakdownPart[];
   /** Replaces the parts, e.g. the "usually under 10 min" copy while a total is still being calculated. */
   note?: ReactNode;
+  section?: CardValueSection;
 }
 
-const TotalBreakdownValue: FC<Props> = ({ total, parts, note }) => (
-  <div className="flex flex-col gap-2">
-    <span className="dial-display2-text text-primary">{total}</span>
-    {note != null ? (
+const TotalBreakdownValue: FC<Props> = ({ total, parts, note, section = CardValueSection.Full }) => {
+  const figure = <span className="dial-display2-text text-primary">{total}</span>;
+  const footer =
+    note != null ? (
       <span className="dial-small-text text-secondary">{note}</span>
     ) : (
       <div className="flex flex-wrap gap-x-4 gap-y-1 dial-small-text">
@@ -26,8 +27,22 @@ const TotalBreakdownValue: FC<Props> = ({ total, parts, note }) => (
           </span>
         ))}
       </div>
-    )}
-  </div>
-);
+    );
+
+  if (section === CardValueSection.Figure) {
+    return figure;
+  }
+
+  if (section === CardValueSection.Footer) {
+    return footer;
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {figure}
+      {footer}
+    </div>
+  );
+};
 
 export default TotalBreakdownValue;

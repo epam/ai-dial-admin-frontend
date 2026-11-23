@@ -47,17 +47,10 @@ import {
   EntitiesI18nKey,
   EntityFieldsI18nKey,
   ImportI18nKey,
-  QueriesI18nKey,
   SourceI18nKey,
   TelemetryI18nKey,
   TestSuitesI18nKey,
 } from '@/src/constants/i18n';
-import {
-  deriveSavedQueryEditor,
-  savedQuerySourcesLabel,
-} from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
-import { SAVED_QUERY_EDITOR_I18N_KEYS } from '@/src/constants/analytics/queries';
-import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { RowImportMeta } from '@/src/models/deployments/import';
 import { ValidationState } from '@/src/types/deployments/import';
 import {
@@ -81,6 +74,7 @@ import {
   OPTIONAL_CURATED_COLUMN_FIELDS,
   PROVENANCE_HINT_KEY,
   PROVENANCE_LABEL_KEY,
+  SESSION_RATING_SELECT_FIELDS,
   SORTABLE_SESSION_FIELDS,
 } from '@/src/constants/analytics/sessions-trace';
 import { sessionTopics, formatCompactNumber, formatFixedCost } from '@/src/utils/analytics/session-formatting';
@@ -92,6 +86,8 @@ import {
   SessionsField,
 } from '@/src/models/analytics/sessions-trace';
 import { QueryValueType } from '@/src/models/analytics/query';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
+import { defaultSessionsSource, roleBoundFields, sourceFieldOf } from '@/src/utils/analytics/sessions-source';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { Publication } from '@/src/models/dial/publications';
@@ -286,9 +282,18 @@ const targetRadioNameColumn = (column: ColDef, idField: string): ColDef => ({
   tooltipValueGetter: () => undefined,
 });
 
+const evaluationDescriptionColumn: ColDef = {
+  ...DESCRIPTION_COLUMN,
+  // The deployments API stores a missing description as the string "null".
+  valueGetter: ({ data }: ValueGetterParams) => {
+    const description = data?.description;
+    return description == null || description === 'null' ? '' : description;
+  },
+};
+
 const EVALUATION_DEPLOYMENT_DETAIL_COLUMNS: ColDef[] = [
   { field: 'deploymentId', headerName: 'ID', hide: false },
-  DESCRIPTION_COLUMN,
+  evaluationDescriptionColumn,
 ];
 
 export const EVALUATION_DEPLOYMENTS_COLUMNS: ColDef[] = [
@@ -886,29 +891,67 @@ const sessionFilterPreset = (fieldName?: string): Partial<ColDef> => {
 // not report fails the whole listing.
 const ENTITY_FIELDS = new Set<string>(Object.values(SessionsField));
 
-const availableCuratedColumns = (columns: ColDef[], schemaFields: AnalyticsEntityField[]): ColDef[] => {
+const isBoundColumn = (column: ColDef, source: SessionsSource): boolean => {
+  if (column.field === SessionColumn.Rating) {
+    return source.ratingEnrichment !== null;
+  }
+
+  return sourceFieldOf(source, column.field as string) !== null;
+};
+
+const availableCuratedColumns = (
+  columns: ColDef[],
+  schemaFields: AnalyticsEntityField[],
+  source: SessionsSource,
+): ColDef[] => {
   const available = new Set(schemaFields.map(({ name }) => name));
   const candidates = available.size ? ENTITY_FIELDS : new Set<string>(OPTIONAL_CURATED_COLUMN_FIELDS);
 
-  return columns.filter((column) => !candidates.has(column.field as string) || available.has(column.field as string));
+  return columns.filter((column) => {
+    const fieldName = column.field as string;
+    const bound = sourceFieldOf(source, fieldName) ?? fieldName;
+
+    return isBoundColumn(column, source) && (!candidates.has(fieldName) || available.has(bound));
+  });
 };
 
-const curatedSessionColumns = (t: (key: string) => string, schemaFields: AnalyticsEntityField[]): ColDef[] =>
-  restrictSort(availableCuratedColumns(BASE_SESSIONS_TRACE_COLUMNS(t), schemaFields), SORTABLE_SESSION_FIELDS).map(
-    (column) => ({
-      ...column,
-      ...sessionFilterPreset(column.field),
-      ...(column.field === SessionsField.LastRequestTime ? { sort: 'desc' as ColDef['sort'] } : {}),
-    }),
-  );
+const curatedSessionColumns = (
+  t: (key: string) => string,
+  schemaFields: AnalyticsEntityField[],
+  source: SessionsSource,
+): ColDef[] =>
+  restrictSort(
+    availableCuratedColumns(BASE_SESSIONS_TRACE_COLUMNS(t), schemaFields, source),
+    SORTABLE_SESSION_FIELDS,
+  ).map((column) => ({
+    ...column,
+    ...sessionFilterPreset(column.field),
+    ...(column.field === SessionsField.LastRequestTime ? { sort: 'desc' as ColDef['sort'] } : {}),
+  }));
 
 // The curated set plus one column per field the fetched schema reports and no curated column already reads,
 // so the count is whatever the instance carries. With no schema in hand the curated columns are all there is:
 // an unfetched schema is not evidence that a field exists, and a column that can never fill is of no use.
+const UNBOUND_HIDDEN_FIELDS: SessionsField[] = [SessionsField.TotalPrice, SessionsField.TurnCount];
+
+const composedSessionFields = (source: SessionsSource): string[] => [
+  ...roleBoundFields(source),
+  ...UNBOUND_HIDDEN_FIELDS.filter((fieldName) => sourceFieldOf(source, fieldName) === null),
+  ...(source.ratingEnrichment
+    ? SESSION_RATING_SELECT_FIELDS.map((fieldName) => `${source.ratingEnrichment}.${fieldName}`)
+    : []),
+];
+
 export const SESSIONS_TRACE_COLUMNS = (
   t: (key: string) => string,
   schemaFields: AnalyticsEntityField[] = [],
-): ColDef[] => buildSessionColumnCatalog(curatedSessionColumns(t, schemaFields), schemaFields);
+  source: SessionsSource = defaultSessionsSource(),
+): ColDef[] =>
+  buildSessionColumnCatalog(
+    curatedSessionColumns(t, schemaFields, source),
+    schemaFields,
+    composedSessionFields(source),
+  );
 
 // The origin is what a reader needs to interpret an empty cell — a rollup value cannot be missing, an
 // enrichment value is missing until the evaluation reaches it — so it stays legible even where the tag
@@ -934,17 +977,15 @@ const groupHeaderName = (t: (key: string) => string, group: SessionColumnGroup):
   return group.provenance === ColumnProvenance.Sessions ? tagLabel : `${origin} · ${tagLabel}`;
 };
 
-// A named origin identifies its source on its own — one origin, one enrichment — so its id needs no more
-// than the pair. `Other` is the catch-all every unnamed enrichment shares, so there the source is what keeps
-// two of them from claiming one id.
 const groupId = ({ provenance, source, tag }: SessionColumnGroup): string =>
-  [provenance === ColumnProvenance.Other ? `${provenance}:${source}` : provenance, tag].filter(Boolean).join(':');
+  [source ? `${provenance}:${source}` : provenance, tag].filter(Boolean).join(':');
 
 export const SESSIONS_TRACE_COLUMN_GROUPS = (
   t: (key: string) => string,
   schemaFields: AnalyticsEntityField[] = [],
+  source: SessionsSource = defaultSessionsSource(),
 ): ColGroupDef[] => {
-  const columns = SESSIONS_TRACE_COLUMNS(t, schemaFields);
+  const columns = SESSIONS_TRACE_COLUMNS(t, schemaFields, source);
 
   return sessionColumnGroups(columns, schemaFields).map((group) => {
     const headerName = groupHeaderName(t, group);
@@ -2034,81 +2075,3 @@ export const IMPORT_VALIDATION_COLUMN = (t: (str: string) => string): ColDef => 
   sortable: false,
   filterValueGetter: ({ data }) => getImportValidationStateLabel(data, t),
 });
-
-// Saved queries. The service returns every visible row unpaged with no server-side sort or filter, so
-// these are client-side filters. Field names are the wire ones (snake_case), which is why the shared
-// created/updated columns cannot be reused as-is — only their formatting is.
-export const QUERIES_COLUMN = (t: (str: string) => string): ColDef[] => [
-  {
-    field: 'name',
-    colId: 'name',
-    headerName: t(QueriesI18nKey.Name),
-    hide: false,
-    sort: 'asc',
-    ...baseStringFilter,
-  },
-  {
-    field: 'description',
-    colId: 'description',
-    headerName: t(QueriesI18nKey.Description),
-    hide: false,
-    ...baseStringFilter,
-  },
-  {
-    colId: 'source',
-    headerName: t(QueriesI18nKey.Source),
-    hide: false,
-    valueGetter: ({ data }) => savedQuerySourcesLabel((data as SavedQuery)?.source),
-    tooltipValueGetter: ({ data }) => savedQuerySourcesLabel((data as SavedQuery)?.source),
-    filterValueGetter: (params) => savedQuerySourcesLabel((params.data as SavedQuery)?.source),
-    ...baseStringFilter,
-  },
-  { field: 'tag', colId: 'tag', headerName: t(QueriesI18nKey.Tag), hide: false, ...baseStringFilter },
-  {
-    field: 'scope',
-    colId: 'scope',
-    headerName: t(QueriesI18nKey.Scope),
-    hide: false,
-    valueGetter: ({ data }) =>
-      t(
-        (data as SavedQuery)?.scope === SavedQueryScope.Common
-          ? QueriesI18nKey.ScopeCommon
-          : QueriesI18nKey.ScopePersonal,
-      ),
-    ...baseStringFilter,
-  },
-  {
-    // Derived from the body, never read from a stored field: an `editor` member would be a second
-    // source of truth able to contradict the body it describes.
-    colId: 'editor',
-    headerName: t(QueriesI18nKey.Editor),
-    hide: false,
-    valueGetter: ({ data }) => t(SAVED_QUERY_EDITOR_I18N_KEYS[deriveSavedQueryEditor(data as SavedQuery, null)]),
-    ...baseStringFilter,
-  },
-  {
-    // The service reports no author email whenever there is none to record, so this must not assume one.
-    field: 'owner_email',
-    colId: 'owner_email',
-    headerName: t(QueriesI18nKey.SavedBy),
-    hide: false,
-    valueGetter: ({ data }) => (data as SavedQuery)?.owner_email || t(QueriesI18nKey.SavedByUnknown),
-    ...baseStringFilter,
-  },
-  {
-    field: 'updated_at',
-    colId: 'updated_at',
-    headerName: 'Updated time',
-    hide: false,
-    ...dateTimeColumn,
-    ...dateFilter,
-  },
-  {
-    field: 'created_at',
-    colId: 'created_at',
-    headerName: 'Creation time',
-    hide: true,
-    ...dateTimeColumn,
-    ...dateFilter,
-  },
-];

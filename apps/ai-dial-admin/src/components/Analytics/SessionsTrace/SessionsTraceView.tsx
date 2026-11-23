@@ -14,14 +14,16 @@ import { BasicI18nKey, SessionsTraceI18nKey } from '@/src/constants/i18n';
 import { useReadFailureNotification } from '@/src/hooks/use-read-failure-notification';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import { ReadFailure } from '@/src/models/server-action';
 
 interface Props {
+  source: SessionsSource;
   schemaFields?: AnalyticsEntityField[] | null;
   schemaFailure?: ReadFailure | null;
 }
 
-const SessionsTraceView: FC<Props> = ({ schemaFields, schemaFailure }) => {
+const SessionsTraceView: FC<Props> = ({ source, schemaFields, schemaFailure }) => {
   const t = useI18n();
   const [isColumnsPanelOpen, setIsColumnsPanelOpen] = useState(false);
   const {
@@ -33,7 +35,6 @@ const SessionsTraceView: FC<Props> = ({ schemaFields, schemaFailure }) => {
     isPeriodPending,
     isEmptyResult,
     isFirstPageLoading,
-    isFeedbackCapped,
     hasLoadError,
     search,
     onSearchChange,
@@ -43,7 +44,8 @@ const SessionsTraceView: FC<Props> = ({ schemaFields, schemaFailure }) => {
     onTimeRangeChange,
     feedback,
     onFeedbackChange,
-  } = useSessions(schemaFields);
+  } = useSessions(schemaFields, source);
+  const hasRatings = source.ratingEnrichment !== null;
 
   const onToggleColumnsPanel = useCallback(() => setIsColumnsPanelOpen((isOpen) => !isOpen), []);
 
@@ -60,9 +62,15 @@ const SessionsTraceView: FC<Props> = ({ schemaFields, schemaFailure }) => {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="dial-h1-text text-primary">{t(SessionsTraceI18nKey.Title)}</h1>
-          <SessionsProvenanceLine schemaFields={schemaFields} />
+          <SessionsProvenanceLine baseTable={source.baseTable} schemaFields={schemaFields} />
         </div>
-        <SessionsSummary period={period} periodLabel={periodLabel} isPending={isPeriodPending} />
+        <SessionsSummary
+          period={period}
+          periodLabel={periodLabel}
+          isPending={isPeriodPending}
+          hasCost={source.cost !== null}
+          hasRatings={hasRatings}
+        />
       </div>
       <SessionsToolbar
         search={search}
@@ -73,7 +81,7 @@ const SessionsTraceView: FC<Props> = ({ schemaFields, schemaFailure }) => {
         onTimeRangeChange={onTimeRangeChange}
         feedback={feedback}
         onFeedbackChange={onFeedbackChange}
-        isFeedbackCapped={isFeedbackCapped}
+        hasFeedbackFilter={hasRatings}
         onToggleColumnsPanel={onToggleColumnsPanel}
       />
       <div className="relative flex flex-1 rounded overflow-auto min-h-0 border border-secondary">
@@ -82,6 +90,7 @@ const SessionsTraceView: FC<Props> = ({ schemaFields, schemaFailure }) => {
           gridContext={gridContext}
           onGridReady={onGridReady}
           schemaFields={schemaFields}
+          source={source}
           isColumnsPanelOpen={isColumnsPanelOpen}
           onToggleColumnsPanel={onToggleColumnsPanel}
         />

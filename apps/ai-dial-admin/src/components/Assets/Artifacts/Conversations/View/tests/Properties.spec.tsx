@@ -3,30 +3,33 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { DialConversation } from '@/src/models/dial/conversation';
-import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { ApplicationRoute } from '@/src/types/routes';
 import Properties from '../Properties';
 
 const getDeploymentMock = vi.fn();
-const getAllDeploymentsMock = vi.fn();
 const getModelMock = vi.fn();
+const getPlatformApplicationMock = vi.fn();
 const windowOpenMock = vi.fn();
 
 vi.mock('@/src/app/[lang]/conversations/actions', () => ({
   getDeployment: (...args: unknown[]) => getDeploymentMock(...args),
-  getAllDeployments: (...args: unknown[]) => getAllDeploymentsMock(...args),
 }));
 
 vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
   getModel: (...args: unknown[]) => getModelMock(...args),
 }));
 
+vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
+  getPlatformApplication: (...args: unknown[]) => getPlatformApplicationMock(...args),
+}));
+
 describe('Assets Conversations :: Properties', () => {
   beforeEach(() => {
     getDeploymentMock.mockReset();
-    getAllDeploymentsMock.mockReset();
     getModelMock.mockReset();
     getModelMock.mockResolvedValue(null);
+    getPlatformApplicationMock.mockReset();
+    getPlatformApplicationMock.mockResolvedValue(null);
     windowOpenMock.mockReset();
     vi.stubGlobal('open', windowOpenMock);
   });
@@ -44,42 +47,40 @@ describe('Assets Conversations :: Properties', () => {
     model,
   });
 
-  test('loads agent via getDeployment and opens type-based link', async () => {
-    getDeploymentMock.mockResolvedValue({
-      $type: DeploymentType.Model,
-      deploymentId: 'gpt-4',
-      displayName: 'GPT-4',
-    });
+  const renderProperties = (id: string) => render(<Properties selectedConversation={conversation({ id })} />);
 
+  const openAgentLink = async () => {
     const user = userEvent.setup();
+    await user.click(await screen.findByRole('button'));
+  };
 
-    render(<Properties selectedConversation={conversation({ id: 'gpt-4' })} />);
+  test('shows loading until the model route probe resolves, then opens the probed route', async () => {
+    let resolveProbe: (value: unknown) => void = () => {};
+    getDeploymentMock.mockResolvedValue({ object: 'model', id: 'gpt-4' });
+    getModelMock.mockReturnValue(new Promise((resolve) => (resolveProbe = resolve)));
 
-    const openButton = await screen.findByRole('button');
+    renderProperties('gpt-4');
+
+    await vi.waitFor(() => expect(getModelMock).toHaveBeenCalledOnce());
+    expect(screen.getByRole('status')).toBeTruthy();
+    expect(screen.queryByRole('button')).toBeNull();
+
+    await act(async () => resolveProbe(null));
+    await openAgentLink();
+
     expect(getDeploymentMock).toHaveBeenCalledWith('gpt-4');
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
-    await user.click(openButton);
-
     expect(windowOpenMock).toHaveBeenCalledWith(
       `/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`,
       '_blank',
     );
   });
 
-  test('opens Catalog model link when platform model exists', async () => {
-    getDeploymentMock.mockResolvedValue({
-      $type: DeploymentType.Model,
-      deploymentId: 'msh-responses',
-      displayName: 'msh-responses',
-    });
+  test('opens the Catalog model link when the platform model exists', async () => {
+    getDeploymentMock.mockResolvedValue({ object: 'model', id: 'msh-responses' });
     getModelMock.mockResolvedValue({ response: { name: 'msh-responses' } });
 
-    const user = userEvent.setup();
-
-    render(<Properties selectedConversation={conversation({ id: 'msh-responses' })} />);
-
-    const openButton = await screen.findByRole('button');
-    await user.click(openButton);
+    renderProperties('msh-responses');
+    await openAgentLink();
 
     expect(windowOpenMock).toHaveBeenCalledWith(
       `/en${ApplicationRoute.PlatformModels}/${encodeURIComponent('msh-responses')}`,
@@ -87,7 +88,50 @@ describe('Assets Conversations :: Properties', () => {
     );
   });
 
-  test('hides external link when by-name lookup fails', async () => {
+  test('opens Assets Applications without the prefix for a custom application', async () => {
+    getDeploymentMock.mockResolvedValue({ object: 'application', id: 'applications/bucket/app' });
+
+    renderProperties('applications/bucket/app');
+    await openAgentLink();
+
+    expect(windowOpenMock).toHaveBeenCalledWith(
+      `/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('applications/bucket/app')}?path=${encodeURIComponent('bucket/app')}`,
+      '_blank',
+    );
+  });
+
+  test('opens Applications for a config-defined application whose reference differs from its id', async () => {
+    getDeploymentMock.mockResolvedValue({
+      object: 'application',
+      id: 'my-app',
+      application: 'my-app',
+      reference: 'ref-1',
+    });
+
+    renderProperties('my-app');
+    await openAgentLink();
+
+    expect(windowOpenMock).toHaveBeenCalledWith(
+      `/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`,
+      '_blank',
+    );
+    expect(getModelMock).not.toHaveBeenCalled();
+  });
+
+  test('shows the agent without a link and logs the error when the lookup fails', async () => {
+    const error = new Error('Network error');
+    vi.mocked(console.error).mockClear();
+    getDeploymentMock.mockRejectedValue(error);
+
+    renderProperties('gpt-4');
+
+    expect(await screen.findByText('gpt-4')).toBeTruthy();
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
+    expect(console.error).toHaveBeenCalledWith('Getting conversation deployment error:', error);
+  });
+
+  test('offers no external link when the lookup finds no deployment', async () => {
     getDeploymentMock.mockResolvedValue(null);
 
     render(<Properties selectedConversation={conversation({ id: 'missing' })} />);
@@ -96,6 +140,5 @@ describe('Assets Conversations :: Properties', () => {
     await act(async () => {});
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
-    expect(getAllDeploymentsMock).not.toHaveBeenCalled();
   });
 });

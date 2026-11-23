@@ -1,44 +1,50 @@
 import { describe, expect, test } from 'vitest';
 
-import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
-import { getEmptyAsset } from '@/src/components/Assets/BaseAssetList/utils';
+import { getFlatAssetColumns } from '@/src/components/Assets/FlatAssetGrid/columns';
+import { getGridActionLabels, getToolbarOptionLabels } from '@/src/components/Assets/utils';
+import { AssetSource } from '@/src/models/dial/asset-source';
 import { ApplicationRoute } from '@/src/types/routes';
 
 const VIEW = ApplicationRoute.PlatformAppRunners;
 
 /**
- * App runners are flat in Core's `platform` bucket. Any surface that offers a folder operation routes
- * into `handleCreateFolder`, which calls `createRunner` with the `getEmptyAsset` shape — no `$id` —
- * and the save fails with an id error the user has no way to act on.
+ * The App runner list is a flat grid on the Platform tab, not a file-manager tree, so the file manager's label
+ * helpers must offer nothing for it: a folder operation would submit a placeholder Core cannot store.
  */
 describe('App runner asset :: folder operations', () => {
-  test('Should offer no tree actions, since the tree holds only the flat root', () => {
-    expect(getTreeActionLabels(false, VIEW)).toEqual([]);
+  test('Should offer no file-manager toolbar entries', () => {
+    expect(getToolbarOptionLabels(VIEW, false)).toEqual([]);
   });
 
-  test.each(['addSibling', 'addChild', 'move', 'rename', 'managePermissions'])(
-    'Should not offer %s on the tree',
-    (action) => {
-      expect(getTreeActionLabels(false, VIEW).map((item) => item.key)).not.toContain(action);
+  test('Should offer no file-manager row actions', () => {
+    expect(getGridActionLabels(VIEW, false)).toEqual([]);
+  });
+});
+
+type ColumnFactory = (dateLocale?: unknown, dateOptions?: unknown) => { colId?: string; field?: string };
+
+const columnIds = (view: ApplicationRoute): (string | undefined)[] =>
+  getFlatAssetColumns(view, AssetSource.Platform, () => undefined, { name: 'Name', costObject: 'Cost object' }).map(
+    (column) => {
+      const resolved = typeof column === 'function' ? (column as unknown as ColumnFactory)('en-US', void 0) : column;
+
+      return resolved.colId ?? resolved.field;
     },
   );
 
-  test('Should offer no folder creation in the toolbar', () => {
-    expect(getToolbarOptionLabels(VIEW, false).map((item) => item.key)).toEqual(['newItem']);
+describe('App runner asset :: list columns', () => {
+  test('Should expose name, author, created-at and updated-at', () => {
+    expect(columnIds(VIEW)).toEqual(['name', 'author', 'createdAt', 'updatedAt']);
   });
 
-  test('Should offer duplicate, delete and open-in-new-tab in the grid context menu', () => {
-    expect(getGridActionLabels(VIEW, false).map((item) => item.key)).toEqual(['duplicate', 'delete', 'openInNewTab']);
+  test('Should not collide colIds, since two columns sharing one break ag-grid', () => {
+    const ids = columnIds(VIEW);
+
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
-  test.each(['addSibling', 'addChild', 'move', 'rename', 'managePermissions'])(
-    'Should not offer the folder-bound %s in the grid context menu',
-    (action) => {
-      expect(getGridActionLabels(VIEW, false).map((item) => item.key)).not.toContain(action);
-    },
-  );
-
-  test('Should confirm the empty asset a folder create would send carries no id', () => {
-    expect(getEmptyAsset(VIEW, 'platform/')).not.toHaveProperty('$id');
+  test('Should carry no version or folder column', () => {
+    expect(columnIds(VIEW)).not.toContain('version');
+    expect(columnIds(VIEW)).not.toContain('folder');
   });
 });

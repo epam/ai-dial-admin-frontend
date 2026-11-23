@@ -12,6 +12,8 @@ export enum ColumnProvenance {
   Sessions = 'sessions',
   Insights = 'insights',
   Feedback = 'feedback',
+  Tertiary = 'tertiary',
+  Info = 'info',
   // An enrichment this frontend knows no name for. The entity's enrichments are provisioned per instance,
   // so one can appear that no release anticipated; its columns are still offered, attributed to it by the
   // namespace its own field names carry.
@@ -42,7 +44,6 @@ export interface SessionsPage {
   rows: SessionRow[];
   total: number | null;
   period?: SessionPeriodSummary;
-  candidates?: SessionCandidateIds;
   // The value sets the first page of this result resolved for its array-valued column filters, for the
   // caller to carry into every later page of it. See `SessionPageRequest.arrayFilters`.
   arrayFilters?: SessionArrayFilter[];
@@ -161,13 +162,10 @@ export interface SessionFilters {
 export interface SessionPageRequest extends SessionFilters {
   offset: number;
   limit: number;
-  // Carried by a later page only: the first page resolves the candidate ids and returns them, and the
-  // client sends them back for the rest of that result.
-  chatIds?: string[];
   sort?: SessionSortKey[];
   sourceFields?: string[];
   visibleEnrichmentFields?: string[];
-  // Carried by a later page only, exactly as `chatIds` is: the resolution reads a live table, so resolving
+  // Carried by a later page only: the resolution reads a live table, so resolving
   // again per scroll block could narrow a later page by a different set of values and make rows duplicate
   // or vanish across the scroll.
   arrayFilters?: SessionArrayFilter[];
@@ -203,16 +201,9 @@ export interface SessionGridContext {
 
 export interface SessionFieldValuesRequest extends SessionFilters {
   field: string;
-  // The feedback narrowing reaches the query as candidate ids the first page resolved, so a facet count
-  // agrees with the rows only when the caller sends the same set it is paging under. The value sets an
-  // array-valued column filter resolved travel for the same reason.
-  chatIds?: string[];
+  // The value sets an array-valued column filter resolved travel with the request, so a facet count agrees
+  // with the rows only when the caller sends the same set it is paging under.
   arrayFilters?: SessionArrayFilter[];
-}
-
-export interface SessionCandidateIds {
-  ids: string[];
-  isCapped: boolean;
 }
 
 // Offered fields split by what projecting one costs, which is not the same question as whether its column
@@ -379,8 +370,8 @@ export interface SessionFeedbackRow {
 export interface SessionFeedbackPage {
   rows: SessionFeedbackRow[];
   total: number | null;
-  ratings: SessionRatingCounts | null;
   isCommentTextReadable: boolean;
+  isAvailable: boolean;
 }
 
 // What a session's hops are located by. `source` is the rollup's `client_session_source`: the value
@@ -432,6 +423,8 @@ export enum UsageLogField {
   // publishes them bare — so the grant resolves each against the fetched schema by column name rather than
   // by exact spelling, and the read selects whichever name that instance answered with.
   RequestBody = 'request_body',
+  RequestBodyFull = 'request_body_full',
+  RequestBodyRebuild = 'request_body_rebuild',
   ResponseBody = 'response_body',
   // A later addition to the hop log: an instance predating it does not persist the column, so it is named
   // only when the fetched schema reports it.
@@ -734,6 +727,7 @@ export interface SpanFieldDescriptor {
   label: string;
   type: AnalyticsFieldType;
   tag: string;
+  description?: string;
 }
 
 export interface SpanObjectEntry {
@@ -748,6 +742,7 @@ export interface SpanFactRowProps {
   valueClassName?: string;
   // What the row's copy control puts on the clipboard. Absent where there is nothing to copy.
   copyText?: string;
+  hint?: string;
 }
 
 export interface SpanFieldGroup {
@@ -939,6 +934,7 @@ export interface HopRequestEnvelope {
   recordedBytes: number | null;
   // Set when the envelope's own total budget was reached, so the message list is short of what was recorded.
   isClamped: boolean;
+  isPartial: boolean;
 }
 
 // A clamp states itself **and** states by how much. One shape for every clamped thing, so the three places
@@ -989,6 +985,7 @@ export interface HopRawBody {
   state: HopReadState;
   text: string | null;
   clamp: HopClamp;
+  isPartial: boolean;
 }
 
 // Which sides a read was actually entitled to. A fact panel is built from both body columns, so a builder
@@ -1042,13 +1039,22 @@ export interface HopBodyFields extends HopBodyGrants {
   // enrichment that holds them where it reports them that way, bare where it does not. Held rather than
   // recomputed so the read selects exactly what the grant matched.
   requestField: string | null;
+  requestStatusField: string | null;
   responseFields: string[];
+}
+
+export enum RequestBodyRebuildStatus {
+  Stored = 'stored',
+  Rebuilt = 'rebuilt',
+  Partial = 'partial',
+  Resolvable = 'resolvable',
 }
 
 export interface SessionEntryBodyRow {
   trace_id: string;
   event_kind: string | null;
   request_body: string | null;
+  request_body_rebuild?: string | null;
   response_body: string | null;
   assembled_response?: string | null;
   // Selected by the inspector's own read so the dialect is resolved server-side from the endpoint rather than
@@ -1091,7 +1097,6 @@ export interface SessionFieldDefinition {
 
 export interface SessionPanelFrame {
   panel: SessionDetailPanel;
-  sourceEntity: string;
   provenance: ColumnProvenance;
   labelKey: string;
 }
@@ -1139,4 +1144,19 @@ export interface SessionInsightField {
   label: string;
   hint?: string;
   type: AnalyticsFieldType;
+  tag?: string;
+}
+
+export interface SessionEnrichmentPanel {
+  namespace: string;
+  title: string;
+  description?: string;
+  summary?: SessionInsightField;
+  fields: SessionInsightField[];
+  groups: SpanFieldGroup[];
+}
+
+export interface EnrichmentDefinition {
+  tagOrder: string[];
+  description?: string;
 }

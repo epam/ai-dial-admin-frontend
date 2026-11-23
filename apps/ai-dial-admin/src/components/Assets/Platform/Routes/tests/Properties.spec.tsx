@@ -5,10 +5,6 @@ import { EntityFieldsI18nKey, RoutesI18nKey } from '@/src/constants/i18n';
 import { DialRouteResource } from '@/src/models/dial/resource';
 import RouteAssetProperties from '../Properties';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 const baseAsset = {
   name: 'my-route',
   path: 'my-route',

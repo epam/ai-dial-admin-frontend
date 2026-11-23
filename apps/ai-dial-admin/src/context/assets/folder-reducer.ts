@@ -65,25 +65,6 @@ export const folderReducer = <T extends AssetListItem>(
       return { files, fetchedFoldersData, expandedFolders, filePath, hasFetchError: false };
     }
 
-    case FolderActionType.RootsLoaded: {
-      const shouldReplaceCache = action.refreshData && action.isLatestRequest;
-      const fetchedFoldersData = shouldReplaceCache
-        ? action.fetchedFoldersData
-        : { ...state.fetchedFoldersData, ...action.fetchedFoldersData };
-
-      if (!action.isLatestRequest) {
-        return { ...state, fetchedFoldersData };
-      }
-
-      return {
-        files: action.files,
-        fetchedFoldersData,
-        hasFetchError: false,
-        expandedFolders: new Set(action.refreshData ? [action.openPath] : [...state.expandedFolders, action.openPath]),
-        filePath: !state.filePath || action.resetFolder ? action.openPath : state.filePath,
-      };
-    }
-
     case FolderActionType.FolderLoaded: {
       const files = mergeFiles<T>(state.files, action.fetched, action.path);
       const shouldReplaceCache = action.refreshData && action.isLatestRequest;
@@ -121,5 +102,10 @@ export const folderReducer = <T extends AssetListItem>(
 
     case FolderActionType.FolderToggled:
       return toggleFolderState(state, action.folderPath, action.options).state;
+
+    // Nothing is loaded, so nothing is open: the next load opens the first node, or a hierarchy restore the
+    // chain to the kept selection. A kept `expandedFolders` would make that first load collapse the root.
+    case FolderActionType.TreeInvalidated:
+      return { ...state, files: [], fetchedFoldersData: {}, expandedFolders: new Set() };
   }
 };

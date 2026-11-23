@@ -1,3 +1,4 @@
+import { ColDef } from 'ag-grid-community';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import FormattedValueCellRenderer from '@/src/components/Grid/CellRenderers/FormattedValueCellRenderer';
 import { FileManagerColumnKey, DialFile, NAME_COLUMN, SIZE_COLUMN } from '@epam/ai-dial-react-file-manager';
@@ -6,26 +7,47 @@ import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { isPlatformBucketRow } from '@/src/utils/files/root-folder';
 
+type ColumnFactoryArgs = [Intl.LocalesArgument, Intl.DateTimeFormatOptions | undefined, boolean];
+
+/**
+ * The file manager's `NAME_COLUMN`/`SIZE_COLUMN` are curried factories that its own column hook resolves
+ * with the locale and layout, so a plain `{ ...column }` spread turns them into an empty column.
+ * Wraps a factory instead of spreading it.
+ */
+export const withoutFilters = (column: unknown): ColDef | ((...args: ColumnFactoryArgs) => ColDef) => {
+  const noFilters = { filter: false, floatingFilter: false };
+  if (typeof column === 'function') {
+    return (...args: ColumnFactoryArgs) => ({
+      ...(column as (...a: ColumnFactoryArgs) => ColDef)(...args),
+      ...noFilters,
+    });
+  }
+  return { ...(column as ColDef), ...noFilters };
+};
+
 export const getGridColumns = (view: ApplicationRoute, hasFoldersToDelete: boolean, itemsToDelete?: DialFile[]) => {
   const GRID_NAME_COLUMN = {
     colId: FileManagerColumnKey.Name,
     field: 'name',
     headerName: 'Name',
-    width: 200,
+    flex: 3,
+    minWidth: 200,
   };
 
   const AUTHOR_COLUMN = {
     colId: FileManagerColumnKey.Author,
     field: 'author',
     headerName: 'Author',
-    width: 200,
+    flex: 1,
+    minWidth: 120,
   };
 
   const VERSION_COLUMN = {
     colId: FileManagerColumnKey.Version,
     field: 'version',
     headerName: 'Version',
-    width: 200,
+    width: 110,
+    suppressSizeToFit: true,
     cellRenderer: FormattedValueCellRenderer,
   };
 
@@ -106,6 +128,18 @@ export const getDeleteModalTitle = (
     case ApplicationRoute.PlatformTranslators:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Translators) : t(FileManagerI18nKey.Translator),
+      });
+    case ApplicationRoute.PlatformPlugins:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Plugins) : t(FileManagerI18nKey.Plugin),
+      });
+    case ApplicationRoute.AssetsAliases:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Aliases) : t(FileManagerI18nKey.Alias),
+      });
+    case ApplicationRoute.PlatformRouters:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Routers) : t(FileManagerI18nKey.Router),
       });
     case ApplicationRoute.PlatformRoutes:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
@@ -213,6 +247,18 @@ export const getDeleteModalDescription = (
     case ApplicationRoute.PlatformTranslators:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.Translators) : t(FileManagerI18nKey.Translator)).toLowerCase(),
+      });
+    case ApplicationRoute.PlatformPlugins:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1 ? t(FileManagerI18nKey.Plugins) : t(FileManagerI18nKey.Plugin)).toLowerCase(),
+      });
+    case ApplicationRoute.AssetsAliases:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1 ? t(FileManagerI18nKey.Aliases) : t(FileManagerI18nKey.Alias)).toLowerCase(),
+      });
+    case ApplicationRoute.PlatformRouters:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1 ? t(FileManagerI18nKey.Routers) : t(FileManagerI18nKey.Router)).toLowerCase(),
       });
     case ApplicationRoute.PlatformRoutes:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {

@@ -17,7 +17,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialAppRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
-import { hasConfigEntityOrigin, withSourceColumn } from '@/src/utils/config-entities/source-column';
+import { withSourceColumn } from '@/src/utils/config-entities/source-column';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
@@ -25,11 +25,20 @@ interface Props {
   roles: DialRole[];
   disabled?: boolean;
   isAppRunnerView?: boolean;
+  isCoreRoleSource: boolean;
   route: DialAppRoute;
   onChangeRoute: (route: DialAppRoute) => void;
 }
 
-const RouteRoles: FC<Props> = ({ route, isAppRunnerView, parentRoles, disabled, onChangeRoute, roles }) => {
+const RouteRoles: FC<Props> = ({
+  route,
+  isAppRunnerView,
+  isCoreRoleSource,
+  parentRoles,
+  disabled,
+  onChangeRoute,
+  roles,
+}) => {
   const t = useI18n();
 
   const data = useMemo(() => {
@@ -88,21 +97,21 @@ const RouteRoles: FC<Props> = ({ route, isAppRunnerView, parentRoles, disabled, 
     [onCloseAddModal, onChangeRoute, route],
   );
 
-  const onOpen = (role?: DialRole) => {
-    onOpenInNewTab(ApplicationRoute.Roles, role);
-  };
+  const onOpen = useCallback(
+    (role?: DialRole) => {
+      onOpenInNewTab(isCoreRoleSource ? ApplicationRoute.PlatformRoles : ApplicationRoute.Roles, role);
+    },
+    [isCoreRoleSource],
+  );
 
   const columns = useMemo(() => {
-    // A Core-sourced row's `name` is a Core reference and `getEntityPath` has no case for roles, so its
-    // default branch would build an admin-BE URL for an entity that service need not hold. Drop the
-    // action rather than offer a link that 404s.
-    const actions = hasConfigEntityOrigin(roles) ? [] : [getOpenInNewTabOperation(onOpen)];
+    const actions = [getOpenInNewTabOperation(onOpen)];
     if (!route.isPublic && !disabled) {
       actions.push(getRemoveOperation(onRemoveRole));
     }
 
     return [...withSourceColumn(BASE_COLUMNS, roles), ACTION_COLUMN(actions)];
-  }, [route.isPublic, disabled, onRemoveRole, roles]);
+  }, [route.isPublic, disabled, onOpen, onRemoveRole, roles]);
 
   return (
     <>

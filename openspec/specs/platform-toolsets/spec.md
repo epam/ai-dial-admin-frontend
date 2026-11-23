@@ -1,8 +1,8 @@
 # platform-toolsets Specification
 
 ## Purpose
-Platform-bucket toolsets shown as a second, flat bucket in the existing `Assets ▸ Toolsets` grid
-(`/assets-toolsets`), above the hierarchical, versioned `public` bucket. DIAL Core already gives
+Platform-bucket toolsets shown on the Platform tab of the existing `Assets ▸ Toolsets` listing
+(`/assets-toolsets`), a flat grid beside the Public tab's hierarchical, versioned tree. DIAL Core already gives
 platform-bucket toolsets full field/tab/auth parity with public-bucket ones (auth-secret encryption
 and credential-locator scope both derive from the resource's own bucket in `ToolSetService`,
 discovered-tools/sign-in/sign-out all resolve by the toolset's path regardless of bucket — see
@@ -10,43 +10,35 @@ discovered-tools/sign-in/sign-out all resolve by the toolset's path regardless o
 this capability covers are structural (flat, no folders, no versioning) and surface-level (a
 restricted action set, a dedicated detail view). Created by archiving change `add-platform-toolsets`.
 ## Requirements
-### Requirement: File root shown above physical buckets in the Assets Toolsets grid
-The system SHALL display synthetic `file`, `platform`, and `public` roots in the existing `Assets ▸ Toolsets` grid, using the same `BaseAssetList` instance. The order SHALL be `file`, `platform`, then `public`. No new menu entry or top-level list route SHALL be introduced.
-
-#### Scenario: All roots appear
-- **WHEN** a user opens `/assets-toolsets`
-- **THEN** the grid shows `file`, `platform`, and `public` roots in that order
-
 ### Requirement: File-root toolsets are flat and read-only
-The system SHALL treat Toolsets under the synthetic `file` root as name-only, flat, and read-only. It SHALL load their names from DIAL Core's config-file `toolsets` endpoint with the initial root batch. It SHALL offer no create, import, export, delete, bulk delete, duplicate, rename, move, drag-and-drop, selection mutation, folder creation, or folder-management action.
+The system SHALL treat Toolsets on the config.json tab as name-only, flat, and read-only. It SHALL load their names from DIAL Core's config-file `toolsets` endpoint when the listing mounts. It SHALL offer no create, import, export, delete, bulk delete, duplicate, rename, move, drag-and-drop, selection mutation, folder creation, or folder-management action.
 
-#### Scenario: File-root toolset names load with the listing
+#### Scenario: config.json toolset names load with the listing
 - **WHEN** a user opens the Toolsets listing
-- **THEN** the system requests config-file toolset names with the physical-root reads and renders them without resource metadata or per-name body reads
+- **THEN** the system requests config-file toolset names once and renders them on the config.json tab without resource metadata or per-name body reads
 
-#### Scenario: File-root toolset actions are immutable
-- **WHEN** a user browses the Toolsets `file` root
+#### Scenario: config.json toolset actions are immutable
+- **WHEN** a user browses the Toolsets config.json tab
 - **THEN** only open and open-in-new-tab are available for a toolset row
 
 ### Requirement: File-root toolset detail view
-The system SHALL open a file-root toolset at `/assets-toolsets/{id}?configFile=true`, without a public-bucket `path` parameter. It SHALL preserve the existing config-file detail read and read-only presentation, including hidden ADMIN|CORE format selection.
+The system SHALL open a config.json toolset at `/assets-toolsets/{id}?configFile=true`, without a public-bucket `path` parameter. It SHALL preserve the existing config-file detail read and read-only presentation, including hidden ADMIN|CORE format selection.
 
-#### Scenario: File-root toolset opens without public path
-- **WHEN** a user opens a toolset row from the `file` root
+#### Scenario: config.json toolset opens without public path
+- **WHEN** a user opens a toolset row from the config.json tab
 - **THEN** the system navigates to `/assets-toolsets/{id}?configFile=true` and renders it read-only
 
 #### Scenario: No separate platform toolsets list page exists
 - **WHEN** the user looks for a platform toolsets entry in the sidebar navigation
 - **THEN** no such entry exists — platform toolsets are reachable only through the existing
-  `/assets-toolsets` grid
+  `/assets-toolsets` listing
 
 ### Requirement: Platform bucket toolsets are flat
-The system SHALL NOT offer folder creation, nested navigation, or versioning for toolsets under the
-`platform` bucket, matching the flat treatment already given to platform applications and the six
-existing platform-only entities.
+The system SHALL NOT offer folder creation, nested navigation, or versioning for toolsets on the Platform tab,
+matching the flat treatment already given to platform applications and the six existing platform-only entities.
 
-#### Scenario: No folder actions on the platform node
-- **WHEN** the user opens the context menu on the `platform` top-level node or any toolset under it
+#### Scenario: No folder actions on the Platform tab
+- **WHEN** the user opens the Platform tab or the action menu of any toolset on it
 - **THEN** no folder-create, move, or nested-navigation actions are offered
 
 #### Scenario: No versioning on a platform toolset
@@ -54,75 +46,63 @@ existing platform-only entities.
 - **THEN** no version history, publish, or version-switcher UI is shown
 
 ### Requirement: Platform bucket toolset rows use the restricted action set
-The system SHALL restrict row and multi-select actions on `platform`-bucket toolset rows to
-duplicate, delete, and open-in-new-tab — the same set already used by platform applications and the
-six existing flat platform views — while `public`-bucket rows and the folder tree keep their current,
-unrestricted action set.
+The system SHALL restrict row and multi-select actions on Platform-tab toolset rows to duplicate, delete, and
+open-in-new-tab — the same set already used by platform applications and the six existing flat platform views —
+while the Public tab keeps the file manager's current, unrestricted action set.
 
 #### Scenario: Platform row actions are restricted
-- **WHEN** the user opens the row action menu for a toolset under the `platform` bucket
+- **WHEN** the user opens the row action menu for a toolset on the Platform tab
 - **THEN** only duplicate, delete, and open-in-new-tab are offered
 
 #### Scenario: Public row actions are unchanged
-- **WHEN** the user opens the row action menu for a toolset under the `public` bucket
+- **WHEN** the user opens the row action menu for a toolset on the Public tab
 - **THEN** the full existing action set is offered, unchanged from current behavior
 
-#### Scenario: Toolbar "New" menu offers a create action while browsing the platform bucket
-- **WHEN** the user opens the "New" toolbar menu while the `platform` bucket or an item under it is
-  the current context in the Toolsets view
-- **THEN** the menu offers a single "Toolset" entry (the same label the `public` bucket's create
-  entry uses), with no folder-create or import entries alongside it
+#### Scenario: Create offers a single Toolset entry on the Platform tab
+- **WHEN** the user activates the Create button while the Platform tab is active in the Toolsets listing
+- **THEN** the create-toolset modal opens for a platform toolset, with no folder-create or import entries
 
 ### Requirement: Platform bucket toolset rows use the same column set as other platform entities
-The system SHALL display the same flat column set platform applications and the six existing
-platform-only views use — Name, Author, Created time, Updated time — for `platform`-bucket toolset
-rows, instead of the `public` bucket's Name/Version/Author/Updated time set.
+The system SHALL display the same flat column set platform applications and the six existing platform-only views
+use — Name, Author, Created time, Updated time — for Platform-tab toolset rows, instead of the Public tab's
+Name/Version/Author/Updated time set.
 
-#### Scenario: Platform-bucket rows show no Version column
-- **WHEN** the user browses the `platform` bucket in the Assets Toolsets grid
-- **THEN** the grid shows Name, Author, Created time, and Updated time columns, with no Version
-  column
+#### Scenario: Platform-tab rows show no Version column
+- **WHEN** the user opens the Platform tab in the Assets Toolsets listing
+- **THEN** the grid shows Name, Author, Created time, and Updated time columns, with no Version column
 
-#### Scenario: Public-bucket rows are unaffected
-- **WHEN** the user browses the `public` bucket in the Assets Toolsets grid
+#### Scenario: Public-tab rows are unaffected
+- **WHEN** the user opens the Public tab in the Assets Toolsets listing
 - **THEN** the grid keeps its existing Name, Version, Author, and Updated time columns
 
 ### Requirement: Creating a platform toolset has no version field
-The system SHALL NOT display or require a version field on any create form whose destination is
-the `platform` bucket — the list-page create form while browsing the `platform` bucket in the
-Toolsets view, and the container-seeded create-asset modal opened from an MCP container detail
-view with the `platform` folder selected — since the bucket has no versioning concept. Creating
-into the `public` bucket is unaffected and keeps requiring a version. A create submitted with the
-`platform` bucket as its destination SHALL write the flat, unversioned `platform/{name}` resource
-through the platform-bucket create action, and the resulting toolset SHALL open from the
-post-create navigation and from the Assets Toolsets grid's platform bucket without a 404.
+The system SHALL NOT display or require a version field on any create form whose destination is the Platform
+source — the Create button on the Platform tab of the Toolsets listing, and the container-seeded create-asset modal
+opened from an MCP container detail view with its **Destination** set to Platform — since the platform bucket has
+no versioning concept. Creating into Public is unaffected and keeps requiring a version. A create submitted with
+Platform as its destination SHALL write the flat, unversioned `platform/{name}` resource through the
+platform-bucket create action, and the resulting toolset SHALL open from the post-create navigation and from the
+Platform tab without a 404.
 
-#### Scenario: No version field when creating into the platform bucket
-- **WHEN** the user opens the create form while browsing the `platform` bucket in the Toolsets view
+#### Scenario: No version field when creating from the Platform tab
+- **WHEN** the user opens the create form from the Platform tab of the Toolsets listing
 - **THEN** no version field is shown, and the form can be submitted without one
 
-#### Scenario: Version field unchanged when creating into the public bucket
-- **WHEN** the user opens the create form while browsing the `public` bucket in the Toolsets view
+#### Scenario: Version field unchanged when creating into the Public tree
+- **WHEN** the user opens the create form from the Public tab of the Toolsets listing
 - **THEN** the version field is shown and required, unchanged from current behavior
 
-#### Scenario: The container-seeded create modal hides the version field for a platform destination
-- **WHEN** the user opens the create-asset-toolset modal from an MCP container detail view and
-  selects the `platform` folder
-- **THEN** no version field is shown, the form can be submitted without one, and no version suffix
-  is written into the created resource's path
+#### Scenario: The container-seeded create modal hides the version field for a Platform destination
+- **WHEN** the user opens the create-asset-toolset modal from an MCP container detail view and sets Destination to Platform
+- **THEN** no folder picker or version field is shown, the form can be submitted without one, and no version suffix is written into the created resource's path
 
-#### Scenario: The container-seeded create modal keeps the version field for a public destination
-- **WHEN** the user opens the create-asset-toolset modal from an MCP container detail view and
-  selects a `public` folder
-- **THEN** the version field is shown and required, and the created resource keeps its
-  `{folderId}{name}__{version}` path, unchanged from current behavior
+#### Scenario: The container-seeded create modal keeps the version field for a Public destination
+- **WHEN** the user opens the create-asset-toolset modal from an MCP container detail view and sets Destination to Public with a folder
+- **THEN** the version field is shown and required, and the created resource keeps its `{folderId}{name}__{version}` path, unchanged from current behavior
 
 #### Scenario: A platform-bucket toolset created from a container opens without a 404
-- **WHEN** a user creates a toolset from an MCP container detail view with the `platform` folder
-  selected
-- **THEN** the post-create navigation opens the new toolset's platform-bucket detail view, and
-  clicking the toolset's row in the Assets Toolsets grid's `platform` bucket opens the same detail
-  view — neither resolves to a 404 page
+- **WHEN** a user creates a toolset from an MCP container detail view with Destination set to Platform
+- **THEN** the post-create navigation opens the new toolset's platform-bucket detail view, and clicking the toolset's row on the Platform tab opens the same detail view — neither resolves to a 404 page
 
 #### Scenario: A colon-named platform toolset opens through an encoded detail route
 - **WHEN** a user creates a platform-bucket toolset with `:` in its name from either create entry point
@@ -380,3 +360,4 @@ When the caller's `adminAccess` is not `FULL`, the Assets Toolsets editor SHALL 
 #### Scenario: Non-admin opens a toolset
 - **WHEN** a caller without full admin access opens a toolset
 - **THEN** no roles read is made and the user-roles control cannot be edited
+

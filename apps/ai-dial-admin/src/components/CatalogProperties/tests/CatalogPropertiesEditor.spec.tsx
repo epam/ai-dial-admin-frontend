@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ComponentProps, useEffect } from 'react';
@@ -6,12 +7,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { CatalogSchemaDocument } from '@/src/models/dial/catalog-schema';
 import CatalogPropertiesEditor from '../CatalogPropertiesEditor';
-
-const isReadOnlyAdmin = vi.fn(() => false);
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => isReadOnlyAdmin(),
-}));
 
 interface RendererProps {
   schema?: { properties?: Record<string, unknown>; required?: string[] };
@@ -85,7 +80,7 @@ describe('CatalogPropertiesEditor', () => {
   beforeEach(() => {
     capturedRendererProps = undefined;
     capturedJsonProps = undefined;
-    isReadOnlyAdmin.mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     vi.clearAllMocks();
   });
 
@@ -150,7 +145,7 @@ describe('CatalogPropertiesEditor', () => {
     const onChange = vi.fn();
     renderEditor({ values: { tag: 'New' }, onChange });
 
-    await user.click(screen.getByRole('combobox', { name: 'Compare.View' }));
+    await user.click(screen.getByRole('combobox', { name: /^Compare\.View/ }));
     await user.click(screen.getByText(TypeI18nKey.JSON));
     await user.click(screen.getByRole('button', { name: 'json-editor' }));
 
@@ -196,7 +191,7 @@ describe('CatalogPropertiesEditor — undeclared values', () => {
     );
 
   beforeEach(() => {
-    isReadOnlyAdmin.mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     vi.clearAllMocks();
   });
 
@@ -293,7 +288,7 @@ describe('CatalogPropertiesEditor — undeclared values', () => {
   });
 
   test('offers no remove control to a read-only admin', () => {
-    isReadOnlyAdmin.mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderEditor({ schema: closed, values: { tag: 'New', ['long-name'.repeat(100)]: 'x' } });
 
     expect(screen.getByRole('region', { name: EntitiesI18nKey.UndeclaredCatalogPropertiesMessage })).toHaveTextContent(

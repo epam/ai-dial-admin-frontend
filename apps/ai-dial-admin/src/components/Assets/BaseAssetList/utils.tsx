@@ -20,21 +20,18 @@ import {
   createInterceptor,
   getInterceptor,
 } from '@/src/app/[lang]/platform-interceptors/actions';
+import { bulkDeleteRouters, createRouter, getRouter } from '@/src/app/[lang]/platform-routers/actions';
 import { bulkDeleteTranslators, createTranslator, getTranslator } from '@/src/app/[lang]/platform-translators/actions';
+import { bulkDeletePlugins, createPlugin, getPlugin } from '@/src/app/[lang]/platform-plugins/actions';
+import { bulkDeleteAliases, createAlias, getAlias } from '@/src/app/[lang]/assets-aliases/actions';
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/platform-models/actions';
 import { bulkDeleteKeys, createKey, getKey } from '@/src/app/[lang]/platform-keys/actions';
 import { bulkDeleteRoles, createRole, getRole } from '@/src/app/[lang]/platform-roles/actions';
-import {
-  bulkDeletePolicies,
-  createPolicy,
-  getPolicy,
-  removePolicyFolder,
-} from '@/src/app/[lang]/platform-policies/actions';
+import { bulkDeletePolicies, createPolicy, getPolicy } from '@/src/app/[lang]/platform-policies/actions';
 import {
   bulkDeletePolicyAssignments,
   createPolicyAssignment,
   getPolicyAssignment,
-  removePolicyAssignmentFolder,
 } from '@/src/app/[lang]/platform-policy-assignments/actions';
 import { bulkDeleteRoutes, createRoute, getRoute } from '@/src/app/[lang]/platform-routes/actions';
 import { bulkDeleteProjects, getProject } from '@/src/app/[lang]/projects/actions';
@@ -66,7 +63,10 @@ import { useConversationFolder } from '@/src/context/assets/ConversationsFolderC
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
 import { useCatalogSchemasFolder } from '@/src/context/assets/CatalogSchemasFolderContext';
 import { useInterceptorsFolder } from '@/src/context/assets/InterceptorsFolderContext';
+import { useRoutersFolder } from '@/src/context/assets/RoutersFolderContext';
+import { useAliasesFolder } from '@/src/context/assets/AliasesFolderContext';
 import { useTranslatorsFolder } from '@/src/context/assets/TranslatorsFolderContext';
+import { usePluginsFolder } from '@/src/context/assets/PluginsFolderContext';
 import { useKeysFolder } from '@/src/context/assets/KeysFolderContext';
 import { useRolesFolder } from '@/src/context/assets/RolesFolderContext';
 import { usePoliciesFolder } from '@/src/context/assets/PoliciesFolderContext';
@@ -91,13 +91,7 @@ import {
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
-import {
-  isFileRootPath,
-  isNestedPlatformView,
-  isPlatformBucketView,
-  isPlatformDualBucketView,
-  PLATFORM_ROOT_FOLDER,
-} from '@/src/utils/files/root-folder';
+import { isNestedPlatformView, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { getCostObjectFromFolder } from '@/src/utils/policies/path';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -112,6 +106,7 @@ import {
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { ReactNode } from 'react';
 import DisplayNameCellRenderer from '@/src/components/Grid/CellRenderers/DisplayNameCellRenderer';
+import { EntityHrefGetter } from '@/src/components/Grid/CellRenderers/models';
 import { displayNameFilterValue } from '@/src/constants/grid-columns/formatters';
 import { ASSET_TYPE_ICONS } from './constants';
 import { CreateAssetRoute, CrudAssetRoute } from './types';
@@ -134,7 +129,7 @@ import { CreateAssetRoute, CrudAssetRoute } from './types';
  * the one layout where the date column is hidden.
  */
 export const getAssetNameColumn =
-  (headerName: string, view?: ApplicationRoute) =>
+  (headerName: string, view?: ApplicationRoute, getItemHref?: EntityHrefGetter) =>
   (
     dateLocale: Intl.LocalesArgument,
     dateOptions: Intl.DateTimeFormatOptions | undefined,
@@ -151,14 +146,16 @@ export const getAssetNameColumn =
       filterValueGetter: ({ data }) => displayNameFilterValue(data),
       cellRenderer: (params: ICellRendererParams) =>
         params.data?.nodeType === DialFileNodeType.FOLDER ? (
-          renderFileManagerName(params)
+          <div className="contents [&_.dial-kit-ellipsis-tooltip]:cursor-pointer [&_.dial-kit-ellipsis-tooltip]:text-accent [&_.dial-kit-ellipsis-tooltip]:hover:underline [.ag-cell-focus_&_.dial-kit-ellipsis-tooltip]:underline">
+            {renderFileManagerName(params)}
+          </div>
         ) : (
-          <DisplayNameCellRenderer {...params} typeIcon={view && ASSET_TYPE_ICONS[view]} />
+          <DisplayNameCellRenderer {...params} typeIcon={view && ASSET_TYPE_ICONS[view]} getHref={getItemHref} />
         ),
     };
   };
 
-export const getGridColumns = (view: ApplicationRoute, currentPath?: string) => {
+export const getGridColumns = (view: ApplicationRoute, getItemHref?: EntityHrefGetter) => {
   const AUTHOR_COLUMN = {
     colId: FileManagerColumnKey.Author,
     field: 'author',
@@ -190,20 +187,10 @@ export const getGridColumns = (view: ApplicationRoute, currentPath?: string) => 
 
   // Cast once: ui-kit accepts a column factory wherever a `ColDef` is declared and resolves it in
   // `useFileManagerColumns`, but that union is not in ag-grid's own type.
-  const NAME_COLUMN_DEF = getAssetNameColumn('Name', view) as unknown as ColDef;
+  const NAME_COLUMN_DEF = getAssetNameColumn('Name', view, getItemHref) as unknown as ColDef;
 
-  if (isFileRootPath(currentPath)) {
-    return [NAME_COLUMN_DEF];
-  }
-
-  // Flat platform-bucket views share a metadata-only column set. Metadata includes only each
-  // resource's storage name; schema body `$id` values are available after opening the resource.
-  if (
-    isPlatformBucketView(view) ||
-    view === ApplicationRoute.Skills ||
-    view === ApplicationRoute.Projects ||
-    isPlatformDualBucketView(view, currentPath)
-  ) {
+  // Skills and projects are unversioned, so they share a metadata-only column set.
+  if (view === ApplicationRoute.Skills || view === ApplicationRoute.Projects) {
     return [
       NAME_COLUMN_DEF,
       AUTHOR_COLUMN,
@@ -255,6 +242,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Applications;
     case ApplicationRoute.AssetsToolsets:
       return FileManagerI18nKey.Toolsets;
+    case ApplicationRoute.AssetsAliases:
+      return FileManagerI18nKey.Aliases;
     case ApplicationRoute.Conversations:
       return FileManagerI18nKey.Conversations;
     case ApplicationRoute.PlatformModels:
@@ -267,6 +256,10 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Interceptors;
     case ApplicationRoute.PlatformTranslators:
       return FileManagerI18nKey.Translators;
+    case ApplicationRoute.PlatformPlugins:
+      return FileManagerI18nKey.Plugins;
+    case ApplicationRoute.PlatformRouters:
+      return FileManagerI18nKey.Routers;
     case ApplicationRoute.PlatformRoutes:
       return FileManagerI18nKey.Routes;
     case ApplicationRoute.PlatformRoles:
@@ -306,6 +299,11 @@ export const getEmptyStateContent = (
         title: t(FileManagerI18nKey.ToolsetsEmptyStateTitle),
         description: t(FileManagerI18nKey.ToolsetsEmptyStateDescription),
       };
+    case ApplicationRoute.AssetsAliases:
+      return {
+        title: t(FileManagerI18nKey.AliasesEmptyStateTitle),
+        description: t(FileManagerI18nKey.AliasesEmptyStateDescription),
+      };
     case ApplicationRoute.Conversations:
       return {
         title: t(FileManagerI18nKey.ConversationsEmptyStateTitle),
@@ -335,6 +333,16 @@ export const getEmptyStateContent = (
       return {
         title: t(FileManagerI18nKey.TranslatorsEmptyStateTitle),
         description: t(FileManagerI18nKey.TranslatorsEmptyStateDescription),
+      };
+    case ApplicationRoute.PlatformPlugins:
+      return {
+        title: t(FileManagerI18nKey.PluginsEmptyStateTitle),
+        description: t(FileManagerI18nKey.PluginsEmptyStateDescription),
+      };
+    case ApplicationRoute.PlatformRouters:
+      return {
+        title: t(FileManagerI18nKey.RoutersEmptyStateTitle),
+        description: t(FileManagerI18nKey.RoutersEmptyStateDescription),
       };
     case ApplicationRoute.PlatformRoutes:
       return {
@@ -445,12 +453,15 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.Prompts]: usePromptFolder,
   [ApplicationRoute.AssetsApplications]: useAppsFolder,
   [ApplicationRoute.AssetsToolsets]: useToolsetFolder,
+  [ApplicationRoute.AssetsAliases]: useAliasesFolder,
   [ApplicationRoute.Conversations]: useConversationFolder,
   [ApplicationRoute.PlatformModels]: useModelsFolder,
   [ApplicationRoute.PlatformAppRunners]: useAppRunnersFolder,
   [ApplicationRoute.PlatformCatalogSchemas]: useCatalogSchemasFolder,
   [ApplicationRoute.PlatformInterceptors]: useInterceptorsFolder,
   [ApplicationRoute.PlatformTranslators]: useTranslatorsFolder,
+  [ApplicationRoute.PlatformPlugins]: usePluginsFolder,
+  [ApplicationRoute.PlatformRouters]: useRoutersFolder,
   [ApplicationRoute.PlatformRoutes]: useRoutesFolder,
   [ApplicationRoute.PlatformRoles]: useRolesFolder,
   [ApplicationRoute.PlatformKeys]: useKeysFolder,
@@ -464,12 +475,15 @@ export const GetAssetActionMap = {
   [ApplicationRoute.Prompts]: getPrompt,
   [ApplicationRoute.AssetsApplications]: getApp,
   [ApplicationRoute.AssetsToolsets]: getToolset,
+  [ApplicationRoute.AssetsAliases]: getAlias,
   [ApplicationRoute.Conversations]: getConversation,
   [ApplicationRoute.PlatformModels]: getModel,
   [ApplicationRoute.PlatformAppRunners]: getRunner,
   [ApplicationRoute.PlatformCatalogSchemas]: getCatalogSchema,
   [ApplicationRoute.PlatformInterceptors]: getInterceptor,
   [ApplicationRoute.PlatformTranslators]: getTranslator,
+  [ApplicationRoute.PlatformPlugins]: getPlugin,
+  [ApplicationRoute.PlatformRouters]: getRouter,
   [ApplicationRoute.PlatformRoutes]: getRoute,
   [ApplicationRoute.PlatformRoles]: getRole,
   [ApplicationRoute.PlatformKeys]: getKey,
@@ -524,6 +538,9 @@ export const CreateAssetActionMap: Record<CreateAssetRoute, CreateAssetAction> =
   [ApplicationRoute.AssetsToolsets]: createToolset as unknown as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  // Not sanitized: `folderId` carries the bucket (`public/` or `platform/`) the alias is written to, and the
+  // action builds the path from it before keeping only the fields Core accepts.
+  [ApplicationRoute.AssetsAliases]: createAlias as unknown as CreateAssetAction,
   [ApplicationRoute.PlatformModels]: sanitizePlatformCreateAsset(
     createModel as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
   ),
@@ -538,6 +555,12 @@ export const CreateAssetActionMap: Record<CreateAssetRoute, CreateAssetAction> =
   ),
   [ApplicationRoute.PlatformTranslators]: sanitizePlatformCreateAsset(
     createTranslator as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformPlugins]: sanitizePlatformCreateAsset(
+    createPlugin as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  ),
+  [ApplicationRoute.PlatformRouters]: sanitizePlatformCreateAsset(
+    createRouter as unknown as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
   ),
   [ApplicationRoute.PlatformRoutes]: sanitizePlatformCreateAsset(
     createRoute as (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>,
@@ -601,12 +624,15 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.Prompts]: bulkDeletePrompts,
   [ApplicationRoute.AssetsApplications]: bulkDeleteApps,
   [ApplicationRoute.AssetsToolsets]: bulkDeleteToolsets,
+  [ApplicationRoute.AssetsAliases]: bulkDeleteAliases,
   [ApplicationRoute.Conversations]: deleteConversations,
   [ApplicationRoute.PlatformModels]: bulkDeleteModels,
   [ApplicationRoute.PlatformAppRunners]: bulkDeleteRunners,
   [ApplicationRoute.PlatformCatalogSchemas]: bulkDeleteCatalogSchemas,
   [ApplicationRoute.PlatformInterceptors]: bulkDeleteInterceptors,
   [ApplicationRoute.PlatformTranslators]: bulkDeleteTranslators,
+  [ApplicationRoute.PlatformPlugins]: bulkDeletePlugins,
+  [ApplicationRoute.PlatformRouters]: bulkDeleteRouters,
   [ApplicationRoute.PlatformRoutes]: bulkDeleteRoutes,
   [ApplicationRoute.PlatformRoles]: bulkDeleteRoles,
   [ApplicationRoute.PlatformKeys]: bulkDeleteKeys,
@@ -614,17 +640,6 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.PlatformPolicyAssignments]: bulkDeletePolicyAssignments,
   [ApplicationRoute.Skills]: bulkDeleteSkills,
   [ApplicationRoute.Projects]: bulkDeleteProjects,
-};
-
-/**
- * A nested platform view's folder is a cost object, which Core keeps no marker for: deleting it deletes
- * the records under it, and it goes with the last one.
- */
-export const RemoveCostObjectFolderActionMap: Partial<
-  Record<ApplicationRoute, (path: string) => Promise<ServerActionResponse<Record<string, unknown>>>>
-> = {
-  [ApplicationRoute.PlatformPolicies]: removePolicyFolder,
-  [ApplicationRoute.PlatformPolicyAssignments]: removePolicyAssignmentFolder,
 };
 
 export const PlatformBulkDeleteAssetActionMap: Partial<

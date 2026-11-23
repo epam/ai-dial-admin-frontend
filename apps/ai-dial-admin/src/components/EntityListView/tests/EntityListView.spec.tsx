@@ -1,17 +1,29 @@
 import { useRouter } from 'next/navigation';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
+import { ColDef } from 'ag-grid-community';
 
 import BaseEntityList from '@/src/components/EntityListView/EntityListView';
+import DisplayNameCellRenderer from '@/src/components/Grid/CellRenderers/DisplayNameCellRenderer';
+import LinkCellRenderer from '@/src/components/Grid/CellRenderers/LinkCellRenderer';
+import { DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ApplicationRoute } from '@/src/types/routes';
 import * as openInNewTabUtils from '@/src/utils/open-in-new-tab';
 
 let capturedOpen: ((entity?: unknown) => void) | undefined;
 let capturedGetHref: ((data: unknown) => string | undefined) | undefined;
+let capturedColumns: ColDef[] | undefined;
+let capturedGridOptions: Record<string, unknown> | undefined;
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: (props: { getHref?: (data: unknown) => string | undefined }) => {
+  default: (props: {
+    getHref?: (data: unknown) => string | undefined;
+    columnDefs?: ColDef[];
+    additionalGridOptions?: Record<string, unknown>;
+  }) => {
     capturedGetHref = props.getHref;
+    capturedColumns = props.columnDefs;
+    capturedGridOptions = props.additionalGridOptions;
     return null;
   },
 }));
@@ -96,5 +108,41 @@ describe('BaseEntityList — rendered row hrefs', () => {
     renderList(ApplicationRoute.Models);
 
     expect(capturedGetHref?.({ name: 'my-model' })).toBe('/models/my-model');
+  });
+});
+
+describe('BaseEntityList — name link', () => {
+  beforeEach(() => {
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof useRouter>);
+    capturedColumns = undefined;
+    capturedGridOptions = undefined;
+  });
+
+  const renderList = (baseColumns: ColDef[], route = ApplicationRoute.Models) =>
+    render(
+      <BaseEntityList data={[{ name: 'my-model' }]} baseColumns={baseColumns} route={route} onRemoveEntity={vi.fn()} />,
+    );
+
+  test('links the display-name column to the row details address', () => {
+    renderList([DISPLAY_NAME_COLUMN, { field: 'description' }]);
+
+    const [nameColumn, descriptionColumn] = capturedColumns ?? [];
+    expect(nameColumn.cellRenderer).toBe(DisplayNameCellRenderer);
+    expect(nameColumn.cellRendererParams.getHref({ name: 'my-model' })).toBe('/models/my-model');
+    expect(descriptionColumn.cellRendererParams).toBeUndefined();
+  });
+
+  test('renders the App Runners display name through the link renderer', () => {
+    renderList([{ field: 'dial:applicationTypeDisplayName' }], ApplicationRoute.ApplicationRunners);
+
+    const [nameColumn] = capturedColumns ?? [];
+    expect(nameColumn.cellRenderer).toBe(LinkCellRenderer);
+    expect(nameColumn.cellRendererParams.getHref).toBeTypeOf('function');
+  });
+
+  test('does not navigate on a cell click', () => {
+    renderList([DISPLAY_NAME_COLUMN]);
+
+    expect(capturedGridOptions?.onCellClicked).toBeUndefined();
   });
 });

@@ -5,10 +5,11 @@ import { FC, useCallback, useMemo, useState } from 'react';
 import { Popup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { CompareRun } from '@/src/components/Runs/Compare/models';
-import { MetricInfoSection, ScoreRunData } from '@/src/components/Runs/Details/ValuePopups/models';
+import { ScoreRunData } from '@/src/components/Runs/Details/ValuePopups/models';
 import ScoreColumn from '@/src/components/Runs/Details/ValuePopups/ScoreColumn';
-import { getScoreRunData } from '@/src/components/Runs/Details/ValuePopups/utils';
+import { getDefaultOpenCard, getScoreRunData } from '@/src/components/Runs/Details/ValuePopups/utils';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
+import { useI18n } from '@/src/locales/client';
 import { TextDiffRanges } from '@/src/models/text-diff';
 import { getWordDiffRanges } from '@/src/utils/text-diff';
 
@@ -22,17 +23,14 @@ interface Props {
 
 const NO_DIFF: TextDiffRanges = { original: [], modified: [] };
 
-// Reason is what a reader opens this view for; logs are the long tail behind it.
-const DEFAULT_OPEN_SECTION = MetricInfoSection.Reason;
-
 const ScoreModal: FC<Props> = ({ field, runs, hasComparedMatch, getRunLabel, onClose }) => {
-  // One section at a time: both are tall, and two open at once would leave neither room to read.
-  const [openSection, setOpenSection] = useState<MetricInfoSection | null>(DEFAULT_OPEN_SECTION);
-
+  const t = useI18n();
   const columns = useMemo<ScoreRunData[]>(
     () => runs.map((run) => getScoreRunData(field, run, getRunLabel(run), hasComparedMatch)),
     [field, runs, getRunLabel, hasComparedMatch],
   );
+  // One card at a time: the cards are tall, and several open at once would leave none of them room to read.
+  const [openCardId, setOpenCardId] = useState<string | null>(() => getDefaultOpenCard(columns, t));
   const isComparison = columns.length > 1;
 
   const reasonDiff = useMemo(() => {
@@ -42,10 +40,7 @@ const ScoreModal: FC<Props> = ({ field, runs, hasComparedMatch, getRunLabel, onC
     return getWordDiffRanges(first.reason.text, last.reason.text);
   }, [columns]);
 
-  const onToggleSection = useCallback(
-    (section: MetricInfoSection) => setOpenSection((prev) => (prev === section ? null : section)),
-    [],
-  );
+  const onToggleCard = useCallback((cardId: string) => setOpenCardId((prev) => (prev === cardId ? null : cardId)), []);
 
   const getReasonHighlights = (index: number) => {
     if (index === 0) return reasonDiff.original;
@@ -71,9 +66,9 @@ const ScoreModal: FC<Props> = ({ field, runs, hasComparedMatch, getRunLabel, onC
             key={column.run.slot}
             data={column}
             hasRunHeader={isComparison}
-            openSection={openSection}
+            openCardId={openCardId}
             reasonHighlights={getReasonHighlights(index)}
-            onToggleSection={onToggleSection}
+            onToggleCard={onToggleCard}
           />
         ))}
       </div>

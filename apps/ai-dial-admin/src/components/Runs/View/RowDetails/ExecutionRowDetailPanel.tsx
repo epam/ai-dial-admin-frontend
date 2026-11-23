@@ -38,6 +38,10 @@ interface Props {
   focusRequestId?: number;
   metricGroupOrder?: readonly string[];
   fieldSchema?: RowDetailFieldSchema;
+  /** The row's overall score, joined in by the grid: the detail endpoint does not return it. */
+  testCaseScore?: number | null;
+  /** The run's snapshotted threshold, for the score's above/below icon. */
+  scoreThreshold?: number | null;
   className?: string;
   initialDisplayTree?: ColDef[];
   onDisplayTreeChange?: (tree: ColDef[]) => void;
@@ -54,6 +58,8 @@ const ExecutionRowDetailPanel: FC<Props> = ({
   focusRequestId = 0,
   metricGroupOrder = NO_METRIC_GROUP_ORDER,
   fieldSchema,
+  testCaseScore,
+  scoreThreshold,
   className,
   initialDisplayTree,
   onDisplayTreeChange,
@@ -101,8 +107,10 @@ const ExecutionRowDetailPanel: FC<Props> = ({
 
   const sections = useMemo(() => {
     if (!detail) return [];
-    return buildRowDetailSections(detail, null, metricGroupOrder, fieldSchema);
-  }, [detail, metricGroupOrder, fieldSchema]);
+    return buildRowDetailSections({ ...detail, testCaseScore }, null, metricGroupOrder, fieldSchema, {
+      primary: scoreThreshold,
+    });
+  }, [detail, testCaseScore, scoreThreshold, metricGroupOrder, fieldSchema]);
 
   useEffect(() => {
     if (sections.length === 0) {

@@ -267,7 +267,7 @@ describe('Compare Summary :: Analytics', () => {
     expect(card(RunsI18nKey.ThresholdPassRate).queryByText(/^delta:/)).not.toBeInTheDocument();
   });
 
-  test('renders both overall scores with the diff, an info control beside each and one shared footer', async () => {
+  test('renders both overall scores with the diff, an info control beside each and no method label', async () => {
     await renderLoaded({
       primaryOverallScore: 0.812,
       comparedOverallScore: 0.265,
@@ -278,7 +278,7 @@ describe('Compare Summary :: Analytics', () => {
     expect(side(RunsI18nKey.OverallScore, 'Run #315').getByText('0.265')).toBeInTheDocument();
     expect(overall.getByText('delta:-0.547')).toBeInTheDocument();
     expect(overall.getAllByRole('button', { name: TestSuitesI18nKey.OverallScoreCalculationMethod })).toHaveLength(2);
-    expect(overall.getAllByText(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)).toHaveLength(1);
+    expect(overall.queryByText(TestSuitesI18nKey.TrendsBasedOnMethod)).toBeNull();
   });
 
   test('measures the overall score diff from the baseline, so swapping the runs negates it', async () => {

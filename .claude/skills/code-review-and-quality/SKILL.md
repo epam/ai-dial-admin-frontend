@@ -179,7 +179,7 @@ Use these as the source of truth before applying generic advice:
 | Tests                                | `.claude/rules/testing.md`                                       |
 | Accessibility                        | `.claude/rules/a11y.md`                                           |
 | ui-kit components                    | `ai-dial-ui-kit` MCP server before recommending raw HTML          |
-| Commit / PR scope naming             | `.claude/reference/areas.md`                                     |
+| Commit / PR scope naming             | `docs/areas.md`                                     |
 | Agent config (`.claude`, `.cursor`)  | `npm run validate:agent-docs` must pass; mirrors stay in sync     |
 | Backend contracts                    | `ai-dial-admin-backend`, `ai-dial-admin-deployment-manager-backend` |
 
@@ -278,7 +278,7 @@ findings; `fail` = Request changes or Block.
 ## Commit / PR description
 
 - **Subject:** imperative and informative alone in history. Format is
-  `<type>(<area>): <description> (Issue #<n>)` with the area drawn from `.claude/reference/areas.md`.
+  `<type>(<area>): <description> (Issue #<n>)` with the area drawn from `docs/areas.md`.
 - **Body:** what, why, tradeoffs, links to issues.
 - Weak subjects to reject: "Fix bug", "WIP", "Phase 1", "Small changes".
 

@@ -106,9 +106,37 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.PlatformRouters]: {
+    segments: [
+      { name: 'PlatformRouters', i18nKey: MenuI18nKey.PlatformRouters },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.PlatformTranslators]: {
     segments: [
       { name: 'PlatformTranslators', i18nKey: MenuI18nKey.PlatformTranslators },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  [ApplicationRoute.PlatformPlugins]: {
+    segments: [
+      { name: 'PlatformPlugins', i18nKey: MenuI18nKey.PlatformPlugins },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  // Flat in both buckets, so unlike Applications and Toolsets there is no folder trail to enrich it with.
+  [ApplicationRoute.AssetsAliases]: {
+    segments: [
+      { name: 'AssetsAliases', i18nKey: MenuI18nKey.PlatformAliases },
       {
         name: 'Id',
         href: false,
@@ -209,7 +237,7 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
   },
   [ApplicationRoute.ActivityAudit]: {
     segments: [
-      { name: 'Activity Audit', i18nKey: MenuI18nKey.ActivityAudit },
+      { name: 'Activity Audit', i18nKey: MenuI18nKey.ActivityAudit, isAdminApiOnly: true },
       {
         name: 'Id',
         href: false,
@@ -258,7 +286,7 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
         name: 'Queries',
         i18nKey: MenuI18nKey.Queries,
       },
-      { name: 'Id', href: false },
+      { name: 'Id', href: false, isHidden: true },
     ],
   },
   [ApplicationRoute.AnalyticsTables]: {

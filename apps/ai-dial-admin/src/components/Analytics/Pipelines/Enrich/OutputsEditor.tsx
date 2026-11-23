@@ -4,19 +4,19 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import { GhostButton, GhostIconButton, Input, Label, Textarea, Select } from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
+import { GhostButton, Input, Label, Textarea, Select } from '@epam/ai-dial-ui-kit';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import AllowedValuesField from '@/src/components/Analytics/Pipelines/Enrich/AllowedValuesField';
 import { createOutputRow, toOutputRows, toOutputs } from '@/src/components/Analytics/Pipelines/Enrich/outputs';
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { TransformOutput, TransformType } from '@/src/models/analytics/pipeline';
+import { TransformOutput, TransformPreset, TransformType } from '@/src/models/analytics/pipeline';
 import { OutputRefinementKind, OutputRow } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 import { PIPELINE_SELECT_DEFAULTS, SYSTEM_COLUMN_TAG } from '@/src/constants/analytics/pipelines';
+import { isRoutePreset } from '@/src/utils/analytics/transform-dto';
 
 const isSameDeclaration = (a: TransformOutput[], b?: TransformOutput[]): boolean =>
   JSON.stringify(a) === JSON.stringify(b ?? []);
@@ -24,6 +24,7 @@ const isSameDeclaration = (a: TransformOutput[], b?: TransformOutput[]): boolean
 interface Props {
   outputs?: TransformOutput[];
   type: TransformType;
+  preset?: TransformPreset;
   /** The resolved target's columns: an output's name is one of them, and the column owns its type. */
   columns: AnalyticsTableColumn[];
   /** False until the target resolves — the name control has nothing to offer before then. */
@@ -41,7 +42,16 @@ interface Props {
 const REFINEMENT_SELECT_CLASS = 'w-[220px] shrink-0';
 const REFINEMENT_FIELD_CLASS = 'min-w-[180px] flex-1';
 
-const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled, hasRefinement = true, onChange }) => {
+const OutputsEditor: FC<Props> = ({
+  outputs,
+  type,
+  preset,
+  columns,
+  isReady,
+  isDisabled,
+  hasRefinement = true,
+  onChange,
+}) => {
   const t = useI18n();
 
   const [rows, setRows] = useState<OutputRow[]>(() => toOutputRows(outputs, type));
@@ -81,6 +91,12 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
   );
 
   const isSql = type === TransformType.Sql;
+  const isRoute = isRoutePreset(preset);
+  const expressionMember = isRoute ? 'source' : 'jsonata';
+  const expressionLabel = t(isRoute ? AnalyticsPipelinesI18nKey.OutputSource : AnalyticsPipelinesI18nKey.OutputJsonata);
+  const identityError = t(
+    isRoute ? AnalyticsPipelinesI18nKey.OutputSourceIdentity : AnalyticsPipelinesI18nKey.OutputJsonataIdentity,
+  );
 
   const writableColumns = useMemo(() => columns.filter((column) => column.tag !== SYSTEM_COLUMN_TAG), [columns]);
 
@@ -90,7 +106,7 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
   );
 
   const refinementOptions = [
-    { value: OutputRefinementKind.Jsonata, label: t(AnalyticsPipelinesI18nKey.OutputJsonata) },
+    { value: OutputRefinementKind.Jsonata, label: expressionLabel },
     { value: OutputRefinementKind.Values, label: t(AnalyticsPipelinesI18nKey.OutputValues) },
   ];
 
@@ -98,9 +114,8 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
     new Set(rows.filter((row) => row.id !== currentId && row.name).map((row) => row.name));
 
   const deleteButton = (row: OutputRow) => (
-    <GhostIconButton
+    <RemoveButton
       className="mb-1 shrink-0"
-      icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
       aria-label={t(ButtonsI18nKey.Delete)}
       disabled={isDisabled}
       onClick={() => commit(rows.filter((candidate) => candidate.id !== row.id))}
@@ -178,7 +193,7 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
             if (isSql) {
               return (
                 <DraggableItem key={row.id} id={row.id} findItem={findItem} moveItem={moveItem}>
-                  <div className="flex w-full flex-row items-end gap-3">
+                  <div className="flex min-w-0 flex-1 flex-row items-end gap-3">
                     {nameField}
                     <Input
                       id={`transform-output-expression-${index}`}
@@ -201,14 +216,15 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
 
             // Marked rather than blocking: the service refuses it, and the field sits under the column
             // select, so typing the column name into it is the likely mistake to warn about early.
-            const isIdentityJsonata = Boolean(row.jsonata.trim()) && row.jsonata.trim() === row.name.trim();
+            const expression = row[expressionMember];
+            const isIdentityExpression = Boolean(expression.trim()) && expression.trim() === row.name.trim();
             const refinements = hasColumnDomain
               ? refinementOptions.filter((option) => option.value !== OutputRefinementKind.Values)
               : refinementOptions;
 
             return (
               <DraggableItem key={row.id} id={row.id} findItem={findItem} moveItem={moveItem}>
-                <div className="flex w-full flex-col gap-3 border-b border-tertiary pb-6 last:border-b-0 last:pb-0">
+                <div className="flex min-w-0 flex-1 flex-col gap-3 border-b border-tertiary pb-6 last:border-b-0 last:pb-0">
                   <div className="flex flex-row items-end gap-3">
                     {nameField}
                     {deleteButton(row)}
@@ -220,18 +236,20 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
                     </span>
                   )}
 
-                  <Textarea
-                    id={`transform-output-prose-${index}`}
-                    labelProps={{ label: t(AnalyticsPipelinesI18nKey.OutputProse) }}
-                    aria-label={named(AnalyticsPipelinesI18nKey.OutputProse)}
-                    value={row.text}
-                    // A placeholder rather than a value: what the service composes when nothing is typed,
-                    // shown without becoming a copy the operator then has to maintain.
-                    placeholder={column?.description ?? t(AnalyticsPipelinesI18nKey.OutputProseFromColumn)}
-                    disabled={isDisabled}
-                    rows={3}
-                    onChange={(value) => updateRow(row.id, { text: value })}
-                  />
+                  {!isRoute && (
+                    <Textarea
+                      id={`transform-output-prose-${index}`}
+                      labelProps={{ label: t(AnalyticsPipelinesI18nKey.OutputProse) }}
+                      aria-label={named(AnalyticsPipelinesI18nKey.OutputProse)}
+                      value={row.text}
+                      // A placeholder rather than a value: what the service composes when nothing is typed,
+                      // shown without becoming a copy the operator then has to maintain.
+                      placeholder={column?.description ?? t(AnalyticsPipelinesI18nKey.OutputProseFromColumn)}
+                      disabled={isDisabled}
+                      rows={3}
+                      onChange={(value) => updateRow(row.id, { text: value })}
+                    />
+                  )}
 
                   {/* One at a time, so the selection comes first and the field that belongs to it follows. */}
                   {hasRefinement && (
@@ -258,16 +276,16 @@ const OutputsEditor: FC<Props> = ({ outputs, type, columns, isReady, isDisabled,
 
                       {(hasColumnDomain || row.refinement !== OutputRefinementKind.Values) && (
                         <Input
-                          id={`transform-output-jsonata-${index}`}
+                          id={`transform-output-${expressionMember}-${index}`}
                           containerClassName={REFINEMENT_FIELD_CLASS}
-                          labelProps={{ label: t(AnalyticsPipelinesI18nKey.OutputJsonata) }}
-                          aria-label={named(AnalyticsPipelinesI18nKey.OutputJsonata)}
-                          value={row.jsonata}
+                          labelProps={{ label: expressionLabel }}
+                          aria-label={`${expressionLabel} ${index + 1}`}
+                          value={expression}
                           disabled={isDisabled}
                           className="font-mono"
-                          error={isIdentityJsonata ? t(AnalyticsPipelinesI18nKey.OutputJsonataIdentity) : undefined}
-                          invalid={isIdentityJsonata}
-                          onChange={(value) => updateRow(row.id, { jsonata: value ?? '' })}
+                          error={isIdentityExpression ? identityError : undefined}
+                          invalid={isIdentityExpression}
+                          onChange={(value) => updateRow(row.id, { [expressionMember]: value ?? '' })}
                         />
                       )}
                     </div>

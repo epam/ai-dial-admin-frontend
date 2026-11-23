@@ -9,19 +9,19 @@ const runOrder: TrendsRunPoint[] = [
 ];
 
 describe('parseTrendsRuntimeResult', () => {
-  test('maps avg duration columns onto runOrder', () => {
+  test('maps summed duration columns onto runOrder', () => {
     const points = parseTrendsRuntimeResult(
       {
         rows: [
-          { test_suite_run_id: 'run-1', avg_duration_ms: 100, avg_metric_eval_duration_ms: 50 },
-          { test_suite_run_id: 'run-2', avg_duration_ms: 200, avg_metric_eval_duration_ms: null },
+          { test_suite_run_id: 'run-1', total_duration_ms: 100.6, total_metric_eval_duration_ms: 50.2 },
+          { test_suite_run_id: 'run-2', total_duration_ms: 200, total_metric_eval_duration_ms: null },
         ],
       },
       runOrder,
     );
 
     expect(points).toEqual([
-      { runId: 'run-1', runName: 'Run#1', computedAtMs: 1, source: 100, metrics: 50 },
+      { runId: 'run-1', runName: 'Run#1', computedAtMs: 1, source: 101, metrics: 50 },
       { runId: 'run-2', runName: 'Run#2', computedAtMs: 2, source: 200, metrics: null },
     ]);
   });

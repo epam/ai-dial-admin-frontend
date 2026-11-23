@@ -65,6 +65,63 @@ describe('Server :: Core :: ToolsetOpsApi', () => {
     expect(result.success).toBe(true);
   });
 
+  test.each([
+    [
+      'public asset',
+      'public/folder name/app & one__1.0',
+      true,
+      'applications/public/folder%20name/app%20%26%20one__1.0',
+    ],
+    ['platform asset', 'platform/my app & one', true, 'my%20app%20%26%20one'],
+    ['config application', 'platform/my app & one', false, 'platform/my%20app%20%26%20one'],
+    ['config name', 'my app & one', false, 'my%20app%20%26%20one'],
+  ])(
+    'allowedApplicationTools resolves the %s identity and returns all definitions',
+    async (_kind, id, isAsset, encodedId) => {
+      const tools = {
+        tools: [
+          {
+            name: 'first',
+            description: 'First tool',
+            inputSchema: { type: 'object', properties: { query: { type: 'string' } } },
+          },
+          { name: 'second', annotations: { readOnlyHint: true }, outputSchema: { type: 'object' } },
+        ],
+      };
+      fetch.mockResponseOnce(JSON.stringify(tools), { headers: { 'content-type': 'application/json' } });
+
+      const result = await instance.allowedApplicationTools(TOKEN_MOCK, id, isAsset);
+
+      expect(fetch).toHaveBeenCalledOnce();
+      expect(fetch).toHaveBeenCalledWith(
+        `test/v1/toolset/${encodedId}/allowed-tools`,
+        expect.objectContaining({
+          method: 'GET',
+          headers: expect.objectContaining({ authorization: 'Bearer access_token_mock' }),
+        }),
+      );
+      expect(result).toMatchObject({ success: true, response: tools });
+    },
+  );
+
+  test('allowedApplicationTools preserves Core failure details without falling back to discovery', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ error: { code: 'DiscoveryFailed', message: 'Tools unavailable' } }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const result = await instance.allowedApplicationTools(TOKEN_MOCK, 'public/my-app', true);
+
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(result).toMatchObject({
+      success: false,
+      status: 500,
+      errorHeader: 'DiscoveryFailed',
+      errorMessage: 'Tools unavailable',
+    });
+    expect(result.response).toBeUndefined();
+  });
+
   test('signIn calls POST v1/ops/toolset/signin with the given body', async () => {
     fetch.mockResponseOnce(JSON.stringify({}), { headers: { 'content-type': 'application/json' } });
 

@@ -12,10 +12,11 @@ import {
 import {
   ChartColumnSource,
   ChartConfig,
+  ChartLegendConfig,
+  ChartLegendPosition,
   ChartSlotDescriptor,
   ChartType,
   CompactSelectOptionDescriptor,
-  QueryBuilderWarning,
   ResultValueClass,
 } from '@/src/models/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
@@ -80,6 +81,7 @@ export const OPERATOR_OPTION_DESCRIPTORS: CompactSelectOptionDescriptor[] = [
 // toolbar offers no pick — it expresses one fixed meaning, so it has to name what carries it.
 export const RELATIVE_TIME_SUBTRACT_FN = 'date_sub';
 export const RELATIVE_TIME_NOW_FN = 'now';
+export const TIME_BIN_FN = 'date_bin';
 
 // The operators the service refuses over an enum field. ClickHouse defines comparison over an enum but not
 // the string functions, so `ico`/`inc` — and the case-sensitive `co`/`nc` a JSON-authored query may carry —
@@ -153,15 +155,17 @@ export const JSON_INDENT = 2;
 
 export const IMPLICIT_COUNT_ALIAS = 'Count';
 
-export const LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY = 'query-builder-rail-collapsed';
-
-export const QUERY_BUILDER_RAIL_WIDTH_CLASS = 'w-[480px]';
-
 export const CHART_TYPE_OPTIONS: SelectOption[] = toOptions(Object.values(ChartType));
 
-export const DEFAULT_CHART_CONFIG: ChartConfig = { type: ChartType.Bar, xField: null, yField: null };
+export const DEFAULT_CHART_LEGEND: ChartLegendConfig = { isVisible: true, position: ChartLegendPosition.Below };
 
-// Pie shows at most this many slices; the remaining categories merge into one "Other" slice.
+export const DEFAULT_CHART_CONFIG: ChartConfig = {
+  type: ChartType.Bar,
+  xField: null,
+  yFields: null,
+  legend: DEFAULT_CHART_LEGEND,
+};
+
 export const PIE_MAX_SLICES = 10;
 
 const AXIS_SLOTS = {
@@ -170,15 +174,38 @@ const AXIS_SLOTS = {
 };
 
 export const CHART_SLOT_DESCRIPTORS: Record<ChartType, ChartSlotDescriptor> = {
-  [ChartType.Bar]: { xSource: ChartColumnSource.Dimensions, ySource: ChartColumnSource.Aggregates, ...AXIS_SLOTS },
-  [ChartType.Line]: { xSource: ChartColumnSource.Dimensions, ySource: ChartColumnSource.Aggregates, ...AXIS_SLOTS },
+  [ChartType.Bar]: {
+    xSource: ChartColumnSource.Dimensions,
+    ySource: ChartColumnSource.Aggregates,
+    isMultiY: true,
+    ...AXIS_SLOTS,
+  },
+  [ChartType.Line]: {
+    xSource: ChartColumnSource.Dimensions,
+    ySource: ChartColumnSource.Aggregates,
+    isMultiY: true,
+    ...AXIS_SLOTS,
+  },
   [ChartType.Pie]: {
     xSource: ChartColumnSource.Dimensions,
     ySource: ChartColumnSource.Aggregates,
-    xLabelKey: QueryBuilderI18nKey.ChartCategory,
+    isMultiY: false,
+    xLabelKey: QueryBuilderI18nKey.ChartSlices,
     yLabelKey: QueryBuilderI18nKey.ChartValue,
   },
-  [ChartType.Scatter]: { xSource: ChartColumnSource.Numeric, ySource: ChartColumnSource.Numeric, ...AXIS_SLOTS },
+  [ChartType.Scatter]: {
+    xSource: ChartColumnSource.Numeric,
+    ySource: ChartColumnSource.Numeric,
+    isMultiY: false,
+    ...AXIS_SLOTS,
+  },
+  [ChartType.Scorecard]: {
+    xSource: ChartColumnSource.Aggregates,
+    ySource: ChartColumnSource.Aggregates,
+    isMultiY: false,
+    xLabelKey: QueryBuilderI18nKey.ChartValue,
+    yLabelKey: QueryBuilderI18nKey.ChartValue,
+  },
 };
 
 // A tooltip can show a short value in place; past this the value needs the viewer instead.
@@ -187,17 +214,6 @@ export const RESULT_TOOLTIP_MAX_CHARS = 240;
 // Wider than a column ever shows, so the preview is never the limit on screen, but bounded so a wide
 // result does not hold whole documents in the DOM.
 export const RESULT_PREVIEW_CHARS = 400;
-
-export const WARNING_I18N: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
-  [QueryBuilderWarning.MissingGroupByField]: QueryBuilderI18nKey.WarningMissingGroupByField,
-  [QueryBuilderWarning.EmptyAggregate]: QueryBuilderI18nKey.WarningEmptyAggregate,
-  [QueryBuilderWarning.DroppedProjectionColumn]: QueryBuilderI18nKey.WarningDroppedProjectionColumn,
-  [QueryBuilderWarning.DroppedCondition]: QueryBuilderI18nKey.WarningDroppedCondition,
-};
-
-// Which section header surfaces which aggregate-validation warning.
-export const GROUP_BY_SECTION_WARNINGS = [QueryBuilderWarning.EmptyAggregate, QueryBuilderWarning.MissingGroupByField];
-export const AGGREGATE_SECTION_WARNINGS = [QueryBuilderWarning.EmptyAggregate];
 
 // The schema's own statement about a column's value class. A type absent from this map is a type the
 // result grid does not format — Uuid, Enum, Boolean, String, Object, Array, Map.

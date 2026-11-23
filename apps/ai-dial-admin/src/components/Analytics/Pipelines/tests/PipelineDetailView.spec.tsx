@@ -1,3 +1,5 @@
+import { notificationMock } from '@/test-mocks/notification';
+import { navigationMock } from '@/test-mocks/navigation';
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -13,14 +15,8 @@ import { CreatePipelineDto } from '@/src/models/analytics/pipeline';
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
 
-const refresh = vi.fn();
-const push = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, push }) }));
-
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { refresh, push } = navigationMock.router;
+const { showNotification } = notificationMock;
 
 const enrichment: AnalyticsTable = {
   name: 'turn_feedback',
@@ -452,6 +448,42 @@ describe('PipelineDetailView', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
   });
 
+  test('presents the input token budget only for a group trigger', async () => {
+    const { unmount } = await renderLoaded({ trigger: { kind: TriggerKind.Group } });
+    expect(screen.getByLabelText(AnalyticsPipelinesI18nKey.InputTokenBudget, { exact: false })).toBeTruthy();
+    unmount();
+
+    await renderLoaded({ trigger: { kind: TriggerKind.Schedule } });
+    expect(screen.queryByLabelText(AnalyticsPipelinesI18nKey.InputTokenBudget, { exact: false })).toBeNull();
+  });
+
+  test('drops the input token budget from the save once the trigger is switched to schedule', async () => {
+    const user = userEvent.setup();
+    await renderLoaded({
+      trigger: { kind: TriggerKind.Group, ready_when: { idle: '5m' } },
+      advanced: { input_token_budget: 4000, rows_per_scan: 100 },
+    });
+
+    await user.click(screen.getByRole('radio', { name: AnalyticsPipelinesI18nKey.TriggerSchedule }));
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    await vi.waitFor(() => expect(updatePipeline).toHaveBeenCalled());
+    const [, dto] = vi.mocked(updatePipeline).mock.calls[0] as [string, CreatePipelineDto];
+    expect(dto.trigger?.kind).toBe(TriggerKind.Schedule);
+    expect(dto.advanced).toEqual({ rows_per_scan: 100 });
+  });
+
+  test('a fractional input token budget is reported and holds the save back', async () => {
+    const user = userEvent.setup();
+    await renderLoaded({ trigger: { kind: TriggerKind.Group } });
+
+    const input = screen.getByLabelText(AnalyticsPipelinesI18nKey.InputTokenBudget, { exact: false });
+    await user.type(input, '1.5');
+
+    expect(screen.getByText(AnalyticsPipelinesI18nKey.InputTokenBudgetInvalid)).toBeTruthy();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+
   test('carries a member no control presents through the save', async () => {
     const user = userEvent.setup();
     await renderLoaded({ filter: 'score > 0.5', advanced: { rows_per_scan: 100, rate_rpm: 60 } });
@@ -671,7 +703,7 @@ describe('PipelineDetailView', () => {
   test('still offers the rule its own target even though it is taken', async () => {
     renderView();
 
-    // The 2.0 select carries the chosen option as the value of its readonly combobox, not as text.
-    expect(await screen.findByDisplayValue('turn_feedback')).toBeTruthy();
+    // The 2.0 select draws the chosen option in the content slot; the input value stays empty.
+    expect(await screen.findByText('turn_feedback')).toBeTruthy();
   });
 });

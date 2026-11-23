@@ -3,15 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  CellClickedEvent,
-  ColDef,
-  GridApi,
-  GridOptions,
-  GridReadyEvent,
-  IDatasource,
-  IGetRowsParams,
-} from 'ag-grid-community';
+import { ColDef, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 
 import { cloneDataset } from '@/src/app/[lang]/datasets/actions';
@@ -26,7 +18,7 @@ import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import { RUN_STATUS_FILTER_COMPONENTS } from '@/src/components/Runs/List/run-status-filter-components';
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
-import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
+import { withNameLink } from '@/src/components/Grid/columns/name-link-column';
 import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   getCancelOperation,
@@ -42,7 +34,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset } from '@/src/models/evaluation/dataset';
-import { Run, RunStatus } from '@/src/models/evaluation/run';
+import { Run, RunStatus, RunTestSuiteParams } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -98,7 +90,6 @@ const EvaluationListView = <T extends object>({
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
     ...(isRunsList ? { components: RUN_STATUS_FILTER_COMPONENTS } : {}),
-    onCellClicked: (e: CellClickedEvent) => onCellClicked(e, route, router.push),
   };
 
   const gridDataSource: IDatasource = useMemo(
@@ -229,8 +220,8 @@ const EvaluationListView = <T extends object>({
   }, [cancelRunEntity, gridApi]);
 
   const onRun = useCallback(
-    (num?: string | number) => {
-      return runTestSuite((currentEntity as TestSuite)?.id as string, num).then((res) => {
+    (params: RunTestSuiteParams) => {
+      return runTestSuite((currentEntity as TestSuite)?.id as string, params).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.RunSuccess), t(TestSuitesI18nKey.RunSuccessDescription)),
@@ -304,7 +295,12 @@ const EvaluationListView = <T extends object>({
     actionColumn.push(getCancelOperation(onOpenCancelModal));
   }
 
-  const columnDefs = [...baseColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)], true)];
+  const getHref = useCallback((data: unknown) => getUrnForEntity(route, data), [route]);
+  const linkedColumns = useMemo(
+    () => withNameLink(baseColumns, getHref, isRunsList ? 'testRunName' : 'name'),
+    [baseColumns, getHref, isRunsList],
+  );
+  const columnDefs = [...linkedColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)], true)];
 
   return (
     <>
@@ -316,7 +312,7 @@ const EvaluationListView = <T extends object>({
         isEnableColumnPanel
         storageKey={isRunsList ? RUNS_LIST_STORAGE_KEY : route}
         onGridReady={onGridReady}
-        getHref={(data) => getUrnForEntity(route, data)}
+        getHref={getHref}
       >
         <HeaderButtons route={route} onCreateEntity={onCreateEntity} />
       </ListEntities>

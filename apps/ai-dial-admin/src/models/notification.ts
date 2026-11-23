@@ -8,17 +8,12 @@ export interface Notification {
   duration?: number | null;
   requestId?: string;
   onClose?: () => void;
-  downloadDetails?: FileDetails[];
-  customTitle?: ReactNode;
+  action?: NotificationAction;
 }
 
-export interface FileDetails {
-  id: string;
-  name: string;
-  progress: number;
-  onCancel?: () => void;
-  failed: boolean;
-  complete: boolean;
+export interface NotificationAction {
+  label: string;
+  onClick: () => void;
 }
 
 export interface NotificationConfig extends Notification {
@@ -28,14 +23,5 @@ export interface NotificationConfig extends Notification {
 export enum NotificationType {
   success = 'success',
   error = 'error',
-  dynamic = 'dynamic',
   prepare = 'prepare',
-}
-
-export enum NotificationIconColor {
-  success = 'text-accent-secondary',
-  error = 'text-error',
-  dynamic = 'text-secondary',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  prepare = 'text-secondary',
 }

@@ -36,23 +36,6 @@ vi.mock('@/src/components/Common/FileManager/FileManager', () => ({
           props.onMoveItems(
             [
               {
-                sourceUrl: 'platform/platform-app',
-                destinationUrl: 'platform/other-folder/platform-app',
-                nodeType: DialFileNodeType.ITEM,
-              },
-            ],
-            'platform/',
-            'platform/other-folder/',
-          )
-        }
-      >
-        move-platform-row
-      </button>
-      <button
-        onClick={() =>
-          props.onMoveItems(
-            [
-              {
                 sourceUrl: 'public/folder/app__1.0',
                 destinationUrl: 'public/other-folder/app__1.0',
                 nodeType: DialFileNodeType.ITEM,
@@ -69,24 +52,9 @@ vi.mock('@/src/components/Common/FileManager/FileManager', () => ({
   ),
 }));
 
-/**
- * Regression (4.4): a platform-bucket row (AssetsApplications browsed under `platform/`) has no
- * folder concept — Core has no move route for it — so `handleMoveItems` must skip it rather than
- * issue a bogus `moveApps` call. Public-bucket rows in the same dual-bucket view stay movable.
- */
-describe('BaseAssetList :: handleMoveItems skips platform-bucket rows', () => {
+describe('BaseAssetList :: handleMoveItems', () => {
   beforeEach(() => {
     vi.mocked(moveApps).mockClear();
-  });
-
-  test('moving a platform-bucket row does not call moveApps', () => {
-    render(<BaseAssetList view={ApplicationRoute.AssetsApplications} />);
-
-    fireEvent.click(screen.getByText('move-platform-row'));
-
-    // The handler ran and counted the row as being moved, and still queued no move for it.
-    expect(screen.getByText('moving:1')).toBeInTheDocument();
-    expect(moveApps).not.toHaveBeenCalled();
   });
 
   test('moving a public-bucket row calls moveApps', async () => {

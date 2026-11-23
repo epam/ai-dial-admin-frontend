@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -7,12 +8,7 @@ import DeploymentProperties from '../DeploymentProperties';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { ChatEntity } from '@/src/models/dial/base-entity';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
 
 vi.mock('@/src/app/[lang]/models/actions', () => ({
   getModelsAdapters: vi.fn(),
@@ -111,7 +107,7 @@ describe('DeploymentProperties — display name', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 
   test('accepts a typed name that is not one of the existing names', async () => {
@@ -158,7 +154,7 @@ describe('DeploymentProperties — display name', () => {
   });
 
   test('disables the field for a read-only admin', () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     const { input } = renderDisplayName();
 
     expect(input).toBeDisabled();

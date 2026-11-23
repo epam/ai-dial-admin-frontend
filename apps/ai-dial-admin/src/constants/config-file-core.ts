@@ -37,6 +37,9 @@ export const READABLE_CONFIG_FILE_TYPES: ReadonlySet<ConfigFileEntityType> = new
   ConfigFileEntityType.Schemas,
   ConfigFileEntityType.CatalogSchemas,
   ConfigFileEntityType.Translators,
+  ConfigFileEntityType.Plugins,
+  ConfigFileEntityType.Routers,
+  ConfigFileEntityType.Aliases,
 ]);
 
 /** The single settings entry Core exposes — `settings` is a singleton, not a listable collection. */
@@ -53,4 +56,5 @@ export const METADATA_RESOURCE_TYPE: Partial<Record<ConfigFileEntityType, Resour
   [ConfigFileEntityType.Interceptors]: ResourceType.INTERCEPTOR,
   [ConfigFileEntityType.Roles]: ResourceType.ROLE,
   [ConfigFileEntityType.Models]: ResourceType.MODEL,
+  [ConfigFileEntityType.Plugins]: ResourceType.PLUGIN,
 };

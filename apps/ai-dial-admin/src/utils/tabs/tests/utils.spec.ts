@@ -18,6 +18,7 @@ import {
   dependenciesTab,
   deploymentsToolsTab,
   entitiesTab,
+  evalTrendsTab,
   eventsTab,
   executionLogTab,
   extractionResultTab,
@@ -45,6 +46,8 @@ import {
   getRouteTabs,
   getRunTabs,
   getSystemPropertiesTabs,
+  sessionsSourceTab,
+  enrichmentRoutesTab,
   getTabsForAsset,
   getTestSuiteRequestTemplateTabs,
   getTestSuiteTabs,
@@ -123,6 +126,18 @@ describe('Entities :: tabs', () => {
     expect(res).toEqual([propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t)]);
   });
 
+  test('includes Eval Trends for models when evaluationEnabled is true', () => {
+    const res = getModelsTabs(t, flags({ evaluationEnabled: true, adminApiEnabled: true }));
+    expect(res).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      auditTab(t),
+      evalTrendsTab(t),
+    ]);
+  });
+
   test('Should return tabs for application', () => {
     const res = getApplicationTabs(t, flags({ adminApiEnabled: true }));
     expect(res).toEqual([
@@ -147,6 +162,21 @@ describe('Entities :: tabs', () => {
       appRouteTab(t),
       rolesTab(t),
       interceptorsTab(t),
+    ]);
+  });
+
+  test('includes Eval Trends for application when evaluationEnabled is true', () => {
+    const res = getApplicationTabs(t, flags({ evaluationEnabled: true, adminApiEnabled: true }));
+    expect(res).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      dependenciesTab(t),
+      appRouteTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      auditTab(t),
+      evalTrendsTab(t),
     ]);
   });
 
@@ -200,6 +230,16 @@ describe('Entities :: tabs', () => {
     expect(tabs).toEqual([{ id: 'Activities', label: TabsI18nKey.Activities }]);
   });
 
+  test.each([
+    ['AssetsToolsets', ApplicationRoute.AssetsToolsets],
+    ['PlatformModels', ApplicationRoute.PlatformModels],
+  ])('returns dashboard and traces tabs for %s when only analyticsUsageEnabled is true', (_, view) => {
+    expect(getAuditTabs(t, flags({ dashboardEnabled: false, analyticsUsageEnabled: true }), view)).toEqual([
+      { id: 'Dashboard', label: TabsI18nKey.Dashboard },
+      { id: 'Traces', label: TabsI18nKey.Traces },
+    ]);
+  });
+
   test('returns dashboard and traces tabs for AssetsToolsets when dashboardEnabled is true', () => {
     const tabs = getAuditTabs(t, flags({ dashboardEnabled: true }), ApplicationRoute.AssetsToolsets);
     expect(tabs).toEqual([
@@ -225,6 +265,14 @@ describe('Entities :: tabs', () => {
       catalogTab(t),
       interceptorsTab(t),
       appRouteTab(t),
+    ]);
+  });
+
+  test("offers an alias its properties, target and roles, since everything else is its target's", () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsAliases).map((tab) => tab.id)).toEqual([
+      EntityViewTab.Properties,
+      EntityViewTab.Target,
+      EntityViewTab.Roles,
     ]);
   });
 
@@ -257,6 +305,37 @@ describe('Entities :: tabs', () => {
     expect(withResourceDependenciesTab([propertiesTab(t)], t)).toEqual([propertiesTab(t), resourceDependenciesTab(t)]);
   });
 
+  test('appends Eval Trends for AssetsApplications when evaluationEnabled is true', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsApplications, flags({ evaluationEnabled: true }))).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      catalogTab(t),
+      interceptorsTab(t),
+      appRouteTab(t),
+      evalTrendsTab(t),
+    ]);
+  });
+
+  test('places Eval Trends after Audit for AssetsApplications when both evaluation and usage audit are enabled', () => {
+    expect(
+      getTabsForAsset(
+        t,
+        ApplicationRoute.AssetsApplications,
+        flags({ evaluationEnabled: true, analyticsUsageEnabled: true }),
+      ),
+    ).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      catalogTab(t),
+      interceptorsTab(t),
+      appRouteTab(t),
+      auditTab(t),
+      evalTrendsTab(t),
+    ]);
+  });
+
   test('offers an asset application the Audit tab only behind the analytics usage flag', () => {
     const tabsWith = (overrides: Partial<FeatureFlags>) =>
       getTabsForAsset(t, ApplicationRoute.AssetsApplications, flags(overrides));
@@ -283,6 +362,26 @@ describe('Entities :: tabs', () => {
     ).toEqual([propertiesTab(t), toolsTab(t), catalogTab(t), auditTab(t)]);
   });
 
+  test('appends Audit for AssetsToolsets when analyticsUsageEnabled is true without adminApiEnabled', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets, flags({ analyticsUsageEnabled: true }))).toEqual([
+      propertiesTab(t),
+      toolsTab(t),
+      catalogTab(t),
+      auditTab(t),
+    ]);
+  });
+
+  test('appends Audit for PlatformModels when analyticsUsageEnabled is true without adminApiEnabled', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformModels, flags({ analyticsUsageEnabled: true }))).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      catalogTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      auditTab(t),
+    ]);
+  });
+
   test('returns only Dashboard and Traces tabs for PlatformModels when dashboardEnabled is true', () => {
     const tabs = getAuditTabs(t, flags({ dashboardEnabled: true }), ApplicationRoute.PlatformModels);
     expect(tabs).toEqual([
@@ -303,6 +402,26 @@ describe('Entities :: tabs', () => {
     ]);
   });
 
+  test('returns Properties, Features, Catalog, Roles for PlatformRouters, with no Interceptors or Audit', () => {
+    expect(
+      getTabsForAsset(t, ApplicationRoute.PlatformRouters, flags({ dashboardEnabled: true, adminApiEnabled: true })),
+    ).toEqual([propertiesTab(t), featuresTab(t), catalogTab(t), rolesTab(t)]);
+  });
+
+  test('inserts Parameters after Features for PlatformRouters that have a schema', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformRouters, undefined, undefined, true)).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      parametersTab(t),
+      catalogTab(t),
+      rolesTab(t),
+    ]);
+  });
+
+  test('threads rolesWarning into the Roles tab for PlatformRouters', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformRouters, undefined, true)).toContainEqual(rolesTab(t, true));
+  });
+
   test('omits Audit for PlatformModels with dashboardEnabled but without adminApiEnabled', () => {
     const tabs = getTabsForAsset(t, ApplicationRoute.PlatformModels, flags({ dashboardEnabled: true }));
     expect(tabs).toEqual([propertiesTab(t), featuresTab(t), catalogTab(t), rolesTab(t), interceptorsTab(t)]);
@@ -321,6 +440,34 @@ describe('Entities :: tabs', () => {
       rolesTab(t),
       interceptorsTab(t),
       auditTab(t),
+    ]);
+  });
+
+  test('includes Eval Trends for PlatformModels when evaluationEnabled is true', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformModels, flags({ evaluationEnabled: true }))).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      catalogTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      evalTrendsTab(t),
+    ]);
+  });
+
+  test('places Eval Trends after Audit for PlatformModels when both evaluation and audit are enabled', () => {
+    const tabs = getTabsForAsset(
+      t,
+      ApplicationRoute.PlatformModels,
+      flags({ evaluationEnabled: true, dashboardEnabled: true, adminApiEnabled: true }),
+    );
+    expect(tabs).toEqual([
+      propertiesTab(t),
+      featuresTab(t),
+      catalogTab(t),
+      rolesTab(t),
+      interceptorsTab(t),
+      auditTab(t),
+      evalTrendsTab(t),
     ]);
   });
 
@@ -479,6 +626,16 @@ describe('Entities :: tabs', () => {
       globalInterceptorsTab(t),
       rateLimitScheduleTab(t),
       spendingLimitsTab(t),
+    ]);
+  });
+
+  test('adds the sessions source and enrichment routes tabs to system properties when analytics is enabled', () => {
+    expect(getSystemPropertiesTabs(t, true)).toEqual([
+      globalInterceptorsTab(t),
+      rateLimitScheduleTab(t),
+      spendingLimitsTab(t),
+      sessionsSourceTab(t),
+      enrichmentRoutesTab(t),
     ]);
   });
 

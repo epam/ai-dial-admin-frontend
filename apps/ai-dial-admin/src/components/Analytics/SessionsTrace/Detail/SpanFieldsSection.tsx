@@ -1,6 +1,6 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 import SpanGroupPanel from '@/src/components/Analytics/SessionsTrace/Detail/SpanGroupPanel';
 import { useSpanFieldGroups } from '@/src/components/Analytics/SessionsTrace/Detail/use-span-field-groups';
@@ -17,11 +17,12 @@ interface Props {
   isRecord?: boolean;
   // The column each group previews while closed, by tag. Absent uses the hop log's.
   summaryFields?: Record<string, string>;
+  lead?: ReactNode;
 }
 
 // No groups means the schema read failed, not that the span recorded nothing: the facts above this section
 // are read from the typed span row and need no schema.
-const SpanFieldsSection: FC<Props> = ({ groups, row, isRecord, summaryFields }) => {
+const SpanFieldsSection: FC<Props> = ({ groups, row, isRecord, summaryFields, lead }) => {
   const t = useI18n();
   const { openTag, onToggleGroup } = useSpanFieldGroups({ groups });
 
@@ -31,6 +32,7 @@ const SpanFieldsSection: FC<Props> = ({ groups, row, isRecord, summaryFields }) 
         <p className="text-secondary dial-tiny-text">{t(SessionsTraceI18nKey.SpanFieldsUnavailable)}</p>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded border border-secondary bg-layer-3 p-1">
+          {lead && <div className="px-2 pb-2 pt-1.5">{lead}</div>}
           {groups.map((group) => (
             <SpanGroupPanel
               key={group.tag}

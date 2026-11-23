@@ -2,16 +2,16 @@
 
 import { FC, Fragment, useEffect, useState } from 'react';
 
-import { GhostButton, GhostIconButton, Input, Label, Select } from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
+import { GhostButton, Input, Label, Select } from '@epam/ai-dial-ui-kit';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { createVarRow, getTakenVarNames, toVarRows, toVars } from '@/src/components/Analytics/Pipelines/Enrich/vars';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { PipelineVar } from '@/src/models/analytics/pipeline';
 import { VarBindingKind, VarRow } from '@/src/models/analytics/pipeline-ui';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { isProjectionOnly } from '@/src/utils/analytics/entity-fields';
 import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 
 const isSameDeclaration = (a: Record<string, PipelineVar>, b?: Record<string, PipelineVar>): boolean =>
@@ -57,7 +57,9 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
     ) : null;
   }
 
-  const fieldOptions = fields.map((field) => ({ value: field.name, label: `${field.name} · ${field.type}` }));
+  const fieldOptions = fields
+    .filter((field) => !isProjectionOnly(field))
+    .map((field) => ({ value: field.name, label: `${field.name} · ${field.type}` }));
 
   const bindingOptions = [
     { value: VarBindingKind.Column, label: t(AnalyticsPipelinesI18nKey.VarColumn) },
@@ -128,8 +130,7 @@ const VariablesEditor: FC<Props> = ({ vars, fields, isReady, hasError, onChange 
                 />
               )}
 
-              <GhostIconButton
-                icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
+              <RemoveButton
                 aria-label={`${t(ButtonsI18nKey.Delete)} ${index + 1}`}
                 onClick={() => commit(rows.filter((candidate) => candidate.id !== row.id))}
               />

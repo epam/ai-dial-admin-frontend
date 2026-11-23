@@ -7,7 +7,7 @@ import { useCallback, useMemo, useState } from 'react';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, KeysI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -15,6 +15,8 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialKeyResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
+import { ApplicationRoute } from '@/src/types/routes';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
   asset: DialKeyResource;
@@ -69,10 +71,19 @@ const KeyRoles = ({ asset, roles, onChange }: Props) => {
     [asset, onChange],
   );
 
-  const columnDefs = useMemo(
-    () => (isReadOnlyAdmin ? BASE_COLUMNS : [...BASE_COLUMNS, ACTION_COLUMN([getRemoveOperation(onRemoveRole)])]),
-    [isReadOnlyAdmin, onRemoveRole],
-  );
+  const onOpenRole = useCallback((role?: DialRole) => {
+    if (role) {
+      onOpenInNewTab(ApplicationRoute.PlatformRoles, role);
+    }
+  }, []);
+
+  const columnDefs = useMemo(() => {
+    const actions = [getOpenInNewTabOperation(onOpenRole)];
+    if (!isReadOnlyAdmin) {
+      actions.push(getRemoveOperation(onRemoveRole));
+    }
+    return [...BASE_COLUMNS, ACTION_COLUMN(actions)];
+  }, [isReadOnlyAdmin, onOpenRole, onRemoveRole]);
 
   return (
     <div className="flex flex-col gap-4 h-full">

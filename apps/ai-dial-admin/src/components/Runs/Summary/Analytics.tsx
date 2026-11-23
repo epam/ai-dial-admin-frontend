@@ -4,19 +4,17 @@ import { FC } from 'react';
 
 import { AnalyticsCard, Spinner } from '@epam/ai-dial-ui-kit';
 
+import CardFooter from '@/src/components/Runs/Summary/Cards/CardFooter';
 import CostValue from '@/src/components/Runs/Summary/Cards/CostValue';
-import OverallScoreInfo from '@/src/components/Runs/Summary/Cards/OverallScoreInfo';
+import { CardValueSection } from '@/src/components/Runs/Summary/Cards/models';
+import OverallScoreMethod from '@/src/components/Runs/Summary/Cards/OverallScoreMethod';
 import OverallScoreValue from '@/src/components/Runs/Summary/Cards/OverallScoreValue';
 import PassRateValue from '@/src/components/Runs/Summary/Cards/PassRateValue';
 import RuntimeValue from '@/src/components/Runs/Summary/Cards/RuntimeValue';
 import TestCasesCompletedValue from '@/src/components/Runs/Summary/Cards/TestCasesCompletedValue';
-import {
-  ANALYTICS_KPI_CARD_CLASS,
-  ANALYTICS_KPI_CARD_TOP_CLASS,
-  ANALYTICS_KPI_GRID_CLASS,
-} from '@/src/components/Runs/Summary/constants';
+import { ANALYTICS_KPI_CARD_CLASS, ANALYTICS_KPI_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
 import { useRunKpiCards } from '@/src/components/Runs/Summary/use-run-kpi-cards';
-import { RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 
@@ -46,15 +44,47 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
   return (
     <div className={ANALYTICS_KPI_GRID_CLASS}>
       <AnalyticsCard
-        className={ANALYTICS_KPI_CARD_TOP_CLASS}
+        className={ANALYTICS_KPI_CARD_CLASS}
         title={t(RunsI18nKey.TestCasesCompleted)}
-        value={<TestCasesCompletedValue breakdown={figures.breakdown} hasThreshold={figures.hasThreshold} />}
+        value={
+          <TestCasesCompletedValue
+            breakdown={figures.breakdown}
+            hasThreshold={figures.hasThreshold}
+            section={CardValueSection.Figure}
+          />
+        }
+        description={
+          <CardFooter>
+            <TestCasesCompletedValue
+              breakdown={figures.breakdown}
+              hasThreshold={figures.hasThreshold}
+              section={CardValueSection.Footer}
+            />
+          </CardFooter>
+        }
         error={kpis.hasNoTestCases}
       />
       <AnalyticsCard
-        className={ANALYTICS_KPI_CARD_TOP_CLASS}
+        className={ANALYTICS_KPI_CARD_CLASS}
         title={rateTitle}
-        value={<PassRateValue rate={figures.rate} threshold={figures.threshold} label={rateTitle} />}
+        value={
+          <PassRateValue
+            rate={figures.rate}
+            threshold={figures.threshold}
+            label={rateTitle}
+            section={CardValueSection.Figure}
+          />
+        }
+        description={
+          <CardFooter>
+            <PassRateValue
+              rate={figures.rate}
+              threshold={figures.threshold}
+              label={rateTitle}
+              section={CardValueSection.Footer}
+            />
+          </CardFooter>
+        }
         error={kpis.hasNoTestCases}
       />
       {overallScore != null && (
@@ -63,25 +93,46 @@ const Analytics: FC<Props> = ({ run, overallScore, metricSnapshotCount }) => {
           title={t(RunsI18nKey.OverallScore)}
           value={<OverallScoreValue score={overallScore} threshold={figures.threshold} />}
           description={
-            <span className="flex items-center gap-1">
-              <span>{t(TestSuitesI18nKey.TrendsBasedOnCompletedStatic)}</span>
-              {kpis.scoreMethod && (
-                <OverallScoreInfo scoreMethod={kpis.scoreMethod} metricCount={metricSnapshotCount ?? 0} />
-              )}
-            </span>
+            kpis.scoreMethod && (
+              <CardFooter>
+                <OverallScoreMethod scoreMethod={kpis.scoreMethod} metricCount={metricSnapshotCount ?? 0} />
+              </CardFooter>
+            )
           }
         />
       )}
       <AnalyticsCard
-        className={ANALYTICS_KPI_CARD_TOP_CLASS}
+        className={ANALYTICS_KPI_CARD_CLASS}
         title={t(RunsI18nKey.TotalRuntime)}
-        value={<RuntimeValue sourceMs={figures.sourceMs} metricsMs={figures.metricsMs} sourceLabel={sourceLabel} />}
+        value={
+          <RuntimeValue
+            sourceMs={figures.sourceMs}
+            metricsMs={figures.metricsMs}
+            sourceLabel={sourceLabel}
+            section={CardValueSection.Figure}
+          />
+        }
+        description={
+          <CardFooter>
+            <RuntimeValue
+              sourceMs={figures.sourceMs}
+              metricsMs={figures.metricsMs}
+              sourceLabel={sourceLabel}
+              section={CardValueSection.Footer}
+            />
+          </CardFooter>
+        }
         error={kpis.hasRuntimeError}
       />
       <AnalyticsCard
-        className={ANALYTICS_KPI_CARD_TOP_CLASS}
+        className={ANALYTICS_KPI_CARD_CLASS}
         title={t(RunsI18nKey.TotalRunCost)}
-        value={<CostValue cost={cost} sourceLabel={sourceLabel} />}
+        value={<CostValue cost={cost} sourceLabel={sourceLabel} section={CardValueSection.Figure} />}
+        description={
+          <CardFooter>
+            <CostValue cost={cost} sourceLabel={sourceLabel} section={CardValueSection.Footer} />
+          </CardFooter>
+        }
         error={cost.hasError}
       />
     </div>

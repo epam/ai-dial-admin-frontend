@@ -8,14 +8,14 @@ import { sortAccess } from './access';
 export const toDependency = (values: DependencyFormValues): ResourceDependency => ({
   kind: RESOURCE_DEPENDENCY_KIND,
   link_id: values.linkId.trim(),
-  target: { path: values.path.trim() },
+  target: { url: values.path.trim() },
   access: sortAccess(values.access),
   required: values.isRequired,
 });
 
 export const toFormValues = (dependency: ResourceDependency): DependencyFormValues => ({
   linkId: dependency.link_id,
-  path: dependency.target?.path ?? '',
+  path: dependency.target?.url ?? '',
   access: sortAccess(dependency.access ?? []),
   isRequired: !!dependency.required,
 });

@@ -11,6 +11,7 @@ import {
   getGridColumns,
   generateTreeForDeletingItems,
   normalizePath,
+  withoutFilters,
 } from '@/src/components/Assets/Modals/utils';
 
 const t = (key: string, options?: Record<string, string | number>) =>
@@ -146,5 +147,32 @@ describe('generateTreeForDeletingItems', () => {
         'Selected/assistant__stable',
       ),
     ).toBe(assets[0].path);
+  });
+});
+
+describe('withoutFilters', () => {
+  test('keeps a curried column factory callable and resolved, with filters off', () => {
+    const [nameColumn] = getGridColumns(ApplicationRoute.AssetsToolsets, true);
+    const wrapped = withoutFilters(nameColumn) as (...args: unknown[]) => ColDef;
+
+    expect(wrapped).toBeInstanceOf(Function);
+    expect(wrapped('en', undefined, false)).toMatchObject({
+      colId: FileManagerColumnKey.Name,
+      field: 'name',
+      filter: false,
+      floatingFilter: false,
+    });
+  });
+
+  test('turns filters off on a plain column', () => {
+    expect(withoutFilters({ field: 'name' })).toEqual({ field: 'name', filter: false, floatingFilter: false });
+  });
+
+  test('gives the name column the spare width and the version column a small fixed one', () => {
+    const [name, version] = getGridColumns(ApplicationRoute.AssetsToolsets, false, assets as unknown as DialFile[]);
+
+    expect(name).toMatchObject({ flex: 3 });
+    expect(version).toMatchObject({ width: 110 });
+    expect(version).not.toHaveProperty('flex');
   });
 });

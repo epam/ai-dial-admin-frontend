@@ -2,8 +2,6 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useRouter } from 'next/navigation';
-
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import {
   Button,
@@ -28,16 +26,17 @@ import { useIngestFailuresCount } from '@/src/components/Analytics/Tables/Ingest
 import { findRunningTableBackfill } from '@/src/components/Analytics/Tables/Backfill/use-table-backfill-runs';
 import CreateTablePopup from '@/src/components/Analytics/Tables/CreateTablePopup';
 import EditTableMetadataPopup from '@/src/components/Analytics/Tables/EditTableMetadataPopup';
-import RowsRestrictedBadge from '@/src/components/Analytics/Tables/RowsRestrictedBadge';
+import RestrictedBadge from '@/src/components/Analytics/Tables/RestrictedBadge';
+import { RestrictionKind } from '@/src/components/Analytics/Tables/models';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
 import { TABLE_TYPE_LABEL } from '@/src/components/Analytics/Tables/constants';
 import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
-import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
+import EntityLinkCell from '@/src/components/Grid/CellRenderers/EntityLinkCell';
 import ListEntities from '@/src/components/ListView/List';
 import { useAppContext } from '@/src/context/AppContext';
 import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { usePolledRead } from '@/src/hooks/use-polled-read';
-import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
+import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { BACKFILL_POLL_INTERVAL_MS } from '@/src/constants/analytics/backfill';
@@ -55,7 +54,6 @@ interface Props {
 
 const TablesView: FC<Props> = ({ initialTables }) => {
   const t = useI18n();
-  const router = useRouter();
   const { showNotification } = useNotification();
   const { canCreate, canDelete } = useAnalyticsTablePermissions();
   const { isEnableAuth, isFullAdmin } = useAppContext();
@@ -92,11 +90,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
       return;
     }
     showNotification(
-      getErrorNotification(
-        read.errorHeader ?? t(AnalyticsTablesI18nKey.TablesLoadFailed),
-        read.errorMessage,
-        read.requestId,
-      ),
+      getErrorNotification(t(AnalyticsTablesI18nKey.TablesLoadFailed), read.errorMessage, read.requestId),
     );
   }, [showNotification, t]);
 
@@ -151,13 +145,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
       showNotification(getSuccessNotification(t(AnalyticsTablesI18nKey.Deleted)));
       void reload();
     } else {
-      showNotification(
-        getErrorNotification(
-          res.errorHeader || t(AnalyticsTablesI18nKey.ActionFailed),
-          res.errorMessage,
-          res.requestId,
-        ),
-      );
+      showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.ActionFailed), res.errorMessage, res.requestId));
     }
   };
 
@@ -177,13 +165,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
       setEditTarget(null);
       void reload();
     } else {
-      showNotification(
-        getErrorNotification(
-          res.errorHeader || t(AnalyticsTablesI18nKey.ActionFailed),
-          res.errorMessage,
-          res.requestId,
-        ),
-      );
+      showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.ActionFailed), res.errorMessage, res.requestId));
     }
   };
 
@@ -215,9 +197,12 @@ const TablesView: FC<Props> = ({ initialTables }) => {
         flex: 2,
         cellRenderer: ({ data }: ICellRendererParams<AnalyticsTable>) =>
           data && (
-            <span className="flex items-center gap-2">
-              <span className="truncate">{data.name}</span>
-              {data.permissions?.rows_restricted && <RowsRestrictedBadge />}
+            <span className="flex min-w-0 items-center gap-2">
+              <EntityLinkCell href={tableDetailHref(data.name)}>
+                <EllipsisTooltip className="dial-small-text" text={data.name} />
+              </EntityLinkCell>
+              {data.permissions?.rows_restricted && <RestrictedBadge kind={RestrictionKind.Rows} />}
+              {data.permissions?.columns_restricted && <RestrictedBadge kind={RestrictionKind.Columns} />}
             </span>
           ),
       },
@@ -271,12 +256,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
         columnDefs={columns}
         rowData={tables}
         getRowId={(params) => params.data.name}
-        additionalGridOptions={{
-          onCellClicked: (e) => {
-            if (e.colDef.field === ACTIONS_COLUMN_CEL_ID || !e.data) return;
-            navigateEntityUrl(tableDetailHref(e.data.name), router.push, e.event as MouseEvent | undefined);
-          },
-        }}
+        getHref={(table) => (table ? tableDetailHref((table as AnalyticsTable).name) : undefined)}
         emptyDataProps={{ title: t(AnalyticsTablesI18nKey.NoTables) }}
       >
         {isFullAdmin && !failuresCount.isUnavailable && (

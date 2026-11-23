@@ -11,7 +11,13 @@ import {
   TriggerKind,
   TransformType,
 } from '@/src/models/analytics/pipeline';
-import { TableWriteMode, AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
+import {
+  TableWriteMode,
+  AnalyticsTableType,
+  CreateTableDto,
+  TableAccessEntryDto,
+  TableGrantKey,
+} from '@/src/models/analytics/table';
 import { IngestFailureKind, IngestFailureState } from '@/src/models/analytics/ingest-failure';
 import { TableBackfillState } from '@/src/models/analytics/table-backfill';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -23,6 +29,13 @@ const fetch = createFetchMock(vi);
 fetch.enableMocks();
 
 const JSON_HEADERS = { headers: { 'content-type': 'application/json' } };
+
+const ACCESS_ENTRY: TableAccessEntryDto = {
+  privileges: [TableGrantKey.Read],
+  rows: null,
+  columns: ['region'],
+  generation: 3,
+};
 
 describe('Server :: AnalyticsDataApi', () => {
   const instance = new AnalyticsDataApi({ host: TEST_URL });
@@ -338,75 +351,80 @@ describe('Server :: AnalyticsDataApi', () => {
     );
   });
 
-  test('getTableAccess issues GET /v1/tables/{name}/access and returns the parsed lists', async () => {
-    const access = { write: ['analytics-writer'], modify: [] };
+  test('getTableAccess issues GET /v1/tables/{name}/access and returns the role-keyed configuration', async () => {
+    const access = {
+      generation: 3,
+      roles: { 'analytics-writer': { privileges: ['write'], rows: null, columns: null } },
+      ineffective_grants: [],
+    };
     fetch.mockResponseOnce(JSON.stringify(access), JSON_HEADERS);
 
     const res = await instance.getTableAccess('events', TOKEN_MOCK);
 
     expect(res).toEqual(expect.objectContaining({ success: true, response: access }));
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/v1/tables/events/access'),
+      expect.stringMatching(/\/v1\/tables\/events\/access$/),
       expect.objectContaining({ method: 'GET' }),
     );
   });
 
-  test('updateTableAccess PUTs only the given lists to /v1/tables/{name}/access', async () => {
-    const access = { write: ['w'] };
-    fetch.mockResponseOnce(JSON.stringify({ write: ['w'], ineffective_grants: [] }), JSON_HEADERS);
+  test('putTableAccessEntry PUTs the whole entry with the role in the query, a slash encoded', async () => {
+    const stored = { ...ACCESS_ENTRY, generation: 4, role: 'team x/1', ineffective_grants: [] };
+    fetch.mockResponseOnce(JSON.stringify(stored), JSON_HEADERS);
 
-    const res = await instance.updateTableAccess('events', access, TOKEN_MOCK);
+    const res = await instance.putTableAccessEntry('events', 'team x/1', ACCESS_ENTRY, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/v1/tables/events/access'),
-      expect.objectContaining({ method: 'PUT', body: JSON.stringify(access) }),
+      expect.stringMatching(/\/v1\/tables\/events\/access\?role=team\+x%2F1$/),
+      expect.objectContaining({ method: 'PUT', body: JSON.stringify(ACCESS_ENTRY) }),
     );
-    expect(res.response).toEqual({ write: ['w'], ineffective_grants: [] });
+    expect(res.response).toEqual(stored);
   });
 
-  test('getRowPolicies issues GET /v1/tables/{name}/row-policies and returns the policies', async () => {
-    const policies = { policies: { 'team-x': { filter: { op: 'eq', args: [] } } } };
-    fetch.mockResponseOnce(JSON.stringify(policies), JSON_HEADERS);
+  test('putTableAccessEntry addresses the everyone grantee through the query, never the path', async () => {
+    fetch.mockResponseOnce(JSON.stringify({}), JSON_HEADERS);
 
-    const res = await instance.getRowPolicies('events', TOKEN_MOCK);
-
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/v1/tables/events/row-policies'),
-      expect.objectContaining({ method: 'GET' }),
-    );
-    expect(res.response).toEqual(policies);
-  });
-
-  test('putRowPolicy PUTs the policy to the role-scoped URL with the role encoded', async () => {
-    const policy = { filter: { op: 'eq', args: [] } } as any;
-    fetch.mockResponseOnce(JSON.stringify(policy), JSON_HEADERS);
-
-    await instance.putRowPolicy('events', 'team x/1', policy, TOKEN_MOCK);
+    await instance.putTableAccessEntry('events', '*', ACCESS_ENTRY, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/v1/tables/events/row-policies/team%20x%2F1'),
-      expect.objectContaining({ method: 'PUT', body: JSON.stringify(policy) }),
+      expect.stringMatching(/\/v1\/tables\/events\/access\?role=(\*|%2A)$/),
+      expect.objectContaining({ method: 'PUT' }),
     );
   });
 
-  test('deleteRowPolicy issues DELETE on the role-scoped URL', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ success: true }));
-
-    await instance.deleteRowPolicy('events', 'team-x', TOKEN_MOCK);
-
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/v1/tables/events/row-policies/team-x'),
-      expect.objectContaining({ method: 'DELETE' }),
-    );
-  });
-
-  test('a failed row-policy write surfaces the failure to the caller', async () => {
+  test('a refused entry write surfaces the failure to the caller', async () => {
     fetch.mockResponseOnce(JSON.stringify({ message: 'region is not a column' }), { status: 422 });
 
-    const res = await instance.putRowPolicy('events', 'team-x', { filter: { op: 'eq', args: [] } } as any, TOKEN_MOCK);
+    const res = await instance.putTableAccessEntry('events', 'team-x', ACCESS_ENTRY, TOKEN_MOCK);
 
     expect(res.success).toBe(false);
     expect(res.status).toBe(422);
+  });
+
+  test('deleteTableAccessEntry issues DELETE with the role and the generation in the query', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+
+    const res = await instance.deleteTableAccessEntry('events', 'team/x', 7, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/v1\/tables\/events\/access\?role=team%2Fx&generation=7$/),
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+    expect(res.success).toBe(true);
+  });
+
+  test('deleteTableAccessEntry returns a 404 as success, because the entry is already gone', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ message: 'no entry' }), { status: 404 });
+
+    expect(await instance.deleteTableAccessEntry('events', 'team-x', 7, TOKEN_MOCK)).toEqual({ success: true });
+  });
+
+  test('deleteTableAccessEntry reports any other failure', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ message: 'stale' }), { status: 409 });
+
+    const res = await instance.deleteTableAccessEntry('events', 'team-x', 7, TOKEN_MOCK);
+
+    expect(res).toEqual(expect.objectContaining({ success: false, status: 409 }));
   });
 });
 
@@ -964,7 +982,13 @@ describe('Server :: AnalyticsDataApi — catalog import', () => {
     fetch.mockResponseOnce(JSON.stringify(preview), JSON_HEADERS);
     const body = new FormData();
 
-    const res = await instance.previewCatalogImport(body, CatalogResolutionPolicy.SKIP_IF_EXISTS, false, TOKEN_MOCK);
+    const res = await instance.previewCatalogImport(
+      body,
+      CatalogResolutionPolicy.SKIP_IF_EXISTS,
+      false,
+      false,
+      TOKEN_MOCK,
+    );
 
     expect(res).toEqual(expect.objectContaining({ success: true, response: preview }));
     expect(fetch).toHaveBeenCalledWith(
@@ -981,13 +1005,46 @@ describe('Server :: AnalyticsDataApi — catalog import', () => {
       headers: { 'content-type': 'application/json' },
     });
 
-    const res = await instance.importCatalog(new FormData(), CatalogResolutionPolicy.FAIL_IF_EXISTS, true, TOKEN_MOCK);
+    const res = await instance.importCatalog(
+      new FormData(),
+      CatalogResolutionPolicy.FAIL_IF_EXISTS,
+      true,
+      false,
+      TOKEN_MOCK,
+    );
 
     expect(res).toEqual(expect.objectContaining({ success: false, status: 409 }));
     expect(fetch).toHaveBeenCalledWith(
       expect.stringMatching(/\/v1\/catalog\/import\?resolution_policy=FAIL_IF_EXISTS&acknowledge_reused_names=true$/),
       expect.anything(),
     );
+  });
+
+  test('previewCatalogImport asks for access only when it is included', async () => {
+    fetch.mockResponseOnce(JSON.stringify({}), JSON_HEADERS);
+
+    await instance.previewCatalogImport(
+      new FormData(),
+      CatalogResolutionPolicy.SKIP_IF_EXISTS,
+      false,
+      true,
+      TOKEN_MOCK,
+    );
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /\/v1\/catalog\/import\/preview\?resolution_policy=SKIP_IF_EXISTS&acknowledge_reused_names=false&include_access=true$/,
+      ),
+      expect.anything(),
+    );
+  });
+
+  test('importCatalog asks for access only when it is included', async () => {
+    fetch.mockResponseOnce(JSON.stringify({}), JSON_HEADERS);
+
+    await instance.importCatalog(new FormData(), CatalogResolutionPolicy.FAIL_IF_EXISTS, false, true, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('&include_access=true'), expect.anything());
   });
 
   describe('table backfill', () => {

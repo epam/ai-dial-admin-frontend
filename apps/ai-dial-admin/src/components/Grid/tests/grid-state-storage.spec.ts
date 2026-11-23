@@ -4,6 +4,7 @@ import { ColumnState, GridApi } from 'ag-grid-community';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GRID_COLUMNS_KEY } from '@/src/components/Grid/constants';
+import { ACTIVITY_ID_COLUMN_ID, EXPANDER_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import {
   applyGridState,
   getColumnsStateFromStorage,
@@ -75,6 +76,28 @@ describe('mergeColumnOrder', () => {
       'name',
       'author',
       FileManagerColumnKey.Actions,
+    ]);
+  });
+
+  test('keeps the audit expander and the Activity ID first even when a stored order moved them', () => {
+    const stored: ColumnState[] = [
+      { colId: 'activityType' },
+      { colId: EXPANDER_COLUMN_CEL_ID },
+      { colId: 'resourceId' },
+      { colId: ACTIVITY_ID_COLUMN_ID },
+    ];
+    const current: ColumnState[] = [
+      { colId: EXPANDER_COLUMN_CEL_ID },
+      { colId: ACTIVITY_ID_COLUMN_ID },
+      { colId: 'activityType' },
+      { colId: 'resourceId' },
+    ];
+
+    expect(mergeColumnOrder(current, stored).map((column) => column.colId)).toEqual([
+      EXPANDER_COLUMN_CEL_ID,
+      ACTIVITY_ID_COLUMN_ID,
+      'activityType',
+      'resourceId',
     ]);
   });
 

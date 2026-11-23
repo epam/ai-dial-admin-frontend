@@ -79,3 +79,50 @@ describe('FieldValue clamp', () => {
     expect(onOverflowChange).toHaveBeenCalledWith(false);
   });
 });
+
+describe('FieldValue overall score threshold', () => {
+  test('puts the above-threshold icon after the value and speaks the result', () => {
+    const { container } = render(
+      <FieldValue raw="0.7" isScoreIndicator={false} threshold={0.6} failedLabel="Failed" />,
+    );
+
+    expect(screen.getByText('0.7')).toBeInTheDocument();
+    expect(screen.getByText('Runs.TestCaseOverallScoreAboveThresholdTooltip')).toHaveClass('sr-only');
+    expect(container.querySelector('svg')).toBeInTheDocument();
+    expect(screen.getByText('0.7').nextElementSibling).toContainElement(container.querySelector('svg'));
+  });
+
+  test('shows the below-threshold result for a lower score, including zero', () => {
+    render(<FieldValue raw="0" isScoreIndicator={false} threshold={0.6} failedLabel="Failed" />);
+
+    expect(screen.getByText('0')).toBeInTheDocument();
+    expect(screen.getByText('Runs.TestCaseOverallScoreBelowThresholdTooltip')).toBeInTheDocument();
+  });
+
+  test.each([[undefined], [null]])('shows the bare value for a threshold of %s', (threshold) => {
+    const { container } = render(
+      <FieldValue raw="0.7" isScoreIndicator={false} threshold={threshold} failedLabel="Failed" />,
+    );
+
+    expect(screen.getByText('0.7')).toBeInTheDocument();
+    expect(container.querySelector('svg')).not.toBeInTheDocument();
+  });
+
+  test('shows the empty value without an icon when there is no score', () => {
+    const { container } = render(
+      <FieldValue raw={null} isScoreIndicator={false} threshold={0.6} failedLabel="Failed" />,
+    );
+
+    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(container.querySelector('svg')).not.toBeInTheDocument();
+  });
+
+  test('shows a non-numeric value as text without an icon', () => {
+    const { container } = render(
+      <FieldValue raw="n/a" isScoreIndicator={false} threshold={0.6} failedLabel="Failed" />,
+    );
+
+    expect(screen.getByText('n/a')).toBeInTheDocument();
+    expect(container.querySelector('svg')).not.toBeInTheDocument();
+  });
+});

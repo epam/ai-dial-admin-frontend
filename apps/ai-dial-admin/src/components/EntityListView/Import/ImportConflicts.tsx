@@ -1,16 +1,18 @@
 'use client';
-import { Dispatch, FC, SetStateAction, useCallback } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useMemo } from 'react';
 
 import { CellValueChangedEvent, ColDef, GridOptions, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 import { RadioGroup, RadioGroupOrientation, RadioButtonWithContent, StepStatus } from '@epam/ai-dial-ui-kit';
 import { toRadioItems } from '@/src/utils/radio-items';
 
+import ClientSecretWarning from '@/src/components/EntityListView/Import/ClientSecretWarning';
 import {
   changeFilesMap,
   generateFileColumnsForImportGrid,
   generateFileRowDataForImportGrid,
   generateAssetColumnsForImportGrid,
   generateAssetRowDataForImportGrid,
+  hasOAuthToolsets,
   isErrorFileNode,
   isErrorPromptNode,
 } from '@/src/components/EntityListView/Import/utils';
@@ -20,6 +22,8 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
+import { ClientSecretColumnOptions } from '@/src/models/import-asset';
+import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion, isVersionlessAssetView } from '@/src/utils/is-view';
 import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
@@ -33,6 +37,8 @@ interface Props {
   setResolution: Dispatch<SetStateAction<string>>;
   setEditedFileMap: Dispatch<SetStateAction<Map<string, FileImportMap>>>;
   setStepsState: (status: StepStatus) => void;
+  /** Toolset JSON import with the unsafe-import flag on: OAUTH toolsets get the warning and a client secret column. */
+  withClientSecret?: boolean;
 }
 
 const ImportConflicts: FC<Props> = ({
@@ -44,6 +50,7 @@ const ImportConflicts: FC<Props> = ({
   setResolution,
   setEditedFileMap,
   setStepsState,
+  withClientSecret,
 }) => {
   const t = useI18n();
 
@@ -54,6 +61,17 @@ const ImportConflicts: FC<Props> = ({
   const fileCount = [...filesMap.values()].reduce((total, value) => total + value.files.length, 0);
   const shouldShowPreview = fileCount > 0;
 
+  const hasClientSecretColumn = useMemo(
+    () => !!withClientSecret && hasOAuthToolsets(filesMap),
+    [withClientSecret, filesMap],
+  );
+  const clientSecretColumn: ClientSecretColumnOptions | undefined = hasClientSecretColumn
+    ? {
+        headerName: t(ImportI18nKey.ClientSecretColumn),
+        getInputLabel: (name) => t(ImportI18nKey.ClientSecretInputLabel, { name }),
+      }
+    : void 0;
+
   const changeFile = useCallback(
     (value: string, data: unknown, field: string) => {
       setEditedFileMap((prev) => changeFilesMap(prev, data as FileImportGridData, field, value, route));
@@ -62,11 +80,17 @@ const ImportConflicts: FC<Props> = ({
   );
 
   const rowData = isAssetImport
-    ? generateAssetRowDataForImportGrid(filesMap, existing as DialPrompt[], undefined, isVersionlessImport)
+    ? generateAssetRowDataForImportGrid(
+        filesMap,
+        existing as DialPrompt[],
+        undefined,
+        isVersionlessImport,
+        hasClientSecretColumn,
+      )
     : generateFileRowDataForImportGrid(filesMap, existing as DialFile[]);
 
   const columnDefs: ColDef[] = isAssetImport
-    ? generateAssetColumnsForImportGrid(changeFile, undefined, undefined, isVersionlessImport)
+    ? generateAssetColumnsForImportGrid(changeFile, undefined, undefined, isVersionlessImport, clientSecretColumn)
     : generateFileColumnsForImportGrid(changeFile);
 
   const rowClassRules: RowClassRules = {
@@ -106,6 +130,11 @@ const ImportConflicts: FC<Props> = ({
         id="conflict-resolution"
         onChange={setResolution}
       />
+      {hasClientSecretColumn && (
+        <div className="mt-4">
+          <ClientSecretWarning isOverride={resolution === ConflictResolutionPolicy.OVERRIDE} />
+        </div>
+      )}
       {shouldShowPreview && (
         <div className="flex flex-col flex-1 min-h-0 mt-4">
           <div>

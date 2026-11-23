@@ -19,7 +19,9 @@ import {
 import { BasicI18nKey, TestSuitesI18nKey, ValidityStatusI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ResponseColumn, TestCaseSchema, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
+import { toTryOutJsonEditorProps } from '@/src/components/TestSuites/utils/tryout-json-editor';
 import CollapsibleSection from './CollapsibleSection';
+import TryOutEventsSection from './TryOutEventsSection';
 
 interface Props {
   isLoading?: boolean;
@@ -116,6 +118,10 @@ const TurnColumnSection: FC<{ turn: TryOutColumnTurnResult; showTurnLabel: boole
     () => (turn.responseBody != null ? JSON.stringify(turn.responseBody, null, 2) : ''),
     [turn.responseBody],
   );
+  const editorProps = useMemo(
+    () => toTryOutJsonEditorProps(turn.responseBody, { wordWrap: 'off' }),
+    [turn.responseBody],
+  );
 
   return (
     <div className="flex flex-col gap-y-4 shrink-0">
@@ -131,14 +137,16 @@ const TurnColumnSection: FC<{ turn: TryOutColumnTurnResult; showTurnLabel: boole
         headerIcon={<CopyButton value={copyText} valueLabel={t(BasicI18nKey.Response)} />}
         growOnOpen={false}
       >
-        <div className="h-64">
+        <div className="h-64 min-h-64">
           <JsonEditor
-            entity={(turn.responseBody ?? null) as object | null}
-            options={{ wordWrap: 'off' }}
+            entity={editorProps.entity}
+            text={editorProps.text}
+            options={editorProps.options}
             readonly={true}
           />
         </div>
       </CollapsibleSection>
+      <TryOutEventsSection streaming={turn.streaming} events={turn.events} />
     </div>
   );
 };

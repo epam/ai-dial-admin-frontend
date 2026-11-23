@@ -36,8 +36,8 @@ When the Trends tab has at least one run, the KPI strip SHALL include four cards
    **Completion Rate of Latest Run** (rate from the latest `test_case_eval_scores` segments;
    loading indicator while the combined eval aggregate is pending)
 2. **Overall Score of Latest Run** (latest `runOrder` overall score, threshold glyph/tooltip when
-   set, delta vs previous run, and the static "Based on completed test cases" subtitle with a
-   calculation-method info control)
+   set, delta vs previous run, and the truncating "Based on <method>" label — "mean of <N> metrics",
+   "weighted mean of <N> metrics" or "specific function" — with an info control)
 3. **Total Runtime of Latest Run** (latest combo total + source/Metrics breakdown)
 4. **Total Cost of Latest Run** (latest combo total + source/Metrics breakdown)
 
@@ -107,9 +107,10 @@ Overall Score Trend plots), formatted to three decimals. The card SHALL:
   threshold (exact threshold counts as above)
 - show a signed delta vs the previous run’s overall score (`+0.12 vs prev.`); hide it when either
   score is missing or the delta is zero (higher is better → green)
-- show the static “Based on completed test cases” subtitle followed by an info control whose tooltip
+- show a “Based on <method>” label (“mean of <N> metrics”, “weighted mean of <N> metrics” or
+  “specific function”), truncated with an ellipsis when it does not fit, in place of any static subtitle, followed by an info control whose tooltip
   describes the overall-score method stored in the latest run’s own suite snapshot, never the suite as
-  configured now (same tooltip as the run Summary card); omit the control when the latest run has no
+  configured now (same tooltip as the run Summary card); omit the name and control when the latest run has no
   suite snapshot
 
 #### Scenario: Calculation method comes from the latest run snapshot
@@ -310,10 +311,10 @@ below the `xl` breakpoint). The card SHALL:
   `Score` and the formatted overall score
 - draw the threshold line from each run’s snapshot `overallScoreThreshold` (including `0`) as 1px
   dashed horizontal segments in the accent-secondary stroke color, with a left-side label
-  `Thld (value)` at the start of the first segment for each distinct threshold value (shortened so
-  the label is not clipped on the last run's short segment; when the label still would not fit
-  inside the last run's segment it is right-aligned to the chart's right edge instead); suppress repeated labels when the same
-  value reappears after a gap or another threshold
+  `Thld (value)` at the start of every horizontal segment, including a segment whose value already
+  appeared earlier (shortened so the label is not clipped on the last run's short segment; when the
+  label still would not fit inside the last run's segment it is right-aligned to the chart's right
+  edge instead)
 - show the full `Threshold (value)` text in a tooltip when a horizontal threshold segment or its label
   is hovered
 - merge neighboring runs that share the same snapshot threshold into one continuous dashed segment
@@ -346,11 +347,11 @@ below the `xl` breakpoint). The card SHALL:
 - **WHEN** a run in the middle of the Trends window has no snapshot `overallScoreThreshold`
 - **THEN** the threshold line has a gap at that run and does not connect across it
 
-#### Scenario: Repeated threshold values are labeled once
+#### Scenario: Repeated threshold values are labeled on each segment
 
 - **WHEN** the Trends window has snapshot thresholds `0.6`, unset, `0.8`, and `0.6`
-- **THEN** all threshold segments remain visible with a gap at the unset run, and only the first
-  segment at each distinct value shows its label (`Threshold (0.6)` and `Threshold (0.8)`)
+- **THEN** all threshold segments remain visible with a gap at the unset run, and each horizontal
+  segment shows its label (`Thld (0.6)`, `Thld (0.8)`, and `Thld (0.6)` again)
 
 #### Scenario: No threshold line when unset
 
@@ -575,12 +576,14 @@ row and Metric Trends. Each card SHALL:
   **Metrics cost** / **Metrics runtime** label, and a total-line label (**Cost** / **Time**)
 - draw one stacked bar per Trends-window run (source/blue under metrics/violet), scaled to a shared
   nice Y ceiling with five external ticks (`$…` for Cost via the shared run-cost formatter; duration
-  via the shared suite run-time formatter)
+  via the Run Summary duration formatter — seconds with one decimal under a minute, then minutes and
+  seconds, then hours and minutes)
 - overlay a total line whose points sit on each stack top (sum of present segments; a run with both
   segments missing is a gap with no bar and no point)
 - load Cost from one-shot `GET /test-suite-runs/{id}/costs` per window run (`avgTestCaseCost` /
   `avgMetricEvalCost`); load Runtime from one `eval_summaries` aggregate grouped by run id
-  (`avg(exec_duration_ms)` / `avg(metric_eval_duration_ms)`)
+  (`sum(exec_duration_ms)` / `sum(metric_eval_duration_ms)`), the same totals the Run Summary Total
+  Runtime card shows
 - label runs under the plot with the shared Trends rotated run-name glyph
 - show a loading indicator while the card’s fetch is in flight with no points yet, and the shared
   empty state when every run lacks figures
@@ -601,10 +604,10 @@ row and Metric Trends. Each card SHALL:
 - **WHEN** a run’s `/costs` payload has no finite averages
 - **THEN** that run has no Cost Trend bar segment and no total-line point
 
-#### Scenario: Runtime averages map to bar segments
+#### Scenario: Runtime totals map to bar segments
 
-- **WHEN** a run’s `eval_summaries` aggregate returns `avg_duration_ms` `100` and
-  `avg_metric_eval_duration_ms` `40`
+- **WHEN** a run’s `eval_summaries` aggregate returns `total_duration_ms` `100` and
+  `total_metric_eval_duration_ms` `40`
 - **THEN** that run’s Runtime Trend bar stacks source `100` under metrics `40` and the total line
   point is `140`
 

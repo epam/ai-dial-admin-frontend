@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ConfirmationPopup, Switch, Badge, BadgeColor, BadgeVariant, Tooltip } from '@epam/ai-dial-ui-kit';
+import { ConfirmationPopup, Switch } from '@epam/ai-dial-ui-kit';
 import {
   CellClickedEvent,
   ColDef,
@@ -45,14 +45,7 @@ import { testCaseFromTryOutRow } from '@/src/components/TestSuites/utils/tryout-
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { getDuplicateOperation, getRemoveOperation, getTryOutOperation } from '@/src/constants/grid-columns/actions';
-import {
-  BasicI18nKey,
-  ButtonsI18nKey,
-  DatasetsI18nKey,
-  DeleteI18nKey,
-  TabsI18nKey,
-  TestSuitesI18nKey,
-} from '@/src/constants/i18n';
+import { BasicI18nKey, ButtonsI18nKey, DeleteI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useDatasetExport } from '@/src/hooks/use-dataset-export';
@@ -72,6 +65,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import DatasetBanner from './DatasetBanner';
 import HeaderButtons from './Header';
+import PrivateDatasetTag from './PrivateDatasetTag';
 import RunCondition from './RunCondition/RunCondition';
 import { useIncludedIds } from './RunCondition/use-included-ids';
 import { GridRowType } from '@/src/types/grid-row-type';
@@ -721,11 +715,7 @@ const TestCasesList: FC<Props> = ({
       ? includedIds.size
       : lastIncludedCountRef.current;
 
-  const datasetTag = isPrivate && (
-    <Tooltip tooltip={t(TestSuitesI18nKey.TestCasesPrivateTagTooltip)} triggerClassName="flex items-center">
-      <Badge label={t(DatasetsI18nKey.VisibilityPrivate)} variant={BadgeVariant.Filled} color={BadgeColor.Violet} />
-    </Tooltip>
-  );
+  const datasetTag = isPrivate && <PrivateDatasetTag />;
 
   const isPublicDatasetAttached = !isPrivate && !!dataset?.visibility;
 

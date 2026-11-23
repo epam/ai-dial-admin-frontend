@@ -11,6 +11,17 @@ describe('Utils :: analytics :: extractPlaceholders', () => {
     expect(extractPlaceholders('{{ members }}')).toEqual(['members']);
   });
 
+  test('reads a placeholder carrying the json suffix as a use of its name', () => {
+    expect(extractPlaceholders('{"members": {{members:json}}, "note": "{{ note:json }}"}')).toEqual([
+      'members',
+      'note',
+    ]);
+  });
+
+  test('reports a name used in both forms once', () => {
+    expect(extractPlaceholders('{{payload}} and {{payload:json}}')).toEqual(['payload']);
+  });
+
   test('reports a repeated placeholder once', () => {
     expect(extractPlaceholders('{{a}} then {{a}}')).toEqual(['a']);
   });

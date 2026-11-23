@@ -15,6 +15,7 @@ import {
   TEST_CASE_TRY_OUT_URL,
   TEST_CASE_URL,
   TEST_SUITES_RUNS_URL,
+  TEST_SUITE_RUNS_CONFIG_URL,
   TEST_SUITES_URL,
   TEST_SUITE_DETACH_URL,
   TEST_SUITE_METRICS_URL,
@@ -65,11 +66,27 @@ describe('Server :: TestSuiteApi', () => {
   test('Should calls runTestSuite and return list', async () => {
     fetch.mockResponseOnce(JSON.stringify([mockTestSuite]));
 
-    await instance.runTestSuite(TOKEN_MOCK, 'id', 1);
+    await instance.runTestSuite(TOKEN_MOCK, 'id', { numberOfRuns: 1, concurrencyLevel: 2 });
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${TEST_SUITE_RUN_URL('id')}`,
-      expect.objectContaining({ method: 'POST' }),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          runConfig: { numberOfRuns: 1, execution: { concurrencyLevel: 2 } },
+        }),
+      }),
+    );
+  });
+
+  test('Should call getTestSuiteRunConfig', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ maxConcurrencyLevel: 5 }));
+
+    await instance.getTestSuiteRunConfig(TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_RUNS_CONFIG_URL}`,
+      expect.objectContaining({ method: 'GET' }),
     );
   });
 

@@ -26,7 +26,11 @@ const AllowedValuesField: FC<Props> = ({ index, values, disabled, onChange }) =>
     // The popup control carries no name of its own, and there is one per output row, so the group names
     // which row's domain this is — the same way the other row editors name their select cells.
     <SaveValidationContextProvider>
-      <div role="group" aria-label={`${t(AnalyticsPipelinesI18nKey.OutputValues)} ${index + 1}`} className="flex-1">
+      <div
+        role="group"
+        aria-label={`${t(AnalyticsPipelinesI18nKey.OutputValues)} ${index + 1}`}
+        className="min-w-0 flex-1"
+      >
         <Multiselect
           className="min-w-[180px]"
           elementId={`transform-output-values-${index}`}

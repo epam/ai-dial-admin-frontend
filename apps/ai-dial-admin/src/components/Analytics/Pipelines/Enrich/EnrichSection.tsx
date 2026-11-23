@@ -140,6 +140,23 @@ const EnrichSection: FC<Props> = ({ form }) => {
             invalid={!form.isSampleFractionValid}
             onChange={(v) => onAdvancedChange({ sample_fraction: v ? Number(v) : undefined })}
           />
+
+          {trigger?.kind === TriggerKind.Group && (
+            <Input
+              id="pipeline-input-token-budget"
+              containerClassName={controlClassName}
+              wrapperClassName={NUMBER_INPUT_WIDTH}
+              type="number"
+              min={0}
+              step={1}
+              labelProps={{ label: t(AnalyticsPipelinesI18nKey.InputTokenBudget) }}
+              value={draft.advanced?.input_token_budget == null ? '' : String(draft.advanced.input_token_budget)}
+              caption={t(AnalyticsPipelinesI18nKey.InputTokenBudgetCaption)}
+              error={form.isInputTokenBudgetValid ? undefined : t(AnalyticsPipelinesI18nKey.InputTokenBudgetInvalid)}
+              invalid={!form.isInputTokenBudgetValid}
+              onChange={(v) => onAdvancedChange({ input_token_budget: v ? Number(v) : undefined })}
+            />
+          )}
         </div>
       </Accordion>
     </div>

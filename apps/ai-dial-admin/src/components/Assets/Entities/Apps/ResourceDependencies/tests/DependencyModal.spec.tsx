@@ -141,6 +141,31 @@ describe('DependencyModal', () => {
       expect(submit()).toBeDisabled();
     });
 
+    test('rejects Write on an applications target, keeps it selected, and clears once the path changes', async () => {
+      renderModal();
+
+      fill('docs', 'applications/public/x/');
+      await user.click(writeBox());
+
+      expect(screen.getByRole('alert').textContent).toBe(ResourceDependenciesI18nKey.WriteNotAllowed);
+      expect(writeBox()).toBeChecked();
+      expect(submit()).toBeDisabled();
+
+      setText(pathInput(), 'files/public/x/');
+
+      expect(screen.queryByRole('alert')).toBeNull();
+      expect(submit()).toBeEnabled();
+    });
+
+    test('accepts Read alone on a toolsets target', () => {
+      renderModal();
+
+      fill('docs', 'toolsets/public/x/');
+
+      expect(screen.queryByRole('alert')).toBeNull();
+      expect(submit()).toBeEnabled();
+    });
+
     test('rejects a link id another dependency already uses', async () => {
       renderModal({ otherLinkIds: ['docs'] });
 

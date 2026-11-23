@@ -3,7 +3,7 @@ import { FC, useState } from 'react';
 import { ColDef, GetRowIdParams, ValueFormatterParams, ValueGetterParams } from 'ag-grid-community';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ResultArea from '@/src/components/Analytics/QueryBuilder/Result/ResultArea';
 import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
@@ -48,6 +48,9 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     );
   },
 }));
+
+const getTable = vi.hoisted(() => vi.fn());
+vi.mock('@/src/app/[lang]/tables/actions', () => ({ getTable }));
 
 const formatWith = (col: ColDef | undefined, value: unknown): string =>
   (col?.valueFormatter as (p: ValueFormatterParams) => string)({ value } as ValueFormatterParams);
@@ -130,18 +133,76 @@ const renderArea = (overrides: Partial<AreaProps> = {}) => {
 };
 
 describe('QueryBuilder :: ResultArea', () => {
+  beforeEach(() => localStorage.setItem('query-builder-chart-panel-open', 'true'));
+
   test('shows the pre-run empty state', () => {
     renderArea();
-    expect(screen.getByText('QueryBuilder.ResultsEmptyDescription')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.ResultsReadyTitle')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.ResultsReadyDescription')).toBeInTheDocument();
   });
 
-  test('renders stat tiles and the grid for a result', () => {
+  test('says the query changed instead of the row count when the shown result is out of date', () => {
+    renderArea({ result: AGG_RESULT, meta: AGG_META, isQueryChanged: true });
+
+    expect(screen.getByRole('status')).toHaveTextContent(/^QueryBuilder.ResultsQueryChanged$/);
+    expect(screen.getByText('grid rows: 2')).toBeInTheDocument();
+  });
+
+  test.each([
+    ['dims an out-of-date result', true, true],
+    ['leaves a current result at full strength', false, false],
+  ])('%s', (_case, isQueryChanged, isDimmed) => {
+    renderArea({ result: AGG_RESULT, meta: AGG_META, isQueryChanged });
+
+    expect(!!screen.getByText('grid rows: 2').closest('.opacity-60')).toBe(isDimmed);
+  });
+
+  test('reports the returned rows out of the total and renders the grid for a result', () => {
     renderArea({ result: AGG_RESULT, meta: AGG_META });
 
-    expect(screen.getByText('QueryBuilder.RowsReturned')).toBeInTheDocument();
-    expect(screen.getByText('QueryBuilder.Fields')).toBeInTheDocument();
-    expect(screen.getByText('QueryBuilder.Total')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(/^QueryChips.ResultsCountOfTotal$/);
     expect(screen.getByText('grid rows: 2')).toBeInTheDocument();
+  });
+
+  test('reports the returned rows alone when the response has no total', () => {
+    renderArea({ result: { ...AGG_RESULT, totalCount: undefined }, meta: AGG_META });
+
+    expect(screen.getByRole('status')).toHaveTextContent(/^QueryChips.ResultsCount$/);
+  });
+
+  test('reports the row count for a result with no rows', () => {
+    renderArea({ result: { columns: [], rows: [] }, meta: ROW_META });
+
+    expect(screen.getByRole('status')).toHaveTextContent(/^QueryChips.ResultsCount$/);
+  });
+
+  test.each([
+    ['before a run', {}],
+    ['while a first run is in flight', { isRunning: true }],
+  ])('reports no row count %s', (_case, flags) => {
+    renderArea(flags);
+
+    expect(screen.getByRole('radiogroup', { name: 'QueryBuilder.ResultViewSwitcher' })).toBeInTheDocument();
+    expect(screen.queryByText(/QueryChips.ResultsCount/)).toBeNull();
+  });
+
+  test('renders the actions slot beside the export', () => {
+    renderArea({
+      result: AGG_RESULT,
+      meta: AGG_META,
+      onExportCsv: vi.fn(),
+      actions: <button type="button">Save query</button>,
+    });
+
+    expect(screen.getByRole('button', { name: 'Save query' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'QueryBuilder.ExportCsv' })).toBeInTheDocument();
+  });
+
+  test('renders the actions slot before a run, when there is nothing to export', () => {
+    renderArea({ onExportCsv: vi.fn(), actions: <button type="button">Save query</button> });
+
+    expect(screen.getByRole('button', { name: 'Save query' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'QueryBuilder.ExportCsv' })).toBeNull();
   });
 
   test('gives identical rows distinct ids, so the grid shows every row the run returned', () => {
@@ -163,11 +224,6 @@ describe('QueryBuilder :: ResultArea', () => {
     expect(value).toBe('claude');
   });
 
-  test('omits the Total tile when the response has no total', () => {
-    renderArea({ result: { ...AGG_RESULT, totalCount: undefined }, meta: AGG_META });
-    expect(screen.queryByText('QueryBuilder.Total')).not.toBeInTheDocument();
-  });
-
   test('empty result shows the no-rows state', () => {
     renderArea({ result: { columns: [], rows: [] }, meta: ROW_META });
     expect(screen.getByText('QueryBuilder.NoRows')).toBeInTheDocument();
@@ -179,8 +235,8 @@ describe('QueryBuilder :: ResultArea', () => {
 
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
-    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartXAxis/ })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartYAxis/ })).toBeInTheDocument();
   });
 
   test('chart view shows a hint for a grouped result with no aggregate columns', async () => {
@@ -188,6 +244,18 @@ describe('QueryBuilder :: ResultArea', () => {
     renderArea({
       result: { columns: ['event_id', 'project_id'], rows: [{ event_id: '1', project_id: 'p' }] },
       meta: { ...AGG_META, dimensionColumns: ['event_id', 'project_id'], aggregateColumns: [] },
+    });
+
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
+
+    expect(screen.getByText('QueryBuilder.ChartNoValueColumn')).toBeInTheDocument();
+  });
+
+  test('chart view shows the no-value-column hint for an ungrouped total that is not a number', async () => {
+    const user = userEvent.setup();
+    renderArea({
+      result: { columns: ['latest'], rows: [{ latest: 'n/a' }] },
+      meta: { ...AGG_META, dimensionColumns: [], aggregateColumns: ['latest'] },
     });
 
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
@@ -210,8 +278,8 @@ describe('QueryBuilder :: ResultArea', () => {
 
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
 
-    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartXAxis' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'QueryBuilder.ChartYAxis' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartXAxis/ })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /^QueryBuilder.ChartYAxis/ })).toBeInTheDocument();
   });
 
   test('chart view shows the no-value-column hint for a fallback SQL result', async () => {
@@ -356,5 +424,57 @@ describe('QueryBuilder :: ResultArea — Export CSV', () => {
     await user.hover(screen.getByRole('button', { name: EXPORT_NAME }));
 
     expect((await screen.findByRole('tooltip')).textContent).toBe('QueryBuilder.ExportCsvSqlHint');
+  });
+});
+
+describe('QueryBuilder :: ResultArea :: access hint', () => {
+  const EMPTY = { columns: [], rows: [] };
+  const restricted = (isRestricted?: boolean) => ({
+    success: true,
+    response: { permissions: { rows_restricted: isRestricted } },
+  });
+
+  test('says no rows match the access when the source reports its rows restricted', async () => {
+    getTable.mockResolvedValue(restricted(true));
+    renderArea({ result: EMPTY, meta: { ...ROW_META, source: 'events' } });
+
+    expect(await screen.findByText('QueryBuilder.NoRowsForAccess')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.NoRows')).toBeInTheDocument();
+    expect(getTable).toHaveBeenCalledExactlyOnceWith('events');
+  });
+
+  test.each([
+    ['is not restricted', () => getTable.mockResolvedValue(restricted(false))],
+    ['omits the flag', () => getTable.mockResolvedValue(restricted())],
+    ['cannot be read', () => getTable.mockResolvedValue({ success: false })],
+    ['fails to answer', () => getTable.mockRejectedValue(new Error('down'))],
+  ])('keeps the plain empty state when the source %s', async (_name, arrange) => {
+    getTable.mockClear();
+    arrange();
+    renderArea({ result: EMPTY, meta: { ...ROW_META, source: 'events' } });
+
+    await act(async () => {});
+
+    expect(screen.getByText('QueryBuilder.NoRows')).toBeInTheDocument();
+    expect(screen.queryByText('QueryBuilder.NoRowsForAccess')).not.toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.NoRowsDescription')).toBeInTheDocument();
+  });
+
+  test('asks nothing for a SQL run, which names no source', async () => {
+    getTable.mockClear();
+    renderArea({ result: EMPTY, meta: SQL_FALLBACK_META });
+
+    await act(async () => {});
+
+    expect(getTable).not.toHaveBeenCalled();
+  });
+
+  test('asks nothing for a result that has rows', async () => {
+    getTable.mockClear();
+    renderArea({ result: AGG_RESULT, meta: { ...AGG_META, source: 'events' } });
+
+    await act(async () => {});
+
+    expect(getTable).not.toHaveBeenCalled();
   });
 });

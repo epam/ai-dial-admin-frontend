@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
-import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
+import { SESSION_DETAIL_PANELS, UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
+import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import { SessionsTraceI18nKey } from '@/src/constants/i18n';
 import {
   SessionDetailRow,
@@ -12,13 +13,15 @@ import {
 } from '@/src/models/analytics/sessions-trace';
 import {
   sessionTitle,
-  feedbackByResponseId,
   feedbackRowCounts,
   isFeedbackContested,
   isFeedbackPartial,
   isFeedbackReRated,
   resolveSessionField,
+  roleScopedPanels,
+  sessionRatingFigures,
 } from '@/src/utils/analytics/session-detail-fields';
+import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 
 const RECORD: SessionDetailRow = {
   client_session_id: 'Lrr0e6L5bpTND3IY_dN0_',
@@ -291,19 +294,62 @@ describe('isFeedbackPartial', () => {
     expect(isFeedbackPartial(rows, 1)).toBe(false);
   });
 
-  test('an absent total cannot be judged partial', () => {
-    expect(isFeedbackPartial(rows, null)).toBe(false);
+  test('an absent total means the list came back full, so it is partial', () => {
+    expect(isFeedbackPartial(rows, null)).toBe(true);
+  });
+
+  test('an empty list is never partial', () => {
+    expect(isFeedbackPartial([], null)).toBe(false);
   });
 });
 
-describe('feedbackByResponseId', () => {
-  test('keys each row by its response id', () => {
-    const row = feedbackRow({ response_id: 'resp-1' });
+describe('sessionRatingFigures', () => {
+  test('reads the counts composed onto the session record', () => {
+    const record = { ...RECORD, rating_up: 2, rating_down: 1, provable_down: 1, captured_form: 0, rate_events: 3 };
 
-    expect(feedbackByResponseId([row]).get('resp-1')).toBe(row);
+    expect(sessionRatingFigures(record)).toEqual({
+      rating_up: 2,
+      rating_down: 1,
+      provable_down: 1,
+      captured_form: 0,
+      rate_events: 3,
+    });
   });
 
-  test('leaves out a row that names no response', () => {
-    expect(feedbackByResponseId([feedbackRow({ response_id: null }), feedbackRow({ response_id: '' })]).size).toBe(0);
+  test('states zero for a session the rating enrichment has no row for', () => {
+    const record = { ...RECORD, rating_up: 0, rating_down: 0, provable_down: 0, captured_form: 0, rate_events: 0 };
+
+    expect(sessionRatingFigures(record)).toMatchObject({ rating_up: 0, rating_down: 0 });
+  });
+
+  test('reports no figures where the schema has no rating enrichment', () => {
+    const unresolved = { ...RECORD, rating_up: null, rating_down: null };
+
+    expect(sessionRatingFigures(unresolved)).toBeNull();
+    expect(sessionRatingFigures(RECORD)).toBeNull();
+  });
+});
+
+describe('roleScopedPanels', () => {
+  const panels = [
+    {
+      ...SESSION_DETAIL_PANELS[0],
+      fields: [
+        { labelKey: 'cost', column: SessionsField.TotalPrice },
+        { labelKey: 'turns', column: SessionsField.TurnCount },
+        { labelKey: 'tokens', column: SessionsField.PromptTokens },
+        { labelKey: 'blank' },
+      ],
+    },
+  ];
+  const labelsOf = (source: SessionsSource) =>
+    roleScopedPanels(panels, source)[0].fields.map(({ labelKey }) => labelKey);
+
+  test('keeps every field while each role is bound', () => {
+    expect(labelsOf(defaultSessionsSource())).toEqual(['cost', 'turns', 'tokens', 'blank']);
+  });
+
+  test('drops the cost and turns figures when their roles are unbound', () => {
+    expect(labelsOf({ ...defaultSessionsSource(), cost: null, turns: null })).toEqual(['tokens', 'blank']);
   });
 });

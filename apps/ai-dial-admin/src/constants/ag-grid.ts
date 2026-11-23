@@ -27,6 +27,7 @@ export const CHECKBOX_COLUMN_CEL_ID = 'checkboxColumn';
 export const DRAGGABLE_COLUMN_CEL_ID = 'draggableColumn';
 export const RADIO_COLUMN_CEL_ID = 'radioColumn';
 export const EXPANDER_COLUMN_CEL_ID = 'expanderColumn';
+export const ACTIVITY_ID_COLUMN_ID = 'activityId';
 
 const UTILITY_COLUMN_WIDTH = 32;
 

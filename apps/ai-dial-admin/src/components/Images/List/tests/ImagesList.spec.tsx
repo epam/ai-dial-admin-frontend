@@ -29,6 +29,12 @@ describe('ImagesList', () => {
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Columns })).toBeInTheDocument();
   });
 
+  test('renders an image name as a link to its details page', async () => {
+    renderList([{ id: 'img-1', name: 'img' } as Image]);
+
+    expect(await screen.findByRole('link', { name: 'img' })).toHaveAttribute('href');
+  });
+
   test('hides the columns toggle when there are no images', () => {
     renderList();
 

@@ -17,6 +17,7 @@ import {
   GlobalSettings,
   RateLimitSchedule as RateLimitScheduleModel,
   SpendingLimits as SpendingLimitsModel,
+  SystemPropertiesTabStore,
 } from '@/src/models/system-properties';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -25,7 +26,11 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { ENTITY_VIEW_CLASS_NAME, ENTITY_VIEW_SCROLL_CLASS_NAME } from '@/src/constants/main-layout';
 import { DEFAULT_SPENDING_LIMITS } from './constants';
 import Header from './Header';
+import { useEnrichmentRoutes } from './hooks/use-enrichment-routes';
+import { useSessionsSource } from './hooks/use-sessions-source';
 import RateLimitSchedule from './RateLimitSchedule';
+import EnrichmentRoutes from './EnrichmentRoutes';
+import SessionsSource from './SessionsSource';
 import SpendingLimits from './SpendingLimits';
 import { isRateLimitScheduleValid } from './utils/rate-limit-schedule';
 import { isDefaultCostObjectValid } from './utils/spending-limits';
@@ -37,9 +42,16 @@ interface Props {
   doesSettingsExist: boolean;
   /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
   optionWarnings?: EntitiesI18nKey[];
+  isAnalyticsEnabled?: boolean;
 }
 
-const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSettingsExist, optionWarnings }) => {
+const SystemProperties: FC<Props> = ({
+  interceptors,
+  globalSettings,
+  doesSettingsExist,
+  optionWarnings,
+  isAnalyticsEnabled,
+}) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -59,6 +71,11 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
     (currentSettings?.spendingLimits ?? DEFAULT_SPENDING_LIMITS).defaultCostObject,
   );
   const isScheduleValid = isRateLimitScheduleValid(currentSettings?.rateLimitSchedule);
+  const isSessionsSourceTab = activeTab === EntityViewTab.SessionsSource;
+  const sessionsSource = useSessionsSource(!!isAnalyticsEnabled && isSessionsSourceTab);
+  const isSessionsSourceInvalid = !sessionsSource.isLoading && !sessionsSource.isComplete;
+  const isEnrichmentRoutesTab = activeTab === EntityViewTab.EnrichmentRoutes;
+  const enrichmentRoutes = useEnrichmentRoutes(!!isAnalyticsEnabled && isEnrichmentRoutesTab);
 
   // Reset clears registered fields, so re-register even if the value did not change.
   useEffect(() => {
@@ -129,6 +146,23 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
     setCurrentSettings(globalSettings);
   }, [globalSettings]);
 
+  const tabStores: Partial<Record<EntityViewTab, SystemPropertiesTabStore>> = {
+    [EntityViewTab.SessionsSource]: {
+      isChanged: sessionsSource.isChanged,
+      isDiscardable: sessionsSource.isDiscardable,
+      disableSave: !sessionsSource.isComplete,
+      onSave: sessionsSource.onSave,
+      onDiscard: sessionsSource.onDiscard,
+    },
+    [EntityViewTab.EnrichmentRoutes]: {
+      isChanged: enrichmentRoutes.isChanged,
+      disableSave: !enrichmentRoutes.isValid,
+      onSave: enrichmentRoutes.onSave,
+      onDiscard: enrichmentRoutes.onDiscard,
+    },
+  };
+  const activeStore = tabStores[activeTab] ?? { isChanged, onSave, onDiscard };
+
   const changeTab = useCallback((tab: string) => {
     setActiveTab(tab as EntityViewTab);
   }, []);
@@ -136,11 +170,16 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
   return (
     <div className={ENTITY_VIEW_CLASS_NAME}>
       <Header
-        isChanged={isChanged}
+        isChanged={activeStore.isChanged}
+        isDiscardable={activeStore.isDiscardable}
         isScheduleValid={isScheduleValid}
         isCostObjectInvalid={isCostObjectInvalid}
-        onSave={onSave}
-        onDiscard={onDiscard}
+        isSessionsSourceInvalid={isSessionsSourceInvalid}
+        isEnrichmentRoutesInvalid={!enrichmentRoutes.isValid}
+        isAnalyticsEnabled={isAnalyticsEnabled}
+        disableSave={activeStore.disableSave}
+        onSave={activeStore.onSave}
+        onDiscard={activeStore.onDiscard}
         activeTab={activeTab}
         onChangeTab={changeTab}
       />
@@ -165,6 +204,20 @@ const SystemProperties: FC<Props> = ({ interceptors, globalSettings, doesSetting
             onChangeSpendingLimits={changeSpendingLimits}
           />
         )}
+        {isAnalyticsEnabled && isSessionsSourceTab && (
+          <SessionsSource
+            setting={sessionsSource.setting}
+            tables={sessionsSource.tables}
+            fields={sessionsSource.fields}
+            isLoading={sessionsSource.isLoading}
+            isUnsaved={sessionsSource.isUnsaved}
+            isUsingDefaults={sessionsSource.isUsingDefaults}
+            isDefaultTableMissing={sessionsSource.isDefaultTableMissing}
+            onChangeBaseTable={sessionsSource.onChangeBaseTable}
+            onChangeRole={sessionsSource.onChangeRole}
+          />
+        )}
+        {isAnalyticsEnabled && isEnrichmentRoutesTab && <EnrichmentRoutes routes={enrichmentRoutes} />}
       </div>
     </div>
   );

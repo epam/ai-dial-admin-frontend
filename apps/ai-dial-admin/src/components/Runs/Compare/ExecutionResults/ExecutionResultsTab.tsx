@@ -15,7 +15,7 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Spinner } from '@epam/ai-dial-ui-kit';
 
-import { getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
+import { executeStructuredQuery, getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ColumnWidths } from '@/src/components/Grid/models';
 import DisplayPanel from '@/src/components/Runs/Compare/ExecutionResults/DisplayPanel';
@@ -36,7 +36,14 @@ import {
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { applyCompareColumnMove } from '@/src/components/Runs/Compare/ExecutionResults/utils/compare-column-blocks';
 import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
+import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
 import { CompareRun, ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
+import {
+  attachTestCaseScores,
+  buildTestCaseScoreLookup,
+  buildTestCaseScoresQuery,
+  parseTestCaseScores,
+} from '@/src/components/Runs/utils/test-case-scores';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { mapGridColToPivotField } from '@/src/components/Runs/View/RowDetails/map-grid-col-to-pivot-field';
 import {
@@ -70,7 +77,8 @@ const loadRunResults = async (runId: string) => {
   if (!run) {
     return null;
   }
-  return getTestCaseRunResults(RESULT_FILTERS(run));
+  const results = await getTestCaseRunResults(RESULT_FILTERS(run));
+  return results === null ? null : { threshold: run.suiteSnapshot?.overallScoreThreshold, content: results.content };
 };
 
 const ExecutionResultsTab: FC<Props> = ({
@@ -101,6 +109,9 @@ const ExecutionResultsTab: FC<Props> = ({
     columnWidths,
     results,
     comparedResults,
+    testCaseScores,
+    primaryThreshold,
+    comparedThreshold,
   } = executionResultsState;
 
   const panelColDefsRef = useRef(panelColDefs);
@@ -125,7 +136,10 @@ const ExecutionResultsTab: FC<Props> = ({
           setHasLoadError(true);
           return;
         }
-        setExecutionResultsState({ results: resultsResponse?.content || [] });
+        setExecutionResultsState({
+          results: resultsResponse.content || [],
+          primaryThreshold: resultsResponse.threshold,
+        });
       })
       .catch(() => {
         if (!isCancelled) {
@@ -152,7 +166,10 @@ const ExecutionResultsTab: FC<Props> = ({
           setHasLoadError(true);
           return;
         }
-        setExecutionResultsState({ comparedResults: resultsResponse?.content || [] });
+        setExecutionResultsState({
+          comparedResults: resultsResponse.content || [],
+          comparedThreshold: resultsResponse.threshold,
+        });
       })
       .catch(() => {
         if (!isCancelled) {
@@ -165,11 +182,41 @@ const ExecutionResultsTab: FC<Props> = ({
     };
   }, [comparedRunId, comparedResults, setExecutionResultsState]);
 
+  useEffect(() => {
+    if (testCaseScores !== null) {
+      return;
+    }
+
+    let isCancelled = false;
+    const loadScores = async () => {
+      try {
+        const result = await executeStructuredQuery(buildTestCaseScoresQuery([primaryRunId, comparedRunId]));
+        if (!isCancelled) setExecutionResultsState({ testCaseScores: parseTestCaseScores(result) });
+      } catch {
+        if (!isCancelled) setExecutionResultsState({ testCaseScores: [] });
+      }
+    };
+    void loadScores();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [primaryRunId, comparedRunId, testCaseScores, setExecutionResultsState]);
+
   const mergedRowData = useMemo(() => {
-    if (results === null || comparedResults === null) return null;
-    const merged = mergeByTestCaseId(results, comparedResults);
+    if (results === null || comparedResults === null || testCaseScores === null) return null;
+    const lookup = buildTestCaseScoreLookup(testCaseScores);
+    const merged = mergeByTestCaseId(
+      attachTestCaseScores(results, lookup, primaryRunId),
+      attachTestCaseScores(comparedResults, lookup, comparedRunId),
+    );
     return onlyMatchingTestCases ? merged.filter(isMatchedCompareRow) : merged;
-  }, [results, comparedResults, onlyMatchingTestCases]);
+  }, [results, comparedResults, testCaseScores, primaryRunId, comparedRunId, onlyMatchingTestCases]);
+
+  const thresholds = useMemo(
+    () => ({ [CompareRunSlot.Primary]: primaryThreshold, [CompareRunSlot.Secondary]: comparedThreshold }),
+    [primaryThreshold, comparedThreshold],
+  );
 
   const metricsSchema = useMemo(() => {
     if (!mergedRowData) return {};
@@ -186,8 +233,9 @@ const ExecutionResultsTab: FC<Props> = ({
       hideHighlights,
       metricsSchema,
       runs,
+      thresholds,
     });
-  }, [mergedRowData, errorText, t, hideHighlights, metricsSchema, runs]);
+  }, [mergedRowData, errorText, t, hideHighlights, metricsSchema, runs, thresholds]);
 
   const onCellClicked = useCallback(
     (event: CellClickedEvent<CompareAnalyticsRow>) => {
@@ -415,7 +463,7 @@ const ExecutionResultsTab: FC<Props> = ({
     }
   }, [isGridReady, filterModel, displayColDefs]);
 
-  const isCompareDataReady = results !== null && comparedResults !== null;
+  const isCompareDataReady = results !== null && comparedResults !== null && testCaseScores !== null;
 
   if (hasLoadError) {
     return <p className="text-secondary dial-small-text">{t(RunsI18nKey.LoadError)}</p>;

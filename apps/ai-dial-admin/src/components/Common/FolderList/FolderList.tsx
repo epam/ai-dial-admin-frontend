@@ -12,7 +12,6 @@ import { RuleFolderContextType } from '@/src/context/RuleFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { Asset } from '@/src/models/dial/deployment-asset';
-import { isFileRootPath } from '@/src/utils/files/root-folder';
 import { useScrollSelectedFolder } from '@/src/hooks/use-scroll-selected-folder';
 import { isUnitFolder } from '@/src/utils/org-units/units';
 
@@ -20,27 +19,22 @@ interface Props {
   disableAutoFetch?: boolean;
   initialPath?: string;
   context?: () => AssetsFolderContextReader<AssetListItem> | RuleFolderContextType;
-  /** Roots the empty-state auto-fetch loads — both buckets for dual-bucket views (see `getRootFolders`). */
-  rootPaths?: string[];
 }
 
-const DEFAULT_ROOT_PATHS = [`${ROOT_FOLDER}/`];
+const ROOT_PATH = `${ROOT_FOLDER}/`;
 
 // Expansion is owned by the folder context (`toggleFolder` runs from `onItemClick`). A handler must
 // still be passed: its presence is what makes the tree controlled, and its own toggle is discarded
 // unless the context is a rule folder context, which applies caret expansion itself.
 const IGNORE_TREE_EXPANSION_CHANGE = () => undefined;
 
-const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPaths = DEFAULT_ROOT_PATHS }) => {
+const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch }) => {
   const t = useI18n();
   const folderContext = context?.();
-  const autoFetchedRootsKeyRef = useRef<string | undefined>(undefined);
-  const rootPathsKey = rootPaths.join('|');
+  const hasAutoFetchedRef = useRef(false);
   const scrollToFolder = useScrollSelectedFolder();
 
-  const folderData = useMemo(() => {
-    return folderContext?.files?.filter((node) => !isFileRootPath(node.path));
-  }, [folderContext]);
+  const folderData = folderContext?.files;
 
   useEffect(() => {
     const context = folderContext as RuleFolderContextType;
@@ -51,21 +45,14 @@ const FolderList: FC<Props> = ({ context, initialPath, disableAutoFetch, rootPat
       !disableAutoFetch &&
       !initialPath &&
       (folderContext?.files == null || folderContext?.files?.length === 0) &&
-      autoFetchedRootsKeyRef.current !== rootPathsKey
+      !hasAutoFetchedRef.current
     ) {
       // `folderContext` changes with every fetch (in-flight flag, failure), and Next.js runs server
       // actions serially, so re-fetching on each change queues duplicates and retries a failure forever.
-      autoFetchedRootsKeyRef.current = rootPathsKey;
-      // Only the assets context has dual-bucket views (Applications/Toolsets) whose empty-state
-      // fetch takes several roots at once; a rule folder always has a single root.
-      const assetsContext = folderContext as AssetsFolderContextReader<AssetListItem> | undefined;
-      if (rootPaths.length > 1 && assetsContext) {
-        assetsContext.fetchFiles(rootPaths);
-      } else {
-        folderContext?.fetchFiles(rootPaths[0]);
-      }
+      hasAutoFetchedRef.current = true;
+      folderContext?.fetchFiles(ROOT_PATH);
     }
-  }, [folderContext, disableAutoFetch, initialPath, rootPaths, rootPathsKey, scrollToFolder]);
+  }, [folderContext, disableAutoFetch, initialPath, scrollToFolder]);
 
   // `context` is typed via `AssetsFolderContextReader`/`RuleFolderContextType`, neither of which
   // exposes `toggleFolder` at the type level: the former omits it because it's the one member that

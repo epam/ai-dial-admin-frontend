@@ -1,18 +1,7 @@
 import { PublicationStatus } from '@/src/models/dial/publications';
 import { ResourceType } from '@/src/types/resource-type';
 
-/** DIAL Core publication operation endpoints (`core.client.url` + path). */
-export const CORE_PUBLICATION_LIST_URL = 'v1/ops/publication/list';
-export const CORE_PUBLICATION_GET_URL = 'v1/ops/publication/get';
-export const CORE_PUBLICATION_APPROVE_URL = 'v1/ops/publication/approve';
-export const CORE_PUBLICATION_REJECT_URL = 'v1/ops/publication/reject';
-export const CORE_PUBLICATION_DELETE_URL = 'v1/ops/publication/delete';
-export const CORE_PUBLICATION_UPDATE_URL = 'v1/ops/publication/update';
-export const CORE_PUBLICATION_CREATE_URL = 'v1/ops/publication/create';
-export const CORE_PUBLICATION_RULES_URL = 'v1/ops/publication/rule/list';
-
-/** DIAL Core file/bucket endpoints used by the publication file flow. */
-export const CORE_BUCKET_URL = 'v1/bucket';
+/** DIAL Core file endpoints used by the publication file flow. */
 export const CORE_FILES_URL = 'v1/files';
 export const CORE_FILES_METADATA_URL = 'v1/metadata/files';
 
@@ -43,11 +32,15 @@ export const SCHEMAS_PREFIX = 'schemas/platform/';
 export const CATALOG_SCHEMAS_PREFIX = 'catalog_schemas/platform/';
 export const INTERCEPTORS_PREFIX = 'interceptors/platform/';
 export const TRANSLATORS_PREFIX = 'translators/platform/';
+export const PLUGINS_PREFIX = 'plugins/platform/';
+export const ROUTERS_PREFIX = 'routers/platform/';
 export const ROLES_PREFIX = 'roles/platform/';
 export const ROUTES_PREFIX = 'routes/platform/';
 export const KEYS_PREFIX = 'keys/platform/';
 export const POLICIES_PREFIX = 'policies/platform/';
 export const POLICY_ASSIGNMENTS_PREFIX = 'policy_assignments/platform/';
+/** Aliases are dual-bucket like applications: the bucket is part of the path (`public/<name>`, `platform/<name>`). */
+export const ALIASES_PREFIX = 'aliases/';
 
 export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.APPLICATION]: APPLICATIONS_PREFIX,
@@ -62,11 +55,14 @@ export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.CATALOG_SCHEMA]: CATALOG_SCHEMAS_PREFIX,
   [ResourceType.INTERCEPTOR]: INTERCEPTORS_PREFIX,
   [ResourceType.TRANSLATOR]: TRANSLATORS_PREFIX,
+  [ResourceType.PLUGIN]: PLUGINS_PREFIX,
+  [ResourceType.ROUTER]: ROUTERS_PREFIX,
   [ResourceType.ROLE]: ROLES_PREFIX,
   [ResourceType.ROUTE]: ROUTES_PREFIX,
   [ResourceType.PROJECT_KEY]: KEYS_PREFIX,
   [ResourceType.POLICY]: POLICIES_PREFIX,
   [ResourceType.POLICY_ASSIGNMENT]: POLICY_ASSIGNMENTS_PREFIX,
+  [ResourceType.ALIAS]: ALIASES_PREFIX,
 };
 
 /** Hardcoded list path — the backend always lists `publications/public/`. */

@@ -2,11 +2,11 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { analyticsDataApi } from '@/src/app/api/api';
+import { analyticsDataApi, sessionsSourceApi } from '@/src/app/api/api';
 import {
+  EnrichmentDefinition,
   SessionArrayFilter,
   SessionArrayValueSource,
-  SessionCandidateIds,
   SessionColumnFilter,
   SessionDetailResult,
   SessionDetailRow,
@@ -18,10 +18,8 @@ import {
   SessionFilters,
   SessionPageRequest,
   SessionPeriodSummary,
-  SessionRatingRow,
   SessionRatingTotalsField,
   SessionScalarFilter,
-  SessionRow,
   SessionEntryBodyRow,
   SpanFieldRow,
   SessionSpansPage,
@@ -54,28 +52,24 @@ import {
 import { Token } from '@/src/models/auth';
 import { ReadFailure, ServerActionResponse } from '@/src/models/server-action';
 import { toReadFailure } from '@/src/utils/notification';
-import { StructuredQueryResult } from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { errorObjLog } from '@/src/server/logger';
-import { attachRatings, sessionRatingCounts, unresolvedRatings } from '@/src/utils/analytics/session-rows';
+import { ratedSessionRow } from '@/src/utils/analytics/session-rows';
 import {
   buildArrayValueResolutionQuery,
   buildSessionDetailQuery,
-  buildSessionFeedbackQuery,
   buildSessionFieldValuesQuery,
+  buildSessionRatedResponsesQuery,
   buildSessionHopBodyQuery,
   buildSessionListQuery,
   buildSessionSpansQuery,
   buildSessionTraceFiguresQuery,
   buildSessionTracePageQuery,
   buildSessionTraceRootsQuery,
-  buildSessionRatingCountsQuery,
-  buildSessionRatingsQuery,
   buildSessionRatingTotalsQuery,
   buildSessionTotalsQuery,
-  buildRatedSessionIdsQuery,
   needsValueResolution,
 } from '@/src/utils/analytics/sessions-queries';
 import {
@@ -87,12 +81,9 @@ import {
   SESSION_SPAN_LIMIT,
   SESSION_TRACE_PAGE_SIZE,
   SESSION_TRACE_ROOT_CAP,
-  SESSIONS_ENTITY,
-  FEEDBACK_CANDIDATE_LIMIT,
-  FEEDBACK_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/sessions-trace';
-import { AnalyticsEntityField, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
+import { AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { EntityCallRow, EntityTraceCursor, EntityTracePage } from '@/src/models/analytics/entity-traces';
 import { withEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { toNumber } from '@/src/utils/analytics/scalar';
@@ -106,6 +97,7 @@ import { dialectOf, messagesForDialect } from '@/src/utils/analytics/hop-inspect
 import { embeddingFactsOf } from '@/src/utils/analytics/hop-inspector/embedding';
 import {
   buildRequestEnvelope,
+  isRebuildPartial,
   NO_CLAMP,
   parseJson,
   textByteLength,
@@ -115,6 +107,19 @@ import { protocolFactsOf } from '@/src/utils/analytics/hop-inspector/protocol';
 import { paramsOf } from '@/src/utils/analytics/hop-inspector/params';
 import { NO_FACTS, responseEnvelopeOf, rawBodyOf } from '@/src/utils/analytics/hop-inspector/response';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { DEFAULT_SESSIONS_SOURCE_SETTING } from '@/src/constants/analytics/sessions-source';
+import {
+  SessionsSource,
+  SessionsSourceProblem,
+  SessionsSourceResolution,
+  SessionsSourceSetting,
+} from '@/src/models/analytics/sessions-source';
+import {
+  isEntityMissing,
+  ratingEnrichmentOf,
+  resolveSessionsSource,
+  sourceFieldOf,
+} from '@/src/utils/analytics/sessions-source';
 
 const token = () => getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
@@ -125,71 +130,66 @@ const toRange = ({ startMs, endMs }: SessionFilters): TimeRange => ({
   endDate: new Date(endMs),
 });
 
-const ratingRows = (result: ServerActionResponse<StructuredQueryResult>): SessionRatingRow[] =>
-  (result.response?.rows ?? []) as unknown as SessionRatingRow[];
+interface CallerSource {
+  resolution: SessionsSourceResolution;
+  schema: ServerActionResponse<AnalyticsEntitySchema>;
+}
 
-const withRatings = async (rows: SessionRow[], range: TimeRange, authToken: Token): Promise<SessionRow[]> => {
-  if (!rows.length) {
-    return rows;
+const readBaseSchema = async (
+  baseTable: string,
+  authToken: Token,
+): Promise<ServerActionResponse<AnalyticsEntitySchema>> => {
+  try {
+    return await withEntitySchemaCache(baseTable, authToken, () =>
+      analyticsDataApi.getEntitySchema(baseTable, authToken),
+    );
+  } catch (error) {
+    errorObjLog(error, 'Failed to fetch the sessions entity schema');
+    return { success: false };
   }
-
-  const query = buildSessionRatingsQuery({ range, chatIds: rows.map((row) => row.client_session_id) });
-  const result = await analyticsDataApi.executeAction(query, authToken);
-
-  if (!result.success) {
-    errorObjLog(result, 'Failed to resolve session ratings');
-    return unresolvedRatings(rows);
-  }
-
-  return attachRatings(rows, ratingRows(result));
 };
 
-const HTTP_NOT_FOUND = 404;
-
-// 404 is the one answer meaning the entity is not provisioned, as opposed to the read having failed.
-async function isFeedbackEntityAbsent(authToken: Token): Promise<boolean> {
+const readSetting = async (authToken: Token): Promise<ServerActionResponse<SessionsSourceSetting>> => {
   try {
-    const read = await withEntitySchemaCache(FEEDBACK_ENTITY, authToken, () =>
-      analyticsDataApi.getEntitySchema(FEEDBACK_ENTITY, authToken),
-    );
-    return !read.success && read.status === HTTP_NOT_FOUND;
+    const read = await sessionsSourceApi.getSetting(authToken);
+
+    if (!read.success) {
+      errorObjLog(read, 'Failed to read the Sessions source setting');
+    }
+
+    return read;
   } catch (error) {
-    errorObjLog(error, 'Failed to fetch the rating source entity schema');
-    return false;
+    errorObjLog(error, 'Failed to read the Sessions source setting');
+    return { success: false };
   }
+};
+
+async function callerSource(authToken: Token): Promise<CallerSource> {
+  const setting = await readSetting(authToken);
+
+  if (!setting.success) {
+    return {
+      resolution: { source: null, failure: null, problem: SessionsSourceProblem.SettingUnreadable },
+      schema: { ...setting, response: undefined },
+    };
+  }
+
+  const schema = await readBaseSchema(
+    setting.response?.baseTable ?? DEFAULT_SESSIONS_SOURCE_SETTING.baseTable,
+    authToken,
+  );
+
+  if (!setting.response && isEntityMissing(schema)) {
+    return { resolution: { source: null, failure: null, problem: SessionsSourceProblem.DefaultTableMissing }, schema };
+  }
+
+  return { resolution: resolveSessionsSource(setting.response, schema.response?.fields), schema };
 }
 
-// Resolved on the first page of a result and returned to the caller, which carries the ids into every
-// later page of it: the narrowing is a property of the filter, not of the page. Not exported — a
-// server-side cache keyed on the filter state alone would serve one caller's candidates to another, and
-// the caller already holds them for the life of the filter state.
-async function resolveRatedChatIds(
-  filters: SessionFilters,
-  authToken: Token,
-): Promise<ServerActionResponse<SessionCandidateIds>> {
-  if (await isFeedbackEntityAbsent(authToken)) {
-    return { success: true, response: { ids: [], isCapped: false } };
-  }
-
-  const query = buildRatedSessionIdsQuery({ range: toRange(filters), feedback: filters.feedback });
-  const result = await analyticsDataApi.executeAction(query, authToken);
-
-  if (!result.success) {
-    return { ...result, response: undefined };
-  }
-
-  const ids = (result.response?.rows ?? [])
-    .map((row) => row[ResponseRatingsField.ChatId])
-    .filter((id): id is string => typeof id === 'string' && id.length > 0);
-
-  return { ...result, response: { ids, isCapped: ids.length >= FEEDBACK_CANDIDATE_LIMIT } };
-}
-
-// An active feedback filter narrows by `in`, so an empty candidate set means "nothing carries this
-// feedback" — the complete answer. Building the query anyway would drop the `in` predicate and return
-// every session, and the service rejects an empty `in` list with a 400 either way.
-const isNarrowedToNothing = ({ feedback, chatIds }: SessionPageRequest): boolean =>
-  feedback !== FeedbackFilter.All && !chatIds?.length;
+const sourceFailure = <T extends object>(resolution: SessionsSourceResolution): ServerActionResponse<T> => ({
+  success: false,
+  ...(resolution.failure ? { errorMessage: `${resolution.failure.role}: ${resolution.failure.field}` } : {}),
+});
 
 const arrayValueSource = (fieldName: string): SessionArrayValueSource | undefined =>
   SESSION_ARRAY_VALUE_SOURCE[fieldName as SessionsField];
@@ -323,42 +323,28 @@ async function resolveColumnFilters(
 }
 
 export async function getSessionsSchema(): Promise<ServerActionResponse<AnalyticsEntitySchema>> {
-  const authToken = await token();
-  return withEntitySchemaCache(SESSIONS_ENTITY, authToken, () =>
-    analyticsDataApi.getEntitySchema(SESSIONS_ENTITY, authToken),
-  );
+  const { schema } = await callerSource(await token());
+  return schema;
+}
+
+export async function getSessionsSource(): Promise<SessionsSourceResolution> {
+  const { resolution } = await callerSource(await token());
+  return resolution;
 }
 
 export async function getSessions(request: SessionPageRequest): Promise<SessionsResponse> {
   const authToken = await token();
+  const { resolution } = await callerSource(authToken);
+  const source = resolution.source;
+
+  if (!source) {
+    return sourceFailure(resolution);
+  }
+
   const range = toRange(request);
   const isFirstPage = request.offset === 0;
-
-  let candidates: SessionCandidateIds | undefined;
-  let chatIds = request.chatIds;
-
-  if (isFirstPage && request.feedback !== FeedbackFilter.All) {
-    const resolved = await resolveRatedChatIds(request, authToken);
-    if (!resolved.success) {
-      return { ...resolved, response: undefined };
-    }
-    candidates = resolved.response;
-    chatIds = candidates?.ids ?? [];
-  }
-
-  const periodSummary = isFirstPage ? resolvePeriodSummary(range, authToken) : Promise.resolve(undefined);
-
-  if (isNarrowedToNothing({ ...request, chatIds })) {
-    return {
-      success: true,
-      response: {
-        rows: [],
-        total: 0,
-        ...withPeriod(await periodSummary),
-        ...(candidates ? { candidates } : {}),
-      },
-    };
-  }
+  const feedback = source.ratingEnrichment ? request.feedback : FeedbackFilter.All;
+  const periodSummary = isFirstPage ? resolvePeriodSummary(range, source, authToken) : Promise.resolve(undefined);
 
   const resolvedFilters = await resolveColumnFilters(
     request.columnFilters ?? [],
@@ -370,19 +356,15 @@ export async function getSessions(request: SessionPageRequest): Promise<Sessions
   if (!resolvedFilters) {
     return {
       success: false,
-      response: {
-        rows: [],
-        total: null,
-        ...withPeriod(await periodSummary),
-        ...(candidates ? { candidates } : {}),
-      },
+      response: { rows: [], total: null, ...withPeriod(await periodSummary) },
     };
   }
 
   const query = buildSessionListQuery({
     range,
+    source,
     search: request.search,
-    chatIds: chatIds ?? [],
+    feedback,
     columnFilters: resolvedFilters.columnFilters,
     arrayFilters: resolvedFilters.arrayFilters,
     sort: request.sort ?? [],
@@ -392,35 +374,26 @@ export async function getSessions(request: SessionPageRequest): Promise<Sessions
     limit: request.limit,
   });
 
-  const [page, period] = await Promise.all([
-    (async () => {
-      const result = await analyticsDataApi.executeAction(query, authToken);
-      if (!result.success) {
-        return { result, rows: null };
-      }
-      const rows = (result.response?.rows ?? []) as unknown as SessionRow[];
-      return { result, rows: await withRatings(rows, range, authToken) };
-    })(),
-    periodSummary,
-  ]);
+  const [result, period] = await Promise.all([analyticsDataApi.executeAction(query, authToken), periodSummary]);
 
   // The grid's row total is the period count, which is the grid's own count only while nothing narrows the
   // period. Under a filter it is not, and must not be offered as one: the grid then finds the end of the
   // result by a page coming back short, which is the signal it already terminates on.
-  const gridTotal = isNarrowed(request) ? null : toNumber(period?.totals?.sessions ?? null);
+  const gridTotal = isNarrowed({ ...request, feedback }) ? null : toNumber(period?.totals?.sessions ?? null);
 
   const resolved = {
     total: gridTotal,
     ...withPeriod(period),
-    ...(candidates ? { candidates } : {}),
     ...(isFirstPage && resolvedFilters.arrayFilters.length ? { arrayFilters: resolvedFilters.arrayFilters } : {}),
   };
 
-  if (!page.rows) {
-    return { ...page.result, response: { rows: [], ...resolved } };
+  if (!result.success) {
+    return { ...result, response: { rows: [], ...resolved } };
   }
 
-  return { ...page.result, response: { rows: page.rows, ...resolved } };
+  const rows = ((result.response?.rows ?? []) as Record<string, unknown>[]).map((raw) => ratedSessionRow(source, raw));
+
+  return { ...result, response: { rows, ...resolved } };
 }
 
 /**
@@ -434,11 +407,11 @@ export async function getSessionFieldValues(
 ): Promise<ServerActionResponse<SessionFieldValue[]>> {
   const authToken = await token();
   const range = toRange(request);
+  const { resolution } = await callerSource(authToken);
+  const source = resolution.source;
 
-  // Same guard as the listing's: an empty candidate set under an active feedback filter is the complete
-  // answer, not a missing predicate.
-  if (request.feedback !== FeedbackFilter.All && !request.chatIds?.length) {
-    return { success: true, response: [] };
+  if (!source) {
+    return sourceFailure(resolution);
   }
 
   // The caller passes the sets its rows are narrowed by rather than letting this resolve its own: the
@@ -459,8 +432,9 @@ export async function getSessionFieldValues(
     buildSessionFieldValuesQuery({
       field: request.field,
       range,
+      source,
       search: request.search,
-      chatIds: request.chatIds ?? [],
+      feedback: source.ratingEnrichment ? request.feedback : FeedbackFilter.All,
       columnFilters: resolvedFilters.columnFilters,
       arrayFilters: resolvedFilters.arrayFilters,
     }),
@@ -475,8 +449,9 @@ export async function getSessionFieldValues(
   // Null is not one of an enum's values: on an enrichment-backed field it means the enrichment has not
   // reached that session, which is a statement about coverage rather than something to select. The
   // grouped count reports it as a group all the same, so it is dropped here.
+  const boundField = sourceFieldOf(source, request.field) ?? request.field;
   const values = (result.response?.rows ?? []).reduce<SessionFieldValue[]>((list, row) => {
-    const name = row[request.field];
+    const name = row[boundField];
     if (typeof name === 'string' && name.length > 0) {
       list.push({
         value: name,
@@ -489,70 +464,86 @@ export async function getSessionFieldValues(
   return { success: true, response: values };
 }
 
-export async function getSessionDetail(
-  chatId: string,
-  schemaFields?: AnalyticsEntityField[],
-): Promise<ServerActionResponse<SessionDetailResult>> {
-  const result = await analyticsDataApi.executeAction(buildSessionDetailQuery(chatId, schemaFields), await token());
+export async function getSessionDetail(chatId: string): Promise<ServerActionResponse<SessionDetailResult>> {
+  const authToken = await token();
+  const { resolution, schema } = await callerSource(authToken);
+  const source = resolution.source;
+
+  if (!source) {
+    return sourceFailure(resolution);
+  }
+
+  const result = await analyticsDataApi.executeAction(
+    buildSessionDetailQuery(chatId, schema.response?.fields, source),
+    authToken,
+  );
 
   if (!result.success) {
     return { ...result, response: undefined };
   }
 
-  const session = (result.response?.rows?.[0] ?? null) as SessionDetailRow | null;
+  const raw = result.response?.rows?.[0] as Record<string, unknown> | undefined;
+  const session = raw ? (ratedSessionRow(source, raw) as unknown as SessionDetailRow) : null;
 
   return { ...result, response: { session } };
 }
 
-// Never rejects: a failed schema read must cost the optional comment column, not the page. Without this the
-// rejection would reach the detail route's `Promise.all` and render the error state for a session whose
-// header, traces and record all resolved.
-async function feedbackSchemaFields(authToken: Token): Promise<string[] | undefined> {
+const usageLogSchema = async (authToken: Token): Promise<ServerActionResponse<AnalyticsEntitySchema>> => {
   try {
-    const read = await withEntitySchemaCache(FEEDBACK_ENTITY, authToken, () =>
-      analyticsDataApi.getEntitySchema(FEEDBACK_ENTITY, authToken),
+    return await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
+      analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
     );
-    return read.response?.fields?.map(({ name }) => name);
   } catch (error) {
-    errorObjLog(error, 'Failed to fetch the rating source entity schema');
-    return undefined;
+    errorObjLog(error, 'Failed to fetch the usage log schema');
+    return { success: false };
   }
-}
+};
 
-/**
- * The list and the session's own figures, resolved together. The figures come from an aggregate scoped
- * to the session rather than from counting the listed rows: the list is bounded, so counting it would
- * report the bound as the session's total. Both reads are issued concurrently — neither needs the other
- * — and the counts failing leaves them unresolved without taking the list down with them.
- */
-export async function getSessionFeedback(chatId: string): Promise<ServerActionResponse<SessionFeedbackPage>> {
+export async function getSessionFeedback(
+  scope: SessionScope,
+  firstRequestTime: number | string | null,
+  lastRequestTime: number | string | null,
+): Promise<ServerActionResponse<SessionFeedbackPage>> {
   const authToken = await token();
-  const schemaFieldNames = await feedbackSchemaFields(authToken);
+  const schema = await usageLogSchema(authToken);
+  const fields = schema.response?.fields ?? [];
+  const namespace = ratingEnrichmentOf(fields);
+  const window = paddedUtcDayRange([firstRequestTime, lastRequestTime]);
+  const isCommentTextReadable = Boolean(
+    namespace && fields.some(({ name }) => name === `${namespace}.${ResponseRatingsField.CommentSample}`),
+  );
+  const empty: SessionFeedbackPage = { rows: [], total: 0, isCommentTextReadable, isAvailable: Boolean(namespace) };
 
-  const [list, counts] = await Promise.all([
-    analyticsDataApi.executeAction(
-      buildSessionFeedbackQuery(chatId, SESSION_FEEDBACK_LIMIT, schemaFieldNames),
-      authToken,
-    ),
-    analyticsDataApi.executeAction(buildSessionRatingCountsQuery(chatId), authToken),
-  ]);
-
-  if (!list.success) {
-    return { ...list, response: undefined };
+  if (!namespace || !window) {
+    return { success: true, response: empty };
   }
 
-  const countRow = ratingRows(counts)[0];
-  if (!counts.success) {
-    errorObjLog(counts, 'Failed to resolve session rating counts');
+  const hasClientSessionId = fields.some(({ name }) => name === UsageLogField.ClientSessionId);
+  const result = await analyticsDataApi.executeAction(
+    buildSessionRatedResponsesQuery({
+      scope,
+      window,
+      namespace,
+      limit: SESSION_FEEDBACK_LIMIT,
+      isCommentTextReadable,
+      hasClientSessionId,
+    }),
+    authToken,
+  );
+
+  if (!result.success) {
+    return { ...result, response: undefined };
   }
+
+  const rows = (result.response?.rows ?? []) as unknown as SessionFeedbackRow[];
 
   return {
-    ...list,
+    ...result,
     response: {
-      rows: (list.response?.rows ?? []) as unknown as SessionFeedbackRow[],
-      total: list.response?.totalCount ?? null,
-      ratings: counts.success ? sessionRatingCounts(countRow) : null,
-      isCommentTextReadable: (schemaFieldNames ?? []).includes(ResponseRatingsField.CommentSample),
+      rows,
+      total: rows.length < SESSION_FEEDBACK_LIMIT ? rows.length : null,
+      isCommentTextReadable,
+      isAvailable: true,
     },
   };
 }
@@ -591,7 +582,7 @@ async function isUsageLogFieldServed(name: string, authToken: Token): Promise<bo
  */
 export async function getSessionTracePage(
   scope: SessionScope,
-  projectId: string,
+  projectId: string | null,
   firstRequestTime: number | string | null,
   lastRequestTime: number | string | null,
   offset: number,
@@ -672,14 +663,14 @@ export async function getSessionTracePage(
   // Reported, never resolved. A violation means the recorded data has a shape this design did not anticipate,
   // so it is logged as a fault to investigate while the listing still renders from what was read — rather
   // than silently picking one of the candidates, which is the failure mode the guards exist to prevent.
-  for (const violation of traceInvariantViolations(rootRows, projectId)) {
+  for (const violation of traceInvariantViolations(rootRows, projectId ?? '')) {
     errorObjLog(violation, `Session trace invariant violated: ${violation.invariant}`);
   }
 
   return {
     success: true,
     response: {
-      groups: traceGroupsOf(pageRows, rootRows, figureRows, projectId),
+      groups: traceGroupsOf(pageRows, rootRows, figureRows, projectId ?? ''),
       hasMore,
     },
   };
@@ -773,16 +764,21 @@ interface HopBodyRead {
 // — while this row is keyed by the column itself. Stripping the namespace once, here, is what keeps the move
 // out of every reader below: a projection alias is not honoured on a row read, so the qualified key arrives
 // whatever the query asked for, and a row keyed by it reads as a hop that recorded nothing.
-const bodyRowOf = (raw: Record<string, unknown>): SessionEntryBodyRow =>
-  Object.fromEntries(
+const bodyRowOf = (raw: Record<string, unknown>): SessionEntryBodyRow => {
+  const { [UsageLogField.RequestBodyFull]: rebuilt, ...row } = Object.fromEntries(
     Object.entries(raw).map(([key, cell]) => [unqualified(key), cell]),
-  ) as unknown as SessionEntryBodyRow;
+  );
+
+  return (rebuilt === undefined
+    ? row
+    : { ...row, [UsageLogField.RequestBody]: rebuilt }) as unknown as SessionEntryBodyRow;
+};
 
 // The names the grant resolved against this instance's schema, not the constants: the read has to select a
 // column under the name the service answered with.
 const bodyFieldsFor = (side: HopInspectorSide, fields: HopBodyFields): string[] => {
   if (side === HopInspectorSide.Request) {
-    return fields.requestField === null ? [] : [fields.requestField];
+    return [fields.requestField, fields.requestStatusField].filter((name): name is string => name !== null);
   }
 
   return fields.responseFields;
@@ -848,6 +844,7 @@ const emptyRequestEnvelope = (state: HopReadState): HopRequestEnvelope => ({
   roleCounts: [],
   recordedBytes: null,
   isClamped: false,
+  isPartial: false,
 });
 
 // Tier 1. What crosses to the browser is an envelope — roles, positions, sizes, property names and sizes, and
@@ -866,6 +863,7 @@ export async function getSessionHopRequest(
   }
 
   const dialect = dialectOf(row.request_uri ?? null);
+  const isPartial = isRebuildPartial(row.request_body_rebuild);
   const parsed = parseJson(row.request_body);
   const params = paramsOf(parsed);
   const recordedBytes = row.request_body === null ? null : textByteLength(row.request_body);
@@ -873,7 +871,7 @@ export async function getSessionHopRequest(
   if (dialect === HopDialect.Unknown) {
     return {
       success: true,
-      response: { ...emptyRequestEnvelope(HopReadState.Unstructured), params, recordedBytes },
+      response: { ...emptyRequestEnvelope(HopReadState.Unstructured), params, recordedBytes, isPartial },
     };
   }
 
@@ -882,11 +880,11 @@ export async function getSessionHopRequest(
   if (!messages.length) {
     return {
       success: true,
-      response: { ...emptyRequestEnvelope(HopReadState.NoBody), dialect, params, recordedBytes },
+      response: { ...emptyRequestEnvelope(HopReadState.NoBody), dialect, params, recordedBytes, isPartial },
     };
   }
 
-  return { success: true, response: buildRequestEnvelope({ dialect, params, messages, recordedBytes }) };
+  return { success: true, response: buildRequestEnvelope({ dialect, params, messages, recordedBytes, isPartial }) };
 }
 
 const emptyResponseEnvelope = (state: HopReadState): HopResponseEnvelope => ({
@@ -957,12 +955,15 @@ export async function getSessionHopRawBody(
   const { row, state } = read;
 
   if (!row) {
-    return hopReadEnvelope(read, { state, text: null, clamp: NO_CLAMP });
+    return hopReadEnvelope(read, { state, text: null, clamp: NO_CLAMP, isPartial: false });
   }
 
   return {
     success: true,
-    response: rawBodyOf(side === HopInspectorSide.Request ? row.request_body : row.response_body),
+    response:
+      side === HopInspectorSide.Request
+        ? rawBodyOf(row.request_body, isRebuildPartial(row.request_body_rebuild))
+        : rawBodyOf(row.response_body),
   };
 }
 
@@ -1089,8 +1090,12 @@ const isNarrowed = ({ search, columnFilters, feedback }: SessionPageRequest): bo
 
 const withPeriod = (period?: SessionPeriodSummary) => (period ? { period } : {});
 
-async function resolveSessionTotals(range: TimeRange, authToken: Token): Promise<SessionTotals | undefined> {
-  const result = await analyticsDataApi.executeAction(buildSessionTotalsQuery(range), authToken);
+async function resolveSessionTotals(
+  range: TimeRange,
+  source: SessionsSource,
+  authToken: Token,
+): Promise<SessionTotals | undefined> {
+  const result = await analyticsDataApi.executeAction(buildSessionTotalsQuery(range, source), authToken);
 
   if (!result.success) {
     errorObjLog(result, 'Failed to resolve the sessions summary');
@@ -1108,9 +1113,13 @@ async function resolveSessionTotals(range: TimeRange, authToken: Token): Promise
 async function resolveRatingCount(
   range: TimeRange,
   feedback: FeedbackFilter,
+  source: SessionsSource,
   authToken: Token,
 ): Promise<number | null | undefined> {
-  const result = await analyticsDataApi.executeAction(buildSessionRatingTotalsQuery({ range, feedback }), authToken);
+  const result = await analyticsDataApi.executeAction(
+    buildSessionRatingTotalsQuery({ range, feedback, source }),
+    authToken,
+  );
 
   if (!result.success) {
     errorObjLog(result, 'Failed to resolve the session rating totals');
@@ -1122,11 +1131,15 @@ async function resolveRatingCount(
   return toNumber((row?.[SessionRatingTotalsField.Sessions] ?? null) as number | string | null);
 }
 
-async function resolvePeriodSummary(range: TimeRange, authToken: Token): Promise<SessionPeriodSummary> {
+async function resolvePeriodSummary(
+  range: TimeRange,
+  source: SessionsSource,
+  authToken: Token,
+): Promise<SessionPeriodSummary> {
   const [totals, rated, negative] = await Promise.all([
-    resolveSessionTotals(range, authToken),
-    resolveRatingCount(range, FeedbackFilter.Rated, authToken),
-    resolveRatingCount(range, FeedbackFilter.Negative, authToken),
+    resolveSessionTotals(range, source, authToken),
+    source.ratingEnrichment ? resolveRatingCount(range, FeedbackFilter.Rated, source, authToken) : undefined,
+    source.ratingEnrichment ? resolveRatingCount(range, FeedbackFilter.Negative, source, authToken) : undefined,
   ]);
 
   const hasRatings = rated !== undefined && negative !== undefined;
@@ -1156,4 +1169,25 @@ export async function getHopBodyGrants(): Promise<ServerActionResponse<HopBodyGr
   );
 
   return { success: true, response: { isRequestReadable, isResponseReadable } };
+}
+
+export async function getEnrichmentDefinitions(namespaces: string[]): Promise<Record<string, EnrichmentDefinition>> {
+  const authToken = await token();
+  const reads = await Promise.all(
+    namespaces.map(async (namespace) => {
+      try {
+        const read = await analyticsDataApi.getTable(namespace, authToken);
+        const definition: EnrichmentDefinition = {
+          tagOrder: read.response?.tag_order ?? [],
+          ...(read.response?.description ? { description: read.response.description } : {}),
+        };
+        return [namespace, definition] as const;
+      } catch (error) {
+        errorObjLog(error, `Failed to read the ${namespace} table definition`);
+        return [namespace, { tagOrder: [] }] as const;
+      }
+    }),
+  );
+
+  return Object.fromEntries(reads);
 }

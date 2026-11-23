@@ -50,6 +50,29 @@ describe('Model asset :: detail view tab set', () => {
     ]);
   });
 
+  test('Should insert Eval Trends after Interceptors when evaluation is enabled', () => {
+    expect(tabIds(flags({ evaluationEnabled: true }))).toEqual([
+      EntityViewTab.Properties,
+      EntityViewTab.Features,
+      EntityViewTab.Catalog,
+      EntityViewTab.Roles,
+      EntityViewTab.Interceptors,
+      EntityViewTab.EvalTrends,
+    ]);
+  });
+
+  test('Should place Eval Trends after Audit when evaluation and dashboard audit are enabled', () => {
+    expect(tabIds(flags({ evaluationEnabled: true, dashboardEnabled: true, adminApiEnabled: true }))).toEqual([
+      EntityViewTab.Properties,
+      EntityViewTab.Features,
+      EntityViewTab.Catalog,
+      EntityViewTab.Roles,
+      EntityViewTab.Interceptors,
+      EntityViewTab.Audit,
+      EntityViewTab.EvalTrends,
+    ]);
+  });
+
   test('Should not append Audit when the dashboard feature is enabled but the admin API is not', () => {
     expect(tabIds(flags({ dashboardEnabled: true }))).toEqual([
       EntityViewTab.Properties,

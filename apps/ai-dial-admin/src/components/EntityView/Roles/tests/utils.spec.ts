@@ -25,6 +25,10 @@ describe('getNoAvailableTitle', () => {
     expect(getNoAvailableTitle(ApplicationRoute.Applications)).toBe(RolesI18nKey.NotAvailableApplication);
   });
 
+  test('returns NotAvailableAlias for AssetsAliases view', () => {
+    expect(getNoAvailableTitle(ApplicationRoute.AssetsAliases)).toBe(RolesI18nKey.NotAvailableAlias);
+  });
+
   test('returns NotAvailableApplication for Toolsets view', () => {
     expect(getNoAvailableTitle(ApplicationRoute.Toolsets)).toBe(RolesI18nKey.NotAvailableToolSet);
   });

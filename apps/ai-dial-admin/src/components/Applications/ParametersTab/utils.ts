@@ -6,6 +6,7 @@ import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCe
 import EditableOnBlurCellRenderer from '@/src/components/Grid/CellRenderers/EditableOnBlurCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import StringEditorCellRenderer from '@/src/components/Grid/CellRenderers/StringEditorCellRenderer';
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { BasicI18nKey, EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { UserSession } from '@/src/models/auth';
@@ -54,15 +55,30 @@ export const getCorrectConfig = (
   return null;
 };
 
+/**
+ * The deployment id evaluation suites and the parameters iframe use for an application. Public-bucket
+ * asset apps are addressed as `applications/<path>`; platform-bucket and Entities apps use `name`.
+ */
+export const getApplicationDeploymentId = (
+  view?: ApplicationRoute,
+  application?: DialApplication | DialApplicationResource | AssetApp,
+): string | undefined => {
+  if (
+    view === ApplicationRoute.AssetsApplications &&
+    !isPlatformBucketPath((application as AssetApp)?._metadata?.path)
+  ) {
+    const path = (application as AssetApp)?._metadata?.path;
+    return path ? `applications/${path}` : undefined;
+  }
+  return application?.name;
+};
+
 export const getTargetUrl = (
   view?: ApplicationRoute,
   application?: DialApplication | DialApplicationResource,
   frameConfig?: FrameConfig | null,
 ) => {
-  const id =
-    view === ApplicationRoute.AssetsApplications && !isPlatformBucketPath((application as AssetApp)?._metadata?.path)
-      ? `applications/${(application as AssetApp)?._metadata?.path}`
-      : application?.name;
+  const id = getApplicationDeploymentId(view, application);
   try {
     const iframeUrl = `${frameConfig?.host}?authProvider=${frameConfig?.providerId}&theme=${frameConfig?.theme}&id=${id}&applicationName=${encodeURIComponent(frameConfig?.name as string)}`;
     return new URL(iframeUrl);
@@ -82,7 +98,10 @@ export const getAppRunner = (
   return applicationSchemes?.find((scheme) => {
     const resource = entity as DialApplicationResource;
     const application = entity as DialApplication;
-    const schemaSourceId = resource.application_type_schema_id || getSchemaSourceId(application.source);
+    const schemaSourceId =
+      resource.application_type_schema_id ||
+      (entity as { applicationTypeSchemaId?: string }).applicationTypeSchemaId ||
+      getSchemaSourceId(application.source);
     const editorUrl = resource.editor_url || application.editorUrl;
 
     return (
@@ -150,7 +169,16 @@ export const getDefaultValueForType = (type: string): unknown => {
   return '';
 };
 
-//todo support multiple types from scheme
+/** The active type of a schema row: the type matching its current value, else the first allowed one. */
+export const resolveRowType = (allowedTypes: string[], value: unknown): string => {
+  if (allowedTypes.length === 1) return allowedTypes[0];
+  if (value != null) {
+    const inferredType = inferTypeFromValue(value);
+    if (allowedTypes.includes(inferredType)) return inferredType;
+  }
+  return allowedTypes[0];
+};
+
 export const convertJsonSchema = (
   schema: DialApplicationScheme,
   schemeData: Record<string, unknown>,
@@ -162,24 +190,21 @@ export const convertJsonSchema = (
 
     const isRequired = schema.required && schema.required.includes(key);
 
-    let typeValue = TypeEntity.OBJECT as string;
+    let allowedTypes: string[] = [TypeEntity.OBJECT];
 
     if (value.anyOf) {
-      typeValue = getTypeFromUnion(value.anyOf);
+      allowedTypes = getTypesFromUnion(value.anyOf);
     } else if (value.oneOf) {
-      typeValue = getTypeFromUnion(value.oneOf);
+      allowedTypes = getTypesFromUnion(value.oneOf);
     } else if (value.type) {
-      if (value.type === TypeEntity.ARRAY) {
-        typeValue = TypeEntity.OBJECT;
-      } else {
-        typeValue = value.type;
-      }
+      allowedTypes = getTypesFromUnion([value]);
     }
 
     result.push({
       key,
       value: schemeData[key],
-      type: typeValue,
+      type: resolveRowType(allowedTypes, schemeData[key]),
+      allowedTypes,
       required: isRequired || false,
       isFromScheme: true,
     });
@@ -188,17 +213,17 @@ export const convertJsonSchema = (
   return result;
 };
 
-export const getTypeFromUnion = (types: DialSchemePropertyType[]): string => {
+export const getTypesFromUnion = (types: DialSchemePropertyType[]): string[] => {
   const typesSet = new Set<string>();
 
   types.forEach((typeOption) => {
-    if (typeOption.type === TypeEntity.ARRAY) {
+    if (typeOption.type === TypeEntity.ARRAY || typeOption.type === TypeEntity.OBJECT) {
       typesSet.add(TypeEntity.OBJECT);
     } else if (typeOption.type === TypeEntity.BOOLEAN) {
       typesSet.add(TypeEntity.BOOLEAN);
     } else if (typeOption.type === TypeEntity.STRING) {
       typesSet.add(TypeEntity.STRING);
-    } else if (typeOption.type === TypeEntity.NUMBER) {
+    } else if (typeOption.type === TypeEntity.NUMBER || typeOption.type === TypeEntity.INTEGER) {
       typesSet.add(TypeEntity.NUMBER);
     } else if (typeOption.type === TypeEntity.NULL) {
       typesSet.add(TypeEntity.NULL);
@@ -207,15 +232,9 @@ export const getTypeFromUnion = (types: DialSchemePropertyType[]): string => {
     }
   });
 
-  if (typesSet.has(TypeEntity.NULL)) {
-    typesSet.delete(TypeEntity.NULL);
-  }
+  typesSet.delete(TypeEntity.NULL);
 
-  if (typesSet.size === 1) {
-    return [...typesSet][0];
-  }
-
-  return TypeEntity.OBJECT;
+  return typesSet.size ? [...typesSet] : [TypeEntity.OBJECT];
 };
 
 export const convertAppPropertiesToArray = (
@@ -322,11 +341,20 @@ export const getAppPropertiesColumns = (
               isReadonly: readOnly,
             },
           };
+        } else if (params.data.type === DefaultItemType.string) {
+          return {
+            component: StringEditorCellRenderer,
+            params: {
+              label: params.data.key,
+              onChange: onChangeEditable,
+              disabled: readOnly,
+            },
+          };
         } else {
           return {
             component: EditableCellRenderer,
             params: {
-              inputType: params.data.type === 'string' ? 'text' : 'number',
+              inputType: 'number',
               onChange: onChangeEditable,
               isReadonly: readOnly,
               hideTriangle: true,
@@ -335,7 +363,11 @@ export const getAppPropertiesColumns = (
         }
       },
       tooltipValueGetter: (params: ITooltipParams) => {
-        if (params.data.type === TypeEntity.OBJECT || params.data.type === TypeEntity.BOOLEAN) {
+        if (
+          params.data.type === TypeEntity.OBJECT ||
+          params.data.type === TypeEntity.BOOLEAN ||
+          params.data.type === TypeEntity.STRING
+        ) {
           return void 0;
         }
         return params.value;
@@ -370,7 +402,9 @@ export const getAppPropertiesColumns = (
               label: t(TypeI18nKey.Object),
             },
           ];
-          return data.isFromScheme ? items.filter((i) => i.value === data.type) : items;
+          if (!data.isFromScheme) return items;
+          const allowedTypes = data.allowedTypes ?? [data.type];
+          return items.filter((i) => allowedTypes.includes(i.value));
         },
         onChange: onChangeSelect,
         isReadonly: readOnly,

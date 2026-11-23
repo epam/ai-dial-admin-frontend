@@ -2,6 +2,8 @@ import { MarkedPrivilege } from '@/src/components/Analytics/Tables/access/models
 import { AnalyticsTableAccessI18nKey } from '@/src/constants/i18n';
 import { TableGrantKey } from '@/src/models/analytics/table';
 
+export const EVERYONE_ROLE = '*';
+
 export const ALL_GRANT_KEYS: TableGrantKey[] = [
   TableGrantKey.Get,
   TableGrantKey.Read,
@@ -19,3 +21,5 @@ export const MARKED_PRIVILEGES: Array<{ key: MarkedPrivilege; label: AnalyticsTa
 
 // The service answers 409 table_is_system to a write or modify grant on a system table.
 export const SYSTEM_LOCKED_PRIVILEGES: MarkedPrivilege[] = [TableGrantKey.Write, TableGrantKey.Modify];
+
+export const LIMIT_STEP_HEADING = 'dial-tiny-lead-semi-text text-accent-secondary';

@@ -2,15 +2,15 @@
 
 import { FC } from 'react';
 
-import { GhostButton, GhostIconButton, Select } from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
+import { GhostButton, Select } from '@epam/ai-dial-ui-kit';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { withStrandedOption } from '@/src/components/Analytics/Pipelines/Common/utils';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { MemberSelectOrderBy, SortDirection } from '@/src/models/analytics/pipeline';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { isProjectionOnly } from '@/src/utils/analytics/entity-fields';
 import { PIPELINE_SELECT_DEFAULTS } from '@/src/constants/analytics/pipelines';
 
 interface Props {
@@ -25,7 +25,9 @@ const OrderByEditor: FC<Props> = ({ orderBy, fields, onChange }) => {
 
   const rows = orderBy ?? [];
 
-  const fieldOptions = fields.map((field) => ({ value: field.name, label: field.name }));
+  const fieldOptions = fields
+    .filter((field) => !isProjectionOnly(field))
+    .map((field) => ({ value: field.name, label: field.name }));
 
   const isStranded = (name: string): boolean => Boolean(name) && !fields.some((field) => field.name === name);
 
@@ -65,8 +67,7 @@ const OrderByEditor: FC<Props> = ({ orderBy, fields, onChange }) => {
             className="flex-1"
             onChange={(v) => updateRow(index, { direction: v as SortDirection })}
           />
-          <GhostIconButton
-            icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
+          <RemoveButton
             aria-label={`${t(ButtonsI18nKey.Delete)} ${t(AnalyticsPipelinesI18nKey.OrderBy)} ${index + 1}`}
             onClick={() => onChange(rows.filter((_, i) => i !== index))}
           />

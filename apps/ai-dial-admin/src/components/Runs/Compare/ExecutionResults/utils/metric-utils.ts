@@ -1,3 +1,4 @@
+import { OVERALL_SCORE_COL_ID } from '@/src/components/Runs/constants';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
@@ -191,6 +192,18 @@ const hasExecutionStatusDiffForVisibility = (row: CompareAnalyticsRow, hiddenCol
   return hasExecutionStatusDiff(row);
 };
 
+/** `testCaseScore` is attached to each side before the rows are merged, so both sides read it the same way. */
+export const getOverallScoreDeltaKind = (row: CompareAnalyticsRow): MetricDeltaKind =>
+  getCompareFieldDelta(row.testCaseScore, row._compared?.testCaseScore ?? null, { isNumeric: true });
+
+const hasOverallScoreDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: ReadonlySet<string>): boolean => {
+  if (hiddenColIds && !isAnyColVisible([OVERALL_SCORE_COL_ID, `cmp_${OVERALL_SCORE_COL_ID}`], hiddenColIds)) {
+    return false;
+  }
+
+  return getOverallScoreDeltaKind(row) !== MetricDeltaKind.Empty;
+};
+
 const hasHttpDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: ReadonlySet<string>): boolean => {
   if (hiddenColIds && !isAnyColVisible(['http', 'cmp_http'], hiddenColIds)) {
     return false;
@@ -214,7 +227,9 @@ const hasDurationDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: R
 };
 
 const hasExecutionFieldDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: ReadonlySet<string>): boolean =>
-  hasHttpDiffForVisibility(row, hiddenColIds) || hasDurationDiffForVisibility(row, hiddenColIds);
+  hasOverallScoreDiffForVisibility(row, hiddenColIds) ||
+  hasHttpDiffForVisibility(row, hiddenColIds) ||
+  hasDurationDiffForVisibility(row, hiddenColIds);
 
 const hasExtractedDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: ReadonlySet<string>): boolean => {
   const compared = row._compared;
@@ -311,6 +326,10 @@ const countExecutionFieldDiffsForRow = (
   hiddenColIds?: ReadonlySet<string>,
 ): void => {
   const compared = row._compared;
+
+  if (!hiddenColIds || isAnyColVisible([OVERALL_SCORE_COL_ID, `cmp_${OVERALL_SCORE_COL_ID}`], hiddenColIds)) {
+    countFieldDelta(getOverallScoreDeltaKind(row), counts);
+  }
 
   if (!hiddenColIds || isAnyColVisible(['http', 'cmp_http'], hiddenColIds)) {
     countFieldDelta(

@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -23,9 +24,9 @@ vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
 
 vi.mock('@/src/app/[lang]/queries/actions');
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => ({ featureFlags: { deploymentsEnabled: true } })),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: { deploymentsEnabled: true } }));
+});
 
 vi.mock('@/src/components/Analytics/QueryBuilder/Sql/SqlEditor', () => ({
   default: () => <textarea aria-label="sql-editor" />,
@@ -51,7 +52,7 @@ vi.mock('@/src/components/Analytics/QueryBuilder/Result/ResultArea', () => ({
       <span>view: {view}</span>
       <span>axis: {chartConfig.xField ?? 'none'}</span>
       <button onClick={() => onChangeView(QueryResultView.Chart)}>pick chart view</button>
-      <button onClick={() => onChangeChartConfig({ type: ChartType.Bar, xField: 'project_id', yField: 'count' })}>
+      <button onClick={() => onChangeChartConfig({ type: ChartType.Bar, xField: 'project_id', yFields: ['count'] })}>
         pick axis
       </button>
     </div>

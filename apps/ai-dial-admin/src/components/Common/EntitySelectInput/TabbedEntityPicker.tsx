@@ -1,0 +1,197 @@
+'use client';
+
+import { Tabs, TabItem } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
+import { FC, useCallback, useMemo, useState } from 'react';
+
+import FlatAssetGrid from '@/src/components/Assets/FlatAssetGrid/FlatAssetGrid';
+import { AssetTabsI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
+import { useFlatAssets } from '@/src/hooks/use-flat-assets';
+import { useI18n } from '@/src/locales/client';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
+import { AssetSource } from '@/src/models/dial/asset-source';
+import { AssetSourceCounts, getAvailableSources, getDefaultSource } from '@/src/utils/files/asset-sources';
+import { ENTITY_SELECT_CONFIGS } from './constants';
+import { EntitySelectType, PickedEntity } from './models';
+import PublicEntityTree from './PublicEntityTree';
+
+interface Props {
+  entityType: EntitySelectType;
+  value: string;
+  isModalOpen: boolean;
+  onChangeSelectedPath?: (path: string | null) => void;
+  onChangeSelectedPaths?: (paths: string[]) => void;
+  /** Multi-selection: every entity picked on any tab. */
+  onChangeSelectedEntities?: (entities: PickedEntity[]) => void;
+  /** Single selection: the one entity picked on any tab, or `null`. Takes precedence over the multi callback. */
+  onChangeSelectedEntity?: (entity: PickedEntity | null) => void;
+}
+
+const TAB_LABEL_KEYS: Record<AssetSource, AssetTabsI18nKey> = {
+  [AssetSource.Public]: AssetTabsI18nKey.Public,
+  [AssetSource.Platform]: AssetTabsI18nKey.Platform,
+  [AssetSource.ConfigFile]: AssetTabsI18nKey.ConfigFile,
+};
+
+/**
+ * The same sources as the listing, one tab each. Every body stays mounted (hidden while inactive) so a pick made
+ * on one tab survives a visit to another. The two flat sources share one set of names, because a platform and a
+ * config.json entity of the same name are stored under the same key.
+ *
+ * In single-selection mode a pick on any tab replaces a pick on another, so at most one entity is ever selected.
+ * The flat grids follow `flatNames`; the Public tree has no way to be told to clear, so it is remounted.
+ */
+const TabbedEntityPicker: FC<Props> = ({
+  entityType,
+  onChangeSelectedEntities,
+  onChangeSelectedEntity,
+  ...treeProps
+}) => {
+  const t = useI18n();
+  const { isUnitMode } = useAppContext();
+  const { route } = ENTITY_SELECT_CONFIGS[entityType];
+  const isSingle = onChangeSelectedEntity != null;
+  const sources = useMemo(() => getAvailableSources(route, isUnitMode), [route, isUnitMode]);
+  const [activeSource, setActiveSource] = useState<AssetSource>(getDefaultSource(route));
+  const [publicPaths, setPublicPaths] = useState<string[]>([]);
+  const [flatNames, setFlatNames] = useState<ReadonlySet<string>>(new Set());
+  // Bumped when a flat pick replaces a Public pick, to drop the tree's own highlighted row.
+  const [treeKey, setTreeKey] = useState(0);
+  const platform = useFlatAssets(route, AssetSource.Platform, sources.includes(AssetSource.Platform));
+  const configFile = useFlatAssets(route, AssetSource.ConfigFile, sources.includes(AssetSource.ConfigFile));
+
+  // Public is a tree and is not counted, so it has no entry here and its tab shows no badge.
+  const counts = useMemo<AssetSourceCounts>(
+    () => ({ [AssetSource.Platform]: platform.count, [AssetSource.ConfigFile]: configFile.count }),
+    [platform.count, configFile.count],
+  );
+  const tabs = useMemo<TabItem[]>(
+    () =>
+      sources.map((source) => ({
+        id: source,
+        label: t(TAB_LABEL_KEYS[source]),
+        count: source === AssetSource.Public ? undefined : counts[source],
+      })),
+    [sources, t, counts],
+  );
+
+  const report = useCallback(
+    (paths: string[], names: ReadonlySet<string>) => {
+      const platformNames = new Set(platform.rows.map((row) => row.name));
+      const entities: PickedEntity[] = [
+        ...paths.map((path) => ({ source: AssetSource.Public, path, name: path })),
+        ...[...names].map((name) => ({
+          source: platformNames.has(name) ? AssetSource.Platform : AssetSource.ConfigFile,
+          name,
+        })),
+      ];
+      if (onChangeSelectedEntity) {
+        onChangeSelectedEntity(entities[0] ?? null);
+        return;
+      }
+      onChangeSelectedEntities?.(entities);
+    },
+    [onChangeSelectedEntities, onChangeSelectedEntity, platform.rows],
+  );
+
+  const onChangePublicPaths = useCallback(
+    (paths: string[]) => {
+      setPublicPaths(paths);
+      report(paths, flatNames);
+    },
+    [flatNames, report],
+  );
+
+  const onChangePublicPath = useCallback(
+    (path: string | null) => {
+      const paths = path ? [path] : [];
+      const names: ReadonlySet<string> = path ? new Set() : flatNames;
+      setPublicPaths(paths);
+      setFlatNames(names);
+      report(paths, names);
+    },
+    [flatNames, report],
+  );
+
+  const onChangeFlatSelection = useCallback(
+    (tabRows: AssetListItem[], selectedRows: AssetListItem[]) => {
+      const tabNames = new Set(tabRows.map((row) => row.name));
+      const remaining = new Set([...flatNames].filter((name) => !tabNames.has(name)));
+
+      if (isSingle) {
+        const picked = selectedRows[0]?.name;
+        const next = new Set(picked ? [picked] : remaining);
+        // A flat pick replaces a Public pick; the tree is told by remounting it.
+        const nextPaths = picked ? [] : publicPaths;
+        if (picked && publicPaths.length > 0) {
+          setTreeKey((key) => key + 1);
+        }
+        setPublicPaths(nextPaths);
+        setFlatNames(next);
+        report(nextPaths, next);
+        return;
+      }
+
+      const next = new Set(remaining);
+      selectedRows.forEach((row) => next.add(row.name));
+      setFlatNames(next);
+      report(publicPaths, next);
+    },
+    [flatNames, isSingle, publicPaths, report],
+  );
+
+  const publicTreeProps = isSingle
+    ? { ...treeProps, onChangeSelectedPath: onChangePublicPath, onChangeSelectedPaths: undefined }
+    : { ...treeProps, onChangeSelectedPaths: onChangePublicPaths };
+
+  return (
+    <div className="flex size-full min-h-0 flex-col">
+      {sources.length > 1 && (
+        <div className="px-3 pt-3">
+          <Tabs
+            ariaLabel={t(AssetTabsI18nKey.TabsLabel)}
+            tabs={tabs}
+            activeTabId={activeSource}
+            onTabChange={(id) => setActiveSource(id as AssetSource)}
+          />
+        </div>
+      )}
+      <div className="min-h-0 flex-1">
+        {sources.includes(AssetSource.Public) && (
+          <div className={classNames('size-full', activeSource !== AssetSource.Public && 'hidden')}>
+            <PublicEntityTree key={treeKey} {...publicTreeProps} entityType={entityType} />
+          </div>
+        )}
+        {sources.includes(AssetSource.Platform) && (
+          <div className={classNames('size-full p-3', activeSource !== AssetSource.Platform && 'hidden')}>
+            <FlatAssetGrid
+              isSelectMode
+              isSingleSelect={isSingle}
+              view={route}
+              source={AssetSource.Platform}
+              assets={platform}
+              selectedNames={flatNames}
+              onSelectionChange={(rows) => onChangeFlatSelection(platform.rows, rows)}
+            />
+          </div>
+        )}
+        {sources.includes(AssetSource.ConfigFile) && (
+          <div className={classNames('size-full p-3', activeSource !== AssetSource.ConfigFile && 'hidden')}>
+            <FlatAssetGrid
+              isSelectMode
+              isSingleSelect={isSingle}
+              view={route}
+              source={AssetSource.ConfigFile}
+              assets={configFile}
+              selectedNames={flatNames}
+              onSelectionChange={(rows) => onChangeFlatSelection(configFile.rows, rows)}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default TabbedEntityPicker;

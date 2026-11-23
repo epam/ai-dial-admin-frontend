@@ -27,7 +27,7 @@ import { useGridStatePersistence } from '@/src/components/Grid/hooks/use-grid-st
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
-import { FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
+import { FILE_PREVIEW, PREVIEW_EXTENSIONS, ROOT_FOLDER } from '@/src/constants/file';
 import { FileManagerI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { getRouteNamespace } from '@/src/utils/org-units/namespaces';
@@ -44,14 +44,9 @@ import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import {
-  getRootFolder,
-  getRootFolders,
-  isFileRootPath,
-  isNestedPlatformView,
-  isPlatformBucketView,
-} from '@/src/utils/files/root-folder';
+import { shouldRestoreFolderHierarchy } from '@/src/utils/files/folder-hierarchy';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { addTrailingSlash } from '@/src/utils/url';
 import MoveItemsModal from './MoveItemsModal';
 import { FILE_MANAGER_GRID_PERSISTENCE, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
 import { useShowHiddenFiles } from './use-show-hidden-files';
@@ -69,7 +64,8 @@ import {
 
 interface Props {
   view: ApplicationRoute;
-  label: string;
+  /** The folder tree's title; omit it where the page already shows its own. */
+  label?: string;
   columnDefs: ColDef[];
   getContext: () => AssetsFolderContextReader<AssetListItem>;
   onCreateFolder?: (
@@ -103,6 +99,8 @@ interface Props {
   folderToRefetch?: string | null;
 }
 
+const ROOT_PATH = `${ROOT_FOLDER}/`;
+
 const UNIT_PROTECTED_ACTIONS = new Set([
   DialFileManagerActions.Move,
   DialFileManagerActions.Rename,
@@ -132,12 +130,13 @@ const FileManager: FC<Props> = ({
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { isUnitMode, canWriteAt } = useAppContext();
   const { showNotification } = useNotification();
-  const { units, ensureUnits } = useOrgUnits();
+  const { units, ensureUnits, refreshUnits } = useOrgUnits();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const folderContext = getContext();
   const {
     files,
     fetchFiles,
+    fetchFolderHierarchy,
     isFetchingFiles,
     filePath,
     setFilePath,
@@ -151,8 +150,6 @@ const FileManager: FC<Props> = ({
     [loadedPaths, fetchedFoldersData],
   );
   // In unit mode the unit owning the open folder decides; a view with no unit namespace stays read-only.
-  // The platform bucket is admin-only, so a unit user's roots stop at the shared space.
-  const isPlatformBucketEnabled = !isUnitMode;
   const namespace = getRouteNamespace(view);
   const isReadOnly = isReadOnlyAdmin || (isUnitMode && (namespace == null || !canWriteAt(namespace, filePath ?? '')));
   const [gridApi, setGridApi] = useState<GridApi>();
@@ -168,9 +165,27 @@ const FileManager: FC<Props> = ({
     onColumnResized,
   } = useGridStatePersistence({ storageKey: view, columnDefs, gridApi, ...FILE_MANAGER_GRID_PERSISTENCE });
 
+  // A filter typed in one folder would hide the contents of the next one, whichever way the user got there.
   useEffect(() => {
-    ensureUnits();
-  }, [ensureUnits]);
+    if (Object.keys(gridApi?.getFilterModel() ?? {}).length > 0) {
+      gridApi?.setFilterModel(null);
+    }
+    // Only a path change clears; a grid that appears later has nothing to clear.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filePath]);
+
+  // Opening a listing that can hold unit folders reads the units again, so its first tree is built from
+  // fresh data; folder navigation inside it never re-runs this. Other listings only need them for icons.
+  const hasUnitNamespace = namespace != null;
+  useEffect(() => {
+    if (hasUnitNamespace) {
+      void refreshUnits();
+    } else {
+      ensureUnits();
+    }
+    // Mount only: a later change of the callbacks or the view must not repeat the read.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!folderToRefetch) {
@@ -198,27 +213,22 @@ const FileManager: FC<Props> = ({
 
   useEffect(() => {
     if (files == null || files?.length === 0) {
-      const rootPaths = getRootFolders(view, isPlatformBucketEnabled, !isUnitMode).map((root) => `${root}/`);
-      fetchFiles(rootPaths.length > 1 ? rootPaths : rootPaths[0]);
-      setLoadedPaths(new Set(rootPaths));
+      // A selection that outlived the tree (back from a details page) needs its chain, not just the root.
+      if (fetchFolderHierarchy && shouldRestoreFolderHierarchy(filePath, fetchedFoldersData)) {
+        fetchFolderHierarchy(filePath, true);
+      } else {
+        fetchFiles(ROOT_PATH);
+      }
+      setLoadedPaths(new Set([ROOT_PATH]));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files]);
 
-  // Applications is the one view with two top-level buckets (`platform`/`public` — see
-  // `getRootFolders`). Neither `filteredFiles[0]` is "the" root there, so pass a plain label
-  // wrapper instead of reusing one bucket's own node as the tree's virtual root.
-  const isMultiRootView = getRootFolders(view, isPlatformBucketEnabled, !isUnitMode).length > 1;
-  // Conversations and the flat platform views have no folder concept for their rows — the row
-  // context menu and bulk toolbar already hide "Move to" for them (`Assets/utils.ts`,
-  // `FileManager/utils.ts`), but `onMoveToFiles` also drives drag-and-drop independently of those
-  // menus, so it must be withheld here too rather than left to resolve as a silent no-op with a
-  // false success toast (`handleMoveToFiles` reports success on an empty promise list).
-  const isMoveSupported = !isPlatformBucketView(view) && view !== ApplicationRoute.Conversations;
-  // A nested platform view's folder (a cost object) exists only while it holds a record, so there is no
-  // folder marker to create: the create modal takes the folder instead.
-  const isCreateFolderSupported = !isNestedPlatformView(view);
-  const isFileRootActive = isFileRootPath(filePath);
+  // Conversations have no folder concept for their rows — the row context menu and bulk toolbar already hide
+  // "Move to" for them (`Assets/utils.ts`, `FileManager/utils.ts`), but `onMoveToFiles` also drives
+  // drag-and-drop independently of those menus, so it must be withheld here too rather than left to resolve
+  // as a silent no-op with a false success toast (`handleMoveToFiles` reports success on an empty promise list).
+  const isMoveSupported = view !== ApplicationRoute.Conversations;
   const hasUnits = Object.keys(units).length > 0;
   const getUnitIcon = useCallback(
     (file: DialFile) =>
@@ -282,7 +292,7 @@ const FileManager: FC<Props> = ({
       // rejected.
       await onCreateFolder?.(_, folderPath).then((res) => {
         if (res && res.success) {
-          const parentPath = getParentPathByFullPath(newPath) || `${getRootFolder(view)}/`;
+          const parentPath = getParentPathByFullPath(newPath) || ROOT_PATH;
 
           fetchFiles(parentPath);
           setLoadedPaths((prev) => new Set(prev).add(newPath));
@@ -329,11 +339,14 @@ const FileManager: FC<Props> = ({
     [createFolder],
   );
 
-  const handleOnPathChange = useCallback(
-    (nextPath: string | undefined) => {
-      if (!nextPath) {
+  // The breadcrumb reports `public/folder` (segments joined with no trailing slash), while the tree, the
+  // expanded set and the fetched-folder cache are all keyed `public/folder/`.
+  const onPathChangeNormalized = useCallback(
+    (rawPath: string | undefined) => {
+      if (!rawPath) {
         return;
       }
+      const nextPath = addTrailingSlash(rawPath);
       const newExpanded = new Set(expandedFolders);
 
       if (newExpanded.has(nextPath)) {
@@ -390,7 +403,7 @@ const FileManager: FC<Props> = ({
       onDeleteItems?.(fileNodes).then((result) => {
         const isSuccess = result.every((res) => (Array.isArray(res) ? res.every((r) => r.success) : res.success));
         if (isSuccess) {
-          const parentPath = getParentPathByFullPath(fileNodes[0]?.sourceUrl) || `${getRootFolder(view)}/`;
+          const parentPath = getParentPathByFullPath(fileNodes[0]?.sourceUrl) || ROOT_PATH;
           fetchFiles(parentPath);
           setFilePath(parentPath);
 
@@ -477,7 +490,7 @@ const FileManager: FC<Props> = ({
   const onGridColumnsChanged = useCallback((event: GridColumnsChangedEvent) => reapplyState(event.api), [reapplyState]);
 
   const gridOptions = useMemo(() => {
-    const base = getGridOptions(view, isReadOnly, persistedColumnDefs ?? columnDefs, t, undefined, filePath);
+    const base = getGridOptions(view, isReadOnly, persistedColumnDefs ?? columnDefs, t);
     return {
       ...base,
       getItemIcon: getUnitIcon,
@@ -492,9 +505,6 @@ const FileManager: FC<Props> = ({
         onGridColumnsChanged,
       },
     };
-    // Applications and Toolsets are the only views whose action set depends on `filePath` (which
-    // bucket is being browsed — see `isPlatformDualBucketView`); every other view keeps the same
-    // options regardless of path, so this dependency is a no-op for them.
   }, [
     view,
     isReadOnly,
@@ -508,14 +518,13 @@ const FileManager: FC<Props> = ({
     onColumnVisible,
     onColumnResized,
     onGridColumnsChanged,
-    filePath,
   ]);
 
   const isUnitFolderActive = hasUnits && isUnitFolder(units, filePath ?? '');
   const hasFolderPath = !!filePath?.replaceAll('/', '');
 
   const toolbarOptions = useMemo(() => {
-    const base = getToolbarOptions(view, isReadOnlyAdmin, t, filePath);
+    const base = getToolbarOptions(view, isReadOnlyAdmin, t);
     // A unit folder cannot receive imported resources, so its Create menu keeps only the "new item" entry.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { uploadFiles: _import, ...newActions } = base.newActions;
@@ -524,22 +533,23 @@ const FileManager: FC<Props> = ({
       newActions: isUnitFolderActive ? newActions : base.newActions,
       additionalButtons: <ResetFiltersButton gridApi={gridApi} />,
     };
-  }, [view, isReadOnlyAdmin, t, filePath, gridApi, isUnitFolderActive]);
+  }, [view, isReadOnlyAdmin, t, gridApi, isUnitFolderActive]);
 
   return (
     <>
       <DialFileManager
-        className="bg-transparent"
+        // The library pads the tree's bottom only (`pb-6`); without a tree title, give it vertical padding instead.
+        className={classNames('bg-transparent', !label && '[&_div:has(>[role=tree])]:!py-4')}
         path={filePath}
-        defaultPath={`${getRootFolder(view)}/`}
+        defaultPath={ROOT_PATH}
         items={filteredFiles as []}
-        rootItem={isMultiRootView ? ({ label } as DialRootFolder) : (filteredFiles?.[0] as DialRootFolder)}
+        rootItem={filteredFiles?.[0] as DialRootFolder}
         filesLoading={isFetchingFiles}
         showNavigationPanel={hasFolderPath}
         contentHeaderClassName={classNames('h-[52px] items-start', !hasFolderPath && 'justify-end')}
         navigationPanelOptions={{ searchable: false, ariaLabel: t(FileManagerI18nKey.FolderPath) }}
         sortOptions={{ sortable: false }}
-        bulkActionsToolbarOptions={getBulkActionsToolbarOptions(view, t, filePath)}
+        bulkActionsToolbarOptions={getBulkActionsToolbarOptions(view, t)}
         toolbarOptions={toolbarOptions}
         showHiddenFiles={isHiddenFilesToggleVisible ? isShowHiddenFiles : undefined}
         onShowHiddenFilesChange={isHiddenFilesToggleVisible ? onShowHiddenFilesChange : undefined}
@@ -553,34 +563,33 @@ const FileManager: FC<Props> = ({
             view,
             onExpandedPathsChange,
             t,
-            filePath,
             label,
           ),
           getItemIcon: getUnitIcon,
         }}
         gridOptions={gridOptions}
         onGridApiChange={setGridApi}
-        onPathChange={handleOnPathChange}
+        onPathChange={onPathChangeNormalized}
         forbiddenSymbolsRegExp={getForbiddenSymbolsRegExp(view)}
         {...props}
         getItemActionRestriction={getItemActionRestriction}
-        onCreateFolder={isReadOnly || isFileRootActive || !isCreateFolderSupported ? undefined : handleCreateFolder}
-        onDownloadFiles={isFileRootActive ? undefined : handleDownloadFiles}
+        onCreateFolder={isReadOnly ? undefined : handleCreateFolder}
+        onDownloadFiles={handleDownloadFiles}
         onCreateFolderValidate={handleCreateFolderValidate}
         onRenameValidate={handleCreateFolderValidate}
-        onDeleteFiles={isReadOnly || isFileRootActive ? undefined : handleDeleteFileNodes}
-        onMoveToFiles={isReadOnly || isFileRootActive || !isMoveSupported ? undefined : handleMoveToFiles}
+        onDeleteFiles={isReadOnly ? undefined : handleDeleteFileNodes}
+        onMoveToFiles={isReadOnly || !isMoveSupported ? undefined : handleMoveToFiles}
         onFolderPopupPathChange={handleFolderPopupPathChange}
-        onManagePermissions={isReadOnly || isFileRootActive ? undefined : handleManagePermissions}
-        onPreview={isFileRootActive ? undefined : handlePreviewFile}
-        onUploadFiles={isReadOnly || isFileRootActive ? undefined : handleDragAndDropFiles}
+        onManagePermissions={isReadOnly ? undefined : handleManagePermissions}
+        onPreview={handlePreviewFile}
+        onUploadFiles={isReadOnly ? undefined : handleDragAndDropFiles}
         folderCreationValidationMessages={getValidationMessages(t)}
         renameValidationMessages={getValidationMessages(t)}
         destinationFolderPopupOptions={getDestinationFolderPopupOptions(
           view,
           t,
           handleFolderNestingDepthExceeded,
-          isReadOnly || isFileRootActive || !isCreateFolderSupported ? undefined : handleDestinationFolderCreate,
+          isReadOnly ? undefined : handleDestinationFolderCreate,
         )}
         isRenameFileAvailable={false}
         isDuplicateFolderAvailable={false}

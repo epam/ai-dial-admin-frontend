@@ -5,7 +5,9 @@ import { FC, useState } from 'react';
 import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import CompareMetricDeltaValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareMetricDeltaValue';
+import CellCopyButton from '@/src/components/Runs/Details/RowDetails/CellCopyButton';
 import FieldValue from '@/src/components/Runs/Details/RowDetails/FieldValue';
+import ScoreThresholdTooltip from '@/src/components/Runs/Details/RowDetails/ScoreThresholdTooltip';
 import StatusValue from '@/src/components/Runs/Details/RowDetails/StatusValue';
 import { ROW_DETAIL_CELL_BASE } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
 import {
@@ -13,6 +15,7 @@ import {
   ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP,
 } from '@/src/components/Runs/Details/RowDetails/constants';
 import { RowDetailField } from '@/src/components/Runs/Details/RowDetails/models';
+import { canCopyFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/can-copy-field-value';
 import { getScoreFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/score-field-value';
 import { isRightAlignedRowDetailField } from '@/src/components/Runs/Details/RowDetails/utils/row-detail-alignment';
 import { getCompareDiffCellProps } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-styles';
@@ -20,7 +23,10 @@ import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/
 import { EXECUTION_STATUS_FIELD_KEY } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import { CompareRunSlot } from '@/src/components/Runs/Compare/constants';
 import { CompareRun } from '@/src/components/Runs/Compare/models';
-import { getRowDetailRunValue } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/run-field-values';
+import {
+  getRowDetailRunThreshold,
+  getRowDetailRunValue,
+} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/run-field-values';
 import { mergeClasses } from '@/src/utils/merge-classes';
 import { IconMaximize } from '@tabler/icons-react';
 
@@ -66,32 +72,38 @@ const DetailRow: FC<Props> = ({
 
   const renderRunCell = (run: CompareRun) => {
     const { raw, isFailed } = getRowDetailRunValue(row, run.slot);
+    const threshold = getRowDetailRunThreshold(row, run.slot);
     const isMissing = run.slot === CompareRunSlot.Secondary && !hasComparedMatch;
     const hasScore = !isMissing && !isStatusRow && getScoreFieldValue(raw, row.isScoreIndicator, isFailed) != null;
+    const canCopy = !isMissing && canCopyFieldValue(row, raw, isFailed) && raw != null;
 
     return (
-      <div
-        key={run.slot}
-        className={mergeClasses(
-          ROW_DETAIL_CELL_BASE,
-          isRightAligned && 'text-right',
-          hasScore && 'p-0 flex',
-          valueProps.className,
-        )}
-        {...diffCellDataAttr(valueProps)}
-      >
-        {isMissing && <span className="text-secondary dial-small-text">{noMatchLabel}</span>}
-        {!isMissing && isStatusRow && <StatusValue raw={raw} />}
-        {!isMissing && !isStatusRow && (
-          <FieldValue
-            raw={raw}
-            isFailed={isFailed}
-            isScoreIndicator={row.isScoreIndicator}
-            failedLabel={failedLabel}
-            onOverflowChange={(isOverflowing) => onRunOverflowChange(run.slot, isOverflowing)}
-          />
-        )}
-      </div>
+      <ScoreThresholdTooltip key={run.slot} raw={raw} threshold={isMissing ? undefined : threshold}>
+        <div
+          className={mergeClasses(
+            ROW_DETAIL_CELL_BASE,
+            'relative group/cell',
+            isRightAligned && 'text-right',
+            hasScore && 'p-0 flex',
+            valueProps.className,
+          )}
+          {...diffCellDataAttr(valueProps)}
+        >
+          {isMissing && <span className="text-secondary dial-small-text">{noMatchLabel}</span>}
+          {!isMissing && isStatusRow && <StatusValue raw={raw} />}
+          {!isMissing && !isStatusRow && (
+            <FieldValue
+              raw={raw}
+              isFailed={isFailed}
+              isScoreIndicator={row.isScoreIndicator}
+              threshold={threshold}
+              failedLabel={failedLabel}
+              onOverflowChange={(isOverflowing) => onRunOverflowChange(run.slot, isOverflowing)}
+            />
+          )}
+          {canCopy && <CellCopyButton label={row.label} value={raw} />}
+        </div>
+      </ScoreThresholdTooltip>
     );
   };
 

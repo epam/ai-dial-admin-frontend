@@ -11,6 +11,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialModelEndpoint } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isUpstreamAuthKeyRequired } from '@/src/utils/models/upstream-auth';
+import { findOriginalUpstream } from '@/src/utils/models/upstream-secrets';
 import Endpoint from './Endpoint/Endpoint';
 
 interface Props<T> {
@@ -94,7 +95,11 @@ const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
           required={required}
           isAuthTypeSupported={isAuthTypeSupported}
           isAuthKeyRequired={
-            isAuthTypeSupported && isUpstreamAuthKeyRequired(endpoint.authType, originalUpstreams?.[index]?.authType)
+            isAuthTypeSupported &&
+            isUpstreamAuthKeyRequired(
+              endpoint.authType,
+              findOriginalUpstream(originalUpstreams, entity.upstreams, index)?.authType,
+            )
           }
           updateEndpoint={(point) => onUpdateEndPoint(point, index)}
           removeEndpoint={onRemoveEndpoint}

@@ -2,6 +2,8 @@ import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
 import { AnalyticsRunnerApi } from '@/src/server/analytics/analytics-runner-api';
 import { AnalyticsAuditApi } from '@/src/server/analytics/audit-api';
 import { DashboardsApi } from '@/src/server/analytics/dashboards-api';
+import { EnrichmentRoutesApi } from '@/src/server/analytics/enrichment-routes-api';
+import { SessionsSourceApi } from '@/src/server/analytics/sessions-source-api';
 import { stripAssetIdentityFields, stripMetadata } from '@/src/server/assets/exim';
 import { AppRunnerSchemaApi } from '@/src/server/core/app-runner-schema-api';
 import { CatalogSchemasApi } from '@/src/server/core/catalog-schemas-api';
@@ -180,6 +182,14 @@ export const analyticsDataApi = new AnalyticsDataApi({
 });
 
 export const dashboardsApi = new DashboardsApi({
+  host: process.env.DIAL_ANALYTICS_API_URL,
+});
+
+export const sessionsSourceApi = new SessionsSourceApi({
+  host: process.env.DIAL_ANALYTICS_API_URL,
+});
+
+export const enrichmentRoutesApi = new EnrichmentRoutesApi({
   host: process.env.DIAL_ANALYTICS_API_URL,
 });
 

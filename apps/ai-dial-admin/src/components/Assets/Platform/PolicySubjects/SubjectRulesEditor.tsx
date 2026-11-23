@@ -1,27 +1,29 @@
 'use client';
 
-import {
-  ButtonAppearance,
-  DIAL_ICON_SIZE,
-  GhostIconButton,
-  Input,
-  PrimaryButton,
-  Select,
-  TagInput,
-} from '@epam/ai-dial-ui-kit';
-import { IconPlus, IconTrashX } from '@tabler/icons-react';
+import { ButtonAppearance, Input, PrimaryButton, Select, TagInput } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 import { FC, useCallback } from 'react';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { SUBJECT_FUNCTION_OPTIONS } from '@/src/components/Assets/Platform/PolicySubjects/constants';
-import { PolicySubjectsI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey, PolicySubjectsI18nKey, StatusBadgeI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { PolicySubjectFunction, PolicySubjectRule } from '@/src/models/dial/policy';
-import { addRule, isTargetlessFunction, normalizeSubject, removeRule, updateRule } from '@/src/utils/policies/subjects';
+import {
+  addRule,
+  areTargetsValid,
+  isFunctionValid,
+  isSourceValid,
+  isTargetlessFunction,
+  normalizeSubject,
+  removeRule,
+  updateRule,
+} from '@/src/utils/policies/subjects';
 
-const isTargetMissing = (rule: PolicySubjectRule): boolean =>
-  !isTargetlessFunction(rule.function) && !rule.targets?.length;
+const getTargetsErrorKey = (rule: PolicySubjectRule): ErrorI18nKey | PolicySubjectsI18nKey =>
+  rule.targets?.length ? ErrorI18nKey.EmptyField : PolicySubjectsI18nKey.TargetsRequired;
 
 interface Props {
   rules?: PolicySubjectRule[];
@@ -52,8 +54,8 @@ const SubjectRulesEditor: FC<Props> = ({ rules, onChange }) => {
 
   return (
     <div className="flex flex-col gap-y-4">
-      <p className="">{t(PolicySubjectsI18nKey.Pinned)}</p>
-      {!rules?.length && <p className="text-secondary dial-small-text">{t(PolicySubjectsI18nKey.Empty)}</p>}
+      <p className="text-secondary">{t(PolicySubjectsI18nKey.Pinned)}</p>
+      {!rules?.length && <p className="dial-small-text">{t(PolicySubjectsI18nKey.Empty)}</p>}
       {rules?.map((rule, index) => (
         <div
           // The list has no stable id and rules are only ever appended or removed by position.
@@ -69,7 +71,8 @@ const SubjectRulesEditor: FC<Props> = ({ rules, onChange }) => {
               placeholder={t(PolicySubjectsI18nKey.SourcePlaceholder)}
               value={rule.source}
               disabled={isReadOnlyAdmin}
-              invalid={!rule.source}
+              invalid={!isSourceValid(rule.source)}
+              error={!isSourceValid(rule.source) ? t(ErrorI18nKey.EmptyField) : undefined}
               onChange={(source) => onChangeRule(index, { source })}
             />
           </div>
@@ -80,6 +83,8 @@ const SubjectRulesEditor: FC<Props> = ({ rules, onChange }) => {
               options={functionOptions}
               value={rule.function}
               disabled={isReadOnlyAdmin}
+              invalid={!isFunctionValid(rule.function)}
+              error={!isFunctionValid(rule.function) ? t(StatusBadgeI18nKey.Invalid) : undefined}
               onChange={(value) => onChangeRule(index, { function: value as PolicySubjectFunction })}
             />
           </div>
@@ -88,8 +93,8 @@ const SubjectRulesEditor: FC<Props> = ({ rules, onChange }) => {
               id={`subject-targets-${index}`}
               labelProps={{ label: t(PolicySubjectsI18nKey.Targets), required: !isTargetlessFunction(rule.function) }}
               caption={isTargetlessFunction(rule.function) ? t(PolicySubjectsI18nKey.TargetsNotUsed) : undefined}
-              error={isTargetMissing(rule) ? t(PolicySubjectsI18nKey.TargetsRequired) : undefined}
-              invalid={isTargetMissing(rule)}
+              error={!areTargetsValid(rule) ? t(getTargetsErrorKey(rule)) : undefined}
+              invalid={!areTargetsValid(rule)}
               value={rule.targets ?? []}
               disabled={isReadOnlyAdmin || isTargetlessFunction(rule.function)}
               onChange={(targets) => onChangeRule(index, { targets })}
@@ -99,11 +104,7 @@ const SubjectRulesEditor: FC<Props> = ({ rules, onChange }) => {
           {!isReadOnlyAdmin && (
             // Offset by the label height so the button lines up with the controls, not their labels.
             <div className="shrink-0 pt-6">
-              <GhostIconButton
-                icon={<IconTrashX size={DIAL_ICON_SIZE.SM} className="text-error" aria-hidden />}
-                aria-label={t(PolicySubjectsI18nKey.RemoveRule)}
-                onClick={() => onRemoveRule(index)}
-              />
+              <RemoveButton aria-label={t(PolicySubjectsI18nKey.RemoveRule)} onClick={() => onRemoveRule(index)} />
             </div>
           )}
         </div>

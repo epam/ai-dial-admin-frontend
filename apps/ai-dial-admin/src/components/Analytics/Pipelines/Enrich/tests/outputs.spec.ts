@@ -11,6 +11,7 @@ const row = (overrides: Partial<OutputRow>): OutputRow => ({
   refinement: OutputRefinementKind.Jsonata,
   values: [],
   jsonata: '',
+  source: '',
   ...overrides,
 });
 
@@ -79,5 +80,29 @@ describe('Analytics :: pipelines :: toOutputs', () => {
 
     expect(toOutputs(rows, TransformType.Llm)).toEqual([{ name: 'risk', prose: 'Severity.', jsonata: 'level' }]);
     expect(rows[0].values).toEqual(['low']);
+  });
+});
+
+describe('Analytics :: pipelines :: outputs — the route source', () => {
+  test('seeds the source beside the jsonata', () => {
+    const [seeded] = toOutputRows([{ name: 'check_count', source: 'intent_counts.check' }], TransformType.Llm);
+
+    expect(seeded.source).toBe('intent_counts.check');
+    expect(seeded.jsonata).toBe('');
+  });
+
+  test('publishes both expressions, so a preset change loses neither', () => {
+    expect(
+      toOutputs([row({ name: 'check_count', jsonata: 'count', source: 'intent_counts.check' })], TransformType.Llm),
+    ).toEqual([{ name: 'check_count', prose: '', jsonata: 'count', source: 'intent_counts.check' }]);
+  });
+
+  test('publishes no source for a row refined by a value list', () => {
+    const [output] = toOutputs(
+      [row({ name: 'risk', refinement: OutputRefinementKind.Values, values: ['low'], source: 'level' })],
+      TransformType.Llm,
+    );
+
+    expect(output.source).toBeUndefined();
   });
 });

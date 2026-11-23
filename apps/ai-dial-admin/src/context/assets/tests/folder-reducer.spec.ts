@@ -100,79 +100,6 @@ describe('Folder Reducer :: HierarchyLoaded', () => {
   });
 });
 
-describe('Folder Reducer :: RootsLoaded', () => {
-  const payload = {
-    type: FolderActionType.RootsLoaded as const,
-    files: [createFolder('platform/'), createFolder('public/')],
-    fetchedFoldersData: { 'platform/': [createItem('platform/a')], 'public/': [createItem('public/b')] },
-    openPath: 'public/',
-    isLatestRequest: true,
-  };
-
-  test('Should show the open root and select it', () => {
-    const next = folderReducer(createState(), payload);
-
-    expect(next.files).toBe(payload.files);
-    expect(next.filePath).toBe('public/');
-    expect([...next.expandedFolders]).toEqual(['public/']);
-  });
-
-  test('Should merge into the cached folders and keep the open ones by default', () => {
-    const next = folderReducer(
-      createState({ fetchedFoldersData: { 'other/': [] }, expandedFolders: new Set(['other/']) }),
-      payload,
-    );
-
-    expect(Object.keys(next.fetchedFoldersData)).toEqual(['other/', 'platform/', 'public/']);
-    expect([...next.expandedFolders]).toEqual(['other/', 'public/']);
-  });
-
-  test('Should replace the cache and open only the root when refreshing', () => {
-    const next = folderReducer(
-      createState({ fetchedFoldersData: { 'other/': [] }, expandedFolders: new Set(['other/']) }),
-      { ...payload, refreshData: true },
-    );
-
-    expect(Object.keys(next.fetchedFoldersData)).toEqual(['platform/', 'public/']);
-    expect([...next.expandedFolders]).toEqual(['public/']);
-  });
-
-  test('Should clear a previous error', () => {
-    const next = folderReducer(createState({ hasFetchError: true }), payload);
-
-    expect(next.hasFetchError).toBe(false);
-  });
-
-  test('Should keep the current selection by default', () => {
-    const next = folderReducer(createState({ filePath: 'platform/' }), payload);
-
-    expect(next.filePath).toBe('platform/');
-  });
-
-  test('Should select the open root over the current selection when resetFolder is set', () => {
-    const next = folderReducer(createState({ filePath: 'platform/' }), { ...payload, resetFolder: true });
-
-    expect(next.filePath).toBe('public/');
-  });
-
-  test('Should only add to the cache when a newer request has started', () => {
-    const state = createState({
-      files: [createFolder('current/')],
-      filePath: 'current/',
-      hasFetchError: true,
-      expandedFolders: new Set(['current/']),
-      fetchedFoldersData: { 'current/': [createItem('current/x')] },
-    });
-
-    const next = folderReducer(state, { ...payload, isLatestRequest: false, refreshData: true });
-
-    expect(next).toEqual({
-      ...state,
-      fetchedFoldersData: { ...state.fetchedFoldersData, ...payload.fetchedFoldersData },
-    });
-  });
-});
-
 describe('Folder Reducer :: FolderLoaded', () => {
   const items = [createItem('root/item')];
   const payload = {
@@ -379,5 +306,55 @@ describe('Folder Reducer :: FolderToggled', () => {
     const next = folderReducer(state, { type: FolderActionType.FolderToggled, folderPath: 'a/', options });
 
     expect(next).toEqual(toggleFolderState(state, 'a/', options).state);
+  });
+});
+
+describe('Folder Reducer :: TreeInvalidated', () => {
+  test('Should empty the tree, the cache and the open folders and keep the selection', () => {
+    const state = createState({
+      files: [createFolder('public/')],
+      filePath: 'public/Acme/',
+      expandedFolders: new Set(['public/', 'public/Acme/']),
+      fetchedFoldersData: { 'public/': [createItem('public/x')] },
+    });
+
+    const next = folderReducer(state, { type: FolderActionType.TreeInvalidated });
+
+    expect(next.files).toEqual([]);
+    expect(next.fetchedFoldersData).toEqual({});
+    expect([...next.expandedFolders]).toEqual([]);
+    expect(next.filePath).toBe('public/Acme/');
+  });
+
+  test('Should keep a fetch error flag as it was', () => {
+    const next = folderReducer(createState({ hasFetchError: true }), { type: FolderActionType.TreeInvalidated });
+
+    expect(next.hasFetchError).toBe(true);
+  });
+
+  test('Should not mutate the state it receives', () => {
+    const state = createState({ files: [createFolder('public/')], expandedFolders: new Set(['public/']) });
+
+    folderReducer(state, { type: FolderActionType.TreeInvalidated });
+
+    expect(state.files).toHaveLength(1);
+    expect([...state.expandedFolders]).toEqual(['public/']);
+  });
+
+  test('Should let the next load open the first node again', () => {
+    const invalidated = folderReducer(
+      createState({ files: [createFolder('public/')], expandedFolders: new Set(['public/']) }),
+      { type: FolderActionType.TreeInvalidated },
+    );
+
+    const loaded = folderReducer(invalidated, {
+      type: FolderActionType.FolderLoaded,
+      path: 'public/',
+      fetched: [],
+      folderItems: [],
+      isLatestRequest: true,
+    });
+
+    expect(loaded.expandedFolders.has('public/')).toBe(true);
   });
 });

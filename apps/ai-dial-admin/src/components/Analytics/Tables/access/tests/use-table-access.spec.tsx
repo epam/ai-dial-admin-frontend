@@ -1,21 +1,23 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import {
-  deleteRowPolicy,
-  getRowPolicies,
-  getTableAccess,
-  putRowPolicy,
-  updateTableAccess,
-} from '@/src/app/[lang]/tables/actions';
-import { AccessStatus, RowsCellKind } from '@/src/components/Analytics/Tables/access/models';
-import { useTableAccess } from '@/src/components/Analytics/Tables/access/use-table-access';
+import { deleteTableAccessEntry, getTableAccess, putTableAccessEntry } from '@/src/app/[lang]/tables/actions';
+import { AccessChangeOutcome, AccessStatus, RowsCellKind } from '@/src/components/Analytics/Tables/access/models';
+import { SaveEntryResult, useTableAccess } from '@/src/components/Analytics/Tables/access/use-table-access';
 import { AnalyticsTableAccessI18nKey, AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { QueryExprType, QueryFilterNode, QueryOperator, QueryValueType } from '@/src/models/analytics/query';
-import { RowPolicies, TableAccess, TableAccessUpdateResult } from '@/src/models/analytics/table';
+import {
+  IneffectiveGrant,
+  IneffectiveGrantReason,
+  TableAccessConfig,
+  TableAccessEntry,
+  TableAccessEntryResult,
+  TableGrantKey,
+} from '@/src/models/analytics/table';
 
-const showNotification = vi.hoisted(() => vi.fn());
-vi.mock('@/src/context/NotificationContext', () => ({ useNotification: () => ({ showNotification }) }));
+const { showNotification } = notificationMock;
+
 vi.mock('@/src/app/[lang]/tables/actions');
 
 const filter: QueryFilterNode = {
@@ -26,15 +28,38 @@ const filter: QueryFilterNode = {
   ],
 };
 
-const noSelection = { get: false, read: false, write: false, modify: false, sensitive: false };
+const entry = (privileges: TableGrantKey[], over: Partial<TableAccessEntry> = {}): TableAccessEntry => ({
+  privileges,
+  rows: null,
+  columns: null,
+  ...over,
+});
 
-const mockLoad = (
-  lists: Partial<TableAccess> = { read: ['team-x'], write: ['ingest-bot'] },
-  policies: RowPolicies = {},
-) => {
-  vi.mocked(getTableAccess).mockResolvedValue({ success: true, response: lists as TableAccess });
-  vi.mocked(getRowPolicies).mockResolvedValue({ success: true, response: { policies } });
+const READ_ENTRY = entry([TableGrantKey.Read]);
+
+const config = (over: Partial<TableAccessConfig> = {}): TableAccessConfig => ({
+  generation: 5,
+  roles: { 'team-x': READ_ENTRY, 'ingest-bot': entry([TableGrantKey.Write]) },
+  ineffective_grants: [],
+  ...over,
+});
+
+const stored = (role: string, generation: number, saved: TableAccessEntry = READ_ENTRY): TableAccessEntryResult => ({
+  ...saved,
+  generation,
+  role,
+  ineffective_grants: [],
+});
+
+const everyoneWarning: IneffectiveGrant = {
+  key: TableGrantKey.Read,
+  role: '*',
+  reason: IneffectiveGrantReason.EveryoneReadsAllRows,
+  message: 'everyone reads every row',
 };
+
+const mockLoad = (over: Partial<TableAccessConfig> = {}) =>
+  vi.mocked(getTableAccess).mockResolvedValue({ success: true, response: config(over) });
 
 const renderLoaded = async (isEnabled = true) => {
   const view = renderHook(() => useTableAccess('events', isEnabled));
@@ -49,30 +74,34 @@ beforeEach(() => {
 });
 
 describe('useTableAccess — loading', () => {
-  test('reads the access lists and the row policies together and offers the tab with its count', async () => {
-    mockLoad({ read: ['team-x'], write: ['ingest-bot'] }, { 'team-x': { filter }, lonely: { filter } });
+  test('reads the role-keyed access with one request and offers the tab with its rows', async () => {
+    mockLoad({
+      roles: { 'team-x': entry([TableGrantKey.Read], { rows: { filter }, columns: ['region'] }), '*': READ_ENTRY },
+      ineffective_grants: [everyoneWarning],
+    });
 
     const { result } = await renderLoaded();
 
+    expect(getTableAccess).toHaveBeenCalledOnce();
     expect(getTableAccess).toHaveBeenCalledWith('events');
-    expect(getRowPolicies).toHaveBeenCalledWith('events');
     expect(result.current.status).toBe(AccessStatus.Ready);
     expect(result.current.isTabOffered).toBe(true);
-    expect(result.current.rows.map((row) => row.role)).toEqual(['ingest-bot', 'lonely', 'team-x']);
-    expect(result.current.rows.find((row) => row.role === 'team-x')?.rowsKind).toBe(RowsCellKind.Policy);
+    expect(result.current.rows.map((row) => row.role)).toEqual(['*', 'team-x']);
+    expect(result.current.rows[1]).toMatchObject({ rowsKind: RowsCellKind.Policy, columns: ['region'] });
+    expect(result.current.rows[0].warnings).toEqual([everyoneWarning.message]);
+    expect(result.current.roles['*']).toEqual(READ_ENTRY);
+    expect(result.current.warnings).toEqual([everyoneWarning]);
   });
 
   test('requests nothing while disabled', async () => {
     const { result } = await renderLoaded(false);
 
     expect(getTableAccess).not.toHaveBeenCalled();
-    expect(getRowPolicies).not.toHaveBeenCalled();
     expect(result.current.isTabOffered).toBe(false);
   });
 
-  test('does not offer the tab while the reads are in flight', () => {
+  test('does not offer the tab while the read is in flight', () => {
     vi.mocked(getTableAccess).mockReturnValue(new Promise(() => undefined));
-    vi.mocked(getRowPolicies).mockReturnValue(new Promise(() => undefined));
 
     const { result } = renderHook(() => useTableAccess('events', true));
 
@@ -90,15 +119,6 @@ describe('useTableAccess — loading', () => {
     expect(showNotification).not.toHaveBeenCalled();
   });
 
-  test('removes the tab without a notification when the policies read is forbidden', async () => {
-    vi.mocked(getRowPolicies).mockResolvedValue({ success: false, status: 403 });
-
-    const { result } = await renderLoaded();
-
-    expect(result.current.status).toBe(AccessStatus.Forbidden);
-    expect(showNotification).not.toHaveBeenCalled();
-  });
-
   test('notifies and keeps the tab offered when the access read fails otherwise', async () => {
     vi.mocked(getTableAccess).mockResolvedValue({ success: false, status: 500, errorHeader: 'boom' });
 
@@ -106,10 +126,12 @@ describe('useTableAccess — loading', () => {
 
     expect(result.current.status).toBe(AccessStatus.Failed);
     expect(result.current.isTabOffered).toBe(true);
-    expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ title: 'boom' }));
+    expect(showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: AnalyticsTablesI18nKey.AccessLoadFailed }),
+    );
   });
 
-  test('uses the fallback title when the failed read carries none', async () => {
+  test('titles a failed read without a header with its own string', async () => {
     vi.mocked(getTableAccess).mockResolvedValue({ success: false, status: 500 });
 
     await renderLoaded();
@@ -118,247 +140,250 @@ describe('useTableAccess — loading', () => {
       expect.objectContaining({ title: AnalyticsTablesI18nKey.AccessLoadFailed }),
     );
   });
-
-  test('notifies with its own title when the policies read fails', async () => {
-    vi.mocked(getRowPolicies).mockResolvedValue({ success: false, status: 500 });
-
-    const { result } = await renderLoaded();
-
-    expect(result.current.status).toBe(AccessStatus.Failed);
-    expect(showNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ title: AnalyticsTableAccessI18nKey.RowPoliciesLoadFailed }),
-    );
-  });
 });
 
-describe('useTableAccess — saveGrants', () => {
-  test('reads the lists again, then sends only the changed key with every other grantee kept', async () => {
-    const { result } = await renderLoaded();
-    // Another admin added a role after the first read.
-    vi.mocked(getTableAccess).mockResolvedValue({
-      success: true,
-      response: { read: ['team-x', 'analysts'] } as TableAccess,
-    });
-    vi.mocked(updateTableAccess).mockResolvedValue({
-      success: true,
-      response: { read: ['team-x', 'analysts', 'team-z'] } as unknown as TableAccessUpdateResult,
-    });
-
-    let outcome: Awaited<ReturnType<typeof result.current.saveGrants>> | undefined;
+describe('useTableAccess — saveEntry', () => {
+  const save = async (
+    result: { current: ReturnType<typeof useTableAccess> },
+    role: string,
+    saved: TableAccessEntry = READ_ENTRY,
+  ) => {
+    let outcome: SaveEntryResult | undefined;
     await act(async () => {
-      outcome = await result.current.saveGrants('team-z', { ...noSelection, read: true });
+      outcome = await result.current.saveEntry(role, saved);
     });
 
-    expect(getTableAccess).toHaveBeenCalledTimes(2);
-    expect(updateTableAccess).toHaveBeenCalledWith('events', { read: ['team-x', 'analysts', 'team-z'] });
-    expect(outcome?.isOk).toBe(true);
-    expect(result.current.rows.map((row) => row.role)).toContain('team-z');
+    return outcome;
+  };
+
+  test('sends the whole entry of one role with the generation that was read', async () => {
+    const { result } = await renderLoaded();
+    const saved = entry([TableGrantKey.Read], { rows: { filter }, columns: ['region'] });
+    vi.mocked(putTableAccessEntry).mockResolvedValue({ success: true, response: stored('team-z', 6, saved) });
+
+    const outcome = await save(result, 'team-z', saved);
+
+    expect(putTableAccessEntry).toHaveBeenCalledOnce();
+    expect(putTableAccessEntry).toHaveBeenCalledWith('events', 'team-z', { ...saved, generation: 5 });
+    expect(outcome?.outcome).toBe(AccessChangeOutcome.Done);
   });
 
-  test('sends nothing when the selection matches what is stored', async () => {
+  test('sends the generation the previous save returned on the next save', async () => {
     const { result } = await renderLoaded();
+    vi.mocked(getTableAccess).mockResolvedValue({ success: false, status: 500 });
+    vi.mocked(putTableAccessEntry).mockResolvedValue({ success: true, response: stored('team-z', 6) });
 
-    let outcome: Awaited<ReturnType<typeof result.current.saveGrants>> | undefined;
-    await act(async () => {
-      outcome = await result.current.saveGrants('team-x', { ...noSelection, read: true });
+    await save(result, 'team-z');
+    await save(result, 'team-y');
+
+    expect(putTableAccessEntry).toHaveBeenLastCalledWith('events', 'team-y', { ...READ_ENTRY, generation: 6 });
+    expect(result.current.rows.map((row) => row.role)).toEqual(['ingest-bot', 'team-x', 'team-y', 'team-z']);
+  });
+
+  test('reads the access again after a successful save and shows what is now stored', async () => {
+    const { result } = await renderLoaded();
+    vi.mocked(putTableAccessEntry).mockResolvedValue({ success: true, response: stored('*', 6) });
+    mockLoad({
+      generation: 9,
+      roles: { '*': READ_ENTRY, analysts: entry([TableGrantKey.Get]) },
+      ineffective_grants: [everyoneWarning],
     });
 
-    expect(updateTableAccess).not.toHaveBeenCalled();
-    expect(outcome).toEqual({ isOk: true });
+    await save(result, '*');
+    await save(result, 'team-y');
+
+    expect(getTableAccess).toHaveBeenCalledTimes(3);
+    expect(result.current.rows.map((row) => row.role)).toEqual(['*', 'analysts']);
+    expect(result.current.warnings).toEqual([everyoneWarning]);
+    expect(putTableAccessEntry).toHaveBeenLastCalledWith('events', 'team-y', { ...READ_ENTRY, generation: 9 });
   });
 
   test('hands back the service answer so the caller can show ineffective grants', async () => {
     const { result } = await renderLoaded();
-    const answer = { read: ['team-x', 'team-z'], ineffective_grants: [{ role: 'team-z', key: 'read' }] };
-    vi.mocked(updateTableAccess).mockResolvedValue({ success: true, response: answer as never });
+    const answer = { ...stored('*', 6), ineffective_grants: [everyoneWarning] };
+    vi.mocked(putTableAccessEntry).mockResolvedValue({ success: true, response: answer });
 
-    let outcome: Awaited<ReturnType<typeof result.current.saveGrants>> | undefined;
-    await act(async () => {
-      outcome = await result.current.saveGrants('team-z', { ...noSelection, read: true });
-    });
+    const outcome = await save(result, '*');
 
-    expect(outcome?.result).toBe(answer);
+    expect(outcome).toEqual({ outcome: AccessChangeOutcome.Done, result: answer });
   });
 
-  test('notifies and reports failure when the update is refused, leaving the lists as they were', async () => {
+  test('drops a role whose stored entry came back with nothing left', async () => {
     const { result } = await renderLoaded();
-    vi.mocked(updateTableAccess).mockResolvedValue({
+    vi.mocked(getTableAccess).mockResolvedValue({ success: false, status: 500 });
+    vi.mocked(putTableAccessEntry).mockResolvedValue({ success: true, response: stored('team-x', 6, entry([])) });
+
+    await save(result, 'team-x', entry([]));
+
+    expect(result.current.rows.map((row) => row.role)).toEqual(['ingest-bot']);
+  });
+
+  test('reports a conflict without an error notification and without reading again', async () => {
+    const { result } = await renderLoaded();
+    vi.mocked(putTableAccessEntry).mockResolvedValue({
+      success: false,
+      status: 409,
+      errorHeader: 'access_conflict',
+      errorMessage: 'changed by someone else',
+    });
+
+    const outcome = await save(result, 'team-x', entry([TableGrantKey.Modify]));
+
+    expect(outcome).toEqual({ outcome: AccessChangeOutcome.Conflict });
+    expect(showNotification).not.toHaveBeenCalled();
+    expect(getTableAccess).toHaveBeenCalledOnce();
+    expect(result.current.roles['team-x']).toEqual(READ_ENTRY);
+  });
+
+  test('notifies and reports failure when the save is refused, leaving the roles as they were', async () => {
+    const { result } = await renderLoaded();
+    vi.mocked(putTableAccessEntry).mockResolvedValue({
       success: false,
       status: 422,
       errorHeader: 'refused',
-      errorMessage: 'sensitive_grant_widens',
+      errorMessage: 'region is not a column',
       requestId: 'req-1',
     });
 
-    let outcome: Awaited<ReturnType<typeof result.current.saveGrants>> | undefined;
-    await act(async () => {
-      outcome = await result.current.saveGrants('team-z', { ...noSelection, read: true });
-    });
+    const outcome = await save(result, 'team-z');
 
-    expect(outcome?.isOk).toBe(false);
+    expect(outcome).toEqual({ outcome: AccessChangeOutcome.Failed, errorMessage: 'region is not a column' });
     expect(showNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'refused', description: 'sensitive_grant_widens', requestId: 'req-1' }),
+      expect.objectContaining({
+        title: AnalyticsTableAccessI18nKey.SaveFailed,
+        description: 'region is not a column',
+        requestId: 'req-1',
+      }),
     );
+    expect(getTableAccess).toHaveBeenCalledOnce();
     expect(result.current.rows.map((row) => row.role)).not.toContain('team-z');
   });
 
-  test('does not update when the fresh read fails', async () => {
+  test('sends the same generation again after a busy answer', async () => {
     const { result } = await renderLoaded();
-    vi.mocked(getTableAccess).mockResolvedValue({ success: false, status: 500 });
+    vi.mocked(putTableAccessEntry).mockResolvedValueOnce({ success: false, status: 409, errorHeader: 'table_busy' });
+    vi.mocked(putTableAccessEntry).mockResolvedValueOnce({ success: true, response: stored('team-z', 6) });
 
-    let outcome: Awaited<ReturnType<typeof result.current.saveGrants>> | undefined;
-    await act(async () => {
-      outcome = await result.current.saveGrants('team-z', { ...noSelection, read: true });
-    });
+    const first = await save(result, 'team-z');
+    const second = await save(result, 'team-z');
 
-    expect(outcome?.isOk).toBe(false);
-    expect(updateTableAccess).not.toHaveBeenCalled();
-  });
-});
-
-describe('useTableAccess — saveRowPolicy', () => {
-  test('stores a policy and shows it on the role', async () => {
-    const { result } = await renderLoaded();
-    vi.mocked(putRowPolicy).mockResolvedValue({ success: true, response: { filter } });
-
-    let outcome;
-    await act(async () => {
-      outcome = await result.current.saveRowPolicy('team-x', filter);
-    });
-
-    expect(putRowPolicy).toHaveBeenCalledWith('events', 'team-x', { filter });
-    expect(outcome).toEqual({ isOk: true });
-    expect(result.current.rows.find((row) => row.role === 'team-x')?.rowsKind).toBe(RowsCellKind.Policy);
+    expect(first?.outcome).toBe(AccessChangeOutcome.Failed);
+    expect(second?.outcome).toBe(AccessChangeOutcome.Done);
+    expect(putTableAccessEntry).toHaveBeenNthCalledWith(1, 'events', 'team-z', { ...READ_ENTRY, generation: 5 });
+    expect(putTableAccessEntry).toHaveBeenNthCalledWith(2, 'events', 'team-z', { ...READ_ENTRY, generation: 5 });
   });
 
-  test('removes an existing policy when given no filter', async () => {
-    mockLoad({ read: ['team-x'] }, { 'team-x': { filter } });
+  test('uses the fallback title when a failed save carries none', async () => {
     const { result } = await renderLoaded();
-    vi.mocked(deleteRowPolicy).mockResolvedValue({ success: true });
+    vi.mocked(putTableAccessEntry).mockResolvedValue({ success: false, status: 500 });
 
-    await act(async () => {
-      await result.current.saveRowPolicy('team-x', null);
-    });
+    await save(result, 'team-z');
 
-    expect(deleteRowPolicy).toHaveBeenCalledWith('events', 'team-x');
-    expect(result.current.rows.find((row) => row.role === 'team-x')?.rowsKind).toBe(RowsCellKind.All);
-  });
-
-  test('sends nothing when removing a policy the role does not have', async () => {
-    const { result } = await renderLoaded();
-
-    let outcome;
-    await act(async () => {
-      outcome = await result.current.saveRowPolicy('team-x', null);
-    });
-
-    expect(outcome).toEqual({ isOk: true });
-    expect(deleteRowPolicy).not.toHaveBeenCalled();
-    expect(putRowPolicy).not.toHaveBeenCalled();
-  });
-
-  test('returns the service message of a refusal and notifies', async () => {
-    const { result } = await renderLoaded();
-    vi.mocked(putRowPolicy).mockResolvedValue({ success: false, status: 422, errorMessage: 'region is not a column' });
-
-    let outcome;
-    await act(async () => {
-      outcome = await result.current.saveRowPolicy('team-x', filter);
-    });
-
-    expect(outcome).toEqual({ isOk: false, errorMessage: 'region is not a column' });
     expect(showNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ title: AnalyticsTableAccessI18nKey.RowLimitSaveFailed }),
+      expect.objectContaining({ title: AnalyticsTableAccessI18nKey.SaveFailed }),
     );
-    expect(result.current.rows.find((row) => row.role === 'team-x')?.rowsKind).toBe(RowsCellKind.All);
-  });
-
-  test('keeps the policy and notifies when the delete fails', async () => {
-    mockLoad({ read: ['team-x'] }, { 'team-x': { filter } });
-    const { result } = await renderLoaded();
-    vi.mocked(deleteRowPolicy).mockResolvedValue({ success: false, status: 500 });
-
-    let outcome;
-    await act(async () => {
-      outcome = await result.current.saveRowPolicy('team-x', null);
-    });
-
-    expect(outcome).toMatchObject({ isOk: false });
-    expect(result.current.rows.find((row) => row.role === 'team-x')?.rowsKind).toBe(RowsCellKind.Policy);
   });
 });
 
 describe('useTableAccess — removeRole', () => {
-  test('sends only the lists that name the role, then deletes its policy', async () => {
-    mockLoad({ read: ['team-x', 'other'], write: ['team-x'], modify: ['other'] }, { 'team-x': { filter } });
-    const { result } = await renderLoaded();
-    vi.mocked(updateTableAccess).mockResolvedValue({
-      success: true,
-      response: { read: ['other'], write: [] } as never,
-    });
-    vi.mocked(deleteRowPolicy).mockResolvedValue({ success: true });
-
-    let isRemoved: boolean | undefined;
+  const remove = async (result: { current: ReturnType<typeof useTableAccess> }, role: string) => {
+    let outcome: AccessChangeOutcome | undefined;
     await act(async () => {
-      isRemoved = await result.current.removeRole('team-x');
+      outcome = await result.current.removeRole(role);
     });
 
-    expect(updateTableAccess).toHaveBeenCalledWith('events', { read: ['other'], write: [] });
-    expect(deleteRowPolicy).toHaveBeenCalledWith('events', 'team-x');
-    expect(isRemoved).toBe(true);
-    expect(result.current.rows.map((row) => row.role)).toEqual(['other']);
+    return outcome;
+  };
+
+  test('sends one delete with the generation that was read, then reads the access again', async () => {
+    const { result } = await renderLoaded();
+    vi.mocked(deleteTableAccessEntry).mockResolvedValue({ success: true });
+    mockLoad({ generation: 6, roles: { 'ingest-bot': entry([TableGrantKey.Write]) } });
+
+    const outcome = await remove(result, 'team-x');
+
+    expect(deleteTableAccessEntry).toHaveBeenCalledOnce();
+    expect(deleteTableAccessEntry).toHaveBeenCalledWith('events', 'team-x', 5);
+    expect(getTableAccess).toHaveBeenCalledTimes(2);
+    expect(outcome).toBe(AccessChangeOutcome.Done);
+    expect(result.current.rows.map((row) => row.role)).toEqual(['ingest-bot']);
   });
 
-  test('sends no policy delete for a role without a policy', async () => {
+  test('drops the role even when the read after the removal fails', async () => {
     const { result } = await renderLoaded();
-    vi.mocked(updateTableAccess).mockResolvedValue({ success: true, response: { read: [] } as never });
+    vi.mocked(deleteTableAccessEntry).mockResolvedValue({ success: true });
+    vi.mocked(getTableAccess).mockResolvedValue({ success: false, status: 500 });
 
-    await act(async () => {
-      await result.current.removeRole('team-x');
-    });
+    const outcome = await remove(result, 'team-x');
 
-    expect(deleteRowPolicy).not.toHaveBeenCalled();
+    expect(outcome).toBe(AccessChangeOutcome.Done);
+    expect(result.current.rows.map((row) => row.role)).toEqual(['ingest-bot']);
   });
 
-  test('sends no access update for a role no list names', async () => {
-    mockLoad({ read: ['other'] }, { lonely: { filter } });
+  test('notifies, reads the access again and reports a conflict when the role was changed', async () => {
     const { result } = await renderLoaded();
-    vi.mocked(deleteRowPolicy).mockResolvedValue({ success: true });
-
-    await act(async () => {
-      await result.current.removeRole('lonely');
+    vi.mocked(deleteTableAccessEntry).mockResolvedValue({
+      success: false,
+      status: 409,
+      errorHeader: 'access_conflict',
+      errorMessage: 'changed by someone else',
+      requestId: 'req-2',
     });
+    mockLoad({ generation: 8, roles: { 'team-x': entry([TableGrantKey.Modify]) } });
 
-    expect(updateTableAccess).not.toHaveBeenCalled();
-    expect(deleteRowPolicy).toHaveBeenCalledWith('events', 'lonely');
+    const outcome = await remove(result, 'team-x');
+
+    expect(outcome).toBe(AccessChangeOutcome.Conflict);
+    expect(showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ description: 'changed by someone else', requestId: 'req-2' }),
+    );
+    expect(getTableAccess).toHaveBeenCalledTimes(2);
+    expect(result.current.roles['team-x']).toEqual(entry([TableGrantKey.Modify]));
   });
 
-  test('stops, notifies and reports failure when the access update fails', async () => {
+  test('notifies and reports failure without reading again when the removal fails otherwise', async () => {
     const { result } = await renderLoaded();
-    vi.mocked(updateTableAccess).mockResolvedValue({ success: false, status: 500 });
+    vi.mocked(deleteTableAccessEntry).mockResolvedValue({ success: false, status: 500 });
 
-    let isRemoved: boolean | undefined;
-    await act(async () => {
-      isRemoved = await result.current.removeRole('team-x');
-    });
+    const outcome = await remove(result, 'team-x');
 
-    expect(isRemoved).toBe(false);
+    expect(outcome).toBe(AccessChangeOutcome.Failed);
     expect(showNotification).toHaveBeenCalledWith(
       expect.objectContaining({ title: AnalyticsTableAccessI18nKey.RemoveFailed }),
     );
+    expect(getTableAccess).toHaveBeenCalledOnce();
     expect(result.current.rows.map((row) => row.role)).toContain('team-x');
   });
+});
 
-  test('reports failure when the fresh read fails', async () => {
+describe('useTableAccess — reload', () => {
+  test('returns the configuration it read and shows it', async () => {
+    const { result } = await renderLoaded();
+    const next = config({ generation: 9, roles: { analysts: entry([TableGrantKey.Get]) } });
+    vi.mocked(getTableAccess).mockResolvedValue({ success: true, response: next });
+
+    let read: TableAccessConfig | null | undefined;
+    await act(async () => {
+      read = await result.current.reload();
+    });
+
+    expect(read).toEqual(next);
+    expect(result.current.rows.map((row) => row.role)).toEqual(['analysts']);
+  });
+
+  test('notifies and returns nothing when the read fails, keeping what was shown', async () => {
     const { result } = await renderLoaded();
     vi.mocked(getTableAccess).mockResolvedValue({ success: false, status: 500 });
 
-    let isRemoved: boolean | undefined;
+    let read: TableAccessConfig | null | undefined;
     await act(async () => {
-      isRemoved = await result.current.removeRole('team-x');
+      read = await result.current.reload();
     });
 
-    expect(isRemoved).toBe(false);
-    expect(updateTableAccess).not.toHaveBeenCalled();
+    expect(read).toBeNull();
+    expect(showNotification).toHaveBeenCalledWith(
+      expect.objectContaining({ title: AnalyticsTablesI18nKey.AccessLoadFailed }),
+    );
+    expect(result.current.rows.map((row) => row.role)).toEqual(['ingest-bot', 'team-x']);
   });
 });

@@ -1,5 +1,6 @@
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
@@ -9,6 +10,7 @@ import {
   getEntityForUpdate,
   getExportNotificationContent,
   getGridActionLabels,
+  getImportErrorDescription,
   getImportNotificationContent,
   getIsNeedToMove,
   getMoveNotificationContent,
@@ -35,94 +37,38 @@ describe('getToolbarOptionLabels', () => {
 
 describe('getGridActionLabels', () => {
   test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    '%s on the platform bucket offers only duplicate, delete, and openInNewTab',
-    (view) => {
-      const keys = getGridActionLabels(view, false, 'platform/').map((item) => item.key);
-
-      expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
-      expect(keys).not.toContain('preview');
-      expect(keys).not.toContain('move');
-      expect(keys).not.toContain('rename');
-    },
-  );
-
-  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    '%s on the public bucket keeps the existing full action set',
-    (view) => {
-      const withPublicPath = getGridActionLabels(view, false, 'public/').map((item) => item.key);
-      const withoutPath = getGridActionLabels(view, false).map((item) => item.key);
-
-      expect(withPublicPath).toEqual(withoutPath);
-      // The public bucket keeps folder/versioning actions the platform bucket's restricted set lacks.
-      expect(withPublicPath).toContain('move');
-      expect(withPublicPath).toContain('rename');
-    },
-  );
-
-  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    '%s on the platform bucket still returns no options for a read-only admin',
-    (view) => {
-      expect(getGridActionLabels(view, true, 'platform/')).toEqual([]);
-    },
-  );
-});
-
-describe('getGridActionLabels - nested platform views', () => {
-  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
-    '%s offers only duplicate, delete, and openInNewTab, like the flat platform views',
+    '%s keeps the full public-tree action set',
     (view) => {
       const keys = getGridActionLabels(view, false).map((item) => item.key);
 
-      expect(keys).toEqual(getGridActionLabels(ApplicationRoute.PlatformRoutes, false).map((item) => item.key));
-      expect(keys).not.toContain('move');
+      expect(keys).toContain('move');
+      expect(keys).toContain('rename');
+      expect(keys).not.toContain('preview');
     },
   );
 
-  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
-    '%s offers a read-only admin nothing',
+  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    '%s returns no options for a read-only admin',
     (view) => {
       expect(getGridActionLabels(view, true)).toEqual([]);
     },
   );
-});
 
-describe('getTreeActionLabels - nested platform views', () => {
-  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
-    '%s offers no folder rename, move or delete, since a cost object folder is implicit in Core',
-    (view) => {
-      expect(getTreeActionLabels(false, view, 'platform/')).toEqual([]);
-      expect(getTreeActionLabels(false, view, 'team-a/')).toEqual([]);
-    },
-  );
-
-  test('leaves the flat platform views offering none, as before', () => {
-    expect(getTreeActionLabels(false, ApplicationRoute.PlatformRoutes, 'platform/')).toEqual([]);
-  });
-});
-
-describe('getToolbarOptionLabels - nested platform views', () => {
   test.each([
-    [ApplicationRoute.PlatformPolicies, FileManagerI18nKey.Policy],
-    [ApplicationRoute.PlatformPolicyAssignments, FileManagerI18nKey.PolicyAssignment],
-  ])('%s offers a single new-item action named for the record', (view, label) => {
-    expect(getToolbarOptionLabels(view, false)).toEqual([{ key: 'newItem', label, icon: null }]);
+    ApplicationRoute.PlatformModels,
+    ApplicationRoute.PlatformRoles,
+    ApplicationRoute.PlatformKeys,
+    ApplicationRoute.PlatformPolicies,
+  ])('%s offers nothing here: platform rows are handled by the flat grid', (view) => {
+    expect(getGridActionLabels(view, false)).toEqual([]);
   });
 });
 
 describe('getTreeActionLabels', () => {
   test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    '%s offers no tree actions while browsing the platform bucket',
+    '%s keeps folder-tree actions',
     (view) => {
-      expect(getTreeActionLabels(false, view, 'platform/')).toEqual([]);
-    },
-  );
-
-  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    '%s keeps folder-tree actions while browsing the public bucket',
-    (view) => {
-      const keys = getTreeActionLabels(false, view, 'public/').map((item) => item.key);
-
-      expect(keys.length).toBeGreaterThan(0);
+      expect(getTreeActionLabels(false, view).length).toBeGreaterThan(0);
     },
   );
 });
@@ -149,86 +95,6 @@ describe('Conversations offers no move action', () => {
 
   test('getTreeActionLabels returns no options for a read-only admin', () => {
     expect(getTreeActionLabels(true, ApplicationRoute.Conversations)).toEqual([]);
-  });
-});
-
-describe('getToolbarOptionLabels — dual-bucket views', () => {
-  test('AssetsApplications offers a single "New Application" entry (same label as the public bucket) while browsing the platform bucket', () => {
-    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsApplications, false, 'platform/');
-
-    expect(labels).toEqual([{ key: 'newItem', label: FileManagerI18nKey.Application, icon: null }]);
-  });
-
-  test('AssetsToolsets offers a single "New Toolset" entry (same label as the public bucket) while browsing the platform bucket', () => {
-    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsToolsets, false, 'platform/');
-
-    expect(labels).toEqual([{ key: 'newItem', label: FileManagerI18nKey.Toolset, icon: null }]);
-  });
-
-  test.each([ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
-    '%s keeps the existing toolbar entries while browsing the public bucket',
-    (view) => {
-      const withPublicPath = getToolbarOptionLabels(view, false, 'public/');
-      const withoutPath = getToolbarOptionLabels(view, false);
-
-      expect(withPublicPath).toEqual(withoutPath);
-    },
-  );
-});
-
-describe('getGridActionLabels', () => {
-  test('AssetsRoles offers delete and openInNewTab and duplicate — Role.class has no displayName field for the shared duplicate modal to write', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformRoles, false).map((item) => item.key);
-
-    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab', 'duplicate']));
-  });
-
-  test('AssetsRoles returns no options for a read-only admin', () => {
-    expect(getGridActionLabels(ApplicationRoute.PlatformRoles, true)).toEqual([]);
-  });
-
-  test('AssetsRoutes still offers duplicate, unaffected by the AssetsRoles carve-out', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformRoutes, false).map((item) => item.key);
-
-    expect(keys).toContain('duplicate');
-  });
-
-  test('PlatformKeys now exposes duplicate, delete, and openInNewTab for a non-read-only admin', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformKeys, false).map((item) => item.key);
-
-    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
-  });
-
-  test('PlatformKeys returns no options for a read-only admin', () => {
-    expect(getGridActionLabels(ApplicationRoute.PlatformKeys, true)).toEqual([]);
-  });
-
-  test('PlatformTranslators exposes duplicate, delete, and openInNewTab for a non-read-only admin', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformTranslators, false).map((item) => item.key);
-
-    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
-  });
-
-  test('PlatformTranslators returns no options for a read-only admin', () => {
-    expect(getGridActionLabels(ApplicationRoute.PlatformTranslators, true)).toEqual([]);
-  });
-
-  test('PlatformCatalogSchemas exposes duplicate, delete, and openInNewTab for a writable API row', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, false, 'platform/').map(
-      (item) => item.key,
-    );
-
-    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
-  });
-
-  test('PlatformCatalogSchemas exposes only openInNewTab for a file-root row', () => {
-    const keys = getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, false, 'file/').map((item) => item.key);
-
-    expect(keys).toEqual(['openInNewTab']);
-  });
-
-  test('PlatformCatalogSchemas returns no options for a read-only admin', () => {
-    expect(getGridActionLabels(ApplicationRoute.PlatformCatalogSchemas, true)).toEqual([]);
   });
 });
 
@@ -708,7 +574,7 @@ describe('getImportNotificationContent', () => {
       return `Import ${options?.count} ${options?.item} Failed`;
     }
     if (key === FileManagerI18nKey.ImportErrorDescription) {
-      return `Failed to import ${options?.list}`;
+      return 'Failed to import';
     }
     if (key === FileManagerI18nKey.ImportSkippedTitle) {
       return `Import ${options?.count} ${options?.item} Skipped`;
@@ -789,7 +655,21 @@ describe('getImportNotificationContent', () => {
     expect(result.title).toBe('Import File Success');
     expect(result.description).toBe('Successfully imported one File to /dest');
     expect(result.errorTitle).toBe('Import 1 File Failed');
-    expect(result.errorDescription).toBe('Failed to import /dest/file1.txt');
+    expect(result.errorDescription).toBe('Failed to import:\n /dest/file1.txt');
+  });
+
+  test('should return no error notification when no item failed', () => {
+    const importResults = [{ targetPath: '/dest/file1.txt', status: 'success' }];
+    const result = getImportNotificationContent(
+      ApplicationRoute.Files,
+      importResults,
+      ImportFileType.FILES,
+      '/dest',
+      mockT,
+    );
+
+    expect(result.errorTitle).toBe('');
+    expect(result.errorDescription).toBe('');
   });
 
   test('should return skipped notification for skipped import in Files view', () => {
@@ -953,7 +833,7 @@ describe('getImportNotificationContent', () => {
     );
 
     expect(result.errorTitle).toBe('Import 2 Applications Failed');
-    expect(result.errorDescription).toBe(`Failed to import ${duplicateError}`);
+    expect(result.errorDescription).toBe(`${duplicateError}:\n public/_app__1.0.0\n public/_app__1.0.0`);
   });
 
   test('should return correct notification for single toolset import in Toolsets view', () => {
@@ -1018,128 +898,172 @@ describe('getImportNotificationContent', () => {
 });
 
 describe('getAgentLinkForConversation', () => {
-  test('returns empty string when deployment is null', () => {
-    expect(getAgentLinkForConversation(null, 'en')).toBe('');
+  const MODEL = { object: 'model', id: 'gpt-4' } as const;
+  const APPLICATION = { object: 'application', id: 'app' } as const;
+
+  test('returns an empty string when the lookup found nothing', () => {
+    expect(getAgentLinkForConversation('gpt-4', null, undefined, 'en')).toBe('');
+    expect(getAgentLinkForConversation('gpt-4', undefined, undefined, 'en')).toBe('');
   });
 
-  test('returns empty string when deployment is empty object', () => {
-    expect(getAgentLinkForConversation({}, 'en')).toBe('');
+  test('returns an empty string without a conversation model id', () => {
+    expect(getAgentLinkForConversation(undefined, MODEL, DeploymentType.Model, 'en', ApplicationRoute.Models)).toBe('');
   });
 
-  test('returns model link when deployment has model', () => {
-    const deployment = { model: 'gpt-4' };
-    const result = getAgentLinkForConversation(deployment, 'en');
-    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
+  test('returns an empty model link until the model route is probed', () => {
+    expect(getAgentLinkForConversation('gpt-4', MODEL, DeploymentType.Model, 'en')).toBe('');
   });
 
-  test('encodes special characters in model name', () => {
-    const deployment = { model: 'my model/v1' };
-    const result = getAgentLinkForConversation(deployment, 'en');
-    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('my model/v1')}`);
-  });
-
-  test('returns application link when application equals reference', () => {
-    const deployment = { application: 'my-app', reference: 'my-app' };
-    const result = getAgentLinkForConversation(deployment, 'en');
-    expect(result).toBe(`/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`);
-  });
-
-  test('returns assets application link when application differs from reference', () => {
-    const deployment = {
-      application: 'applications/my-app',
-      reference: 'other-ref',
-      displayName: 'My App',
-    };
-    const result = getAgentLinkForConversation(deployment, 'en');
-    expect(result).toBe(`/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('My App')}?path=my-app`);
-  });
-
-  test('model takes precedence over application', () => {
-    const deployment = { model: 'gpt-4', application: 'my-app', reference: 'my-app' };
-    const result = getAgentLinkForConversation(deployment, 'en');
-    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
-  });
-
-  test('uses currentLocale in the path', () => {
-    const deployment = { model: 'gpt-4' };
-    expect(getAgentLinkForConversation(deployment, 'fr')).toContain('/fr/');
-    expect(getAgentLinkForConversation(deployment, 'de')).toContain('/de/');
-  });
-
-  test('returns model link from eval deployment $type', () => {
-    const result = getAgentLinkForConversation(
-      { $type: 'dial-model', deploymentId: 'gpt-4', displayName: 'GPT-4' },
-      'en',
-      ApplicationRoute.Models,
+  test('returns the probed model route', () => {
+    expect(getAgentLinkForConversation('gpt-4', MODEL, DeploymentType.Model, 'en', ApplicationRoute.Models)).toBe(
+      `/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`,
     );
-    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
+    expect(
+      getAgentLinkForConversation('msh-responses', MODEL, DeploymentType.Model, 'en', ApplicationRoute.PlatformModels),
+    ).toBe(`/en${ApplicationRoute.PlatformModels}/${encodeURIComponent('msh-responses')}`);
   });
 
-  test('returns empty model link until modelRoute is resolved', () => {
+  test('returns an Assets Applications link without the prefix for an applications/ id', () => {
     const result = getAgentLinkForConversation(
-      { $type: 'dial-model', deploymentId: 'gpt-4', displayName: 'GPT-4' },
+      'applications/folder/my-app__1.0.0',
+      APPLICATION,
+      DeploymentType.Application,
       'en',
     );
-    expect(result).toBe('');
-  });
 
-  test('returns platform model link when modelRoute is Catalog', () => {
-    const result = getAgentLinkForConversation(
-      { $type: 'dial-model', deploymentId: 'msh-responses', displayName: 'msh-responses' },
-      'en',
-      ApplicationRoute.PlatformModels,
-    );
-    expect(result).toBe(`/en${ApplicationRoute.PlatformModels}/${encodeURIComponent('msh-responses')}`);
-  });
-
-  test('returns application link from eval deployment $type', () => {
-    const result = getAgentLinkForConversation(
-      { $type: 'dial-application', deploymentId: 'my-app', displayName: 'My App' },
-      'en',
-    );
-    expect(result).toBe(`/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`);
-  });
-
-  test('returns assets application link from applications/ id prefix', () => {
-    const result = getAgentLinkForConversation(
-      {
-        $type: 'dial-application',
-        deploymentId: 'applications/folder/my-app__1.0.0',
-        displayName: 'My Asset App',
-      },
-      'en',
-    );
     expect(result).toBe(
-      `/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('My Asset App')}?path=${encodeURIComponent('folder/my-app__1.0.0')}`,
+      `/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('applications/folder/my-app__1.0.0')}?path=${encodeURIComponent('folder/my-app__1.0.0')}`,
+    );
+  });
+
+  test('returns an empty application link until the application route is probed', () => {
+    const deployment = { ...APPLICATION, application: 'my-app', reference: 'other-ref' };
+
+    expect(getAgentLinkForConversation('my-app', deployment, DeploymentType.Application, 'en')).toBe('');
+  });
+
+  test('returns an Applications link for an unprefixed id once the probe finds no platform application', () => {
+    const deployment = { ...APPLICATION, application: 'my-app', reference: 'other-ref' };
+
+    expect(
+      getAgentLinkForConversation(
+        'my-app',
+        deployment,
+        DeploymentType.Application,
+        'en',
+        undefined,
+        ApplicationRoute.Applications,
+      ),
+    ).toBe(`/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`);
+  });
+
+  test('returns a platform application link when the application route is Assets Applications', () => {
+    expect(
+      getAgentLinkForConversation(
+        'world-economy-v2-hybrid',
+        APPLICATION,
+        DeploymentType.Application,
+        'en',
+        undefined,
+        ApplicationRoute.AssetsApplications,
+      ),
+    ).toBe(`/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('world-economy-v2-hybrid')}`);
+  });
+
+  test('falls back to the catalog record fields when the object does not map', () => {
+    const deployment = { object: 'toolset', id: 'tools', model: 'gpt-4' } as const;
+
+    expect(getAgentLinkForConversation('tools', deployment, undefined, 'en')).toBe(
+      `/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`,
+    );
+  });
+
+  test('returns an empty string when an unmapped deployment names nothing to link', () => {
+    expect(getAgentLinkForConversation('router-1', { object: 'router', id: 'router-1' }, undefined, 'en')).toBe('');
+  });
+
+  test('uses the current locale in the path', () => {
+    expect(getAgentLinkForConversation('gpt-4', MODEL, DeploymentType.Model, 'fr', ApplicationRoute.Models)).toContain(
+      '/fr/',
     );
   });
 });
 
 describe.each([ApplicationRoute.Skills, ApplicationRoute.Projects])('%s folder actions', (view) => {
   test('getTreeActionLabels offers add sibling, add child, manage permissions, and delete', () => {
-    const keys = getTreeActionLabels(false, view, 'public/').map((item) => item.key);
+    const keys = getTreeActionLabels(false, view).map((item) => item.key);
 
     expect(keys).toEqual(['addSibling', 'addChild', 'managePermissions', 'delete']);
   });
 
   test('getTreeActionLabels offers neither rename nor move', () => {
-    const keys = getTreeActionLabels(false, view, 'public/').map((item) => item.key);
+    const keys = getTreeActionLabels(false, view).map((item) => item.key);
 
     expect(keys).not.toContain('rename');
     expect(keys).not.toContain('move');
   });
 
   test('getTreeActionLabels returns no options for a read-only admin', () => {
-    expect(getTreeActionLabels(true, view, 'public/')).toEqual([]);
+    expect(getTreeActionLabels(true, view)).toEqual([]);
   });
 
   test('getGridActionLabels adds the folder actions to the item actions', () => {
-    const keys = getGridActionLabels(view, false, 'public/').map((item) => item.key);
+    const keys = getGridActionLabels(view, false).map((item) => item.key);
 
     expect(keys).toEqual(['addSibling', 'addChild', 'managePermissions', 'delete', 'openInNewTab']);
   });
 
   test('getGridActionLabels returns no options for a read-only admin', () => {
-    expect(getGridActionLabels(view, true, 'public/')).toEqual([]);
+    expect(getGridActionLabels(view, true)).toEqual([]);
+  });
+});
+
+describe('getImportErrorDescription', () => {
+  const t = (key: string) => key;
+  const SECRET_REQUIRED = "Field 'CLIENT_SECRET' is required for OAUTH authentication.";
+  const SECRET_SHORT = "Field 'CLIENT_SECRET' must be at least 8 characters long";
+  const GENERIC_HEADER = `${FileManagerI18nKey.ImportErrorDescription}:`;
+
+  test('groups paths under each distinct reason, in first-seen order', () => {
+    const failed = [
+      { targetPath: 'public/a__1.0.0', status: 'failure', error: SECRET_REQUIRED },
+      { targetPath: 'public/b__1.0.0', status: 'failure', error: SECRET_SHORT },
+      { targetPath: 'public/c__1.0.0', status: 'failure', error: SECRET_REQUIRED },
+    ];
+
+    expect(getImportErrorDescription(failed, t)).toBe(
+      [`${SECRET_REQUIRED}:`, ' public/a__1.0.0', ' public/c__1.0.0', `${SECRET_SHORT}:`, ' public/b__1.0.0'].join(
+        '\n',
+      ),
+    );
+  });
+
+  test('shows a reason once and keeps every path when all items share it', () => {
+    const failed = [
+      { targetPath: '/dest/1.txt', status: 'failure', error: 'File too large' },
+      { targetPath: '/dest/2.txt', status: 'failure', error: 'File too large' },
+    ];
+
+    expect(getImportErrorDescription(failed, t)).toBe(['File too large:', ' /dest/1.txt', ' /dest/2.txt'].join('\n'));
+  });
+
+  test('lists items without a reason under the generic header', () => {
+    const failed = [
+      { targetPath: 'public/a', status: 'failure' },
+      { targetPath: 'public/b', status: 'failure', error: '   ' },
+    ];
+
+    expect(getImportErrorDescription(failed, t)).toBe([GENERIC_HEADER, ' public/a', ' public/b'].join('\n'));
+  });
+
+  test('puts the no-reason group last, even when such an item fails first', () => {
+    const failed = [
+      { targetPath: 'public/a', status: 'failure' },
+      { targetPath: 'public/b', status: 'failure', error: SECRET_SHORT },
+    ];
+
+    expect(getImportErrorDescription(failed, t)).toBe(
+      [`${SECRET_SHORT}:`, ' public/b', GENERIC_HEADER, ' public/a'].join('\n'),
+    );
   });
 });

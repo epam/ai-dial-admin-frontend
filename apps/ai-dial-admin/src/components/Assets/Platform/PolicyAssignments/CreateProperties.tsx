@@ -4,19 +4,18 @@ import { Input } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import PolicySelector from '@/src/components/Assets/Platform/PolicyAssignments/PolicySelector';
-import SubjectRulesEditor from '@/src/components/Assets/Platform/PolicySubjects/SubjectRulesEditor';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import {
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
   ErrorI18nKey,
+  PoliciesI18nKey,
   PolicyAssignmentsI18nKey,
 } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialPolicyAssignmentResource } from '@/src/models/dial/resource';
-import { getCostObjectFromFolder } from '@/src/utils/policies/path';
-import { areRulesValid } from '@/src/utils/policies/subjects';
+import { getCostObjectFromFolder, isPolicyPathElementValid } from '@/src/utils/policies/path';
 import { getErrorForName } from '@/src/utils/validation/name-error';
 
 type AssignmentCreateEntity = DialPolicyAssignmentResource & { folderId?: string };
@@ -25,31 +24,36 @@ interface Props {
   entity: AssignmentCreateEntity;
   names: string[];
   isUniqueNameError?: boolean;
+  isCostObjectLocked?: boolean;
   onChangeEntity: (entity: object) => void;
 }
 
-/**
- * Create-modal body for an assignment: the ID, the cost object (the folder it is stored in — the saved
- * `costObject` is taken from it, never typed twice), the policy, and the subject rules. Core wants a subject
- * pinned by the policy or by the assignment, and most policies leave it open, so the rules are asked here
- * rather than only on the tab.
- */
-const PolicyAssignmentCreateProperties: FC<Props> = ({ entity, names, isUniqueNameError, onChangeEntity }) => {
+/** Details for the first step; the assignment's cost object is taken from its folder. */
+const PolicyAssignmentCreateProperties: FC<Props> = ({
+  entity,
+  names,
+  isUniqueNameError,
+  isCostObjectLocked,
+  onChangeEntity,
+}) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const costObject = getCostObjectFromFolder(entity.folderId);
-  const costObjectError = useMemo(
-    () => (costObject ? getErrorForName(costObject, undefined, t)?.text : t(ErrorI18nKey.EmptyField)),
-    [costObject, t],
-  );
+  const costObjectError = useMemo(() => {
+    if (!costObject) return t(ErrorI18nKey.EmptyField);
+    return (
+      getErrorForName(costObject, undefined, t)?.text ||
+      (isPolicyPathElementValid(costObject) ? undefined : t(PoliciesI18nKey.InvalidPathElement))
+    );
+  }, [costObject, t]);
 
   useEffect(() => {
     dispatch({
       type: ValidationActionType.SetField,
       field: 'assignment',
-      isValid: !costObjectError && !!entity.policy && areRulesValid(entity.subject),
+      isValid: !costObjectError && !!entity.policy?.trim(),
     });
-  }, [dispatch, costObjectError, entity.policy, entity.subject]);
+  }, [dispatch, costObjectError, entity.policy]);
 
   const onChangeCostObject = useCallback(
     (value?: string) => onChangeEntity({ ...entity, folderId: value ? `${value}/` : '' }),
@@ -64,6 +68,9 @@ const PolicyAssignmentCreateProperties: FC<Props> = ({ entity, names, isUniqueNa
         entity={entity}
         names={names}
         isUniqueNameError={isUniqueNameError}
+        externalError={
+          entity.name && !isPolicyPathElementValid(entity.name) ? t(PoliciesI18nKey.InvalidPathElement) : undefined
+        }
         onChangeEntity={onChangeEntity}
       />
       <Input
@@ -71,17 +78,18 @@ const PolicyAssignmentCreateProperties: FC<Props> = ({ entity, names, isUniqueNa
         labelProps={{ label: t(PolicyAssignmentsI18nKey.CostObject), required: true }}
         caption={t(PolicyAssignmentsI18nKey.CostObjectDerived)}
         value={costObject}
-        error={costObject ? costObjectError : undefined}
-        invalid={!!costObject && !!costObjectError}
+        disabled={isCostObjectLocked}
+        error={costObjectError}
+        invalid={!!costObjectError}
         onChange={onChangeCostObject}
       />
       <PolicySelector
         value={entity.policy}
+        error={entity.policy?.trim() ? undefined : t(ErrorI18nKey.EmptyField)}
         costObject={costObject}
         className="w-full"
         onChange={(policy) => onChangeEntity({ ...entity, policy })}
       />
-      <SubjectRulesEditor rules={entity.subject} onChange={(subject) => onChangeEntity({ ...entity, subject })} />
     </div>
   );
 };

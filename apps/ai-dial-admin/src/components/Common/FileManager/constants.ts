@@ -24,4 +24,3 @@ export const FILE_MANAGER_GRID_PERSISTENCE: GridStatePersistenceOptions = {
 export const SHOW_HIDDEN_FILES_STORAGE_KEY_PREFIX = 'file-manager-show-hidden-files';
 /** Scopes file-manager-only grid styling in `scss/ag-grid.scss`. */
 export const FILE_MANAGER_GRID_CLASS = 'file-manager-grid';
-export const MOVE_EXCLUDED_PATHS = ['platform/', 'file/'];

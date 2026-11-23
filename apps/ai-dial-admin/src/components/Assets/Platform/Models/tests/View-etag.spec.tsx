@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { act, render } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -22,18 +23,20 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
   },
 }));
 
-vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
+vi.mock('@/src/app/[lang]/platform-models/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/platform-models/actions')>()),
   updateModel: updateModelMock,
   removeModel: vi.fn(),
 }));
 
-vi.mock('@/src/context/assets/ModelsFolderContext', () => ({
+vi.mock('@/src/context/assets/ModelsFolderContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/context/assets/ModelsFolderContext')>()),
   useModelsFolder: () => ({ fetchFiles: vi.fn() }),
 }));
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags: {}, setEntityReadOnly: vi.fn() }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: {}, setEntityReadOnly: vi.fn() }));
+});
 
 // Bypasses the session-validity retry logic — irrelevant to the etag behavior under test.
 vi.mock('@/src/hooks/use-protected-request', () => ({

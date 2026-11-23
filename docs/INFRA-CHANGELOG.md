@@ -2,6 +2,36 @@
 
 All notable infrastructure-relevant changes to this project will be documented in this file.
 
+## 0.24.0
+
+### Added
+
+#### Telemetry
+
+- Asset application pages (`/assets-applications/[id]`) show a `Traces in Grafana` dropdown with `All traces` and `Errors only` options that open Grafana Explore on the Tempo datasource, filtered to that application. They appear only when `GRAFANA_TRACES_URL` is set; the application is matched on its `dial.deployment` span attribute
+  - `GRAFANA_TRACES_URL` — the Grafana root, for example `https://grafana.example.com` (a trailing slash is optional). It is separate from `GRAFANA_LINK`, which keeps opening whatever URL it holds from the Dashboard page, and `GRAFANA_LINK` is not used for these links
+  - `GRAFANA_TEMPO_DATASOURCE_UID` — UID of the Tempo datasource in Grafana. Set it when it is not `tempo`, or the dropdown opens an empty Explore (default: `tempo`)
+  - `GRAFANA_ORG_ID` — Grafana organization id. An empty, non-numeric or non-positive value uses the default (default: `1`)
+
+#### AI Gateway
+
+- A router's Properties tab has an `Editor URL` field, and a router with one shows that UI in an iframe on its `Parameters` tab, as an application does. Saving a router with an editor URL requires a DIAL Core that includes epam/ai-dial-core#2303; an older Core answers `400` and the router view shows its message. Routers without an editor URL are unaffected
+- An application's OAuth external service can be created with `Register automatically`: the admin enters a `Discovery URL` (an MCP server's URL or the identity provider's issuer URL) and DIAL Core registers the client with the provider itself. A service Core registered shows `Registered by DIAL Core` with its fields read-only, and `Use an existing client instead` turns it into a hand-registered one. Requires a DIAL Core that includes epam/ai-dial-core#2311; an older Core rejects `discovery_url`. Services with an existing client are unaffected
+  - `toolsets.security.allowedRedirectUris` (DIAL Core setting) must list `<admin origin>/external-service-signin`, plus Chat's callback if users sign in from Chat. Core registers only URIs from this list and accepts the panel's sign-in callback for a registered client only through it. With the default empty list every `Register automatically` save fails with `400`. With a list that lacks the admin callback the save succeeds but signing in from the panel fails, and the service has to be deleted and added again after the list is fixed
+
+### Changed
+
+#### Analytics
+
+- The Sessions pages read ratings from enrichments instead of the `response_ratings` table. An enrichment counts as a rating enrichment when it carries `rate_pos_count`, `rate_zero_count` and `rate_neg_count`; its name and how it is built are up to the instance. One on the Sessions base table (`sessions` by default) feeds the rating pills, the feedback filter and the Rating column; one on `dial_usage_log`, grained by `response_id`, feeds the span and trace ratings and the feedback panel's list. Mark `comment_sample` sensitive and keep the counts non-sensitive, as in `response_ratings`. Without them the ratings are hidden rather than failing
+- The Sessions source — the base table and the fields that play the session id, time, project, title, cost and turns roles — is set on a new `Sessions source` tab of System Properties and stored by the Analytics service under `/v1/settings/sessions-source`. Requires an Analytics service that serves that endpoint. Reading it needs `SETTINGS_READ`, which every read-only bundle carries; a `roles-mapping` that names raw privileges must add it, or the Sessions pages show an error instead of sessions. Saving needs `SETTINGS_WRITE` (`FULL_ADMIN`). Without a stored setting the pages use the default binding (`sessions`, `client_session_id`, `last_request_time`, `project_id`, `session_insights.title`, `total_price`, `turn_count`), so an instance that never saves it behaves as before. An instance with no stored setting and no `sessions` table hides the Sessions menu item until a table is saved on that tab
+
+### Removed
+
+#### Governance
+
+- `ORG_UNITS_GROUP_CLAIM` is no longer read. Role holders on an org unit are now added as a `Custom claim`, where the admin enters the claim name and value, so no deployment-level claim name is needed. Remove the variable from deployment values; if it is left in place it is ignored. Existing assignments on that claim keep working and show as `<claim>=<value>`
+
 ## 0.23.0
 
 ### Added

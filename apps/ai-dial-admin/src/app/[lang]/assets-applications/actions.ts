@@ -226,6 +226,11 @@ export async function getAssetTools(name: string) {
   return toolsetOpsApi.discoveredTools(token, name, ResourceType.APPLICATION);
 }
 
+export async function getAssetAllowedTools(path: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return toolsetOpsApi.allowedApplicationTools(token, path, true);
+}
+
 export async function signInExternalService(
   appPath: string,
   serviceId: string,
