@@ -149,6 +149,7 @@ const SystemProperties: FC<Props> = ({
   const tabStores: Partial<Record<EntityViewTab, SystemPropertiesTabStore>> = {
     [EntityViewTab.SessionsSource]: {
       isChanged: sessionsSource.isChanged,
+      isDiscardable: sessionsSource.isDiscardable,
       disableSave: !sessionsSource.isComplete,
       onSave: sessionsSource.onSave,
       onDiscard: sessionsSource.onDiscard,
@@ -170,6 +171,7 @@ const SystemProperties: FC<Props> = ({
     <div className={ENTITY_VIEW_CLASS_NAME}>
       <Header
         isChanged={activeStore.isChanged}
+        isDiscardable={activeStore.isDiscardable}
         isScheduleValid={isScheduleValid}
         isCostObjectInvalid={isCostObjectInvalid}
         isSessionsSourceInvalid={isSessionsSourceInvalid}

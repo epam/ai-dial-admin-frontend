@@ -145,6 +145,8 @@ export const useSessionsSource = (isActive: boolean) => {
     return !isReadFailed || !isEqual(currentSetting, EMPTY_SESSIONS_SOURCE_SETTING);
   }, [currentSetting, isLoading, isReadFailed, savedSetting]);
 
+  const isDiscardable = !isLoading && !isEqual(currentSetting, initialSetting);
+
   const isComplete = isSessionsSourceComplete(currentSetting);
 
   const tableOptions = useMemo(
@@ -207,6 +209,7 @@ export const useSessionsSource = (isActive: boolean) => {
     isUsingDefaults,
     isDefaultTableMissing,
     isChanged,
+    isDiscardable,
     isComplete,
     onChangeBaseTable,
     onChangeRole,
