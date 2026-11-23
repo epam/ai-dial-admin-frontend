@@ -137,7 +137,7 @@ describe('ResourceAuthentication', () => {
 describe('ResourceAuthentication — external service OAuth props', () => {
   const user = userEvent.setup();
   const oauth = { authentication_type: ToolsetAuthType.OAUTH, client_id: 'id' };
-
+
   test('shows no Discovery URL for a toolset caller that passes neither prop', () => {
     render(<ResourceAuthentication name="toolset-1" authSettings={oauth} hideWithLoginOption />);
 
