@@ -6,6 +6,7 @@ import { IconButton, Spinner } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { resolveRunDeployment } from '@/src/components/Runs/Summary/resolve-run-deployment';
+import { useApplicationDeploymentRoute } from '@/src/components/Runs/Summary/use-application-deployment-route';
 import { useDeploymentType } from '@/src/components/Runs/Summary/use-deployment-type';
 import { useModelDeploymentRoute } from '@/src/components/Runs/Summary/use-model-deployment-route';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -22,10 +23,14 @@ const DeploymentExternalLink: FC<Props> = ({ suiteContext }) => {
     suiteContext?.deploymentRef?.id,
     deploymentType,
   );
+  const { applicationRoute, isLoading: isApplicationRouteLoading } = useApplicationDeploymentRoute(
+    suiteContext?.deploymentRef?.id,
+    deploymentType,
+  );
 
   const deployment = useMemo(
-    () => resolveRunDeployment(suiteContext, deploymentType, modelRoute),
-    [suiteContext, deploymentType, modelRoute],
+    () => resolveRunDeployment(suiteContext, deploymentType, modelRoute, applicationRoute),
+    [suiteContext, deploymentType, modelRoute, applicationRoute],
   );
 
   if (deployment) {
@@ -38,7 +43,7 @@ const DeploymentExternalLink: FC<Props> = ({ suiteContext }) => {
     );
   }
 
-  if (isTypeLoading || isModelRouteLoading) {
+  if (isTypeLoading || isModelRouteLoading || isApplicationRouteLoading) {
     return (
       <div className="flex size-[20px] items-center justify-center">
         <Spinner fullWidth={false} size={16} />

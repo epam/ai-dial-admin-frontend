@@ -52,6 +52,7 @@ export const resolveRunDeployment = (
   suiteContext: SuiteContext,
   deploymentType: string | undefined,
   modelRoute?: ApplicationRoute,
+  applicationRoute?: ApplicationRoute,
 ): RunDeployment | null => {
   if (!suiteContext) {
     return null;
@@ -86,6 +87,7 @@ export const resolveRunDeployment = (
   if (suiteContext.deploymentRef?.name && suiteContext.deploymentRef?.id && deploymentType) {
     const navigationTarget = resolveDeploymentNavigationTarget(suiteContext.deploymentRef, deploymentType, {
       modelRoute,
+      applicationRoute,
     });
     if (!navigationTarget) {
       return null;

@@ -9,6 +9,7 @@ import { getDeployment } from '@/src/app/[lang]/conversations/actions';
 import { getAgentLinkForConversation } from '@/src/components/Assets/utils';
 import ExpandableText from '@/src/components/Common/ExpandableText/ExpandableText';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
+import { useApplicationDeploymentRoute } from '@/src/components/Runs/Summary/use-application-deployment-route';
 import { useModelDeploymentRoute } from '@/src/components/Runs/Summary/use-model-deployment-route';
 import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
@@ -30,10 +31,14 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
   const model = selectedConversation.model?.id as string;
   const deploymentType = getDeploymentTypeFromCoreObject(deployment);
   const { modelRoute, isLoading: isModelRouteLoading } = useModelDeploymentRoute(model, deploymentType);
+  const { applicationRoute, isLoading: isApplicationRouteLoading } = useApplicationDeploymentRoute(
+    model,
+    deploymentType,
+  );
 
   const agentLink = useMemo(
-    () => getAgentLinkForConversation(model, deployment, deploymentType, currentLocale, modelRoute),
-    [currentLocale, deployment, deploymentType, model, modelRoute],
+    () => getAgentLinkForConversation(model, deployment, deploymentType, currentLocale, modelRoute, applicationRoute),
+    [applicationRoute, currentLocale, deployment, deploymentType, model, modelRoute],
   );
 
   const openResourceInNewTab = () => {
@@ -78,10 +83,17 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
 
   // The hook's `isLoading` turns true in an effect, so for one render after the lookup lands a model has
   // neither a route nor a loading flag; waiting on the route itself keeps the name from flashing unlinked.
-  // TODO: fix the gap in `useModelDeploymentRoute` instead (key the route by the id it was resolved for and
-  // report loading until it matches), so `DeploymentExternalLink` and TestSuites `Properties` get it too.
+  // TODO: fix the gap in `useModelDeploymentRoute` and `useApplicationDeploymentRoute` instead (key the route
+  // by the id it was resolved for and report loading until it matches), so `DeploymentExternalLink` and
+  // TestSuites `Properties` get it too.
   const isModelRoutePending = deploymentType === DeploymentType.Model && modelRoute === undefined;
-  const isResolvingAgent = isModelLoading || isModelRouteLoading || isModelRoutePending;
+  const isApplicationRoutePending = deploymentType === DeploymentType.Application && applicationRoute === undefined;
+  const isResolvingAgent =
+    isModelLoading ||
+    isModelRouteLoading ||
+    isModelRoutePending ||
+    isApplicationRouteLoading ||
+    isApplicationRoutePending;
 
   return (
     <div className={`size-full flex flex-col gap-y-8 ${STANDARD_CONTROL_WIDTH}`}>
