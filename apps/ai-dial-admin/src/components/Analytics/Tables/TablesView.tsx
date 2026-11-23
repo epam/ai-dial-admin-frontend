@@ -28,7 +28,8 @@ import { useIngestFailuresCount } from '@/src/components/Analytics/Tables/Ingest
 import { findRunningTableBackfill } from '@/src/components/Analytics/Tables/Backfill/use-table-backfill-runs';
 import CreateTablePopup from '@/src/components/Analytics/Tables/CreateTablePopup';
 import EditTableMetadataPopup from '@/src/components/Analytics/Tables/EditTableMetadataPopup';
-import RowsRestrictedBadge from '@/src/components/Analytics/Tables/RowsRestrictedBadge';
+import RestrictedBadge from '@/src/components/Analytics/Tables/RestrictedBadge';
+import { RestrictionKind } from '@/src/components/Analytics/Tables/models';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
 import { TABLE_TYPE_LABEL } from '@/src/components/Analytics/Tables/constants';
 import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
@@ -217,7 +218,8 @@ const TablesView: FC<Props> = ({ initialTables }) => {
           data && (
             <span className="flex items-center gap-2">
               <span className="truncate">{data.name}</span>
-              {data.permissions?.rows_restricted && <RowsRestrictedBadge />}
+              {data.permissions?.rows_restricted && <RestrictedBadge kind={RestrictionKind.Rows} />}
+              {data.permissions?.columns_restricted && <RestrictedBadge kind={RestrictionKind.Columns} />}
             </span>
           ),
       },

@@ -13,6 +13,7 @@ import ResultChart from '@/src/components/Analytics/QueryBuilder/Result/ResultCh
 import { getValueClassColumn } from '@/src/components/Analytics/QueryBuilder/Result/result-column-format';
 import ResultValueCell from '@/src/components/Analytics/QueryBuilder/Result/ResultValueCell';
 import StatChip from '@/src/components/Analytics/QueryBuilder/Result/StatChip';
+import { useRowsRestricted } from '@/src/components/Analytics/QueryBuilder/Result/use-rows-restricted';
 import { getResultColumns, getResultTotal } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { EXPORT_ROW_LIMIT } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
@@ -69,6 +70,7 @@ const ResultArea: FC<Props> = ({
   const rows = useMemo(() => result?.rows ?? [], [result]);
   const gridRows = useMemo(() => rows.map((values, index): ResultGridRow => ({ index, values })), [rows]);
   const total = getResultTotal(result);
+  const isRowsRestricted = useRowsRestricted(meta?.source, !!result && !rows.length && !isRunning);
 
   const chartAvailable =
     !!meta && rows.length > 0 && meta.dimensionColumns.length > 0 && meta.aggregateColumns.length > 0;
@@ -147,7 +149,10 @@ const ResultArea: FC<Props> = ({
             <NoDataContent title={t(chartUnavailableKey())} />
           )
         ) : !rows.length ? (
-          <NoDataContent title={t(QueryBuilderI18nKey.NoRows)} />
+          <NoDataContent
+            title={t(QueryBuilderI18nKey.NoRows)}
+            description={isRowsRestricted ? t(QueryBuilderI18nKey.NoRowsForAccess) : undefined}
+          />
         ) : (
           <div className="min-h-0 flex-1">
             <GridView columnDefs={columns as ColDef[]} rowData={gridRows} getRowId={getRowId} isLiveData />

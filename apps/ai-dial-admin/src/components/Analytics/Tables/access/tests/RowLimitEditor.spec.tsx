@@ -22,8 +22,8 @@ import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 const treeSpy = vi.hoisted(() => vi.fn());
 vi.mock('@/src/components/Analytics/QueryBuilder/Filter/FilterGroup', () => ({
   default: ({ node, fieldOptions }: { node: FilterGroupNode; fieldOptions: { name: string }[] }) => {
-    const { refresh, functions } = useFilterTree();
-    treeSpy({ fieldOptions, functions });
+    const { refresh, functions, callerValues } = useFilterTree();
+    treeSpy({ fieldOptions, functions, callerValues });
 
     return (
       <div>
@@ -305,5 +305,30 @@ describe('RowLimitEditor — JSON view', () => {
     renderEditor({ initialFilter: tooDeep });
 
     expect(monaco.findMatches).not.toHaveBeenCalled();
+  });
+});
+
+describe('RowLimitEditor — caller values', () => {
+  const callerFilter: QueryFilterNode = {
+    op: QueryOperator.Eq,
+    args: [field('project_id'), { type: QueryExprType.Param, name: 'caller.project' }],
+  };
+
+  test('supplies the two caller values to the condition editor', () => {
+    renderEditor();
+
+    const { callerValues } = treeSpy.mock.lastCall![0];
+    expect(callerValues.map((value: { name: string }) => value.name)).toEqual(['caller.user_hash', 'caller.project']);
+  });
+
+  test('opens a stored caller-value policy in the visual view and reports it unchanged', () => {
+    const { onChange } = renderEditor({ initialFilter: callerFilter });
+
+    expect(screen.getByText('children: 1')).toBeInTheDocument();
+    expect(screen.queryByLabelText('row-limit-json')).toBeNull();
+    expect(lastValue(onChange)).toEqual({
+      filter: { op: QueryLogicalOperator.And, args: [callerFilter] },
+      isComplete: true,
+    });
   });
 });

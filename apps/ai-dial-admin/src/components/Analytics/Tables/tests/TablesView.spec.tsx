@@ -51,6 +51,7 @@ const permissions = {
   canModify: true,
   canChangeSensitive: true,
   isRowsRestricted: false,
+  isColumnsRestricted: false,
 };
 
 // The grid is a stand-in, so a cell renderer is reached through the column defs it was handed.
@@ -152,6 +153,14 @@ describe('TablesView — Rows restricted badge', () => {
   test('shows no badge for a table that reports no permissions', () => {
     renderNameCell(TABLES[0]);
 
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.RowsRestricted)).toBeNull();
+    expect(screen.queryByText(AnalyticsTableAccessI18nKey.ColumnsRestricted)).toBeNull();
+  });
+
+  test('shows the Columns restricted badge for a table that limits the viewer to some columns', () => {
+    renderNameCell({ ...TABLES[0], permissions: { columns_restricted: true } as AnalyticsTable['permissions'] });
+
+    expect(screen.getByText(AnalyticsTableAccessI18nKey.ColumnsRestricted)).toBeInTheDocument();
     expect(screen.queryByText(AnalyticsTableAccessI18nKey.RowsRestricted)).toBeNull();
   });
 });
