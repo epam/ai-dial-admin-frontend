@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
@@ -7,11 +8,7 @@ import { ButtonsI18nKey, ExternalServiceI18nKey } from '@/src/constants/i18n';
 import { DialExternalService, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/resource';
 import ExternalServiceConsentActions from '../ExternalServiceConsentActions';
 
-const { showNotification } = vi.hoisted(() => ({ showNotification: vi.fn() }));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification }),
-}));
+const { showNotification } = notificationMock;
 
 const APP_PATH = 'public/my-app';
 const SERVICE_ID = 'dial';

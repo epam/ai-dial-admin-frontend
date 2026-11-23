@@ -12,10 +12,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TabsContent from '../TabsContent';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 let capturedResourceDependenciesProps: { etag?: string; originalApplication?: unknown } | undefined;
 
 vi.mock('@/src/components/Assets/Entities/Apps/ResourceDependencies/ResourceDependencies', () => ({

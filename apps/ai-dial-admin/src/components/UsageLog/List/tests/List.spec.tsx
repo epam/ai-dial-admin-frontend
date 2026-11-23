@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
@@ -8,10 +9,7 @@ import List from '@/src/components/UsageLog/List/List';
 import { TRACES_QUERY } from '@/src/constants/telemetry';
 import { USAGE_LOG_TRACES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
-const showNotificationSpy = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationSpy }),
-}));
+const { showNotification: showNotificationSpy } = notificationMock;
 
 const setGridOptionSpy = vi.fn();
 vi.mock('@/src/components/ListView/List', () => ({

@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -18,10 +19,7 @@ import {
   SpanKind,
 } from '@/src/models/analytics/sessions-trace';
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 const getSessionHopRequest = vi.fn();
 const getSessionHopResponse = vi.fn();

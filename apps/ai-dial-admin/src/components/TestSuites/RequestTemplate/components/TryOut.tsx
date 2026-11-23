@@ -32,9 +32,11 @@ import {
   unwrapJsonRequestBody,
 } from '@/src/components/TestSuites/utils/column-eval-context';
 import { TryOutInvocation } from '@/src/components/TestSuites/utils/models';
+import { toTryOutJsonEditorProps } from '@/src/components/TestSuites/utils/tryout-json-editor';
 import { getRequestTurnCounts, getTryOutSectionShape } from '@/src/utils/evaluation/tryout-sections';
 import CollapsibleSection from './CollapsibleSection';
 import TryOutColumns from './TryOutColumns';
+import TryOutEventsSection from './TryOutEventsSection';
 import TryOutRequestPreview from './TryOutRequestPreview';
 import TryOutRequestTabs from './TryOutRequestTabs';
 import TryOutResponsePreview from './TryOutResponse';
@@ -52,23 +54,32 @@ const TryOutResponseBody: FC<{
   growOnOpen: boolean;
 }> = ({ response, isRequestSend, growOnOpen }) => {
   const t = useI18n();
-  const copyText = useMemo(() => (response?.body ? JSON.stringify(response.body, null, 2) : ''), [response]);
+  const copyText = useMemo(() => (response?.body != null ? JSON.stringify(response.body, null, 2) : ''), [response]);
+  const editorProps = useMemo(() => toTryOutJsonEditorProps(response?.body, { wordWrap: 'off' }), [response?.body]);
 
   return (
-    <CollapsibleSection
-      title={t(BasicI18nKey.Response)}
-      fullViewContent={copyText}
-      headerIcon={<CopyButton value={copyText} valueLabel={t(BasicI18nKey.Response)} />}
-      growOnOpen={growOnOpen}
-    >
-      {isRequestSend ? (
-        <Spinner size={18} fullWidth />
-      ) : (
-        <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64'}>
-          <JsonEditor entity={response?.body as object} options={{ wordWrap: 'off' }} readonly={true} />
-        </div>
-      )}
-    </CollapsibleSection>
+    <div className="flex flex-col gap-y-4 shrink-0">
+      <CollapsibleSection
+        title={t(BasicI18nKey.Response)}
+        fullViewContent={copyText}
+        headerIcon={<CopyButton value={copyText} valueLabel={t(BasicI18nKey.Response)} />}
+        growOnOpen={growOnOpen}
+      >
+        {isRequestSend ? (
+          <Spinner size={18} fullWidth />
+        ) : (
+          <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64 min-h-64'}>
+            <JsonEditor
+              entity={editorProps.entity}
+              text={editorProps.text}
+              options={editorProps.options}
+              readonly={true}
+            />
+          </div>
+        )}
+      </CollapsibleSection>
+      <TryOutEventsSection streaming={response?.streaming} events={response?.events} isLoading={isRequestSend} />
+    </div>
   );
 };
 
@@ -158,7 +169,9 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
     setSelectedRequestIndex(0);
   }, [history]);
 
-  const responseBody = <TryOutResponseBody response={response} isRequestSend={isRequestSend} growOnOpen />;
+  // Fixed editor heights (not growOnOpen) so Request / Response / Events keep a usable min
+  // size and the Response/Columns tab scrolls instead of flex-shrinking sections to 0.
+  const responseBody = <TryOutResponseBody response={response} isRequestSend={isRequestSend} growOnOpen={false} />;
   const columnsResponseBody = (
     <TryOutResponseBody response={response} isRequestSend={isRequestSend} growOnOpen={false} />
   );

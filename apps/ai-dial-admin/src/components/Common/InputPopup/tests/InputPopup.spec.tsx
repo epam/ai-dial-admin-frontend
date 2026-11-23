@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
@@ -83,6 +84,21 @@ describe('InputPopup', () => {
 
     expect(onValueChange).toHaveBeenCalledWith('new');
     expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  test('Should expose custom labels and required state without changing the trigger behavior', async () => {
+    const user = userEvent.setup();
+    const { onOpen } = renderPopup({
+      inputAriaLabel: 'Value',
+      openAriaLabel: 'Open value',
+      required: true,
+      invalid: true,
+    });
+
+    expect(screen.getByRole('textbox', { name: 'Value' })).toHaveAttribute('aria-required', 'true');
+    expect(screen.getByRole('textbox', { name: 'Value' })).toHaveAttribute('aria-invalid', 'true');
+    await user.click(screen.getByRole('button', { name: 'Open value' }));
+    expect(onOpen).toHaveBeenCalledOnce();
   });
 
   test('Should show tags for an array value and open from the overlay button', () => {

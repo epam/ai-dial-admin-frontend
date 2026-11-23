@@ -1,11 +1,11 @@
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { getZipImportLimits } from '../limits';
 
 const ENV_NAMES = ['ZIP_IMPORT_MAX_ENTRIES', 'ZIP_IMPORT_MAX_ENTRY_SIZE_MB', 'ZIP_IMPORT_MAX_TOTAL_SIZE_MB'];
 
 describe('Server :: Zip :: limits :: getZipImportLimits', () => {
-  afterEach(() => ENV_NAMES.forEach((name) => delete process.env[name]));
+  afterEach(() => ENV_NAMES.forEach((name) => vi.stubEnv(name, undefined)));
 
   test('uses defaults when nothing is set', () => {
     expect(getZipImportLimits()).toEqual({
@@ -16,9 +16,9 @@ describe('Server :: Zip :: limits :: getZipImportLimits', () => {
   });
 
   test('applies overrides read at call time, converting MB to bytes', () => {
-    process.env.ZIP_IMPORT_MAX_ENTRIES = '50';
-    process.env.ZIP_IMPORT_MAX_ENTRY_SIZE_MB = '8';
-    process.env.ZIP_IMPORT_MAX_TOTAL_SIZE_MB = '16';
+    vi.stubEnv('ZIP_IMPORT_MAX_ENTRIES', '50');
+    vi.stubEnv('ZIP_IMPORT_MAX_ENTRY_SIZE_MB', '8');
+    vi.stubEnv('ZIP_IMPORT_MAX_TOTAL_SIZE_MB', '16');
 
     expect(getZipImportLimits()).toEqual({
       maxEntries: 50,
@@ -28,7 +28,7 @@ describe('Server :: Zip :: limits :: getZipImportLimits', () => {
   });
 
   test.each(['', 'abc', '0', '-5', '1.5'])('falls back to the default for invalid value %j', (value) => {
-    process.env.ZIP_IMPORT_MAX_ENTRIES = value;
+    vi.stubEnv('ZIP_IMPORT_MAX_ENTRIES', value);
 
     expect(getZipImportLimits().maxEntries).toBe(500);
   });

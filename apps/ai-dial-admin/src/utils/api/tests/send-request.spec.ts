@@ -1,7 +1,9 @@
-import { describe, test, expect, vi } from 'vitest';
+import { beforeEach, describe, test, expect, vi } from 'vitest';
 import { sendRequest, CACHE } from '../send-request';
 
-global.fetch = vi.fn();
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn());
+});
 
 const url = 'https://api.example.com/data';
 const type = 'POST';

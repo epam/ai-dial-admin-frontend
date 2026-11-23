@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -23,9 +24,9 @@ vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
 
 vi.mock('@/src/app/[lang]/queries/actions');
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => ({ featureFlags: { deploymentsEnabled: true } })),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: { deploymentsEnabled: true } }));
+});
 
 vi.mock('@/src/components/Analytics/QueryBuilder/Sql/SqlEditor', () => ({
   default: () => <textarea aria-label="sql-editor" />,

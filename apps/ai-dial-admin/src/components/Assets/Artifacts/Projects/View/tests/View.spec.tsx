@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
@@ -27,10 +28,7 @@ vi.mock('@/src/app/[lang]/projects/actions', () => ({
   moveProjects: vi.fn(),
 }));
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification }),
-}));
+const { showNotification } = notificationMock;
 
 const refresh = vi.fn();
 const push = vi.fn();

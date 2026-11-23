@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ColDef } from 'ag-grid-community';
@@ -5,15 +6,10 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ActionMenuOperationI18nKey, KeysI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { DialKeyResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import KeyRoles from '../KeyRoles';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ rowData, columnDefs }: { rowData: DialRole[]; columnDefs: ColDef[] }) => {
@@ -56,7 +52,7 @@ const renderKeyRoles = (asset: Partial<DialKeyResource> = {}, onChange = vi.fn()
 
 describe('KeyRoles', () => {
   beforeEach(() => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 
   test('Shows the empty-state label when no bearer roles are assigned', () => {
@@ -118,7 +114,7 @@ describe('KeyRoles', () => {
   });
 
   test('lets a read-only admin open a role without offering removal', async () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     const user = userEvent.setup();
     const onChange = vi.fn();
     const open = vi.spyOn(window, 'open').mockImplementation(() => null);
@@ -135,7 +131,7 @@ describe('KeyRoles', () => {
   });
 
   test('Does not render the Add Roles button for a read-only admin', () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
 
     renderKeyRoles();
 

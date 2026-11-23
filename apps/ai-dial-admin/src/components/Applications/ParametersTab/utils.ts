@@ -6,6 +6,7 @@ import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCe
 import EditableOnBlurCellRenderer from '@/src/components/Grid/CellRenderers/EditableOnBlurCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import StringEditorCellRenderer from '@/src/components/Grid/CellRenderers/StringEditorCellRenderer';
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { BasicI18nKey, EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { UserSession } from '@/src/models/auth';
@@ -340,11 +341,20 @@ export const getAppPropertiesColumns = (
               isReadonly: readOnly,
             },
           };
+        } else if (params.data.type === DefaultItemType.string) {
+          return {
+            component: StringEditorCellRenderer,
+            params: {
+              label: params.data.key,
+              onChange: onChangeEditable,
+              disabled: readOnly,
+            },
+          };
         } else {
           return {
             component: EditableCellRenderer,
             params: {
-              inputType: params.data.type === 'string' ? 'text' : 'number',
+              inputType: 'number',
               onChange: onChangeEditable,
               isReadonly: readOnly,
               hideTriangle: true,
@@ -353,7 +363,11 @@ export const getAppPropertiesColumns = (
         }
       },
       tooltipValueGetter: (params: ITooltipParams) => {
-        if (params.data.type === TypeEntity.OBJECT || params.data.type === TypeEntity.BOOLEAN) {
+        if (
+          params.data.type === TypeEntity.OBJECT ||
+          params.data.type === TypeEntity.BOOLEAN ||
+          params.data.type === TypeEntity.STRING
+        ) {
           return void 0;
         }
         return params.value;

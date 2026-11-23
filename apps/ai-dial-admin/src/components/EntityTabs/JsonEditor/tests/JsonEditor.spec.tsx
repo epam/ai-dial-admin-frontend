@@ -1,3 +1,5 @@
+import { notificationMock } from '@/test-mocks/notification';
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import { render, screen } from '@testing-library/react';
 import { useEffect, useId } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -26,47 +28,8 @@ vi.mock('@/src/components/Common/JsonEditorBase/JsonEditorBase', () => ({
   },
 }));
 
-// Overrides the global test-setup mock so `jsonErrorNotifications` and `removeNotification` are
-// controllable, stable references across renders — needed to exercise unmount cleanup against a
-// populated, shared notification list (the global mock always returns an empty array).
-const mocks = vi.hoisted(() => ({
-  dispatch: vi.fn(),
-  notifications: [] as JsonEditorOwnedNotification[],
-  removeNotification: vi.fn(),
-}));
-
-vi.mock('@/src/context/SaveValidationContext', () => ({
-  useSaveValidationContext: () => ({
-    dispatch: mocks.dispatch,
-    jsonErrorNotifications: mocks.notifications,
-  }),
-  useJsonEditorValidation: () => {
-    const editorId = useId();
-    return {
-      editorId,
-      setJsonErrors: (errors: JSONEditorError[]) => {
-        const ownedErrors = errors.map((error) => ({ ...error, editorId }));
-        mocks.dispatch({ type: 'SET_JSON_EDITOR_VALIDATION', editorId, errors: ownedErrors });
-      },
-      removeEditor: () => mocks.dispatch({ type: 'REMOVE_JSON_EDITOR_VALIDATION', editorId }),
-    };
-  },
-  ValidationActionType: {
-    SetField: 'SET_FIELD_VALIDATION',
-    RemoveField: 'REMOVE_FIELD_VALIDATION',
-    SetJsonEditor: 'SET_JSON_EDITOR_VALIDATION',
-    RemoveJsonEditor: 'REMOVE_JSON_EDITOR_VALIDATION',
-    SetJsonEditorNotifications: 'SET_JSON_EDITOR_NOTIFICATIONS',
-    Reset: 'RESET',
-  },
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn(), removeNotification: mocks.removeNotification }),
-}));
-
 const lastDispatchedEditorId = () =>
-  mocks.dispatch.mock.calls
+  saveValidationMock.dispatch.mock.calls
     .map(([action]) => action as { type: string; editorId?: string })
     .filter((action) => action.type === ValidationActionType.SetJsonEditor)
     .at(-1)?.editorId;
@@ -80,7 +43,7 @@ describe('JSONEditor', () => {
     vi.clearAllMocks();
     capturedOnValidates = [];
     editorMock.mountCount = 0;
-    mocks.notifications = [];
+    saveValidationMock.set({ jsonErrorNotifications: [] });
   });
 
   describe('uncontrolled (default)', () => {
@@ -288,10 +251,12 @@ describe('JSONEditor', () => {
 
       expect(editorIdA).not.toBe(editorIdB);
 
-      mocks.notifications = [
-        { id: 'notif-a', message: 'Value expected', startLineNumber: 5, editorId: editorIdA },
-        { id: 'notif-b', message: 'Value expected', startLineNumber: 5, editorId: editorIdB },
-      ] as JsonEditorOwnedNotification[];
+      saveValidationMock.set({
+        jsonErrorNotifications: [
+          { id: 'notif-a', message: 'Value expected', startLineNumber: 5, editorId: editorIdA },
+          { id: 'notif-b', message: 'Value expected', startLineNumber: 5, editorId: editorIdB },
+        ] as JsonEditorOwnedNotification[],
+      });
 
       // Re-render editor A so it picks up the populated notification list before it unmounts.
       rerenderA(
@@ -305,10 +270,10 @@ describe('JSONEditor', () => {
 
       unmountA();
 
-      expect(mocks.removeNotification).toHaveBeenCalledWith('notif-a');
-      expect(mocks.removeNotification).not.toHaveBeenCalledWith('notif-b');
+      expect(notificationMock.removeNotification).toHaveBeenCalledWith('notif-a');
+      expect(notificationMock.removeNotification).not.toHaveBeenCalledWith('notif-b');
 
-      const setNotifications = mocks.dispatch.mock.calls
+      const setNotifications = saveValidationMock.dispatch.mock.calls
         .map(([action]) => action as { type: string; errors?: JsonEditorOwnedNotification[] })
         .filter((action) => action.type === ValidationActionType.SetJsonEditorNotifications)
         .at(-1);

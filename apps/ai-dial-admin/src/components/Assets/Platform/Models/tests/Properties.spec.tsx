@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
@@ -9,14 +10,9 @@ import {
   ErrorI18nKey,
   InterfacesI18nKey,
 } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import { DialModelResource, DialModelResourceType } from '@/src/models/dial/resource';
 import ModelAssetProperties from '../Properties';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
 
 const baseAsset = {
   name: 'gpt-4',
@@ -288,7 +284,7 @@ describe('Model asset Properties :: provider and lifecycle dates', () => {
   });
 
   test('Should disable all three fields for a read-only admin', () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderProperties({ provider: 'Azure', deprecationDate: '2027-06-30' });
 
     expect(providerInput()).toBeDisabled();
@@ -296,6 +292,6 @@ describe('Model asset Properties :: provider and lifecycle dates', () => {
       screen.getByRole('button', { name: `${ButtonsI18nKey.Clear} ${EntityFieldsI18nKey.deprecationDate}` }),
     ).toBeDisabled();
 
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 });

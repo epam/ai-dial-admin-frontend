@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import TryOut from '../TryOut';
@@ -27,8 +28,8 @@ vi.mock('@/src/app/[lang]/applications/actions', () => ({
   tryOutTool: (...args: unknown[]) => mockTryOutApplicationTool(...args),
 }));
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     sidebar: {
       show: false,
       content: null,
@@ -37,8 +38,8 @@ vi.mock('@/src/context/AppContext', () => ({
       isMenuClosed: false,
     },
     toggleSidebar: vi.fn(),
-  }),
-}));
+  }));
+});
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   default: ({ entity }: { entity: unknown }) => <pre role="code">{JSON.stringify(entity)}</pre>,

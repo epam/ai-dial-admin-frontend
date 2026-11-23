@@ -27,7 +27,7 @@ vi.mock('@/src/context/assets/AppsFolderContext', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/src/context/assets/AppsFolderContext')>()),
   useAppsFolder: () => mockFolder,
 }));
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
+
 vi.mock('@/src/components/Common/FileManager/utils', () => ({
   getGridOptions: vi.fn(() => ({})),
   getTreeOptions: vi.fn(() => ({})),

@@ -6,10 +6,6 @@ import { EntityFieldsI18nKey, PluginI18nKey } from '@/src/constants/i18n';
 import { DialPluginResource } from '@/src/models/dial/resource';
 import PluginAssetProperties from '../Properties';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 vi.mock('@/src/components/Common/JsonEditorInput/JsonEditorInput', () => ({
   default: ({ value }: any) => <div>settings:{JSON.stringify(value)}</div>,
 }));

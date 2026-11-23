@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import DetailPage from '@/src/app/[lang]/platform-policies/[id]/page';
@@ -10,17 +11,12 @@ vi.mock('@/src/components/Assets/Platform/Policies/List', () => ({ default: vi.f
 vi.mock('@/src/components/Assets/Platform/Policies/View', () => ({ default: vi.fn() }));
 vi.mock('@/src/server/logger', () => ({ errorObjLog: vi.fn() }));
 
-const notFound = vi.fn(() => {
-  throw new Error('NEXT_NOT_FOUND');
-});
-vi.mock('next/navigation', () => ({ notFound: () => notFound() }));
-
 const renderDetail = (id = 'team-a%2Fcap') => DetailPage({ params: Promise.resolve({ id }) });
 
 describe('platform-policies pages :: POLICIES_ENABLED', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    delete process.env.POLICIES_ENABLED;
+    vi.stubEnv('POLICIES_ENABLED', undefined);
   });
 
   afterEach(() => {

@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -17,20 +18,18 @@ import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table
 
 vi.mock('@/src/app/[lang]/pipelines/actions');
 const backfillSidebar = vi.hoisted(() => ({ showSidebar: vi.fn(), closeSidebar: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
-
 // The global AppContext mock in test-setup.tsx carries `featureFlags: { deploymentsEnabled: true }`,
 // so the strip is off in every shipped pipeline spec; this file is the one that turns it on.
 const context = { analyticsEnabled: true, isFullAdmin: true };
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     isFullAdmin: context.isFullAdmin,
     isReadOnlyAdmin: !context.isFullAdmin,
     isEnableAuth: true,
     featureFlags: { analyticsEnabled: context.analyticsEnabled },
     sidebar: backfillSidebar,
-  }),
-}));
+  }));
+});
 
 // PipelineAudit's own contract is covered in PipelineAudit.spec.tsx; here it stands in for "the
 // activities list rendered", and its absence for "no analytics activity request issued".

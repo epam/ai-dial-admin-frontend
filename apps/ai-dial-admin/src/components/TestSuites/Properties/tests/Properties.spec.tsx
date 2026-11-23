@@ -13,6 +13,7 @@ import TestSuiteProperties from '../Properties';
 const getDeploymentByIdMock = vi.fn();
 const getDeploymentsMock = vi.fn();
 const getModelMock = vi.fn();
+const getPlatformApplicationMock = vi.fn();
 const onOpenInNewTabMock = vi.fn();
 const onChangeMock = vi.fn();
 
@@ -23,6 +24,10 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 
 vi.mock('@/src/app/[lang]/platform-models/actions', () => ({
   getModel: (...args: unknown[]) => getModelMock(...args),
+}));
+
+vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
+  getPlatformApplication: (...args: unknown[]) => getPlatformApplicationMock(...args),
 }));
 
 vi.mock('@/src/utils/open-in-new-tab', async (importOriginal) => {
@@ -76,6 +81,8 @@ describe('TestSuiteProperties', () => {
     getDeploymentsMock.mockReset();
     getModelMock.mockReset();
     getModelMock.mockResolvedValue(null);
+    getPlatformApplicationMock.mockReset();
+    getPlatformApplicationMock.mockResolvedValue(null);
     onOpenInNewTabMock.mockReset();
     onChangeMock.mockReset();
   });
@@ -149,6 +156,33 @@ describe('TestSuiteProperties', () => {
 
     expect(onOpenInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.PlatformModels, { name: 'msh-responses' });
     expect(getModelMock).toHaveBeenCalled();
+  });
+
+  test('Open for a platform application uses AssetsApplications when the platform resource exists', async () => {
+    getPlatformApplicationMock.mockResolvedValue({ response: { name: 'world-economy-v2-hybrid' } });
+    const user = userEvent.setup();
+
+    render(
+      <TestSuiteProperties
+        testSuite={{
+          deploymentRef: {
+            id: 'world-economy-v2-hybrid',
+            name: 'StatGPT',
+            type: DeploymentType.Application,
+          },
+        }}
+        onChange={onChangeMock}
+      />,
+    );
+
+    const openButton = await screen.findByRole('button', { name: ButtonsI18nKey.Open });
+    await user.click(openButton);
+
+    expect(onOpenInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.AssetsApplications, {
+      name: 'world-economy-v2-hybrid',
+    });
+    expect(getPlatformApplicationMock).toHaveBeenCalled();
+    expect(getDeploymentByIdMock).not.toHaveBeenCalled();
   });
 
   test('hides Open when type cannot be resolved', async () => {

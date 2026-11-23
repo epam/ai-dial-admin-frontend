@@ -1,12 +1,20 @@
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { StructuredQuery } from '@/src/models/analytics/query';
-import { ChartConfig, QueryResultView, QueryTimeBound } from '@/src/models/analytics/query-builder';
+import { DEFAULT_CHART_LEGEND } from '@/src/constants/analytics/query-builder';
+import {
+  ChartConfig,
+  ChartLegendConfig,
+  ChartLegendPosition,
+  QueryResultView,
+  QueryTimeBound,
+} from '@/src/models/analytics/query-builder';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 import {
   SavedQuery,
   SavedQueryCaptureInput,
   SavedQueryMetadata,
   SavedQueryChart,
+  SavedQueryChartLegend,
   SavedQueryEditor,
   SavedQueryRequest,
   SavedQueryRestore,
@@ -49,10 +57,24 @@ export const readChartYFields = (yField: SavedQueryChart['y_field'] | string | u
   return entries.filter((entry): entry is string => typeof entry === 'string' && entry.trim() !== '');
 };
 
-const toSavedQueryChart = (chartConfig: ChartConfig): SavedQueryChart => ({
-  type: chartConfig.type,
-  x_field: chartConfig.xField,
-  y_field: chartConfig.yFields,
+const toSavedQueryChart = (chartConfig: ChartConfig): SavedQueryChart => {
+  const legend = chartConfig.legend ?? DEFAULT_CHART_LEGEND;
+  return {
+    type: chartConfig.type,
+    x_field: chartConfig.xField,
+    y_field: chartConfig.yFields,
+    legend: { visible: legend.isVisible, position: legend.position },
+  };
+};
+
+const LEGEND_POSITIONS: string[] = Object.values(ChartLegendPosition);
+
+export const readChartLegend = (legend: SavedQueryChartLegend | undefined): ChartLegendConfig => ({
+  isVisible: typeof legend?.visible === 'boolean' ? legend.visible : DEFAULT_CHART_LEGEND.isVisible,
+  position:
+    legend?.position && LEGEND_POSITIONS.includes(legend.position)
+      ? (legend.position as ChartLegendPosition)
+      : DEFAULT_CHART_LEGEND.position,
 });
 
 interface SavedQueryRequestParts {
@@ -212,7 +234,12 @@ export const toBuilderRestore = (input: SavedQueryRestoreInput): SavedQueryResto
     time: toTimeRestore(saved.time, knownPeriods),
     resultView: saved.result_view ?? QueryResultView.Table,
     chartConfig: saved.chart
-      ? { type: saved.chart.type, xField: saved.chart.x_field, yFields: readChartYFields(saved.chart.y_field) }
+      ? {
+          type: saved.chart.type,
+          xField: saved.chart.x_field,
+          yFields: readChartYFields(saved.chart.y_field),
+          legend: readChartLegend(saved.chart.legend),
+        }
       : void 0,
   };
 };

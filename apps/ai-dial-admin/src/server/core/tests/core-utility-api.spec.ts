@@ -38,6 +38,14 @@ describe('Server :: Core :: CoreUtilityApi', () => {
     expect(calledUrl).not.toContain('/api/');
   });
 
+  test('getCoreVersion returns the version when Core sends it without a content type', async () => {
+    fetch.mockResponseOnce('0.43.0');
+
+    const result = await instance.getCoreVersion(TOKEN_MOCK);
+
+    expect(result).toBe('0.43.0');
+  });
+
   test('getCoreVersion returns null when Core rejects the request', async () => {
     fetch.mockResponseOnce('Unavailable', { status: 503 });
 

@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { ComponentProps } from 'react';
 
 import { render, screen } from '@testing-library/react';
@@ -5,11 +6,8 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey, ResourceDependenciesI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { AdminConsentStatus, ResourceAccess, ResourceDependency } from '@/src/models/dial/resource-dependency';
 import AdminConsent from '../AdminConsent';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn(() => false) }));
 
 const makeDependency = (path: string, access = [ResourceAccess.Read]): ResourceDependency => ({
   kind: 'dial.resourceLink',
@@ -46,7 +44,7 @@ describe('AdminConsent', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     onApprove.mockResolvedValue(undefined);
     onRevoke.mockResolvedValue(undefined);
   });
@@ -209,7 +207,7 @@ describe('AdminConsent', () => {
 
   describe('AdminConsent — read-only admin', () => {
     test('shows the state without any button', () => {
-      vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+      appContextMock.set({ isReadOnlyAdmin: true });
 
       renderConsent({ status: STALE });
 

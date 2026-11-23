@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -9,8 +10,8 @@ const mockShowSidebar = vi.fn();
 const mockToggleIsMenuClosed = vi.fn();
 const mockToggleSidebar = vi.fn();
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     sidebar: {
       show: false,
       content: null,
@@ -21,8 +22,8 @@ vi.mock('@/src/context/AppContext', () => ({
     },
     sidebarOpen: false,
     toggleSidebar: mockToggleSidebar,
-  }),
-}));
+  }));
+});
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   OutlinedButton: ({ label, onClick }: { label: string; onClick: () => void }) => (

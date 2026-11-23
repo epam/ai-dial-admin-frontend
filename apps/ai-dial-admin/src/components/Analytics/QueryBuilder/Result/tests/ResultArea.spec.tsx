@@ -3,7 +3,7 @@ import { FC, useState } from 'react';
 import { ColDef, GetRowIdParams, ValueFormatterParams, ValueGetterParams } from 'ag-grid-community';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ResultArea from '@/src/components/Analytics/QueryBuilder/Result/ResultArea';
 import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
@@ -133,6 +133,8 @@ const renderArea = (overrides: Partial<AreaProps> = {}) => {
 };
 
 describe('QueryBuilder :: ResultArea', () => {
+  beforeEach(() => localStorage.setItem('query-builder-chart-panel-open', 'true'));
+
   test('shows the pre-run empty state', () => {
     renderArea();
     expect(screen.getByText('QueryBuilder.ResultsReadyTitle')).toBeInTheDocument();
@@ -242,6 +244,18 @@ describe('QueryBuilder :: ResultArea', () => {
     renderArea({
       result: { columns: ['event_id', 'project_id'], rows: [{ event_id: '1', project_id: 'p' }] },
       meta: { ...AGG_META, dimensionColumns: ['event_id', 'project_id'], aggregateColumns: [] },
+    });
+
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
+
+    expect(screen.getByText('QueryBuilder.ChartNoValueColumn')).toBeInTheDocument();
+  });
+
+  test('chart view shows the no-value-column hint for an ungrouped total that is not a number', async () => {
+    const user = userEvent.setup();
+    renderArea({
+      result: { columns: ['latest'], rows: [{ latest: 'n/a' }] },
+      meta: { ...AGG_META, dimensionColumns: [], aggregateColumns: ['latest'] },
     });
 
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));

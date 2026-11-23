@@ -163,6 +163,19 @@ describe('RunModal', () => {
 
       expect(getConcurrencyInput().value).toBe('1');
     });
+
+    test('shows the maximum and an error when a typed value exceeds it', async () => {
+      const user = userEvent.setup();
+      await renderLoaded();
+
+      expect(screen.getByText(TestSuitesI18nKey.ParallelTestCasesMaximum)).toBeInTheDocument();
+
+      await user.clear(getConcurrencyInput());
+      await user.type(getConcurrencyInput(), '99');
+
+      expect(screen.getByRole('alert')).toHaveTextContent(TestSuitesI18nKey.ParallelTestCasesAboveMaximum);
+      expect(screen.getByRole('button', { name: ButtonsI18nKey.Run })).toBeDisabled();
+    });
   });
 
   test('ignores a second Run click while the first request is in flight', async () => {

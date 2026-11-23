@@ -509,11 +509,17 @@ describe('evaluateTryOutColumnSections', () => {
     const schema: TestCaseSchema[] = [
       { name: 'prompt', type: TestCaseItemType.STRING, required: false, description: '', perTurn: true },
     ];
+    const streamEvents = [{ event: 'delta', data: { t: 'Pa' } }];
     const history: TryOutHistoryEntry[] = [
       {
         turnIndex: 0,
         resolvedRequest: { body: { contentType: 'application/json', content: { q: 1 } } },
-        response: { statusCode: 200, body: { choices: [{ message: { content: 'Paris' } }] } },
+        response: {
+          statusCode: 200,
+          streaming: true,
+          events: streamEvents,
+          body: { choices: [{ message: { content: 'Paris' } }] },
+        },
         extractedColumns: { answer: 'Paris' },
       },
       {
@@ -536,6 +542,12 @@ describe('evaluateTryOutColumnSections', () => {
     expect(results.groups?.[0].showTurnLabels).toBe(true);
     expect(results.groups?.[0].turns).toHaveLength(2);
     expect(results.groups?.[0].turns[0].columns[0].result).toBe('Paris');
+    expect(results.groups?.[0].turns[0]).toMatchObject({
+      streaming: true,
+      events: streamEvents,
+      responseBody: { choices: [{ message: { content: 'Paris' } }] },
+    });
     expect(results.groups?.[0].turns[1].columns[0].result).toBe('London');
+    expect(results.groups?.[0].turns[1].streaming).toBeUndefined();
   });
 });

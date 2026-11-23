@@ -119,7 +119,9 @@ On the Test Suite view Properties tab (non-modal), the Open Application control 
 `testSuite.deploymentRef.type` when present and SHALL NOT call unfiltered `GET /api/v1/deployments`
 or the admin catalog list for that control. When `type` is missing and `id` is present, the system
 SHALL resolve type with one `GET /api/v1/deployments/all/{id}` call. Navigation SHALL use type plus
-the `applications/` id-prefix fallback (empty catalog). The Application picker SHALL remain usable
+the `applications/` id-prefix fallback (empty catalog). A bare `dial-application` id SHALL open
+Assets Applications when Core has a platform-bucket application of that name, and Entities
+Applications only when that lookup misses. The Application picker SHALL remain usable
 without a Properties-level deployments list (CreateTestSuite loads its own data).
 
 #### Scenario: Properties Open with stored type
@@ -129,6 +131,13 @@ without a Properties-level deployments list (CreateTestSuite loads its own data)
 - **THEN** the system SHALL NOT call unfiltered deployments list or admin catalog for Open
 - **AND** SHALL NOT call `GET /api/v1/deployments/all/{id}`
 - **AND** the Open control SHALL navigate using the stored type
+
+#### Scenario: Properties Open for a platform application
+
+- **WHEN** the user views Test Suite Properties for a suite whose `deploymentRef` is a bare
+  `dial-application` id and Core has a platform-bucket application with that name
+- **THEN** the Open control SHALL navigate to that application's Assets Applications page
+- **AND** SHALL NOT navigate to Entities Applications
 
 #### Scenario: Properties Open with missing type
 

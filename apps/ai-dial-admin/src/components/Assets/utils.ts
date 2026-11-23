@@ -33,13 +33,14 @@ export const getAgentLinkForConversation = (
   deploymentType: DeploymentType | undefined,
   currentLocale: string,
   modelRoute?: ApplicationRoute,
+  applicationRoute?: ApplicationRoute,
 ): string => {
   if (!deployment || !deploymentId) {
     return '';
   }
 
   const target = deploymentType
-    ? resolveDeploymentNavigationTarget({ id: deploymentId }, deploymentType, { modelRoute })
+    ? resolveDeploymentNavigationTarget({ id: deploymentId }, deploymentType, { modelRoute, applicationRoute })
     : resolveCatalogDeploymentNavigation(
         { model: deployment.model, application: deployment.application, reference: deployment.reference },
         { fallbackDisplayName: deploymentId },

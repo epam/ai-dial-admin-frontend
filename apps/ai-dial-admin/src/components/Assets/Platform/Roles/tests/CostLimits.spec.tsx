@@ -6,10 +6,6 @@ import { RolesI18nKey } from '@/src/constants/i18n';
 import { DialRoleResource } from '@/src/models/dial/resource';
 import RoleCostLimit from '../CostLimits';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@epam/ai-dial-ui-kit')>()),
   Switch: ({ labelProps, isOn, onChange, disabled, id }: any) => (

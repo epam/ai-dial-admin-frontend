@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -7,8 +8,8 @@ import { AnalyticsTablesI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { ConfigEntityRow } from '@/src/models/dial/config-file';
 import { ConfigEntityOrigin } from '@/src/types/config-file-entity';
 
-const showNotification = vi.hoisted(() => vi.fn());
-vi.mock('@/src/context/NotificationContext', () => ({ useNotification: () => ({ showNotification }) }));
+const { showNotification } = notificationMock;
+
 vi.mock('@/src/app/[lang]/tables/actions');
 
 const role = (displayName?: string, origin = ConfigEntityOrigin.ConfigFile) =>

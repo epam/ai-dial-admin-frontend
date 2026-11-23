@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -10,14 +11,10 @@ import { NotificationType } from '@/src/models/notification';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 
 const getRunMock = vi.fn();
-const showNotification = vi.fn();
+const { showNotification } = notificationMock;
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   getRun: (id: string) => getRunMock(id),
-}));
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
 }));
 
 const createGridApi = (rows: Run[]) => {
