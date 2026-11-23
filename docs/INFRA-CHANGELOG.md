@@ -6,6 +6,12 @@ All notable infrastructure-relevant changes to this project will be documented i
 
 ### Added
 
+#### Security
+
+- Every page is served with a Content-Security-Policy. By default it is sent as `Content-Security-Policy-Report-Only`: the browser blocks nothing and writes violations to its console
+  - `CSP_MODE` — set to `enforce` to send the policy as `Content-Security-Policy`, so the browser blocks what it forbids. Any other value, or no value, keeps it report-only. Read when the server starts; no rebuild is needed
+  - Under `enforce`, an application or router editor URL on a plain `http:` origin is not loaded in the `Parameters` tab iframe; `https:` origins are
+
 #### Telemetry
 
 - Asset application pages (`/assets-applications/[id]`) show a `Traces in Grafana` dropdown with `All traces` and `Errors only` options that open Grafana Explore on the Tempo datasource, filtered to that application. They appear only when `GRAFANA_TRACES_URL` is set; the application is matched on its `dial.deployment` span attribute
@@ -27,6 +33,10 @@ All notable infrastructure-relevant changes to this project will be documented i
 - The Sessions source — the base table and the fields that play the session id, time, project, title, cost and turns roles — is set on a new `Sessions source` tab of System Properties and stored by the Analytics service under `/v1/settings/sessions-source`. Requires an Analytics service that serves that endpoint. Reading it needs `SETTINGS_READ`, which every read-only bundle carries; a `roles-mapping` that names raw privileges must add it, or the Sessions pages show an error instead of sessions. Saving needs `SETTINGS_WRITE` (`FULL_ADMIN`). Without a stored setting the pages use the default binding (`sessions`, `client_session_id`, `last_request_time`, `project_id`, `session_insights.title`, `total_price`, `turn_count`), so an instance that never saves it behaves as before. An instance with no stored setting and no `sessions` table hides the Sessions menu item until a table is saved on that tab
 
 ### Removed
+
+#### Security
+
+- `ALLOWED_IFRAME_ORIGINS` and `ALLOWED_IMAGE_ORIGINS` are no longer read. They fed a policy that was never sent, so they had no effect. Remove them from deployment values; if they are left in place they are ignored
 
 #### Governance
 
