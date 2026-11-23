@@ -3,6 +3,8 @@ import { describe, expect, test } from 'vitest';
 import { DialExternalService, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/resource';
 import {
   getExternalServiceRowAction,
+  isDiscoveryUrlLocked,
+  isDynamicRegistrationOffered,
   isExternalServiceApproved,
   isLoggedInToExternalService,
   isUnrecognisedAuthType,
@@ -128,5 +130,50 @@ describe('isUnrecognisedAuthType', () => {
 
   test('is false when the type is absent', () => {
     expect(isUnrecognisedAuthType(service())).toBe(false);
+  });
+});
+
+describe('isDynamicRegistrationOffered', () => {
+  const services = {
+    stored: { auth_settings: { authentication_type: ToolsetAuthType.OAUTH } },
+    key: { auth_settings: { authentication_type: ToolsetAuthType.API_KEY } },
+    bare: {},
+  };
+
+  test('is offered for a new service', () => {
+    expect(isDynamicRegistrationOffered(services, '')).toBe(true);
+  });
+
+  test('is not offered when the stored type is OAUTH', () => {
+    expect(isDynamicRegistrationOffered(services, 'stored')).toBe(false);
+  });
+
+  test('is offered when the stored type is another one', () => {
+    expect(isDynamicRegistrationOffered(services, 'key')).toBe(true);
+  });
+
+  test('is offered for a stored service with no auth settings or an unknown id', () => {
+    expect(isDynamicRegistrationOffered(services, 'bare')).toBe(true);
+    expect(isDynamicRegistrationOffered(services, 'missing')).toBe(true);
+  });
+});
+
+describe('isDiscoveryUrlLocked', () => {
+  const services = {
+    registered: service({ authentication_type: ToolsetAuthType.OAUTH, dynamically_registered: true }),
+    static: service({ authentication_type: ToolsetAuthType.OAUTH, dynamically_registered: false }),
+  };
+
+  test('is locked for a stored Core-registered client', () => {
+    expect(isDiscoveryUrlLocked(services, 'registered')).toBe(true);
+  });
+
+  test('is not locked for a stored static client', () => {
+    expect(isDiscoveryUrlLocked(services, 'static')).toBe(false);
+  });
+
+  test('is not locked for a new or unknown service', () => {
+    expect(isDiscoveryUrlLocked(services, '')).toBe(false);
+    expect(isDiscoveryUrlLocked(services, 'missing')).toBe(false);
   });
 });
