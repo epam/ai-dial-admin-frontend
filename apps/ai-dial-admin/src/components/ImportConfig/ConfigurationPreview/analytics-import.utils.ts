@@ -9,9 +9,20 @@ import { AnalyticsImportRow } from '@/src/components/ImportConfig/ConfigurationP
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getCompareChangesOperation } from '@/src/constants/grid-columns/actions';
 import { BasicI18nKey, ImportI18nKey } from '@/src/constants/i18n';
-import { CatalogImportEntry, CatalogImportPreview, CatalogImportResult } from '@/src/models/analytics/catalog-import';
+import {
+  CatalogAccessImportEntry,
+  CatalogImportEntry,
+  CatalogImportPreview,
+  CatalogImportResult,
+} from '@/src/models/analytics/catalog-import';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
-import { AnalyticsImportPreviewTab, CatalogImportAction, CatalogImportStatus } from '@/src/types/analytics/import';
+import {
+  AnalyticsImportPreviewTab,
+  CatalogAccessImportAction,
+  CatalogAccessImportStatus,
+  CatalogImportAction,
+  CatalogImportStatus,
+} from '@/src/types/analytics/import';
 import { ImportConfigurationAction } from '@/src/types/import';
 import { getTabStatusProps } from '@/src/utils/tabs/utils';
 
@@ -19,12 +30,14 @@ const TAB_LABEL_KEYS: Record<AnalyticsImportPreviewTab, string> = {
   [AnalyticsImportPreviewTab.TABLES]: ImportI18nKey.AnalyticsTables,
   [AnalyticsImportPreviewTab.PIPELINES]: ImportI18nKey.AnalyticsPipelines,
   [AnalyticsImportPreviewTab.REQUIRED_SYSTEM_TABLES]: ImportI18nKey.AnalyticsRequiredSystemTables,
+  [AnalyticsImportPreviewTab.ACCESS]: ImportI18nKey.AnalyticsAccess,
 };
 
 export const ANALYTICS_IMPORT_TAB_RESOURCE: Record<AnalyticsImportPreviewTab, ActivityAuditResourceType> = {
   [AnalyticsImportPreviewTab.TABLES]: ActivityAuditResourceType.TABLE,
   [AnalyticsImportPreviewTab.PIPELINES]: ActivityAuditResourceType.PIPELINE,
   [AnalyticsImportPreviewTab.REQUIRED_SYSTEM_TABLES]: ActivityAuditResourceType.TABLE,
+  [AnalyticsImportPreviewTab.ACCESS]: ActivityAuditResourceType.TABLE,
 };
 
 // Create and Skip reuse the admin action column's title-case values and its styling; Fail is styled here.
@@ -36,6 +49,20 @@ const ACTION_LABELS: Record<CatalogImportAction, string> = {
   [CatalogImportAction.FAIL]: FAIL_ACTION_LABEL,
 };
 
+const ACCESS_ACTION_LABELS: Record<CatalogAccessImportAction, string> = {
+  [CatalogAccessImportAction.CREATE]: ImportConfigurationAction.CREATE,
+  [CatalogAccessImportAction.REPLACE]: ImportConfigurationAction.UPDATE,
+  [CatalogAccessImportAction.SKIP]: ImportConfigurationAction.SKIP,
+  [CatalogAccessImportAction.FAIL]: FAIL_ACTION_LABEL,
+};
+
+const ACCESS_STATUS_LABEL_KEYS: Record<CatalogAccessImportStatus, string> = {
+  [CatalogAccessImportStatus.CREATED]: ImportI18nKey.AnalyticsStatusCreated,
+  [CatalogAccessImportStatus.REPLACED]: ImportI18nKey.AnalyticsStatusReplaced,
+  [CatalogAccessImportStatus.SKIPPED]: ImportI18nKey.AnalyticsStatusSkipped,
+  [CatalogAccessImportStatus.ROLLED_BACK]: ImportI18nKey.AnalyticsStatusRolledBack,
+};
+
 const STATUS_LABEL_KEYS: Record<CatalogImportStatus, string> = {
   [CatalogImportStatus.CREATED]: ImportI18nKey.AnalyticsStatusCreated,
   [CatalogImportStatus.SKIPPED]: ImportI18nKey.AnalyticsStatusSkipped,
@@ -44,9 +71,11 @@ const STATUS_LABEL_KEYS: Record<CatalogImportStatus, string> = {
   [CatalogImportStatus.FAILED]: ImportI18nKey.AnalyticsStatusFailed,
 };
 
+type AnalyticsImportObjectTab = Exclude<AnalyticsImportPreviewTab, AnalyticsImportPreviewTab.ACCESS>;
+
 const getEntries = (
   source: CatalogImportPreview | CatalogImportResult,
-): Record<AnalyticsImportPreviewTab, CatalogImportEntry[]> => ({
+): Record<AnalyticsImportObjectTab, CatalogImportEntry[]> => ({
   [AnalyticsImportPreviewTab.TABLES]: source.tables ?? [],
   [AnalyticsImportPreviewTab.PIPELINES]: source.pipelines ?? [],
   [AnalyticsImportPreviewTab.REQUIRED_SYSTEM_TABLES]: source.required_system_tables ?? [],
@@ -81,12 +110,31 @@ const toRow = (entry: CatalogImportEntry, t: (key: string) => string): Analytics
   entry,
 });
 
+const getAccessStatusLabel = (entry: CatalogAccessImportEntry, t: (key: string) => string): string | undefined => {
+  if (!entry.status) return void 0;
+  const key = ACCESS_STATUS_LABEL_KEYS[entry.status];
+  return key ? t(key) : entry.status;
+};
+
+const toAccessRow = (entry: CatalogAccessImportEntry, t: (key: string) => string): AnalyticsImportRow => ({
+  name: `${entry.table} / ${entry.role}`,
+  table: entry.table,
+  role: entry.role,
+  action: ACCESS_ACTION_LABELS[entry.import_action] ?? entry.import_action,
+  problems: (entry.problems ?? []).join('; '),
+  ineffectiveGrants: (entry.ineffective_grants ?? []).map((grant) => grant.message).join('; '),
+  status: getAccessStatusLabel(entry, t),
+  isInvalid: entry.import_action === CatalogAccessImportAction.FAIL || !!entry.problems?.length,
+  entry,
+});
+
 export const getAnalyticsImportRows = (
   source: CatalogImportPreview | CatalogImportResult,
   t: (key: string) => string,
 ): Record<AnalyticsImportPreviewTab, AnalyticsImportRow[]> => {
   const entries = getEntries(source);
   return {
+    [AnalyticsImportPreviewTab.ACCESS]: (source.access ?? []).map((e) => toAccessRow(e, t)),
     [AnalyticsImportPreviewTab.TABLES]: entries[AnalyticsImportPreviewTab.TABLES].map((e) => toRow(e, t)),
     [AnalyticsImportPreviewTab.PIPELINES]: entries[AnalyticsImportPreviewTab.PIPELINES].map((e) => toRow(e, t)),
     [AnalyticsImportPreviewTab.REQUIRED_SYSTEM_TABLES]: entries[AnalyticsImportPreviewTab.REQUIRED_SYSTEM_TABLES].map(
@@ -99,11 +147,13 @@ export const getAnalyticsImportTabs = (
   rows: Record<AnalyticsImportPreviewTab, AnalyticsImportRow[]>,
   t: (key: string) => string,
 ): TabItem[] =>
-  Object.values(AnalyticsImportPreviewTab).map((id) => ({
-    id,
-    label: t(TAB_LABEL_KEYS[id]),
-    ...getTabStatusProps(t, rows[id].some((row) => row.isInvalid) ? TabStatus.Error : undefined),
-  }));
+  Object.values(AnalyticsImportPreviewTab)
+    .filter((id) => id !== AnalyticsImportPreviewTab.ACCESS || rows[id].length > 0)
+    .map((id) => ({
+      id,
+      label: t(TAB_LABEL_KEYS[id]),
+      ...getTabStatusProps(t, rows[id].some((row) => row.isInvalid) ? TabStatus.Error : undefined),
+    }));
 
 const column = (field: string, headerName: string): ColDef => ({ field, colId: field, headerName });
 
@@ -120,15 +170,24 @@ export const getAnalyticsImportColDefs = (
   onCompare: (row?: AnalyticsImportRow) => void,
   hasResult: boolean,
 ): ColDef[] => {
-  const columns: ColDef[] = [
-    ACTION_COLUMN_DEF,
-    column('name', t(ImportI18nKey.AnalyticsName)),
-    column('problems', t(ImportI18nKey.AnalyticsProblems)),
-  ];
+  const columns: ColDef[] =
+    tab === AnalyticsImportPreviewTab.ACCESS
+      ? [
+          ACTION_COLUMN_DEF,
+          column('table', t(ImportI18nKey.AnalyticsTable)),
+          column('role', t(ImportI18nKey.AnalyticsRole)),
+          column('problems', t(ImportI18nKey.AnalyticsProblems)),
+          column('ineffectiveGrants', t(ImportI18nKey.AnalyticsIneffectiveGrants)),
+        ]
+      : [
+          ACTION_COLUMN_DEF,
+          column('name', t(ImportI18nKey.AnalyticsName)),
+          column('problems', t(ImportI18nKey.AnalyticsProblems)),
+        ];
   if (tab === AnalyticsImportPreviewTab.PIPELINES) {
     columns.push(column('canEnable', t(ImportI18nKey.AnalyticsCanEnable)));
   }
-  if (tab !== AnalyticsImportPreviewTab.REQUIRED_SYSTEM_TABLES) {
+  if (tab === AnalyticsImportPreviewTab.TABLES || tab === AnalyticsImportPreviewTab.PIPELINES) {
     columns.push(column('differs', t(ImportI18nKey.AnalyticsDiffers)));
   }
   if (hasResult) {
@@ -155,6 +214,7 @@ export const isAnalyticsImportBlocked = (
   if (preview.validation_errors?.length) return true;
   const entries = Object.values(getEntries(preview)).flat();
   if (entries.some((entry) => entry.import_action === CatalogImportAction.FAIL)) return true;
+  if (preview.access?.some((entry) => entry.import_action === CatalogAccessImportAction.FAIL)) return true;
   return entries.some((entry) => entry.reused_name) && !isReusedNamesAcknowledged;
 };
 

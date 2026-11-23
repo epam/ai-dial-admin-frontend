@@ -39,6 +39,44 @@ describe('AnalyticsExportPreview', () => {
     expect(onPreviewResult).toHaveBeenCalledWith(true);
   });
 
+  test('shows the Access tab with its row count only when the preview carries access', async () => {
+    const onPreviewResult = vi.fn();
+    vi.mocked(previewAnalyticsExportConfig).mockResolvedValue({
+      success: true,
+      response: {
+        objects: [],
+        required_system_tables: [],
+        skipped: [],
+        access: [
+          {
+            table: 'dial_usage_log',
+            roles: ['analytics-viewers'],
+            left_behind: [
+              { role: 'writers', entry: { privileges: [], rows: null, columns: null }, error: 'table_is_system' },
+            ],
+          },
+        ],
+      },
+    });
+
+    render(<AnalyticsExportPreview request={{ ...REQUEST, include_access: true }} onPreviewResult={onPreviewResult} />);
+
+    expect(await screen.findByText(`${ExportI18nKey.AnalyticsAccess} (2)`)).toBeInTheDocument();
+    expect(onPreviewResult).toHaveBeenCalledWith(true);
+  });
+
+  test('hides the Access tab when the preview carries no access', async () => {
+    vi.mocked(previewAnalyticsExportConfig).mockResolvedValue({
+      success: true,
+      response: { objects: [], required_system_tables: [], skipped: [] },
+    });
+
+    render(<AnalyticsExportPreview request={REQUEST} onPreviewResult={vi.fn()} />);
+
+    expect(await screen.findByText(ExportI18nKey.AnalyticsObjects)).toBeInTheDocument();
+    expect(screen.queryByText(ExportI18nKey.AnalyticsAccess, { exact: false })).toBeNull();
+  });
+
   test('reports a refused selection in the service words', async () => {
     const onPreviewResult = vi.fn();
     vi.mocked(previewAnalyticsExportConfig).mockResolvedValue({

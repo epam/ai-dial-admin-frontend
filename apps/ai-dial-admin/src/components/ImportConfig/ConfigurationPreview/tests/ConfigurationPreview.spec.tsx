@@ -85,6 +85,7 @@ const renderPreview = () =>
       fileType={ImportFileType.ARCHIVE}
       configScope={ExportComponentType.DEPLOYMENTS}
       analyticsPolicy={CatalogResolutionPolicy.FAIL_IF_EXISTS}
+      isAccessIncluded={false}
       isReusedNamesAcknowledged={false}
       onChangeReusedNamesAcknowledged={vi.fn()}
       onImportFile={vi.fn()}

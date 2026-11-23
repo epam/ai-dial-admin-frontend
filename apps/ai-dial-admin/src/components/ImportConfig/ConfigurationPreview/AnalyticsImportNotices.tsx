@@ -11,6 +11,7 @@ import { CatalogImportOutcome } from '@/src/types/analytics/import';
 interface Props {
   preview?: CatalogImportPreview;
   result?: CatalogImportResult;
+  isAccessIncluded: boolean;
   isReusedNamesAcknowledged: boolean;
   onChangeReusedNamesAcknowledged: (isAcknowledged: boolean) => void;
 }
@@ -18,6 +19,7 @@ interface Props {
 const AnalyticsImportNotices: FC<Props> = ({
   preview,
   result,
+  isAccessIncluded,
   isReusedNamesAcknowledged,
   onChangeReusedNamesAcknowledged,
 }) => {
@@ -31,7 +33,11 @@ const AnalyticsImportNotices: FC<Props> = ({
             type={NotificationType.SectionMessage}
             variant={NotificationVariant.Success}
             title={t(ImportI18nKey.AnalyticsResultCompleted)}
-            message={t(ImportI18nKey.AnalyticsResultCompletedReminder)}
+            message={t(
+              isAccessIncluded
+                ? ImportI18nKey.AnalyticsResultPipelinesReminder
+                : ImportI18nKey.AnalyticsResultCompletedReminder,
+            )}
           />
         );
       case CatalogImportOutcome.ROLLED_BACK:

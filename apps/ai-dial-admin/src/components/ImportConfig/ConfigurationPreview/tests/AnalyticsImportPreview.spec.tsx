@@ -6,7 +6,12 @@ import { previewAnalyticsImportConfig } from '@/src/app/[lang]/import-config/act
 import AnalyticsImportPreview from '@/src/components/ImportConfig/ConfigurationPreview/AnalyticsImportPreview';
 import { ExportI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { CatalogImportPreview, CatalogImportResult } from '@/src/models/analytics/catalog-import';
-import { CatalogImportAction, CatalogImportOutcome, CatalogResolutionPolicy } from '@/src/types/analytics/import';
+import {
+  CatalogAccessImportAction,
+  CatalogImportAction,
+  CatalogImportOutcome,
+  CatalogResolutionPolicy,
+} from '@/src/types/analytics/import';
 import { getErrorNotification } from '@/src/utils/notification';
 
 vi.mock('@/src/app/[lang]/import-config/actions', () => ({
@@ -30,11 +35,14 @@ describe('AnalyticsImportPreview', () => {
   const onBlockedChange = vi.fn();
   const onChangeReusedNamesAcknowledged = vi.fn();
 
-  const renderPreview = (props: { result?: CatalogImportResult; isReusedNamesAcknowledged?: boolean } = {}) =>
+  const renderPreview = (
+    props: { result?: CatalogImportResult; isReusedNamesAcknowledged?: boolean; isAccessIncluded?: boolean } = {},
+  ) =>
     render(
       <AnalyticsImportPreview
         importBody={new FormData()}
         policy={CatalogResolutionPolicy.FAIL_IF_EXISTS}
+        isAccessIncluded={props.isAccessIncluded ?? false}
         result={props.result}
         isReusedNamesAcknowledged={props.isReusedNamesAcknowledged ?? false}
         onChangeReusedNamesAcknowledged={onChangeReusedNamesAcknowledged}
@@ -56,6 +64,7 @@ describe('AnalyticsImportPreview', () => {
     expect(previewAnalyticsImportConfig).toHaveBeenCalledWith(
       expect.any(FormData),
       CatalogResolutionPolicy.FAIL_IF_EXISTS,
+      false,
       false,
     );
     await vi.waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(false));
@@ -152,5 +161,53 @@ describe('AnalyticsImportPreview', () => {
 
     expect(await screen.findByText(message)).toBeInTheDocument();
     await vi.waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(true));
+  });
+
+  test('requests the preview with access and blocks on a refused access entry', async () => {
+    vi.mocked(previewAnalyticsImportConfig).mockResolvedValue({
+      success: true,
+      response: {
+        ...PREVIEW,
+        access: [
+          {
+            table: 'dial_usage_log',
+            role: 'analytics-viewers',
+            import_action: CatalogAccessImportAction.FAIL,
+            prev: null,
+            next: { privileges: [], rows: null, columns: ['missing'] },
+            problems: ['validation_error: unknown column missing'],
+            ineffective_grants: [],
+          },
+        ],
+      },
+    });
+    renderPreview({ isAccessIncluded: true });
+
+    expect(await screen.findByText(ImportI18nKey.AnalyticsAccess)).toBeInTheDocument();
+    expect(previewAnalyticsImportConfig).toHaveBeenCalledWith(
+      expect.any(FormData),
+      CatalogResolutionPolicy.FAIL_IF_EXISTS,
+      false,
+      true,
+    );
+    await vi.waitFor(() => expect(onBlockedChange).toHaveBeenLastCalledWith(true));
+  });
+
+  test('drops the access reminder from a completed import that carried access', async () => {
+    vi.mocked(previewAnalyticsImportConfig).mockResolvedValue({ success: true, response: PREVIEW });
+    renderPreview({
+      isAccessIncluded: true,
+      result: {
+        import_id: 'i-1',
+        outcome: CatalogImportOutcome.COMPLETED,
+        required_system_tables: [],
+        tables: [],
+        pipelines: [],
+        env_specific: [],
+      },
+    });
+
+    expect(await screen.findByText(ImportI18nKey.AnalyticsResultPipelinesReminder)).toBeInTheDocument();
+    expect(screen.queryByText(ImportI18nKey.AnalyticsResultCompletedReminder)).toBeNull();
   });
 });
