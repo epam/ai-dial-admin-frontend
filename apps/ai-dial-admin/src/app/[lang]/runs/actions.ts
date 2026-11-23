@@ -89,3 +89,22 @@ export async function executeStructuredQuery(query: StructuredQuery) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return structuredQueryApi.execute(query, token);
 }
+
+/**
+ * Runs the queries concurrently on the server and returns one result per query, in order. Next.js runs the
+ * server actions a page dispatches one after another, so a page that needs several queries sends them as one
+ * batch. A query that fails or throws yields `null` instead of rejecting the batch, so a caller can fail only
+ * what depends on it.
+ */
+export async function executeStructuredQueries(queries: StructuredQuery[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return Promise.all(
+    queries.map(async (query) => {
+      try {
+        return await structuredQueryApi.execute(query, token);
+      } catch {
+        return null;
+      }
+    }),
+  );
+}

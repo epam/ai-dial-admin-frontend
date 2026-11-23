@@ -11,15 +11,21 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props {
   deltaLabel: string;
+  /** Whether a rise is the favourable direction (a count of suites run) rather than the costly one (spend). */
+  isIncreaseGood?: boolean;
   className?: string;
 }
 
 const CARET_PROPS = { size: 12, stroke: 1.5, 'aria-hidden': true as const };
 
-/** MoM cost chip: red + caret-up when spend rose, green + caret-down when it fell. */
-const EvalMonthCostDeltaBadge: FC<Props> = ({ deltaLabel, className }) => {
+/**
+ * "vs prev. period" chip with a caret for the direction. By default a rise is red and a fall green, as for
+ * cost; `isIncreaseGood` flips the colours for a figure where more is better.
+ */
+const EvalMonthCostDeltaBadge: FC<Props> = ({ deltaLabel, isIncreaseGood = false, className }) => {
   const t = useI18n();
   const isIncrease = deltaLabel.startsWith('+');
+  const isFavourable = isIncrease === isIncreaseGood;
   const badgeLabel = t(TestSuitesI18nKey.EvalTrendsDeltaVsPrevPeriod, { delta: deltaLabel });
   const Caret = isIncrease ? IconCaretUpFilled : IconCaretDownFilled;
 
@@ -27,7 +33,7 @@ const EvalMonthCostDeltaBadge: FC<Props> = ({ deltaLabel, className }) => {
     <Badge
       label={badgeLabel}
       variant={BadgeVariant.Filled}
-      color={isIncrease ? BadgeColor.Red : BadgeColor.Green}
+      color={isFavourable ? BadgeColor.Green : BadgeColor.Red}
       icon={<Caret {...CARET_PROPS} />}
       textClassName="dial-tiny-semi-text"
       className={classNames('shrink-0', className)}

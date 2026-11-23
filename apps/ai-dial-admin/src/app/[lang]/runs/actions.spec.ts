@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { analyticsApi, runsApi } from '@/src/app/api/api';
+import { analyticsApi, runsApi, structuredQueryApi } from '@/src/app/api/api';
+import { QueryMode, StructuredQuery } from '@/src/models/evaluation/structured-query';
 import { FilterDto } from '@/src/models/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -8,6 +9,7 @@ import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { FilterOperatorDto } from '@/src/types/request';
 import {
   cancelRun,
+  executeStructuredQueries,
   exportRunPreview,
   getRun,
   getRunResults,
@@ -151,5 +153,61 @@ describe('Runs :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(analyticsApi.exportPreview).toHaveBeenCalledWith('run-1', TOKEN_MOCK);
     expect(result).toEqual(preview);
+  });
+});
+
+describe('Runs :: executeStructuredQueries', () => {
+  const queryOf = (entity: string): StructuredQuery => ({ entity, mode: QueryMode.Row });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
+  });
+
+  test('Should run every query with the user token', async () => {
+    (structuredQueryApi.execute as any).mockResolvedValue({ rows: [] });
+
+    await executeStructuredQueries([queryOf('a'), queryOf('b')]);
+
+    expect(structuredQueryApi.execute).toHaveBeenCalledWith(queryOf('a'), TOKEN_MOCK);
+    expect(structuredQueryApi.execute).toHaveBeenCalledWith(queryOf('b'), TOKEN_MOCK);
+  });
+
+  test('Should return one result per query, in the order of the queries', async () => {
+    (structuredQueryApi.execute as any).mockImplementation(async (query: StructuredQuery) => ({
+      rows: [{ entity: query.entity }],
+    }));
+
+    const results = await executeStructuredQueries([queryOf('first'), queryOf('second')]);
+
+    expect(results).toEqual([{ rows: [{ entity: 'first' }] }, { rows: [{ entity: 'second' }] }]);
+  });
+
+  test('Should return null for a query the API reports as failed, and keep the others', async () => {
+    (structuredQueryApi.execute as any).mockImplementation(async (query: StructuredQuery) =>
+      query.entity === 'bad' ? null : { rows: [] },
+    );
+
+    const results = await executeStructuredQueries([queryOf('ok'), queryOf('bad')]);
+
+    expect(results).toEqual([{ rows: [] }, null]);
+  });
+
+  test('Should return null for a query that throws instead of rejecting the batch', async () => {
+    (structuredQueryApi.execute as any).mockImplementation(async (query: StructuredQuery) => {
+      if (query.entity === 'boom') {
+        throw new Error('boom');
+      }
+      return { rows: [] };
+    });
+
+    const results = await executeStructuredQueries([queryOf('boom'), queryOf('ok')]);
+
+    expect(results).toEqual([null, { rows: [] }]);
+  });
+
+  test('Should return an empty list for an empty batch', async () => {
+    expect(await executeStructuredQueries([])).toEqual([]);
   });
 });

@@ -138,6 +138,7 @@ export default {
     Metrics: 'Metrics',
     TestSuites: 'Test Suites',
     Datasets: 'Datasets',
+    SystemHealth: 'System Health',
     Runs: 'Runs',
     Evaluation: 'Evaluation',
     Audit: 'Audit',
@@ -4990,5 +4991,23 @@ export default {
       'Settings hold no secrets: DIAL Core stores and returns them as written. A plugin that needs credentials gets them from the environment of the DIAL Core pod.',
     PreviewNotice:
       'Plugins are a preview feature of DIAL Core and may change in a backward-incompatible way in a future release.',
+  },
+  EvalSystemHealth: {
+    TotalEvaluatees: 'Total evaluatees',
+    TotalModels: 'Total models',
+    TotalApplications: 'Total applications',
+    TotalToolsets: 'Total toolsets',
+    CoverageCaption: '{total} total · {uncovered} uncovered',
+    CoverageInfoLabel: 'How coverage is calculated',
+    CoverageInfoTooltip:
+      'Coverage: each evaluatee (model, application, or toolset) is covered if at least one test suite has run on it in the last {days} days. Uncovered evaluatees have no quality signal.',
+    CoverageLoadFailed: 'Failed to load coverage',
+    SuitesRunThisMonth: 'Test suites run this month',
+    SuitesAddedThisMonth: 'Test suites added this month',
+    SuitesRunCaption: 'of {total} total · {percent}',
+    'SuitesAddedCaption#one': 'across 1 evaluatee',
+    'SuitesAddedCaption#other': 'across {count} evaluatees',
+    ActivityPeriods: '{current} vs {previous}',
+    ActivityLoadFailed: 'Failed to load activity',
   },
 } as const;

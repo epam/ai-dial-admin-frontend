@@ -493,3 +493,34 @@ describe('MENU_CONFIGURATION — Policies entries', () => {
     expect(group?.badge).toBeUndefined();
   });
 });
+
+describe('MENU_CONFIGURATION — Evaluation System Health entry', () => {
+  const findEvaluationItems = (flags: FeatureFlags) =>
+    MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Evaluation)?.items;
+
+  test('lists System Health after Datasets, linked to its route with the Preview badge', () => {
+    const items = findEvaluationItems(baseFlags);
+
+    expect(items?.map((item) => item.key)).toEqual([
+      MenuI18nKey.TestSuites,
+      MenuI18nKey.Runs,
+      MenuI18nKey.Datasets,
+      MenuI18nKey.SystemHealth,
+    ]);
+    expect(items?.find((item) => item.key === MenuI18nKey.SystemHealth)).toEqual({
+      key: MenuI18nKey.SystemHealth,
+      href: ApplicationRoute.SystemHealth,
+      badge: MenuBadge.Preview,
+    });
+  });
+
+  test('leaves the other Evaluation items without a badge', () => {
+    const others = findEvaluationItems(baseFlags)?.filter((item) => item.key !== MenuI18nKey.SystemHealth);
+
+    expect(others?.every((item) => item.badge === undefined)).toBe(true);
+  });
+
+  test('is absent with the whole Evaluation group when evaluationEnabled is false', () => {
+    expect(findEvaluationItems({ ...baseFlags, evaluationEnabled: false })).toBeUndefined();
+  });
+});

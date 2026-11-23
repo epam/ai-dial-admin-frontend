@@ -4,7 +4,7 @@ This documentation describes the structure and contents of the menu items array 
 
 Sections are listed in menu order. `DISABLE_MENU_ITEMS` matches the last segment of an item's key (`Menu.Models` → `models`), so a token hides every item with that key, in whichever section it sits.
 
-A `[Preview]` or `[Deprecated]` marker after a section title is that group's `badge` (`MenuBadge`): a badge shown on the group header while the sidebar is expanded. Sub-items carry no badge, except the two Governance items marked `[Preview]` below.
+A `[Preview]` or `[Deprecated]` marker after a section title is that group's `badge` (`MenuBadge`): a badge shown on the group header while the sidebar is expanded. Sub-items carry no badge, except the Evaluation and Governance items marked `[Preview]` below.
 
 ---
 
@@ -123,7 +123,7 @@ A `[Preview]` or `[Deprecated]` marker after a section title is that group's `ba
 
 ### 7. **Evaluation**
 
-- **Description**: A section for managing test suites, evaluation runs, and datasets.
+- **Description**: A section for managing test suites, evaluation runs, and datasets, and for seeing how much of the platform has been evaluated.
 - **Items**:
   - **Test Suites**
     - **Key**: `TestSuites`
@@ -134,6 +134,9 @@ A `[Preview]` or `[Deprecated]` marker after a section title is that group's `ba
   - **Datasets**
     - **Key**: `Datasets`
     - **Description**: Navigate to the datasets page to create and manage datasets used by test suites.
+  - **System Health** [Preview]
+    - **Key**: `SystemHealth`
+    - **Description**: Navigate to the system health page (`/system-health`) to see how much of what is deployed has been evaluated: coverage cards for evaluatees overall and for models, applications and toolsets (an evaluatee is covered when a test suite has run on it in the last 30 days), and cards for the test suites run and added this month, each against the same span of the previous month.
 
 ### 8. **Analytics** [Preview]
 

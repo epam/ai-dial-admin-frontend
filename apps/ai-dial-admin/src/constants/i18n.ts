@@ -50,6 +50,7 @@ export enum MenuI18nKey {
   Runs = 'Menu.Runs',
   TestSuites = 'Menu.TestSuites',
   Datasets = 'Menu.Datasets',
+  SystemHealth = 'Menu.SystemHealth',
   Metrics = 'Menu.Metrics',
   Audit = 'Menu.Audit',
   Toolsets = 'Menu.Toolsets',
@@ -4760,4 +4761,21 @@ export enum PluginI18nKey {
   Settings = 'Plugin.Settings',
   SettingsHint = 'Plugin.SettingsHint',
   PreviewNotice = 'Plugin.PreviewNotice',
+}
+
+export enum EvalSystemHealthI18nKey {
+  TotalEvaluatees = 'EvalSystemHealth.TotalEvaluatees',
+  TotalModels = 'EvalSystemHealth.TotalModels',
+  TotalApplications = 'EvalSystemHealth.TotalApplications',
+  TotalToolsets = 'EvalSystemHealth.TotalToolsets',
+  CoverageCaption = 'EvalSystemHealth.CoverageCaption',
+  CoverageInfoLabel = 'EvalSystemHealth.CoverageInfoLabel',
+  CoverageInfoTooltip = 'EvalSystemHealth.CoverageInfoTooltip',
+  CoverageLoadFailed = 'EvalSystemHealth.CoverageLoadFailed',
+  SuitesRunThisMonth = 'EvalSystemHealth.SuitesRunThisMonth',
+  SuitesAddedThisMonth = 'EvalSystemHealth.SuitesAddedThisMonth',
+  SuitesRunCaption = 'EvalSystemHealth.SuitesRunCaption',
+  SuitesAddedCaption = 'EvalSystemHealth.SuitesAddedCaption',
+  ActivityPeriods = 'EvalSystemHealth.ActivityPeriods',
+  ActivityLoadFailed = 'EvalSystemHealth.ActivityLoadFailed',
 }

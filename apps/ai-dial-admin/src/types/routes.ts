@@ -77,6 +77,7 @@ export enum ApplicationRoute {
   Runs = '/runs',
   RunsCompare = '/runs/compare',
   Metrics = '/metrics',
+  SystemHealth = '/system-health',
 
   // Analytics
   AnalyticsQueries = '/queries',

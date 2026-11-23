@@ -1,0 +1,92 @@
+import { StructuredQuery, StructuredQueryResult } from '@/src/models/evaluation/structured-query';
+
+export enum CoverageKind {
+  Evaluatees = 'evaluatees',
+  Models = 'models',
+  Applications = 'applications',
+  Toolsets = 'toolsets',
+}
+
+export enum CoverageStatus {
+  Loading = 'loading',
+  Error = 'error',
+  Ready = 'ready',
+}
+
+/** One data source of the page: its load state, and its value once ready. */
+export interface CoverageSource<T> {
+  status: CoverageStatus;
+  value?: T;
+}
+
+/**
+ * Ids of the evaluatees a run in the coverage window targeted, whichever ref carried them: a suite that
+ * reaches an application through an MCP tool covers it as much as one that calls it directly.
+ */
+export type CoveredIds = Set<string>;
+
+/** The listed deployment ids of each evaluatee kind. */
+export interface ListedDeploymentIds {
+  models: string[];
+  applications: string[];
+  toolsets: string[];
+}
+
+/** The deployment listing and the coverage query: every card needs both. */
+export interface CoverageSources {
+  deployments: CoverageSource<ListedDeploymentIds>;
+  covered: CoverageSource<CoveredIds>;
+}
+
+export interface CoverageCardModel {
+  kind: CoverageKind;
+  status: CoverageStatus;
+  total: number;
+  covered: number;
+  uncovered: number;
+  /** Covered divided by total as a 0–1 fraction; `null` while not ready or when the total is zero. */
+  rate: number | null;
+}
+
+export enum ActivityKind {
+  SuitesRun = 'suitesRun',
+  SuitesAdded = 'suitesAdded',
+}
+
+/** A span of local time in epoch milliseconds, both ends inclusive. */
+export interface ActivityPeriod {
+  fromMs: number;
+  toMs: number;
+}
+
+export interface ActivityWindows {
+  current: ActivityPeriod;
+  previous: ActivityPeriod;
+}
+
+/** The structured queries behind the activity cards, by what each one reads. */
+export interface ActivityQueries {
+  totalSuites: StructuredQuery;
+  suitesRunCurrent: StructuredQuery;
+  suitesRunPrevious: StructuredQuery;
+  suitesAddedCurrent: StructuredQuery;
+  suitesAddedPrevious: StructuredQuery;
+}
+
+/** The result of each activity query; `null` for a query that failed. */
+export type ActivityResults = Record<keyof ActivityQueries, StructuredQueryResult | null>;
+
+export interface ActivityCardModel {
+  kind: ActivityKind;
+  status: CoverageStatus;
+  /** The count over the current period. */
+  value: number;
+  /** `value` minus the same count over the previous period; `null` while not ready. */
+  delta: number | null;
+  /** Test suites run only: the number of existing test suites. */
+  total: number | null;
+  /** Test suites run only: `value` divided by `total` as a 0–1 fraction; `null` when the total is zero. */
+  rate: number | null;
+  /** Test suites added only: the number of distinct evaluatees the added suites target. */
+  evaluateeCount: number | null;
+}
