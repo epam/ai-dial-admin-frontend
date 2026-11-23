@@ -16,7 +16,7 @@ export default async function Page() {
   let data: Publication[] | undefined = undefined;
 
   try {
-    data = await publicationsApi.getPublicationList(token);
+    data = (await publicationsApi.getPublicationList(token)) ?? undefined;
   } catch (e) {
     errorObjLog(e, 'Failed to fetch publications list data');
   }

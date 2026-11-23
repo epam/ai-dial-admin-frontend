@@ -1,13 +1,5 @@
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import {
-  CORE_PUBLICATION_APPROVE_URL,
-  CORE_PUBLICATION_CREATE_URL,
-  CORE_PUBLICATION_DELETE_URL,
-  CORE_PUBLICATION_GET_URL,
-  CORE_PUBLICATION_LIST_URL,
-  CORE_PUBLICATION_REJECT_URL,
-  CORE_PUBLICATION_RULES_URL,
-  CORE_PUBLICATION_UPDATE_URL,
   PUBLIC_PUBLICATIONS_PATH,
   PUBLICATION_NOT_FOUND_STATUSES,
   PUBLICATIONS_PREFIX,
@@ -17,13 +9,16 @@ import { Publication, PublicationFile } from '@/src/models/dial/publications';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { BaseApiConfig } from '@/src/server/base-api';
 import { CoreApi } from '@/src/server/core/core-api';
-import { mapPublicationBase, resolvePublicationResourceType } from '@/src/server/publications/mappers';
 import {
-  CorePublication,
-  CorePublicationInfos,
+  mapPublicationBase,
+  resolvePublicationResourceType,
+  toListedPublication,
+} from '@/src/server/publications/mappers';
+import {
   CorePublicationResource,
   CorePublicationRule,
-  CorePublicationRulesResponse,
+  CorePublicationRules,
+  SdkPublication,
 } from '@/src/server/publications/models';
 import { encodeFolderPath } from '@/src/server/publications/path';
 import { uploadStagedFiles } from '@/src/server/publications/resolver/file-resource';
@@ -48,32 +43,39 @@ export class CorePublicationsApi extends CoreApi {
     this.clients = clients;
   }
 
-  /** Every publication of every resource type, each tagged with its resolved `resourceType`. */
-  async getPublicationList(token: Token): Promise<Publication[] | undefined> {
-    const res = await this.post<{ url: string }, CorePublicationInfos>(
-      CORE_PUBLICATION_LIST_URL,
-      { url: PUBLIC_PUBLICATIONS_PATH },
-      token,
+  /**
+   * Every publication of every resource type, each tagged with its resolved `resourceType`. `undefined` on a 403,
+   * `null` on any other failure (`sdkGet` hides the 403 behind `R | null`, so it is typed here).
+   */
+  async getPublicationList(token: Token): Promise<Publication[] | null | undefined> {
+    // The SDK declares this response as a bare `Publication[]`, but Core answers `{ publications: [...] }`.
+    // Remove this cast once the SDK types `ListPublication` that way; `core-publications-api.spec.ts` then fails.
+    const res = await this.sdkGet<{ publications?: SdkPublication[] }>(token, (init) =>
+      this.sdk.getPublications({ ...init, body: { url: PUBLIC_PUBLICATIONS_PATH } }),
     );
     if (!res) {
-      return undefined;
+      return res;
     }
     return (res.publications ?? []).flatMap((publication) => {
+      const listed = toListedPublication(publication);
       const resourceType = resolvePublicationResourceType(publication.resourceTypes);
-      return resourceType ? [{ ...mapPublicationBase(publication), resourceType }] : [];
+      return listed && resourceType ? [{ ...mapPublicationBase(listed), resourceType }] : [];
     });
   }
 
-  async getPublication(token: Token, path: string): Promise<Publication | null> {
-    const res = await this.post<{ url: string }, CorePublication>(
-      CORE_PUBLICATION_GET_URL,
-      { url: PUBLICATIONS_PREFIX + path },
-      token,
+  /** `undefined` on a 403, `null` on any other failure, or when the publication is no longer pending. */
+  async getPublication(token: Token, path: string): Promise<Publication | null | undefined> {
+    const res = await this.sdkGet<SdkPublication>(token, (init) =>
+      this.sdk.getPublication({ ...init, body: { url: PUBLICATIONS_PREFIX + path } }),
     );
-    if (!res || PUBLICATION_NOT_FOUND_STATUSES.has(res.status)) {
+    if (!res) {
+      return res;
+    }
+    const listed = toListedPublication(res);
+    if (!listed || PUBLICATION_NOT_FOUND_STATUSES.has(listed.status)) {
       return null;
     }
-    return resolvePublication(res, token, this.clients);
+    return resolvePublication(listed, token, this.clients);
   }
 
   /**
@@ -82,6 +84,8 @@ export class CorePublicationsApi extends CoreApi {
    * calls this; publications are reviewed/approved in this FE, never created directly
    * (design D1 of `migrate-folders-to-core`, closing the gap `migrate-publications-to-core-api`
    * deliberately left open).
+   *
+   * `targetFolder` is sent as given: the caller encodes it (`folders-core.ts`), unlike {@link ruleList}.
    */
   createPublication(
     token: Token,
@@ -89,7 +93,9 @@ export class CorePublicationsApi extends CoreApi {
     resources: CorePublicationResource[],
     rules?: CorePublicationRule[],
   ): Promise<ServerActionResponse> {
-    return this.postAction(CORE_PUBLICATION_CREATE_URL, { targetFolder, resources, rules }, token);
+    return this.sdkAction(token, (init) =>
+      this.sdk.createPublication({ ...init, body: { targetFolder, resources, rules } }),
+    );
   }
 
   /**
@@ -99,24 +105,31 @@ export class CorePublicationsApi extends CoreApi {
    * name containing spaces/special characters resolves the same rules the old
    * `foldersApi.getRules` did.
    */
-  ruleList(token: Token, path: string): Promise<ServerActionResponse<CorePublicationRulesResponse>> {
-    return this.postAction(CORE_PUBLICATION_RULES_URL, { url: encodeFolderPath(path) }, token);
+  ruleList(token: Token, path: string): Promise<ServerActionResponse<CorePublicationRules>> {
+    return this.sdkAction<CorePublicationRules>(token, (init) =>
+      this.sdk.getPublicationRules({ ...init, body: { url: encodeFolderPath(path) } }),
+    );
   }
 
   approvePublication(token: Token, path: string): Promise<ServerActionResponse> {
-    return this.postAction(CORE_PUBLICATION_APPROVE_URL, { url: PUBLICATIONS_PREFIX + path }, token);
+    return this.sdkAction(token, (init) =>
+      this.sdk.approvePublication({ ...init, body: { url: PUBLICATIONS_PREFIX + path } }),
+    );
   }
 
   declinePublication(token: Token, path: string, comment?: string): Promise<ServerActionResponse> {
-    return this.postAction(
-      CORE_PUBLICATION_REJECT_URL,
-      { url: PUBLICATIONS_PREFIX + path, comment: sanitizeComment(comment) },
-      token,
+    return this.sdkAction(token, (init) =>
+      this.sdk.rejectPublication({
+        ...init,
+        body: { url: PUBLICATIONS_PREFIX + path, comment: sanitizeComment(comment) },
+      }),
     );
   }
 
   deletePublication(token: Token, path: string): Promise<ServerActionResponse> {
-    return this.postAction(CORE_PUBLICATION_DELETE_URL, { url: PUBLICATIONS_PREFIX + path }, token);
+    return this.sdkAction(token, (init) =>
+      this.sdk.deletePublication({ ...init, body: { url: PUBLICATIONS_PREFIX + path } }),
+    );
   }
 
   async updatePublication(token: Token, publication: FormData): Promise<ServerActionResponse> {
@@ -134,7 +147,7 @@ export class CorePublicationsApi extends CoreApi {
 
     const { dto, resourcePuts } = buildUpdatePlan(parsed);
 
-    const updateRes = await this.postAction(CORE_PUBLICATION_UPDATE_URL, dto, token);
+    const updateRes = await this.sdkAction(token, (init) => this.sdk.updatePublication({ ...init, body: dto }));
     if (!updateRes.success) {
       return updateRes;
     }
