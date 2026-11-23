@@ -29,7 +29,7 @@ async function middlewareFn(req: NextRequest) {
   }
 
   const { headerName, value } = buildContentSecurityPolicy({
-    nonce: btoa(crypto.randomUUID()),
+    nonce: btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16)))),
     mode: resolveCspMode(process.env.CSP_MODE),
     isDevelopment: process.env.NODE_ENV === 'development',
   });
