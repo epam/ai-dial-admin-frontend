@@ -1,3 +1,5 @@
+import type { components } from '@epam/ai-dial-typescript-sdk';
+
 import { PublicationStatus } from '@/src/models/dial/publications';
 
 /** Resource action as returned by DIAL Core (uppercase, distinct from the FE `ActionType`). */
@@ -18,57 +20,18 @@ export enum CoreResourceType {
   PROJECT = 'PROJECT',
 }
 
-/** A single resource entry within a DIAL Core publication (`PublicationResourceDto`). */
-export interface CorePublicationResource {
-  action: CoreResourceAction;
-  sourceUrl?: string;
-  targetUrl?: string;
-  reviewUrl?: string;
-}
+export type SdkPublication = components['schemas']['Publication'];
 
-/** A DIAL Core publication (`/v1/ops/publication/get` and list-item shape). */
-export interface CorePublication {
-  url: string;
-  name?: string;
-  targetFolder?: string;
-  status: PublicationStatus;
-  createdAt?: number;
-  resources?: CorePublicationResource[];
-  resourceTypes?: CoreResourceType[];
-  author?: string;
-  displayAuthor?: string;
-  rules?: CorePublicationRule[];
-}
+/** A resource entry of a publication, as the SDK types it (`action` and the urls are optional there). */
+export type CorePublicationResource = components['schemas']['PublicationResource'];
 
-export interface CorePublicationRule {
-  function: string;
-  source: string;
-  targets: string[];
-}
+export type CorePublicationRule = components['schemas']['Rule'];
 
-export interface CorePublicationInfos {
-  publications?: CorePublication[];
-}
+/** Response of `POST /v1/ops/publication/rule/list`. */
+export type CorePublicationRules = components['schemas']['Rules'];
 
-/** Body sent to `POST /v1/ops/publication/update`. */
-export interface CorePublicationUpdateDto {
-  url: string;
-  name?: string;
-  targetFolder: string;
-  resources: CorePublicationResource[];
-  resourceTypes: CoreResourceType[];
-  rules: CorePublicationRule[];
-  displayAuthor?: string;
-}
-
-/** Body sent to `POST /v1/ops/publication/create` (`CreatePublicationDto`). */
-export interface CorePublicationCreateDto {
-  targetFolder: string;
-  resources: CorePublicationResource[];
-  rules?: CorePublicationRule[];
-}
-
-/** Response shape of `POST /v1/ops/publication/rule/list` (`RulesDto`). */
-export interface CorePublicationRulesResponse {
-  rules?: Record<string, CorePublicationRule[]>;
-}
+/**
+ * A publication carrying the two fields the admin cannot work without. Core always sends them; the SDK types them
+ * optional, so `toListedPublication` is the one place that decides what a publication without them means.
+ */
+export type ListedPublication = Omit<SdkPublication, 'url' | 'status'> & { url: string; status: PublicationStatus };

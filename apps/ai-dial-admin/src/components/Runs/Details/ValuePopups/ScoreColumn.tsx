@@ -5,23 +5,23 @@ import { FC } from 'react';
 import { EllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
-import { INFO_SECTIONS, METRIC_INFO_SECTION_I18N } from '@/src/components/Runs/Details/ValuePopups/constants';
 import MetricInfoCard from '@/src/components/Runs/Details/ValuePopups/MetricInfoCard';
 import { MetricInfoSection, ScoreRunData } from '@/src/components/Runs/Details/ValuePopups/models';
 import ScoreChip from '@/src/components/Runs/Details/ValuePopups/ScoreChip';
-import { ErrorI18nKey, RunsI18nKey } from '@/src/constants/i18n';
+import { getScoreCards } from '@/src/components/Runs/Details/ValuePopups/utils';
+import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TextDiffRange } from '@/src/models/text-diff';
 
 interface Props {
   data: ScoreRunData;
   hasRunHeader: boolean;
-  openSection: MetricInfoSection | null;
+  openCardId: string | null;
   reasonHighlights: TextDiffRange[];
-  onToggleSection: (section: MetricInfoSection) => void;
+  onToggleCard: (cardId: string) => void;
 }
 
-const ScoreColumn: FC<Props> = ({ data, hasRunHeader, openSection, reasonHighlights, onToggleSection }) => {
+const ScoreColumn: FC<Props> = ({ data, hasRunHeader, openCardId, reasonHighlights, onToggleCard }) => {
   const t = useI18n();
   const { run, label, isMissing, raw, isFailed } = data;
 
@@ -41,24 +41,16 @@ const ScoreColumn: FC<Props> = ({ data, hasRunHeader, openSection, reasonHighlig
             <span className="dial-tiny-text text-secondary">{t(RunsI18nKey.MetricScoreLabel)}</span>
             <ScoreChip raw={raw} isFailed={isFailed} />
           </div>
-          {INFO_SECTIONS.map((section) => {
-            const info = data[section];
-            // A run with nothing under a section gets no card for it.
-            if (!info) return null;
-
-            const isErrorCard = section === MetricInfoSection.Reason && data.isReasonError;
-
-            return (
-              <MetricInfoCard
-                key={section}
-                title={isErrorCard ? t(ErrorI18nKey.Error) : t(METRIC_INFO_SECTION_I18N[section])}
-                info={info}
-                isOpen={openSection === section}
-                onToggle={() => onToggleSection(section)}
-                highlights={section === MetricInfoSection.Reason ? reasonHighlights : undefined}
-              />
-            );
-          })}
+          {getScoreCards(data, t).map((card) => (
+            <MetricInfoCard
+              key={card.id}
+              title={card.title}
+              info={card.info}
+              isOpen={openCardId === card.id}
+              onToggle={() => onToggleCard(card.id)}
+              highlights={card.section === MetricInfoSection.Reason ? reasonHighlights : undefined}
+            />
+          ))}
         </>
       )}
     </section>

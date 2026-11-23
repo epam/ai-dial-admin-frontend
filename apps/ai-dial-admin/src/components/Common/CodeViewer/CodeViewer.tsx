@@ -38,7 +38,6 @@ const CodeViewer: FC<Props> = ({ title, content, hideFullscreen, defaultOpen = f
     }
   }, [content]);
 
-  const lineCount = useMemo(() => formatted.split('\n').length, [formatted]);
   const size = useMemo(() => formatJsonSize(content), [content]);
 
   const onOpenFullscreen = useCallback((e: MouseEvent) => {
@@ -48,9 +47,14 @@ const CodeViewer: FC<Props> = ({ title, content, hideFullscreen, defaultOpen = f
 
   return (
     <>
-      <div className="border border-secondary rounded overflow-hidden shrink-0">
+      <div
+        className={classNames(
+          'flex flex-col border border-secondary rounded overflow-hidden',
+          isOpen ? 'min-h-48 flex-1' : 'shrink-0',
+        )}
+      >
         {/* Only the title toggles: copy and fullscreen are buttons of their own and cannot nest inside it. */}
-        <div className="flex items-center justify-between px-3 py-1.5 bg-layer-3 dial-tiny-text select-none">
+        <div className="flex shrink-0 items-center justify-between px-3 py-1.5 bg-layer-3 dial-tiny-text select-none">
           <button
             type="button"
             className="flex min-w-0 flex-1 items-center gap-1.5 text-secondary cursor-pointer hover:text-primary transition-colors"
@@ -70,7 +74,7 @@ const CodeViewer: FC<Props> = ({ title, content, hideFullscreen, defaultOpen = f
           </span>
         </div>
         {isOpen && (
-          <div id={contentId} className="bg-layer-0" style={{ height: Math.min(lineCount * 19 + 24, 400) }}>
+          <div id={contentId} className="min-h-0 flex-1 bg-layer-0">
             <Editor
               height="100%"
               language="json"
@@ -81,6 +85,7 @@ const CodeViewer: FC<Props> = ({ title, content, hideFullscreen, defaultOpen = f
               }}
               options={{
                 readOnly: true,
+                automaticLayout: true,
                 minimap: { enabled: false },
                 scrollBeyondLastLine: false,
                 wordWrap: 'on',
