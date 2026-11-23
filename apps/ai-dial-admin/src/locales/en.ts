@@ -1736,6 +1736,7 @@ export default {
     TokenEndpoint: 'Enter token endpoint',
     AuthorizationEndpoint: 'Enter authorization endpoint',
     Resource: 'Enter resource URL',
+    DiscoveryUrl: 'Enter MCP server or issuer URL',
     UpstreamEndpoint: 'Enter upstream endpoint',
     UpstreamId: 'Enter ID',
     UpstreamEndpointWithResponses: 'Enter chat completion endpoint',
@@ -1937,6 +1938,13 @@ export default {
     TokenEndpointAuthMethodNone: 'None',
     DynamicRegistration: 'Dynamic registration',
     ExistingClient: 'Existing client',
+    RegisterAutomatically: 'Register automatically',
+    DiscoveryUrl: 'Discovery URL',
+    DiscoveryUrlCaption:
+      "Where DIAL Core reads the sign-in settings: the MCP server's URL, or the identity provider's issuer URL. DIAL Core never sends requests of the application there.",
+    RegisteredByCore:
+      'Registered by DIAL Core. The client is bound to the authorization server found at the Discovery URL. To use a different one, delete this service and add it again.',
+    UseExistingClientInstead: 'Use an existing client instead',
     ResourceCaption:
       'Optional. Sent as the OAuth resource indicator (RFC 8707). When empty, the value published by the MCP server is used, if any.',
     ToolsWarning: 'Endpoint has been changed. Save changes to display auto-detected tools.',
@@ -2291,6 +2299,8 @@ export default {
     NumberOfParallelTestCases: 'Number of parallel test cases',
     IncreaseParallelTestCases: 'Increase number of parallel test cases',
     DecreaseParallelTestCases: 'Decrease number of parallel test cases',
+    ParallelTestCasesMaximum: 'Maximum is {max}.',
+    ParallelTestCasesAboveMaximum: 'Value is above the maximum of {max}.',
     AllTestCasesCount: 'All ({count})',
     SelectedTestCasesCount: '{selected} out of {total}',
     TryoutWarning: 'Test this suite`s request template against a real deployment.',

@@ -23,6 +23,8 @@ interface Props {
   decreaseAriaLabel: string;
   increaseAriaLabel: string;
   inputContainerClassName?: string;
+  caption?: string;
+  error?: string;
 }
 
 const NumberStepper: FC<Props> = ({
@@ -35,6 +37,8 @@ const NumberStepper: FC<Props> = ({
   decreaseAriaLabel,
   increaseAriaLabel,
   inputContainerClassName = 'w-[90px]',
+  caption,
+  error,
 }) => {
   const onIncrement = useCallback(() => {
     onChange(stepUp(value, min, max));
@@ -43,6 +47,9 @@ const NumberStepper: FC<Props> = ({
   const onDecrement = useCallback(() => {
     onChange(stepDown(value, min));
   }, [onChange, value, min]);
+
+  const constraintMessage = error ?? caption;
+  const constraintId = `${id}-constraint`;
 
   return (
     <div className="flex flex-col gap-2">
@@ -55,7 +62,15 @@ const NumberStepper: FC<Props> = ({
           aria-label={decreaseAriaLabel}
           onClick={onDecrement}
         />
-        <NumberInput id={id} integer value={value} containerClassName={inputContainerClassName} onChange={onChange} />
+        <NumberInput
+          id={id}
+          integer
+          value={value}
+          containerClassName={inputContainerClassName}
+          onChange={onChange}
+          invalid={Boolean(error)}
+          aria-describedby={constraintMessage ? constraintId : undefined}
+        />
         <NeutralIconButton
           appearance={ButtonAppearance.Outlined}
           size={ElementSize.Small}
@@ -64,6 +79,15 @@ const NumberStepper: FC<Props> = ({
           onClick={onIncrement}
         />
       </div>
+      {constraintMessage ? (
+        <p
+          id={constraintId}
+          role={error ? 'alert' : undefined}
+          className={error ? 'dial-tiny-text text-error' : 'dial-tiny-text text-secondary'}
+        >
+          {constraintMessage}
+        </p>
+      ) : null}
     </div>
   );
 };
