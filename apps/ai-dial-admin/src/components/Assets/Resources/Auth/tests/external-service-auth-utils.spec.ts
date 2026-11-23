@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { DialExternalService, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/resource';
 import {
   getExternalServiceRowAction,
+  isDiscoveryUrlLocked,
   isDynamicRegistrationOffered,
   isExternalServiceApproved,
   isLoggedInToExternalService,
@@ -154,5 +155,25 @@ describe('isDynamicRegistrationOffered', () => {
   test('is offered for a stored service with no auth settings or an unknown id', () => {
     expect(isDynamicRegistrationOffered(services, 'bare')).toBe(true);
     expect(isDynamicRegistrationOffered(services, 'missing')).toBe(true);
+  });
+});
+
+describe('isDiscoveryUrlLocked', () => {
+  const services = {
+    registered: service({ authentication_type: ToolsetAuthType.OAUTH, dynamically_registered: true }),
+    static: service({ authentication_type: ToolsetAuthType.OAUTH, dynamically_registered: false }),
+  };
+
+  test('is locked for a stored Core-registered client', () => {
+    expect(isDiscoveryUrlLocked(services, 'registered')).toBe(true);
+  });
+
+  test('is not locked for a stored static client', () => {
+    expect(isDiscoveryUrlLocked(services, 'static')).toBe(false);
+  });
+
+  test('is not locked for a new or unknown service', () => {
+    expect(isDiscoveryUrlLocked(services, '')).toBe(false);
+    expect(isDiscoveryUrlLocked(services, 'missing')).toBe(false);
   });
 });

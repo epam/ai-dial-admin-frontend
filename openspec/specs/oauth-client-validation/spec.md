@@ -338,3 +338,16 @@ Assets toolsets and application external services alike, and a stored `none` SHA
 #### Scenario: Stored none is shown
 - **WHEN** a service or toolset is loaded with `token_endpoint_auth_method: "none"`
 - **THEN** the selector shows "None"
+
+### Requirement: PKCE method "None" sends a blank `code_challenge_method`
+Choosing "None" as the code challenge method when a method was set SHALL send `code_challenge_method: ""`. Core keeps
+the stored method when the key is omitted and only a blank value removes the PKCE pair. When no method was set,
+choosing "None" SHALL leave the key out, so an untouched form's payload does not change.
+
+#### Scenario: Removing PKCE from a stored client
+- **WHEN** a service is loaded with `code_challenge_method: "S256"`, the user selects "None" and saves
+- **THEN** the request carries `code_challenge_method: ""`
+
+#### Scenario: None with no method set
+- **WHEN** no code challenge method is set and the user selects "None"
+- **THEN** the request carries no `code_challenge_method` key

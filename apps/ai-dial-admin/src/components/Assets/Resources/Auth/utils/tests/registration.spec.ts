@@ -4,9 +4,11 @@ import { ClientRegistrationMode } from '@/src/components/Assets/Resources/Auth/m
 import {
   getRegistrationMode,
   toAutomaticSettings,
+  toCodeChallengeMethod,
   toExistingSettings,
   toStaticFromRegistered,
 } from '@/src/components/Assets/Resources/Auth/utils/registration';
+import { BasicI18nKey } from '@/src/constants/i18n';
 import {
   DialToolsetResourceAuthSettings,
   TokenEndpointAuthMethod,
@@ -125,5 +127,20 @@ describe('toStaticFromRegistered', () => {
       client_secret: '',
       token_endpoint_auth_method: undefined,
     });
+  });
+});
+
+describe('toCodeChallengeMethod', () => {
+  test('returns a chosen method as is', () => {
+    expect(toCodeChallengeMethod(ToolsetCodeChallengeMethod.S256, undefined)).toBe(ToolsetCodeChallengeMethod.S256);
+  });
+
+  test('returns a blank method for None when a method was set, so Core removes PKCE', () => {
+    expect(toCodeChallengeMethod(BasicI18nKey.None, ToolsetCodeChallengeMethod.S256)).toBe('');
+  });
+
+  test('omits the method for None when none was set', () => {
+    expect(toCodeChallengeMethod(BasicI18nKey.None, undefined)).toBeUndefined();
+    expect(toCodeChallengeMethod(BasicI18nKey.None, '')).toBeUndefined();
   });
 });

@@ -21,6 +21,7 @@ interface Props {
   hideWithLoginOption?: boolean;
   excludeAuthTypes?: ToolsetAuthType[];
   isDiscoveryUrlSupported?: boolean;
+  isDiscoveryUrlLocked?: boolean;
   isDynamicRegistrationOffered?: boolean;
   onChange?: (authSettings: DialToolsetResourceAuthSettings, forwardPerRequestKey?: boolean) => void;
 }
@@ -39,6 +40,7 @@ const ResourceAuthentication: FC<Props> = ({
   hideWithLoginOption,
   excludeAuthTypes,
   isDiscoveryUrlSupported,
+  isDiscoveryUrlLocked,
   isDynamicRegistrationOffered,
   onChange,
   ...props
@@ -111,6 +113,7 @@ const ResourceAuthentication: FC<Props> = ({
             authSettings={authSettings}
             withLoginVisible={!hideWithLoginOption}
             isDiscoveryUrlSupported={isDiscoveryUrlSupported}
+            isDiscoveryUrlLocked={isDiscoveryUrlLocked}
             isDynamicRegistrationOffered={isDynamicRegistrationOffered}
             redirectUri={redirectUri}
             {...props}
@@ -127,6 +130,7 @@ const ResourceAuthentication: FC<Props> = ({
               onChange={onChange}
               withLoginVisible={!hideWithLoginOption}
               isDiscoveryUrlSupported={isDiscoveryUrlSupported}
+              isDiscoveryUrlLocked={isDiscoveryUrlLocked}
               isDynamicRegistrationOffered={isDynamicRegistrationOffered}
               redirectUri={redirectUri}
               {...props}

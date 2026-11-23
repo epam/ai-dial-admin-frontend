@@ -411,6 +411,16 @@ describe('ResourceOAuthSection — registered by DIAL Core', () => {
       isValid: false,
     });
   });
+
+  test('keeps the Discovery URL locked after the conversion while the stored client is registered', async () => {
+    const user = userEvent.setup();
+    render(<Harness initial={registeredSettings()} isDiscoveryUrlSupported isDiscoveryUrlLocked />);
+
+    await user.click(screen.getByRole('button', { name: ToolsetI18nKey.UseExistingClientInstead }));
+
+    expect(screen.getByDisplayValue(DISCOVERY_URL)).toBeDisabled();
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ClientSecret)).toBeEnabled();
+  });
 });
 
 describe('ResourceOAuthSection — token endpoint authentication method', () => {

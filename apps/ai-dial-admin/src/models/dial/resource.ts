@@ -555,7 +555,8 @@ export interface DialToolsetResourceAuthSettings {
   authorization_endpoint?: string;
   code_challenge?: string;
   code_verifier?: string;
-  code_challenge_method?: ToolsetCodeChallengeMethod;
+  /** A blank value removes PKCE on update ("None"); an omitted one keeps the stored method. */
+  code_challenge_method?: ToolsetCodeChallengeMethod | '';
   token_endpoint?: string;
   token_endpoint_auth_method?: TokenEndpointAuthMethod;
   /** RFC 8707 resource indicator. A blank value tells Core to clear it; an omitted one keeps the stored value. */

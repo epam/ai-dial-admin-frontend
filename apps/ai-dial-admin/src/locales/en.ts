@@ -1917,7 +1917,8 @@ export default {
     DiscoveryUrl: 'Discovery URL',
     DiscoveryUrlCaption:
       "Where DIAL Core reads the sign-in settings: the MCP server's URL, or the identity provider's issuer URL. DIAL Core never sends requests of the application there.",
-    RegisteredByCore: 'Registered by DIAL Core',
+    RegisteredByCore:
+      'Registered by DIAL Core. The client is bound to the authorization server found at the Discovery URL. To use a different one, delete this service and add it again.',
     UseExistingClientInstead: 'Use an existing client instead',
     ResourceCaption:
       'Optional. Sent as the OAuth resource indicator (RFC 8707). When empty, the value published by the MCP server is used, if any.',

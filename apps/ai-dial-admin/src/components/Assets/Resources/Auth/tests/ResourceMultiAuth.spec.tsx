@@ -397,4 +397,25 @@ describe('ResourceMultiAuth — automatic registration', () => {
     expect(screen.getByText(ToolsetI18nKey.RegisteredByCore)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Apply })).toBeEnabled();
   });
+
+  test('a stored registered service keeps its Discovery URL locked even after converting to an existing client', async () => {
+    render(
+      <ResourceMultiAuth
+        asset={assetWithAuth({
+          authentication_type: ToolsetAuthType.OAUTH,
+          dynamically_registered: true,
+          discovery_url: 'https://mcp.example.com/mcp',
+          client_id: 'registered-id',
+          authorization_endpoint: 'https://auth.example.com/authorize',
+          token_endpoint: 'https://auth.example.com/token',
+        })}
+        onChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Edit }));
+    await user.click(screen.getByRole('button', { name: ToolsetI18nKey.UseExistingClientInstead }));
+
+    expect(screen.getByDisplayValue('https://mcp.example.com/mcp')).toBeDisabled();
+  });
 });

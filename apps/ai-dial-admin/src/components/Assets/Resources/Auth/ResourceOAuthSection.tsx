@@ -18,6 +18,7 @@ import { ClientRegistrationMode } from '@/src/components/Assets/Resources/Auth/m
 import {
   getRegistrationMode,
   toAutomaticSettings,
+  toCodeChallengeMethod,
   toExistingSettings,
   toStaticFromRegistered,
 } from '@/src/components/Assets/Resources/Auth/utils/registration';
@@ -35,6 +36,8 @@ interface Props {
   disabled?: boolean;
   // Set for application external services only: Core rejects `discovery_url` on a toolset.
   isDiscoveryUrlSupported?: boolean;
+  // Set while the stored client is Core-registered: Core rejects a changed `discovery_url` then.
+  isDiscoveryUrlLocked?: boolean;
   // Set when Core will register a client for what is saved (see `isDynamicRegistrationOffered`).
   isDynamicRegistrationOffered?: boolean;
   redirectUri?: string;
@@ -45,6 +48,7 @@ const ResourceOAuthSection: FC<Props> = ({
   disabled,
   authSettings,
   isDiscoveryUrlSupported,
+  isDiscoveryUrlLocked,
   isDynamicRegistrationOffered,
   redirectUri,
   onChange,
@@ -114,7 +118,7 @@ const ResourceOAuthSection: FC<Props> = ({
   const discoveryUrlControl = isDiscoveryUrlSupported && (
     <EndpointControl
       id="discoveryUrl"
-      disabled={isFieldsDisabled}
+      disabled={isFieldsDisabled || isDiscoveryUrlLocked}
       required={isAutomatic}
       isFullWidth
       label={t(ToolsetI18nKey.DiscoveryUrl)}
@@ -254,9 +258,10 @@ const ResourceOAuthSection: FC<Props> = ({
             onChange={(code_challenge_method) => {
               onChange?.({
                 ...(authSettings || {}),
-                code_challenge_method: (code_challenge_method === BasicI18nKey.None
-                  ? undefined
-                  : code_challenge_method) as ToolsetCodeChallengeMethod,
+                code_challenge_method: toCodeChallengeMethod(
+                  code_challenge_method as string,
+                  authSettings?.code_challenge_method,
+                ),
                 code_challenge: authSettings?.code_challenge,
                 code_verifier: authSettings?.code_verifier,
               });

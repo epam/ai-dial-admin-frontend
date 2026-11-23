@@ -1,5 +1,11 @@
 import { ClientRegistrationMode } from '@/src/components/Assets/Resources/Auth/models';
-import { DialToolsetResourceAuthSettings, TokenEndpointAuthMethod, ToolsetAuthType } from '@/src/models/dial/resource';
+import { BasicI18nKey } from '@/src/constants/i18n';
+import {
+  DialToolsetResourceAuthSettings,
+  TokenEndpointAuthMethod,
+  ToolsetAuthType,
+  ToolsetCodeChallengeMethod,
+} from '@/src/models/dial/resource';
 
 // Only a stored Core-registered client is derivable from the settings. An unsaved "Register
 // automatically" choice has no marker in them, so the section holds that one in local state.
@@ -26,6 +32,16 @@ export const toExistingSettings = (
   client_id: '',
   redirect_uri: redirectUri,
 });
+
+// "None" must send a blank method: Core keeps the stored one when the key is omitted, and only a
+// blank removes PKCE. With no method stored there is nothing to clear, so the key stays omitted.
+export const toCodeChallengeMethod = (
+  selected: string,
+  current?: DialToolsetResourceAuthSettings['code_challenge_method'],
+): DialToolsetResourceAuthSettings['code_challenge_method'] => {
+  if (selected !== BasicI18nKey.None) return selected as ToolsetCodeChallengeMethod;
+  return current ? '' : undefined;
+};
 
 // The PKCE pair, endpoints, scopes, resource and stored redirect_uri stay as read: Core keeps the
 // pair while `code_challenge_method` is unchanged, and sign-in never reads `redirect_uri`.

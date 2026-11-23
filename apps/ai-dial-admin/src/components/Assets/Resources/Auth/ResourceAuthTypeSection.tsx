@@ -25,6 +25,7 @@ interface Props {
   disabled?: boolean;
   withLoginVisible?: boolean;
   isDiscoveryUrlSupported?: boolean;
+  isDiscoveryUrlLocked?: boolean;
   isDynamicRegistrationOffered?: boolean;
   redirectUri?: string;
   onClick?: (type: ToolsetAuthType) => void;
@@ -42,6 +43,7 @@ const ResourceAuthTypeSection: FC<Props> = ({
   onChange,
   withLoginVisible = true,
   isDiscoveryUrlSupported,
+  isDiscoveryUrlLocked,
   isDynamicRegistrationOffered,
   redirectUri,
   ...props
@@ -128,6 +130,7 @@ const ResourceAuthTypeSection: FC<Props> = ({
               disabled={disabled}
               authSettings={authSettings}
               isDiscoveryUrlSupported={isDiscoveryUrlSupported}
+              isDiscoveryUrlLocked={isDiscoveryUrlLocked}
               isDynamicRegistrationOffered={isDynamicRegistrationOffered}
               redirectUri={redirectUri}
               onChange={onChange}

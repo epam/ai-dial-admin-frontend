@@ -32,6 +32,7 @@ import ExternalServiceConsentActions from './ExternalServiceConsentActions';
 import ResourceAuthentication from './ResourceAuthentication';
 import {
   getExternalServiceRowAction,
+  isDiscoveryUrlLocked,
   isExternalServiceApproved,
   isDynamicRegistrationOffered,
   isLoggedInToExternalService,
@@ -171,6 +172,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
           hideWithLoginOption
           excludeAuthTypes={[ToolsetAuthType.NONE]}
           isDiscoveryUrlSupported
+          isDiscoveryUrlLocked={isDiscoveryUrlLocked(services, editState.originalId)}
           isDynamicRegistrationOffered={isDynamicRegistrationOffered(services, editState.originalId)}
         />
 

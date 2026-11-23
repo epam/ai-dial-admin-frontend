@@ -222,8 +222,8 @@ a full `DialToolsetResource`, enabling reuse for external services. An optional
 behavior. An optional `redirectUrl` prop sets the OAuth `redirect_uri` stored in `auth_settings`.
 An optional `excludeAuthTypes` prop filters specific auth types out of the selectable options.
 An optional `isDiscoveryUrlSupported` prop shows the Discovery URL field in the OAuth section, and an optional
-`isDynamicRegistrationOffered` prop additionally enables the "Register automatically" mode; without them both are
-absent, as for toolsets.
+`isDynamicRegistrationOffered` prop additionally enables the "Register automatically" mode; an optional
+`isDiscoveryUrlLocked` prop disables the Discovery URL field. Without them all three are absent, as for toolsets.
 
 #### Scenario: Toolset caller uses generalized component
 - **WHEN** the asset toolset view renders `ResourceAuthentication`
@@ -599,6 +599,10 @@ authentication method, code challenge method and Discovery URL as read-only. It 
 control. A service the user has not changed SHALL be sent back as read, so Core keeps the same client id and PKCE
 challenge. The panel SHALL NOT send `client_secret` for it.
 
+The "Registered by DIAL Core" banner SHALL also say that the client is bound to the authorization server found at the
+Discovery URL, and that using a different one means deleting the service and adding it again. Core answers `400` to a
+registered client's update that sends a different non-blank Discovery URL, so the field stays read-only.
+
 #### Scenario: Registered client shown
 - **WHEN** a user opens a service with `dynamically_registered: true`
 - **THEN** "Registered by DIAL Core" is shown with the client id and the other registered fields disabled
@@ -625,6 +629,11 @@ Apply is enabled. If the stored token endpoint authentication method is `none` i
 no action that returns a stored service to automatic registration. The action SHALL be disabled while the user is
 signed in to the service, like the other auth fields.
 
+While the stored service (as loaded, not as edited) is Core-registered, the Discovery URL SHALL stay read-only after
+the conversion too, because Core checks the stored state and answers `400` to a changed URL even in the save that
+converts the client to a static one. The ID of the service is looked up by its original id, so a new service is never
+locked. A stored static client keeps an editable Discovery URL.
+
 #### Scenario: Convert to a static client
 - **WHEN** the user chooses "Use an existing client instead", enters a client id and secret and saves
 - **THEN** the request carries both and the service is read back with `dynamically_registered` false
@@ -632,6 +641,10 @@ signed in to the service, like the other auth fields.
 #### Scenario: Apply requires both credentials
 - **WHEN** the user has chosen "Use an existing client instead" and left the client id or secret empty
 - **THEN** Apply is disabled
+
+#### Scenario: Discovery URL stays locked after converting
+- **WHEN** the stored service is Core-registered and the user chooses "Use an existing client instead"
+- **THEN** the client id and secret fields become editable and the Discovery URL stays disabled
 
 #### Scenario: Public client method reset
 - **WHEN** the registered client's token endpoint authentication method is `none` and the user chooses
