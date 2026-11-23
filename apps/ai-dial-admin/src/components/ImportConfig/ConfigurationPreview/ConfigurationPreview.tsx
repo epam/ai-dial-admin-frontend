@@ -42,6 +42,7 @@ interface Props {
   fileType: ImportFileType;
   configScope: ExportComponentType;
   analyticsPolicy: CatalogResolutionPolicy;
+  isAccessIncluded: boolean;
   analyticsResult?: CatalogImportResult;
   isReusedNamesAcknowledged: boolean;
   onChangeReusedNamesAcknowledged: (isAcknowledged: boolean) => void;
@@ -58,6 +59,7 @@ const ConfigurationPreview: FC<Props> = ({
   fileType,
   configScope,
   analyticsPolicy,
+  isAccessIncluded,
   analyticsResult,
   isReusedNamesAcknowledged,
   onChangeReusedNamesAcknowledged,
@@ -173,6 +175,7 @@ const ConfigurationPreview: FC<Props> = ({
           <AnalyticsImportPreview
             importBody={importBody}
             policy={analyticsPolicy}
+            isAccessIncluded={isAccessIncluded}
             result={analyticsResult}
             isReusedNamesAcknowledged={isReusedNamesAcknowledged}
             onChangeReusedNamesAcknowledged={onChangeReusedNamesAcknowledged}

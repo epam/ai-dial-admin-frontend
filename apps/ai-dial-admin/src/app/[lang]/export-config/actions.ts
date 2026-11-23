@@ -168,13 +168,16 @@ export async function previewAnalyticsExportConfig(
   return await analyticsDataApi.previewCatalogExport(request, token);
 }
 
-export async function getAnalyticsEntities(type: string): Promise<ServerActionResponse<EntitiesGridData[]>> {
+export async function getAnalyticsEntities(
+  type: string,
+  isAccessIncluded = false,
+): Promise<ServerActionResponse<EntitiesGridData[]>> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   if (type === AnalyticsExportEntityType.TABLE) {
     const res = await analyticsDataApi.getTables(token);
     return res.success
-      ? { ...res, response: getTablesForExportGrid(res.response ?? []) }
+      ? { ...res, response: getTablesForExportGrid(res.response ?? [], isAccessIncluded) }
       : { ...res, response: void 0 };
   }
   if (type === AnalyticsExportEntityType.PIPELINE) {

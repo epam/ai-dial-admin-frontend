@@ -10,6 +10,20 @@ export enum CatalogImportAction {
   FAIL = 'FAIL',
 }
 
+export enum CatalogAccessImportAction {
+  CREATE = 'CREATE',
+  REPLACE = 'REPLACE',
+  SKIP = 'SKIP',
+  FAIL = 'FAIL',
+}
+
+export enum CatalogAccessImportStatus {
+  CREATED = 'created',
+  REPLACED = 'replaced',
+  SKIPPED = 'skipped',
+  ROLLED_BACK = 'rolled_back',
+}
+
 export enum CatalogImportOutcome {
   COMPLETED = 'completed',
   ROLLED_BACK = 'rolled_back',
@@ -28,4 +42,5 @@ export enum AnalyticsImportPreviewTab {
   TABLES = 'tables',
   PIPELINES = 'pipelines',
   REQUIRED_SYSTEM_TABLES = 'required-system-tables',
+  ACCESS = 'access',
 }

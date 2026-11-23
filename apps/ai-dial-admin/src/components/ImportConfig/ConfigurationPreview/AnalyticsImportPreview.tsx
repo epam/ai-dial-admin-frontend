@@ -21,6 +21,7 @@ import { getErrorNotification } from '@/src/utils/notification';
 interface Props {
   importBody: FormData;
   policy: CatalogResolutionPolicy;
+  isAccessIncluded: boolean;
   result?: CatalogImportResult;
   isReusedNamesAcknowledged: boolean;
   onChangeReusedNamesAcknowledged: (isAcknowledged: boolean) => void;
@@ -30,6 +31,7 @@ interface Props {
 const AnalyticsImportPreview: FC<Props> = ({
   importBody,
   policy,
+  isAccessIncluded,
   result,
   isReusedNamesAcknowledged,
   onChangeReusedNamesAcknowledged,
@@ -49,7 +51,7 @@ const AnalyticsImportPreview: FC<Props> = ({
     const loadPreview = async () => {
       setIsLoading(true);
       setPreview(undefined);
-      const res = await getReqRef.current(previewAnalyticsImportConfig, importBody, policy, false);
+      const res = await getReqRef.current(previewAnalyticsImportConfig, importBody, policy, false, isAccessIncluded);
       setIsLoading(false);
 
       if (res.success && res.response) {
@@ -65,7 +67,7 @@ const AnalyticsImportPreview: FC<Props> = ({
     };
 
     void loadPreview();
-  }, [importBody, policy]);
+  }, [importBody, policy, isAccessIncluded]);
 
   useEffect(() => {
     onBlockedChange(!!result || isAnalyticsImportBlocked(preview, isReusedNamesAcknowledged));
@@ -88,6 +90,7 @@ const AnalyticsImportPreview: FC<Props> = ({
       <AnalyticsImportNotices
         preview={preview}
         result={result}
+        isAccessIncluded={isAccessIncluded}
         isReusedNamesAcknowledged={isReusedNamesAcknowledged}
         onChangeReusedNamesAcknowledged={onChangeReusedNamesAcknowledged}
       />

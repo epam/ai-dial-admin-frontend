@@ -148,6 +148,20 @@ describe('SystemProperties — Sessions source tab', () => {
     );
   });
 
+  test('offers Save without Discard while the unsaved default binding is untouched', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getSessionsSource).mockResolvedValue({ success: true });
+    renderSystemProperties();
+    await openSessionsSourceTab(user);
+
+    expect(await screen.findByRole('button', { name: ButtonsI18nKey.Save })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Discard })).toBeNull();
+
+    await chooseOption(user, baseTablePicker(), 'other_sessions');
+
+    expect(await screen.findByRole('button', { name: ButtonsI18nKey.Discard })).toBeTruthy();
+  });
+
   test('says the default binding is in use while nothing is stored', async () => {
     const user = userEvent.setup();
     vi.mocked(getSessionsSource).mockResolvedValue({ success: true });

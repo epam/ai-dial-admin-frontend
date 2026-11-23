@@ -13,8 +13,9 @@ vi.mock('@/src/components/EntityListView/Import/utils', () => ({ isLargeFile: ()
 describe('Files — Analytics scope', () => {
   const onChangeAnalyticsPolicy = vi.fn();
   const onChangeImportBody = vi.fn();
+  const onChangeAccessIncluded = vi.fn();
 
-  const renderFiles = (files: File[] = []) =>
+  const renderFiles = (files: File[] = [], canGrantAccess = true) =>
     render(
       <Files
         files={files}
@@ -23,6 +24,9 @@ describe('Files — Analytics scope', () => {
         isAnalyticsEnabled
         analyticsPolicy={CatalogResolutionPolicy.FAIL_IF_EXISTS}
         onChangeAnalyticsPolicy={onChangeAnalyticsPolicy}
+        isAccessIncluded={false}
+        canGrantAccess={canGrantAccess}
+        onChangeAccessIncluded={onChangeAccessIncluded}
         onChangeFiles={vi.fn()}
         onChangeFileType={vi.fn()}
         onChangeImportBody={onChangeImportBody}
@@ -50,6 +54,21 @@ describe('Files — Analytics scope', () => {
     const input = container.querySelector('input[type="file"]');
     expect(input?.getAttribute('accept')).toBe('.json, application/json');
     expect(input?.hasAttribute('multiple')).toBe(false);
+  });
+
+  test('reports checking Include access', async () => {
+    const user = userEvent.setup();
+    renderFiles();
+
+    await user.click(screen.getByRole('checkbox', { name: ImportI18nKey.AnalyticsIncludeAccess }));
+
+    expect(onChangeAccessIncluded).toHaveBeenCalledWith(true);
+  });
+
+  test('disables Include access for a caller without the grant permission', () => {
+    renderFiles([], false);
+
+    expect(screen.getByRole('checkbox', { name: ImportI18nKey.AnalyticsIncludeAccess })).toBeDisabled();
   });
 
   test('reports a policy change', async () => {

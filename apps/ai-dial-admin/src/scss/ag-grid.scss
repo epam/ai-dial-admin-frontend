@@ -205,6 +205,12 @@
       @apply bg-transparent;
     }
   }
+  .ag-warning-row {
+    @apply bg-warning;
+    &.ag-row-hover:not(.ag-full-width-row):before {
+      @apply bg-transparent;
+    }
+  }
   .ag-new-row {
     @apply bg-success;
     &.ag-new-border {
