@@ -9,6 +9,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 const getTestSuitesForDeploymentMock = vi.fn();
 const getDeploymentPeriodCostsMock = vi.fn();
 const getSuiteRecentRunAveragesMock = vi.fn();
+const getSuitePassRateMock = vi.fn();
 const onOpenInNewTabMock = vi.fn();
 const trendsRunCountChangeRef = vi.fn();
 
@@ -16,6 +17,7 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getTestSuitesForDeployment: (...args: unknown[]) => getTestSuitesForDeploymentMock(...args),
   getDeploymentPeriodCosts: (...args: unknown[]) => getDeploymentPeriodCostsMock(...args),
   getSuiteRecentRunAverages: (...args: unknown[]) => getSuiteRecentRunAveragesMock(...args),
+  getSuitePassRate: (...args: unknown[]) => getSuitePassRateMock(...args),
 }));
 
 vi.mock('@/src/utils/open-in-new-tab', () => ({
@@ -114,6 +116,7 @@ describe('EvalTrendsTab', () => {
     getTestSuitesForDeploymentMock.mockReset();
     getDeploymentPeriodCostsMock.mockReset();
     getSuiteRecentRunAveragesMock.mockReset();
+    getSuitePassRateMock.mockReset();
     onOpenInNewTabMock.mockReset();
     trendsRunCountChangeRef.mockReset();
     getDeploymentPeriodCostsMock.mockResolvedValue({
@@ -121,6 +124,12 @@ describe('EvalTrendsTab', () => {
       previous: { totalTestCaseCost: null, totalMetricEvalCost: null },
     });
     getSuiteRecentRunAveragesMock.mockResolvedValue([]);
+    getSuitePassRateMock.mockResolvedValue({
+      passRate: null,
+      previousPassRate: null,
+      suiteCount: 0,
+      previousSuiteCount: 0,
+    });
   });
 
   test('shows the empty state when suite loading fails', async () => {
@@ -131,6 +140,7 @@ describe('EvalTrendsTab', () => {
     expect(await screen.findByText(TestSuitesI18nKey.EvalTrendsNoSuitesTitle)).toBeInTheDocument();
     expect(screen.queryByText('loader')).not.toBeInTheDocument();
     expect(screen.queryByText(TestSuitesI18nKey.EvalTrendsMonthCostTitle)).not.toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.EvalTrendsAvgPassRateTitle)).not.toBeInTheDocument();
   });
 
   test('shows empty state when the entity has no suites', async () => {
@@ -143,6 +153,7 @@ describe('EvalTrendsTab', () => {
     expect(screen.queryByTestId('trends')).not.toBeInTheDocument();
     expect(screen.queryByText(TestSuitesI18nKey.EvalTrendsAllSuitesTitle)).not.toBeInTheDocument();
     expect(screen.queryByText(TestSuitesI18nKey.EvalTrendsMonthCostTitle)).not.toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.EvalTrendsAvgPassRateTitle)).not.toBeInTheDocument();
   });
 
   test('defaults to the first suite and switches Trends on selection', async () => {
@@ -158,6 +169,7 @@ describe('EvalTrendsTab', () => {
     expect(screen.queryByText('has-start-run')).not.toBeInTheDocument();
     expect(screen.getByTestId('suite-search')).toHaveTextContent(BasicI18nKey.Search);
     expect(screen.getByText(TestSuitesI18nKey.EvalTrendsAllSuitesTitle)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.EvalTrendsAvgPassRateTitle)).toBeInTheDocument();
     expect(screen.getByText(TestSuitesI18nKey.EvalTrendsMonthCostTitle)).toBeInTheDocument();
     const suiteLabel = screen
       .getAllByText(TestSuitesI18nKey.ViewInTestSuite)
