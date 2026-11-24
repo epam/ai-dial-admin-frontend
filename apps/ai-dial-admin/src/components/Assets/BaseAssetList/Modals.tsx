@@ -14,6 +14,7 @@ import { ModalType } from './types';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { ImportFileType } from '@/src/types/import';
 import { ImportData } from '@/src/models/import-asset';
+import { ImportI18nKey } from '@/src/constants/i18n';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -42,7 +43,7 @@ interface Props {
     resolution: string,
     path: string,
     ignorePaths?: boolean,
-  ) => void;
+  ) => ImportI18nKey | void;
   onExport?: (fileType: ImportFileType) => void;
   onCreate?: (asset: AssetWithVersion) => Promise<ServerActionResponse>;
   onDuplicate?: (entity: AssetWithVersion | DialPrompt) => void;

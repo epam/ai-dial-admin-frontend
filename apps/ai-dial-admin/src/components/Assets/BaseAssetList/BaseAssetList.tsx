@@ -37,6 +37,7 @@ import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
+import { getAssetImportSubmissionError } from '@/src/utils/import/get-asset-import-submission-error';
 import { hasPublicTree } from '@/src/utils/files/asset-sources';
 import { isVersionlessAssetView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -379,8 +380,7 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImportEn
       _: string,
       ignorePaths?: boolean,
     ) => {
-      let importFolder = destinationFolder || `${ROOT_FOLDER}/`;
-      setFolderToRefetch(importFolder);
+      const importFolder = destinationFolder || `${ROOT_FOLDER}/`;
 
       const { body } = getFormDataForImport(
         importFolder,
@@ -392,6 +392,10 @@ const BaseAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImportEn
         view,
       );
 
+      const submissionError = getAssetImportSubmissionError(body, fileType);
+      if (submissionError) return submissionError;
+
+      setFolderToRefetch(importFolder);
       const importAssetAction = ImportAssetActionMap[view as CrudAssetRoute];
 
       runImport(getFolderName(importFolder) || '', () => importAssetAction(body, fileType)).then((res) => {

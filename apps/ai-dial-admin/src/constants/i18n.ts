@@ -1144,6 +1144,8 @@ export enum ImportI18nKey {
   Changes = 'Import.Changes',
   FileSizeErrorHeader = 'Import.FileSizeErrorHeader',
   FileSizeErrorDescription = 'Import.FileSizeErrorDescription',
+  PreparedJsonSizeError = 'Import.PreparedJsonSizeError',
+  ImportConfigSizeError = 'Import.ImportConfigSizeError',
   TotalFileSizeErrorDescription = 'Import.TotalFileSizeErrorDescription',
   ArchiveSizeErrorDescription = 'Import.ArchiveSizeErrorDescription',
   FileUploadSuccessTitle = 'Import.FileUploadSuccessTitle',
