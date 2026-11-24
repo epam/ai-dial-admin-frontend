@@ -7,10 +7,45 @@ import KeycloakProvider from 'next-auth/providers/keycloak';
 import OktaProvider from 'next-auth/providers/okta';
 
 import { tokenConfig } from './auth-callbacks';
+import { KEYCLOAK_PROVIDER_IDS } from './constants';
 import { GitLab } from './custom-gitlab';
 import PingId from './ping-identity';
 
 const DEFAULT_NAME = 'SSO';
+
+const createKeycloakProvider = (id: (typeof KEYCLOAK_PROVIDER_IDS)[number]): Provider | false => {
+  const prefix = `AUTH_${id.toUpperCase()}`;
+  const clientId = process.env[`${prefix}_CLIENT_ID`];
+  const clientSecret = process.env[`${prefix}_SECRET`];
+  const issuer = process.env[`${prefix}_HOST`];
+
+  if (!clientId || !clientSecret || !issuer) {
+    return false;
+  }
+
+  // `id` is set on both: in the options next-auth merges, and on the returned object `NextClient` searches by.
+  const provider = KeycloakProvider({
+    id,
+    clientId,
+    clientSecret,
+    name: process.env[`${prefix}_NAME`] ?? DEFAULT_NAME,
+    issuer,
+    userinfo: {
+      async request(context) {
+        const userinfo = await context.client.userinfo(context.tokens.access_token as string);
+        return userinfo;
+      },
+    },
+    authorization: {
+      params: {
+        scope: process.env[`${prefix}_SCOPE`] || 'openid email profile offline_access',
+      },
+    },
+    token: tokenConfig,
+  });
+
+  return { ...provider, id };
+};
 
 const allProviders: (Provider | boolean)[] = [
   !!process.env.AUTH_AZURE_AD_CLIENT_ID &&
@@ -73,27 +108,8 @@ const allProviders: (Provider | boolean)[] = [
       token: tokenConfig,
     }),
 
-  !!process.env.AUTH_KEYCLOAK_CLIENT_ID &&
-    !!process.env.AUTH_KEYCLOAK_SECRET &&
-    !!process.env.AUTH_KEYCLOAK_HOST &&
-    KeycloakProvider({
-      clientId: process.env.AUTH_KEYCLOAK_CLIENT_ID,
-      clientSecret: process.env.AUTH_KEYCLOAK_SECRET,
-      name: process.env.AUTH_KEYCLOAK_NAME ?? DEFAULT_NAME,
-      issuer: process.env.AUTH_KEYCLOAK_HOST,
-      userinfo: {
-        async request(context) {
-          const userinfo = await context.client.userinfo(context.tokens.access_token as string);
-          return userinfo;
-        },
-      },
-      authorization: {
-        params: {
-          scope: process.env.AUTH_KEYCLOAK_SCOPE || 'openid email profile offline_access',
-        },
-      },
-      token: tokenConfig,
-    }),
+  createKeycloakProvider(KEYCLOAK_PROVIDER_IDS[0]),
+  createKeycloakProvider(KEYCLOAK_PROVIDER_IDS[1]),
 
   !!process.env.AUTH_PING_ID_CLIENT_ID &&
     !!process.env.AUTH_PING_ID_SECRET &&
