@@ -4,8 +4,10 @@ import { ThemeProvider } from '@/src/context/ThemeContext';
 import Page404 from './Page404';
 
 export default async function Page404Wrapper() {
-  const themesConfiguration = await themesApi.getThemesConfiguration();
-  const themeImages = await themesApi.getImages();
+  const [themesConfiguration, themeImages] = await Promise.all([
+    themesApi.getThemesConfiguration(),
+    themesApi.getImages(),
+  ]);
 
   return (
     <I18nProvider locale="en">
