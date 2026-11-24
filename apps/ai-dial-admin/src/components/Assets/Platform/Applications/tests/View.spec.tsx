@@ -1,5 +1,6 @@
 import { appContextMock } from '@/test-mocks/app-context';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
+import { resolveAppRunnerScheme } from '@/src/components/SourceField/Application/resolve-app-runner';
 import { ButtonsI18nKey, EntitiesI18nKey, GrafanaLinksI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { GrafanaTraceLinks } from '@/src/utils/grafana/models';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -11,6 +12,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 import PlatformApplicationView from '../View';
+
+vi.mock('@/src/components/SourceField/Application/resolve-app-runner');
 
 vi.mock('@/src/context/assets/AppsFolderContext', () => ({
   useAppsFolder: vi.fn(),
@@ -54,6 +57,7 @@ describe('PlatformApplicationView', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(resolveAppRunnerScheme).mockImplementation(async (runner) => ({ runner }));
 
     (useAppsFolder as Mock).mockReturnValue({
       fetchFiles: mockFetchFiles,
@@ -112,6 +116,55 @@ describe('PlatformApplicationView', () => {
     const tabLabels = screen.getAllByRole('tab').map((tab) => tab.textContent);
     expect(tabLabels.indexOf(TabsI18nKey.Tools)).toBeGreaterThan(-1);
     expect(tabLabels.indexOf(TabsI18nKey.Roles)).toBeLessThan(tabLabels.indexOf(TabsI18nKey.Interceptors));
+  });
+
+  test('shows Tools for a runner resolved by schema id without changing the application', async () => {
+    const runner: DialApplicationScheme = {
+      $id: 'runner-id',
+      'dial:applicationTypeMcp': { 'dial:endpoint': 'https://mcp.example.com' },
+    };
+    vi.mocked(resolveAppRunnerScheme).mockResolvedValue({ scheme: runner });
+    const app = { ...mockOriginalApp, application_type_schema_id: 'runner-id' } as AssetApp;
+
+    render(
+      <PlatformApplicationView
+        etag={mockEtag}
+        originalApp={app}
+        models={mockModels}
+        applications={mockApplications}
+        schemes={mockSchemes}
+        roles={mockRoles}
+        interceptors={mockInterceptors}
+      />,
+    );
+
+    expect(await screen.findByRole('tab', { name: TabsI18nKey.Tools })).toBeTruthy();
+    expect(resolveAppRunnerScheme).toHaveBeenCalledWith({ $id: 'runner-id' });
+    expect(app.mcp).toBeUndefined();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Save })).toBeNull();
+  });
+
+  test('shows Tools when the matched runner is returned without a resolved scheme', async () => {
+    const runner: DialApplicationScheme = {
+      $id: 'runner-id',
+      'dial:applicationTypeMcp': { 'dial:endpoint': 'https://mcp.example.com' },
+    };
+    vi.mocked(resolveAppRunnerScheme).mockResolvedValue({ runner });
+
+    render(
+      <PlatformApplicationView
+        etag={mockEtag}
+        originalApp={{ ...mockOriginalApp, application_type_schema_id: 'runner-id' } as AssetApp}
+        models={mockModels}
+        applications={mockApplications}
+        schemes={[runner]}
+        roles={mockRoles}
+        interceptors={mockInterceptors}
+      />,
+    );
+
+    expect(await screen.findByRole('tab', { name: TabsI18nKey.Tools })).toBeTruthy();
+    expect(resolveAppRunnerScheme).toHaveBeenCalledWith(runner);
   });
 
   test.each([
