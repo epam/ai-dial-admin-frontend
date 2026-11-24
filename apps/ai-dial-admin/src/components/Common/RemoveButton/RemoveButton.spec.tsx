@@ -1,3 +1,4 @@
+import { ButtonAppearance } from '@epam/ai-dial-ui-kit';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
@@ -74,6 +75,14 @@ describe('Common components :: RemoveButton', () => {
 
       expect(button.className).toContain('danger');
       expect(button.className).toContain('outlined');
+    });
+
+    test('supports a ghost danger button when requested', () => {
+      render(<RemoveButton label={ButtonsI18nKey.Delete} appearance={ButtonAppearance.Ghost} onClick={vi.fn()} />);
+
+      const button = screen.getByRole('button');
+      expect(button.className).toContain('danger');
+      expect(button.className).toContain('ghost');
     });
 
     test('calls onClick when clicked', async () => {

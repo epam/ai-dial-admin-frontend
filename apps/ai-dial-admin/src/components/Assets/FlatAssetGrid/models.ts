@@ -1,6 +1,10 @@
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetSource } from '@/src/models/dial/asset-source';
 
+export interface FlatAssetGridHandle {
+  openDelete: (rows: AssetListItem[]) => void;
+}
+
 /** The sources a flat grid can show; Public only for a view whose Public source is flat. */
 export type FlatAssetSource = AssetSource.Public | AssetSource.Platform | AssetSource.ConfigFile;
 

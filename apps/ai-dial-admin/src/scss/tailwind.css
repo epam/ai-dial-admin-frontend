@@ -37,4 +37,15 @@
   dialog {
     margin: auto;
   }
+
+  /* The file manager's folder picker sets `md:!h-[800px]` on its popup, but the kit's `md:h-auto` is
+     `!important` too under the `important` import above and sorts after it, so the popup stays auto-height.
+     Its `h-full` content then never gets a bound and the popup body becomes one big scroller instead of the
+     tree and grid scrolling on their own. Among `!important` declarations an earlier layer wins, so this
+     `base` rule beats the `utilities` one. */
+  @media (min-width: 48rem) {
+    .dial-kit-popup:has(> .grow > .bg-layer-sunken.h-full) {
+      height: min(800px, 100%) !important;
+    }
+  }
 }
