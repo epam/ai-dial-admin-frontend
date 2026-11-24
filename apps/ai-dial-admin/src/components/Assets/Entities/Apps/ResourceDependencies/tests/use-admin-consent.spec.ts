@@ -2,6 +2,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { useAdminConsent } from '@/src/components/Assets/Entities/Apps/ResourceDependencies/use-admin-consent';
+import { ResourceDependency } from '@/src/models/dial/resource-dependency';
 
 const { protectedRequest } = vi.hoisted(() => ({ protectedRequest: vi.fn() }));
 
@@ -13,7 +14,7 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
 }));
 
 const renderConsent = async () => {
-  const hook = renderHook(() => useAdminConsent('applications/app', 'etag'));
+  const hook = renderHook(() => useAdminConsent('applications/app', []));
   await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
   return hook;
 };
@@ -47,15 +48,15 @@ describe('useAdminConsent', () => {
     expect(result.current).toMatchObject({ status: undefined, hasFailed: true });
   });
 
-  test('re-reads the status and finishes loading when the etag changes', async () => {
+  test('re-reads the status and finishes loading when the saved dependencies change', async () => {
     protectedRequest.mockResolvedValue({ success: true, response: { consented: false } });
-    const hook = renderHook(({ etag }) => useAdminConsent('applications/app', etag), {
-      initialProps: { etag: 'etag-1' },
+    const hook = renderHook(({ saved }) => useAdminConsent('applications/app', saved), {
+      initialProps: { saved: [] as ResourceDependency[] },
     });
     await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
 
     protectedRequest.mockResolvedValue({ success: true, response: { consented: true } });
-    hook.rerender({ etag: 'etag-2' });
+    hook.rerender({ saved: [] });
 
     await waitFor(() => expect(hook.result.current.status).toEqual({ consented: true }));
     expect(hook.result.current.isLoading).toBe(false);

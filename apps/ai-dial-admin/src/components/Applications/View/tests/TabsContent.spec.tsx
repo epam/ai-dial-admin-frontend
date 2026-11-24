@@ -12,7 +12,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TabsContent from '../TabsContent';
 
-let capturedResourceDependenciesProps: { etag?: string; originalApplication?: unknown } | undefined;
+let capturedResourceDependenciesProps: { originalApplication?: unknown } | undefined;
 
 vi.mock('@/src/components/Assets/Entities/Apps/ResourceDependencies/ResourceDependencies', () => ({
   default: (props: typeof capturedResourceDependenciesProps) => {
@@ -233,7 +233,7 @@ describe('TabsContent — Discard remount scope (Issue #4477)', () => {
 describe('TabsContent — Resource Dependencies tab', () => {
   const original = { name: 'app', path: 'public/app' } as unknown as DialApplication;
 
-  test('renders the tab with the saved application and etag on the AssetsApplications view', () => {
+  test('renders the tab with the saved application on the AssetsApplications view', () => {
     render(
       <TabsContent
         {...baseProps}
@@ -241,12 +241,10 @@ describe('TabsContent — Resource Dependencies tab', () => {
         view={ApplicationRoute.AssetsApplications}
         selectedApplication={original}
         originalApplication={original}
-        etag="etag-7"
       />,
     );
 
     expect(screen.getByLabelText('resource-dependencies')).toBeInTheDocument();
-    expect(capturedResourceDependenciesProps?.etag).toBe('etag-7');
     expect(capturedResourceDependenciesProps?.originalApplication).toBe(original);
   });
 
