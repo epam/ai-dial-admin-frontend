@@ -14,6 +14,11 @@ All notable infrastructure-relevant changes to this project will be documented i
 
 - `ANALYTICS_CUSTOM_DASHBOARDS_ENABLED` [Preview] — custom dashboards on the analytics Dashboards page, at `/dashboards/<id>`, stored by the Analytics service under `/v1/dashboards`. Requires an Analytics service that serves that endpoint, widget `settings` included. Takes effect only when `ANALYTICS_ENABLED` and `ANALYTICS_USAGE_ENABLED` are both `true` (default: `false`)
 
+#### AI Gateway
+
+- An application's OAuth external service can be created with `Register automatically`: the admin enters a `Discovery URL` (an MCP server's URL or the identity provider's issuer URL) and DIAL Core registers the client with the provider itself. A service Core registered shows `Registered by DIAL Core` with its fields read-only, and `Use an existing client instead` turns it into a hand-registered one. Requires a DIAL Core that includes epam/ai-dial-core#2311; an older Core rejects `discovery_url`. Services with an existing client are unaffected
+  - `toolsets.security.allowedRedirectUris` (DIAL Core setting) must list `<admin origin>/external-service-signin`, plus Chat's callback if users sign in from Chat. Core registers only URIs from this list and accepts the panel's sign-in callback for a registered client only through it. With the default empty list every `Register automatically` save fails with `400`. With a list that lacks the admin callback the save succeeds but signing in from the panel fails, and the service has to be deleted and added again after the list is fixed
+
 ### Removed
 
 #### Menu
