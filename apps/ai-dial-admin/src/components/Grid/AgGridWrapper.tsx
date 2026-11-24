@@ -1,5 +1,6 @@
 'use client';
 
+import { GridSelectionMode } from '@epam/ai-dial-react-file-manager';
 import { Grid, GridColorScheme } from '@epam/ai-dial-ui-kit';
 import {
   ColDef,
@@ -15,6 +16,7 @@ import {
   SuppressHeaderKeyboardEventParams,
   SuppressKeyboardEventParams,
 } from 'ag-grid-community';
+import classNames from 'classnames';
 import { MutableRefObject, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useTheme } from '@/src/context/ThemeContext';
@@ -46,6 +48,10 @@ export interface AgGridProps<T> {
   isLiveData?: boolean;
   getRowId?: (params: GetRowIdParams<T>) => string;
   getHref?: (data: unknown) => string | undefined;
+  selectionMode?: GridSelectionMode;
+  gridClassName?: string;
+  selectRowLabel?: (row: T) => string;
+  selectAllLabel?: string;
 }
 
 const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
@@ -133,6 +139,10 @@ const AgGridWrapper = <T extends object>({
   isLiveData,
   getRowId,
   getHref,
+  selectionMode,
+  gridClassName,
+  selectRowLabel,
+  selectAllLabel,
 }: AgGridProps<T>) => {
   const [gridApi, setGridApi] = useState<GridApi>();
   const { currentTheme } = useTheme();
@@ -195,6 +205,7 @@ const AgGridWrapper = <T extends object>({
   const hasIconName = useMemo(() => hasIconNameColumn(columnDefs), [columnDefs]);
   const isRowInteractive =
     !!getHref ||
+    !!selectionMode ||
     !!additionalGridOptions?.onRowClicked ||
     !!additionalGridOptions?.onRowDoubleClicked ||
     !!additionalGridOptions?.onCellClicked ||
@@ -235,11 +246,14 @@ const AgGridWrapper = <T extends object>({
       columnDefs={gridColumnDefs}
       rowData={rowData ?? undefined}
       getRowId={isLiveData && getRowId ? getRowIdFromRow : undefined}
+      selectionMode={selectionMode}
+      selectRowLabel={selectRowLabel}
+      selectAllLabel={selectAllLabel}
       getContextMenuItems={getContextMenuItems}
       onGridApiChange={onGridApiChange}
       additionalGridOptions={gridOptions}
       colorScheme={colorScheme}
-      className={isRowInteractive ? undefined : 'ag-grid-static-rows'}
+      className={classNames(gridClassName, { 'ag-grid-static-rows': !isRowInteractive }) || undefined}
     />
   );
 };

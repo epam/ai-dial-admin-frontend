@@ -95,6 +95,8 @@ export default {
     MoveToFolder: 'Move to another folder',
     Selected: 'selected',
     SelectAll: 'Select All',
+    SelectRow: 'Select {name}',
+    ClearSelection: 'Clear selection',
     CopiedSuccessfully: 'copied successfully',
     Search: 'Search',
     Or: 'OR',

@@ -9,7 +9,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
-// The one delete/remove control: bordered when it carries a label, borderless when icon-only.
+// The one delete/remove control: outlined by default when labelled, borderless when icon-only.
 const RemoveButton: FC<RemoveButtonProps> = (props) => {
   const t = useI18n();
 
@@ -17,7 +17,7 @@ const RemoveButton: FC<RemoveButtonProps> = (props) => {
     return (
       <DangerButton
         {...props}
-        appearance={ButtonAppearance.Outlined}
+        appearance={props.appearance ?? ButtonAppearance.Outlined}
         iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
       />
     );

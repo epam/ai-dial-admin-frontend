@@ -8,13 +8,19 @@ import DeletePlatformAssetsModal from '../DeletePlatformAssetsModal';
 import { getDeleteModalDescription, getDeleteModalTitle } from '../utils';
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ rowData }: { rowData: { name: string }[] }) => (
-    <ul aria-label="rows-to-delete">
-      {rowData.map((row) => (
-        <li key={row.name}>{row.name}</li>
-      ))}
-    </ul>
-  ),
+  default: ({ rowData, columnDefs }: { rowData: { name: string; path: string }[]; columnDefs: any[] }) => {
+    const costObject = columnDefs.find((column) => column.colId === 'costObject');
+    return (
+      <ul aria-label="rows-to-delete">
+        {rowData.map((row) => (
+          <li key={row.path}>
+            {row.name}
+            {costObject && ` (${costObject.valueGetter({ data: row }) || 'global'})`}
+          </li>
+        ))}
+      </ul>
+    );
+  },
 }));
 
 const VIEW = ApplicationRoute.PlatformModels;
@@ -52,6 +58,22 @@ describe('DeletePlatformAssetsModal', () => {
     expect(screen.getByText('claude')).toBeInTheDocument();
     expect(screen.queryByRole('tree')).not.toBeInTheDocument();
   });
+
+  test.each([ApplicationRoute.PlatformPolicies, ApplicationRoute.PlatformPolicyAssignments])(
+    'distinguishes selected records with the same name in different cost objects for %s',
+    (view) => {
+      const items = [
+        { name: 'cap', path: 'platform/team-a/cap' },
+        { name: 'cap', path: 'platform/team-b/cap' },
+      ] as never;
+      render(
+        <DeletePlatformAssetsModal view={view} isOpen itemsToDelete={items} onRemove={vi.fn()} onClose={vi.fn()} />,
+      );
+
+      expect(screen.getByText('cap (team-a)')).toBeInTheDocument();
+      expect(screen.getByText('cap (team-b)')).toBeInTheDocument();
+    },
+  );
 
   test('confirms the delete', async () => {
     const { onRemove, onClose } = renderModal();

@@ -175,6 +175,8 @@ export enum BasicI18nKey {
   MoveToFolder = 'Basic.MoveToFolder',
   Selected = 'Basic.Selected',
   SelectAll = 'Basic.SelectAll',
+  SelectRow = 'Basic.SelectRow',
+  ClearSelection = 'Basic.ClearSelection',
   CopiedSuccessfully = 'Basic.CopiedSuccessfully',
   Search = 'Basic.Search',
   Or = 'Basic.Or',
