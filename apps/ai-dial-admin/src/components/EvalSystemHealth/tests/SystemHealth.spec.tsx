@@ -7,7 +7,7 @@ import { MenuI18nKey } from '@/src/constants/i18n';
 vi.mock('@/src/components/EvalSystemHealth/CoverageCardRow', () => ({ default: () => <div>coverage row</div> }));
 vi.mock('@/src/components/EvalSystemHealth/ActivityCardRow', () => ({ default: () => <div>activity row</div> }));
 vi.mock('@/src/components/EvalSystemHealth/RunTrendsSection', () => ({ default: () => <div>run trends</div> }));
-vi.mock('@/src/components/EvalSystemHealth/HealthDistributionPlaceholder', () => ({
+vi.mock('@/src/components/EvalSystemHealth/HealthDistributionSection', () => ({
   default: () => <div>health distribution</div>,
 }));
 
@@ -32,7 +32,7 @@ describe('SystemHealth', () => {
     expect(isFollowing(screen.getByText('activity row'), screen.getByText('run trends'))).toBe(true);
   });
 
-  test('puts the run trends and the chart placeholder in one row, the run trends first', () => {
+  test('puts the run trends and the health distribution chart in one row, the run trends first', () => {
     render(<SystemHealth />);
 
     const runTrends = screen.getByText('run trends');

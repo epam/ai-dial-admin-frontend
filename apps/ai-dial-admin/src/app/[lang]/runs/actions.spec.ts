@@ -14,6 +14,7 @@ import {
   getRun,
   getRunResults,
   getRuns,
+  getHealthDistribution,
   getRunTrends,
   getMetricSnapshots,
   getTestCaseRunResultDetails,
@@ -145,6 +146,23 @@ describe('Runs :: server actions', () => {
     (analyticsApi.getRunTrends as any).mockResolvedValue(null);
 
     expect(await getRunTrends(0, 10)).toBeNull();
+  });
+
+  test('Should call getHealthDistribution action with the weeks, threshold and token', async () => {
+    const distribution = { threshold: 0.75, weeks: [] };
+    (analyticsApi.getHealthDistribution as any).mockResolvedValue(distribution);
+
+    const result = await getHealthDistribution(5, 0.75);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(analyticsApi.getHealthDistribution).toHaveBeenCalledWith(5, 0.75, TOKEN_MOCK);
+    expect(result).toEqual(distribution);
+  });
+
+  test('Should return null from getHealthDistribution action when the request failed', async () => {
+    (analyticsApi.getHealthDistribution as any).mockResolvedValue(null);
+
+    expect(await getHealthDistribution(5, 0.75)).toBeNull();
   });
 
   test('Should call getMetricSnapshots action and return snapshots', async () => {

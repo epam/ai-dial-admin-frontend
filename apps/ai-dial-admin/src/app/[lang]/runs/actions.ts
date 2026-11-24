@@ -70,6 +70,11 @@ export async function getRunTrends(page: number, size: number) {
   return analyticsApi.getRunTrends(page, size, token);
 }
 
+export async function getHealthDistribution(weeks: number, threshold: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return analyticsApi.getHealthDistribution(weeks, threshold, token);
+}
+
 export async function getTestCaseRunResultDetails(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return analyticsApi.getTestCaseRunResultDetails(id, token);

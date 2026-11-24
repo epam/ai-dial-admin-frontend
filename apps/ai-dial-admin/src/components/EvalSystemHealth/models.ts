@@ -122,3 +122,30 @@ export interface RunTrendsData {
   /** Requests the current page again after a failure. */
   retry: () => void;
 }
+
+/** One week of the health distribution chart, ready to draw and to state. */
+export interface HealthDistributionBar {
+  /** Monday 00:00 UTC of the week, in epoch milliseconds. */
+  weekStart: number;
+  /** The week's start as a short month and day in UTC, such as `Nov 3`. */
+  label: string;
+  healthyCount: number;
+  failingCount: number;
+  suiteCount: number;
+  /** Healthy suites as a percentage of the week's suites, to one decimal; `null` for a week with no suite. */
+  healthyShare: number | null;
+  /** `100 - healthyShare`, so the two always add up to 100; `null` exactly when `healthyShare` is. */
+  failingShare: number | null;
+}
+
+export interface HealthDistributionData {
+  status: CoverageStatus;
+  /** One bar per week, oldest first; empty until the request is ready. */
+  bars: HealthDistributionBar[];
+  /** The threshold the backend applied; the requested one until the response is in. */
+  threshold: number;
+  /** Whether the request is ready and no week has a counted suite. */
+  isEmpty: boolean;
+  /** Requests the chart again after a failure. */
+  retry: () => void;
+}

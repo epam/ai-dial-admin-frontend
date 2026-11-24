@@ -1,4 +1,5 @@
 import { Token } from '@/src/models/auth';
+import { HealthDistribution } from '@/src/models/evaluation/health-distribution';
 import { EvalSummaryExportRequestDto, EvalSummaryPreviewResponse } from '@/src/models/evaluation/export';
 import { MetricSnapshot } from '@/src/models/evaluation/metric';
 import { RunComparisonResponse } from '@/src/models/evaluation/run-comparison';
@@ -15,6 +16,7 @@ export const ANALYTICS_RESULTS_URL = `${ANALYTICS_URL}/eval-summaries`;
 export const ANALYTICS_RUN_METRIC_SNAPSHOTS_URL = `${ANALYTICS_URL}/run-metric-snapshots`;
 export const ANALYTICS_METRIC_SCORES_COMPARISON_URL = `${ANALYTICS_URL}/metric-scores/comparison`;
 export const ANALYTICS_RUN_TRENDS_URL = `${ANALYTICS_URL}/test-suites/run-trends`;
+export const ANALYTICS_HEALTH_DISTRIBUTION_URL = `${ANALYTICS_URL}/test-suites/health-distribution`;
 
 export class AnalyticsApi extends BaseApi {
   getTestCaseRunResults(filters: FilterDto[], token: Token): Promise<{ content: AnalyticsResult[] } | null> {
@@ -40,6 +42,11 @@ export class AnalyticsApi extends BaseApi {
   getRunTrends(page: number, size: number, token: Token): Promise<EvaluationPageData<SuiteRunTrend> | null> {
     const params = new URLSearchParams({ page: String(page), size: String(size) });
     return this.get<EvaluationPageData<SuiteRunTrend>>(`${ANALYTICS_RUN_TRENDS_URL}?${params.toString()}`, token);
+  }
+
+  getHealthDistribution(weeks: number, threshold: number, token: Token): Promise<HealthDistribution | null> {
+    const params = new URLSearchParams({ weeks: String(weeks), threshold: String(threshold) });
+    return this.get<HealthDistribution>(`${ANALYTICS_HEALTH_DISTRIBUTION_URL}?${params.toString()}`, token);
   }
 
   exportPreview(runId: string, token: Token): Promise<EvalSummaryPreviewResponse | null> {

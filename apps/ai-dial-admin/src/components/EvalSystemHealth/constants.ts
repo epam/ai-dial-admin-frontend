@@ -69,3 +69,9 @@ export const RUN_TREND_KIND_BY_SUITE_TYPE: Record<SuiteType, EvalSystemHealthI18
   [SuiteType.McpTool]: EvalSystemHealthI18nKey.RunTrendsKindToolset,
   [SuiteType.Route]: EvalSystemHealthI18nKey.RunTrendsKindRoute,
 };
+
+/** Weeks the health distribution chart shows; the title and the request both name it, so it is sent, not defaulted. */
+export const HEALTH_DISTRIBUTION_WEEKS = 5;
+
+/** Pass rate at or above which a test suite counts as healthy in a week; the backend's own default, sent explicitly. */
+export const HEALTH_DISTRIBUTION_THRESHOLD = 0.75;
