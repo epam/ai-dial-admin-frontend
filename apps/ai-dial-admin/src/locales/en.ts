@@ -1187,6 +1187,8 @@ export default {
     Changes: 'Changes',
     FileSizeErrorHeader: 'File size limit error',
     FileSizeErrorDescription: 'Size of file is more than {size} MB',
+    PreparedJsonSizeError: 'The prepared JSON exceeds {size} MB. Reduce the imported content or edits and try again.',
+    ImportConfigSizeError: 'The import destination information is too large. Choose a shorter destination path.',
     TotalFileSizeErrorDescription: 'Total size of selected files is more than {size} MB',
     ArchiveSizeErrorDescription: 'Size of archive is more than {size} MB',
     Notifications: {
