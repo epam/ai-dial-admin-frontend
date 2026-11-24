@@ -273,7 +273,7 @@ Client ID and Client Secret validation SHALL apply only while their controls are
 ### Requirement: Discovery URL is a valid http(s) URL, required only for automatic registration
 The Discovery URL field SHALL accept an absolute `http` or `https` URL. A non-empty value that is not one SHALL
 show an inline URL error and SHALL disable Apply and Save. An empty value SHALL be valid in "Existing client" mode
-and SHALL be invalid in "Register automatically" mode, where the field is required. The field SHALL be disabled
+and SHALL be invalid in "Dynamic Client Registration" mode, where the field is required. The field SHALL be disabled
 while the user is signed in to the service, like the other auth fields.
 
 #### Scenario: Optional for an existing client
@@ -281,7 +281,7 @@ while the user is signed in to the service, like the other auth fields.
 - **THEN** no error is shown and Apply is not blocked by it
 
 #### Scenario: Required for automatic registration
-- **WHEN** the registration type is "Register automatically" and the Discovery URL is empty
+- **WHEN** the registration type is "Dynamic Client Registration" and the Discovery URL is empty
 - **THEN** a required-field error is shown and Apply is disabled
 
 #### Scenario: Not a valid URL
@@ -307,7 +307,7 @@ had a `discovery_url` and were not given one SHALL carry no `discovery_url` key.
 - **THEN** the request carries no `discovery_url` key
 
 ### Requirement: Automatic registration does not require client credentials
-Automatic registration SHALL NOT require client credentials: while the registration type is "Register automatically"
+Automatic registration SHALL NOT require client credentials: while the registration type is "Dynamic Client Registration"
 the Client ID, Client Secret, Authorization endpoint and Token endpoint controls SHALL NOT be mounted, and their
 validation entries SHALL NOT block Apply or Save, by the same rule as "Inactive OAuth credentials do not block
 saving". Switching to "Existing client" SHALL validate those
@@ -315,11 +315,11 @@ controls with the existing rules. Choosing "Use an existing client instead" on a
 non-empty Client ID and a Client Secret that meets the minimum length before Apply is enabled.
 
 #### Scenario: Empty client fields do not block automatic registration
-- **WHEN** the registration type is "Register automatically" with a valid Discovery URL
+- **WHEN** the registration type is "Dynamic Client Registration" with a valid Discovery URL
 - **THEN** Apply is enabled although no client id, secret or endpoint is entered
 
 #### Scenario: Switching back validates the client fields
-- **WHEN** the user switches from "Register automatically" to "Existing client" with the fields empty
+- **WHEN** the user switches from "Dynamic Client Registration" to "Existing client" with the fields empty
 - **THEN** the empty required fields are reported and block Apply
 
 #### Scenario: Converting a registered client

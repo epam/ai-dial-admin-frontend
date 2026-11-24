@@ -54,7 +54,7 @@ const ResourceOAuthSection: FC<Props> = ({
   onChange,
 }) => {
   const t = useI18n();
-  // The one state the settings cannot show: "Register automatically" chosen before a URL is typed.
+  // The one state the settings cannot show: "Dynamic Client Registration" chosen before a URL is typed.
   const [chosenMode, setChosenMode] = useState(ClientRegistrationMode.Existing);
   const mode = authSettings?.dynamically_registered ? getRegistrationMode(authSettings) : chosenMode;
   const isAutomatic = mode === ClientRegistrationMode.Automatic;

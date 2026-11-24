@@ -1940,7 +1940,7 @@ export default {
     TokenEndpointAuthMethodNone: 'None',
     DynamicRegistration: 'Dynamic registration',
     ExistingClient: 'Existing client',
-    RegisterAutomatically: 'Register automatically',
+    RegisterAutomatically: 'Dynamic Client Registration',
     DiscoveryUrl: 'Discovery URL',
     DiscoveryUrlCaption:
       "Where DIAL Core reads the sign-in settings: the MCP server's URL, or the identity provider's issuer URL. DIAL Core never sends requests of the application there.",
