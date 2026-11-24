@@ -198,6 +198,16 @@ describe('callbacks.jwt', () => {
       expect(result.hasInlinePicture).toBe(true);
     });
 
+    test('falls back to UserInfo for the second Keycloak provider too', async () => {
+      const userinfo = vi.fn().mockResolvedValue({ sub: 'sub-1', picture: 'data:image/png;base64,AAAA' });
+      vi.spyOn(NextClient, 'getClient').mockReturnValue({ userinfo } as any);
+
+      const result = await signIn(undefined, 'keycloak1');
+
+      expect(userinfo).toHaveBeenCalledWith('access');
+      expect(result.hasInlinePicture).toBe(true);
+    });
+
     test('ignores UserInfo for a different subject', async () => {
       const userinfo = vi.fn().mockResolvedValue({ sub: 'other', picture: 'https://example.com/a.png' });
       vi.spyOn(NextClient, 'getClient').mockReturnValue({ userinfo } as any);

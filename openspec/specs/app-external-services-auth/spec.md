@@ -222,7 +222,7 @@ a full `DialToolsetResource`, enabling reuse for external services. An optional
 behavior. An optional `redirectUrl` prop sets the OAuth `redirect_uri` stored in `auth_settings`.
 An optional `excludeAuthTypes` prop filters specific auth types out of the selectable options.
 An optional `isDiscoveryUrlSupported` prop shows the Discovery URL field in the OAuth section, and an optional
-`isDynamicRegistrationOffered` prop additionally enables the "Register automatically" mode; an optional
+`isDynamicRegistrationOffered` prop additionally enables the "Dynamic Client Registration" mode; an optional
 `isDiscoveryUrlLocked` prop disables the Discovery URL field. Without them all three are absent, as for toolsets.
 
 #### Scenario: Toolset caller uses generalized component
@@ -525,12 +525,12 @@ sent back unchanged when the user does not edit it.
 - **WHEN** the user edits only the display name of a service that has a `discovery_url` and saves
 - **THEN** the request carries the same `discovery_url`
 
-### Requirement: External service OAuth form offers "Register automatically"
-For an application external service the "Client registration type" selector SHALL offer "Register automatically"
+### Requirement: External service OAuth form offers "Dynamic Client Registration"
+For an application external service the "Client registration type" selector SHALL offer "Dynamic Client Registration"
 (`AuthType.DYNAMIC`) next to "Existing client", and "Existing client" SHALL remain the default. The selector
-SHALL NOT offer "Register automatically" for a toolset.
+SHALL NOT offer "Dynamic Client Registration" for a toolset.
 
-In "Register automatically" the form SHALL show only the registration type selector and the Discovery URL. It
+In "Dynamic Client Registration" the form SHALL show only the registration type selector and the Discovery URL. It
 SHALL hide every other OAuth field (client id, client secret, token endpoint authentication method, scopes,
 authorization endpoint, token endpoint, resource, code challenge method). Entering the mode SHALL clear values
 held for those fields, including the `redirect_uri` that choosing OAUTH fills in, so that the save request
@@ -539,29 +539,29 @@ carries `authentication_type: OAUTH` and `discovery_url` and no other OAuth fiel
 Returning to "Existing client" SHALL restore the form to an empty existing-client state: an empty client id and
 the `redirect_uri` that choosing OAUTH fills in, keeping the Discovery URL the user typed.
 
-A new service that has chosen "Register automatically" and has not yet typed a Discovery URL SHALL stay in that
+A new service that has chosen "Dynamic Client Registration" and has not yet typed a Discovery URL SHALL stay in that
 mode; the mode SHALL NOT revert to "Existing client" because the URL is empty.
 
 #### Scenario: Default is Existing client
 - **WHEN** a user adds an external service and chooses OAuth
 - **THEN** the registration type is "Existing client" and the client fields are shown
 
-#### Scenario: Choosing Register automatically
-- **WHEN** the user selects "Register automatically"
+#### Scenario: Choosing Dynamic Client Registration
+- **WHEN** the user selects "Dynamic Client Registration"
 - **THEN** only the registration type and Discovery URL are shown
 - **AND** the service's `auth_settings` hold `authentication_type` and `discovery_url` and no `redirect_uri`,
   `client_id`, `client_secret`, endpoint, scope, `resource`, PKCE or `token_endpoint_auth_method`
 
 #### Scenario: Mode survives an empty Discovery URL
-- **WHEN** the user selects "Register automatically" and has typed no Discovery URL
-- **THEN** the registration type still reads "Register automatically"
+- **WHEN** the user selects "Dynamic Client Registration" and has typed no Discovery URL
+- **THEN** the registration type still reads "Dynamic Client Registration"
 
 #### Scenario: Apply requires a Discovery URL
-- **WHEN** the user is in "Register automatically" with an empty Discovery URL
+- **WHEN** the user is in "Dynamic Client Registration" with an empty Discovery URL
 - **THEN** Apply is disabled
 
 #### Scenario: Back to Existing client
-- **WHEN** the user switches from "Register automatically" back to "Existing client"
+- **WHEN** the user switches from "Dynamic Client Registration" back to "Existing client"
 - **THEN** the client fields are shown empty and `redirect_uri` is the admin callback
 - **AND** the typed Discovery URL is kept
 
@@ -569,8 +569,8 @@ mode; the mode SHALL NOT revert to "Existing client" because the URL is empty.
 - **WHEN** a user opens the OAuth settings of an Assets toolset
 - **THEN** the registration type selector offers only "Existing client"
 
-### Requirement: Register automatically is offered only where Core will register
-`ResourceMultiAuth` SHALL offer "Register automatically" only when the service being edited is new, or its
+### Requirement: Dynamic Client Registration is offered only where Core will register
+`ResourceMultiAuth` SHALL offer "Dynamic Client Registration" only when the service being edited is new, or its
 **stored** authentication type (the value in the application as loaded, not the value being edited) is not
 `OAUTH`. For a service whose stored type is `OAUTH` the registration type selector SHALL NOT be shown and the mode
 SHALL follow the stored state: "Registered by DIAL Core" when `dynamically_registered` is true, otherwise
@@ -578,11 +578,11 @@ SHALL follow the stored state: "Registered by DIAL Core" when `dynamically_regis
 
 #### Scenario: New service
 - **WHEN** a user adds an external service and chooses OAuth
-- **THEN** "Register automatically" is offered
+- **THEN** "Dynamic Client Registration" is offered
 
 #### Scenario: Stored service of another type switched to OAuth
 - **WHEN** the stored type of a service is `API_KEY` and the user switches it to OAuth
-- **THEN** "Register automatically" is offered
+- **THEN** "Dynamic Client Registration" is offered
 
 #### Scenario: Stored OAuth service
 - **WHEN** a user edits a service whose stored type is `OAUTH`
@@ -590,7 +590,7 @@ SHALL follow the stored state: "Registered by DIAL Core" when `dynamically_regis
 
 #### Scenario: Stored OAuth service switched away and back
 - **WHEN** the stored type is `OAUTH` and the user switches the service to API Key and back to OAuth
-- **THEN** "Register automatically" is still not offered
+- **THEN** "Dynamic Client Registration" is still not offered
 
 ### Requirement: A Core-registered client is shown read-only
 When a service has `dynamically_registered: true` the OAuth section SHALL show "Registered by DIAL Core" and SHALL
@@ -617,7 +617,7 @@ registered client's update that sends a different non-blank Discovery URL, so th
 - **THEN** the fields are shown and no "Use an existing client instead" action is offered
 
 #### Scenario: Registered values appear after save
-- **WHEN** a new service saved with "Register automatically" succeeds
+- **WHEN** a new service saved with "Dynamic Client Registration" succeeds
 - **THEN** the application is re-read from Core and the service shows the registered client id and
   "Registered by DIAL Core"
 
@@ -653,7 +653,7 @@ locked. A stored static client keeps an editable Discovery URL.
 
 #### Scenario: No way back
 - **WHEN** a stored service is in the Existing client mode after conversion
-- **THEN** no "Register automatically" option is offered
+- **THEN** no "Dynamic Client Registration" option is offered
 
 ### Requirement: Registration failures surface through the save notification
 The panel SHALL show Core's message through the existing save-failure notification when Core fails the application

@@ -8,6 +8,7 @@ import { cloneDeep } from 'lodash';
 import { removePlatformApplication, updatePlatformApplication } from '@/src/app/[lang]/assets-applications/actions';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import TabsContent from '@/src/components/Applications/View/TabsContent';
+import { resolveAppRunnerScheme } from '@/src/components/SourceField/Application/resolve-app-runner';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import ApplicationGrafanaLinks from '@/src/components/Assets/ApplicationGrafanaLinks/ApplicationGrafanaLinks';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
@@ -121,25 +122,42 @@ const PlatformApplicationView: FC<Props> = ({
 
   const selectedAppUserRoles = (selectedApp as unknown as DialPlatformApplicationResource).user_roles;
 
+  const [appRunner, setAppRunner] = useState<DialApplicationScheme | undefined>(undefined);
+  const schemaId = (selectedApp as unknown as DialPlatformApplicationResource).application_type_schema_id;
+
+  useEffect(() => {
+    let isCancelled = false;
+    const foundRunner = getAppRunner(selectedApp, schemes);
+
+    resolveAppRunnerScheme(foundRunner ?? { $id: schemaId }).then(({ runner, scheme }) => {
+      if (!isCancelled) {
+        setAppRunner(scheme ?? runner);
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schemaId]);
+
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
       isEditorEnabled,
-      isHideJsonSelector: () => {
-        const scheme = getAppRunner(selectedApp, schemes);
-        return (
-          activeTab === EntityViewTab.Parameters && (scheme?.['dial:applicationTypeEditorUrl'] || selectedApp.editorUrl)
-        );
-      },
+      isHideJsonSelector: () =>
+        activeTab === EntityViewTab.Parameters &&
+        (appRunner?.['dial:applicationTypeEditorUrl'] ||
+          selectedApp.editorUrl ||
+          (selectedApp as unknown as DialPlatformApplicationResource).editor_url),
       onToggleEditor: () => setIsEditorEnabled((prev) => !prev),
     }),
-    [activeTab, isEditorEnabled, schemes, selectedApp],
+    [activeTab, isEditorEnabled, appRunner, selectedApp],
   );
 
   // MCP-configured applications get a Tools tab the same way the public Apps view does — MCP is fully
   // supported for platform-bucket applications, unlike `function`/code-runtime apps. Only
   // `evaluationEnabled` is passed into `getTabsForAsset` so Audit (`analyticsUsageEnabled`) stays off.
   const tabs = useMemo(() => {
-    const appRunner = getAppRunner(originalApp, schemes);
     const baseTabs = withPlatformApplicationTabs(
       t,
       getTabsForAsset(t, ApplicationRoute.AssetsApplications, {
@@ -151,7 +169,7 @@ const PlatformApplicationView: FC<Props> = ({
       return baseTabs.toSpliced(1, 0, toolsTab(t));
     }
     return baseTabs;
-  }, [t, originalApp, schemes, selectedAppUserRoles, featureFlags.evaluationEnabled]);
+  }, [t, originalApp.mcp?.endpoint, appRunner, selectedAppUserRoles, featureFlags.evaluationEnabled]);
 
   useEffect(() => {
     setSelectedApp(cloneDeep(originalApp));
