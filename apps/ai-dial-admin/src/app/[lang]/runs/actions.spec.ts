@@ -14,6 +14,7 @@ import {
   getRun,
   getRunResults,
   getRuns,
+  getRunTrends,
   getMetricSnapshots,
   getTestCaseRunResultDetails,
   getTestCaseRunResults,
@@ -127,6 +128,23 @@ describe('Runs :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(analyticsApi.getTestCaseRunResultDetails).toHaveBeenCalledWith('analytics-1', TOKEN_MOCK);
     expect(result).toEqual(resultDetail);
+  });
+
+  test('Should call getRunTrends action with the page, size and token', async () => {
+    const page = { content: [{ suiteId: 'suite-1' }], page: 1, size: 10, totalElements: 11, totalPages: 2 };
+    (analyticsApi.getRunTrends as any).mockResolvedValue(page);
+
+    const result = await getRunTrends(1, 10);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(analyticsApi.getRunTrends).toHaveBeenCalledWith(1, 10, TOKEN_MOCK);
+    expect(result).toEqual(page);
+  });
+
+  test('Should return null from getRunTrends action when the request failed', async () => {
+    (analyticsApi.getRunTrends as any).mockResolvedValue(null);
+
+    expect(await getRunTrends(0, 10)).toBeNull();
   });
 
   test('Should call getMetricSnapshots action and return snapshots', async () => {

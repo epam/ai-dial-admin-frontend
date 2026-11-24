@@ -1,3 +1,4 @@
+import { EvalSystemHealthI18nKey } from '@/src/constants/i18n';
 import { StructuredQuery, StructuredQueryResult } from '@/src/models/evaluation/structured-query';
 
 export enum CoverageKind {
@@ -89,4 +90,35 @@ export interface ActivityCardModel {
   rate: number | null;
   /** Test suites added only: the number of distinct evaluatees the added suites target. */
   evaluateeCount: number | null;
+}
+
+/** One row of the run-trends table, flattened from a suite so the cells render it without further logic. */
+export interface RunTrendRow {
+  suiteId: string;
+  suiteName: string;
+  /** The evaluatee's name, else its id; `null` for a suite with no reference, which the cell shows as a dash. */
+  evaluateeName: string | null;
+  /** i18n key of the evaluatee's type label; `null` exactly when `evaluateeName` is. */
+  kindKey: EvalSystemHealthI18nKey | null;
+  /** Pass rates (0–1) of the runs that have one, oldest first. */
+  points: number[];
+  /** Pass rate of the newest run as a 0–1 fraction; `null` when it has none. */
+  latestRate: number | null;
+  /** Signed percentage-point change against the previous run (`+10%`); `null` when there is none to show. */
+  deltaLabel: string | null;
+}
+
+export interface RunTrendsData {
+  status: CoverageStatus;
+  /** The rows of the loaded page; empty while loading, on error, and for an empty result. */
+  rows: RunTrendRow[];
+  /** Zero-based index of the page shown or loading. */
+  page: number;
+  /** Page count as the backend reports it, which can exceed what the rows of a short page suggest. */
+  totalPages: number;
+  totalElements: number;
+  goToPreviousPage: () => void;
+  goToNextPage: () => void;
+  /** Requests the current page again after a failure. */
+  retry: () => void;
 }

@@ -8,6 +8,7 @@ import {
   ANALYTICS_METRIC_SCORES_COMPARISON_URL,
   ANALYTICS_RESULTS_URL,
   ANALYTICS_RUN_METRIC_SNAPSHOTS_URL,
+  ANALYTICS_RUN_TRENDS_URL,
   AnalyticsApi,
 } from '../analytics-api';
 
@@ -97,5 +98,24 @@ describe('Server :: AnalyticsApi', () => {
       `${TEST_URL}${ANALYTICS_METRIC_SCORES_COMPARISON_URL}?runIds=run-a%2Crun-b`,
       expect.objectContaining({ method: 'GET' }),
     );
+  });
+
+  test('Should call getRunTrends with the page and size and return the page', async () => {
+    const page = { content: [], page: 2, size: 10, totalElements: 0, totalPages: 0 };
+    fetch.mockResponseOnce(JSON.stringify(page), { headers: { 'content-type': 'application/json' } });
+
+    const result = await instance.getRunTrends(2, 10, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${ANALYTICS_RUN_TRENDS_URL}?page=2&size=10`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result).toEqual(page);
+  });
+
+  test('Should return null from getRunTrends when the request fails', async () => {
+    fetch.mockResponseOnce('', { status: 500 });
+
+    expect(await instance.getRunTrends(0, 10, TOKEN_MOCK)).toBeNull();
   });
 });

@@ -1,5 +1,7 @@
 import { ActivityKind, CoverageKind } from '@/src/components/EvalSystemHealth/models';
 import { EvalSystemHealthI18nKey } from '@/src/constants/i18n';
+import { DeploymentType } from '@/src/models/evaluation/deployment';
+import { SuiteType } from '@/src/models/evaluation/run-trend';
 
 /** A run covers its evaluatee when it started within this many days of now. */
 export const COVERAGE_WINDOW_DAYS = 30;
@@ -47,4 +49,23 @@ export const ACTIVITY_KIND_ORDER: ActivityKind[] = [ActivityKind.SuitesRun, Acti
 export const ACTIVITY_KIND_TITLE_KEY: Record<ActivityKind, EvalSystemHealthI18nKey> = {
   [ActivityKind.SuitesRun]: EvalSystemHealthI18nKey.SuitesRunThisMonth,
   [ActivityKind.SuitesAdded]: EvalSystemHealthI18nKey.SuitesAddedThisMonth,
+};
+
+/** Suites per page of the run-trends table; the backend accepts 1–1000. */
+export const RUN_TRENDS_PAGE_SIZE = 10;
+
+/** Runs the backend returns per suite at most (`RUN_TREND_LENGTH`); the bars column's header names it. */
+export const RUN_TRENDS_LENGTH = 10;
+
+export const RUN_TREND_KIND_BY_DEPLOYMENT_TYPE: Record<DeploymentType, EvalSystemHealthI18nKey> = {
+  [DeploymentType.Model]: EvalSystemHealthI18nKey.RunTrendsKindModel,
+  [DeploymentType.Application]: EvalSystemHealthI18nKey.RunTrendsKindApplication,
+  [DeploymentType.Toolset]: EvalSystemHealthI18nKey.RunTrendsKindToolset,
+};
+
+/** Used when the evaluatee carries no deployment type, or one this table has no label for. */
+export const RUN_TREND_KIND_BY_SUITE_TYPE: Record<SuiteType, EvalSystemHealthI18nKey> = {
+  [SuiteType.Deployment]: EvalSystemHealthI18nKey.RunTrendsKindModel,
+  [SuiteType.McpTool]: EvalSystemHealthI18nKey.RunTrendsKindToolset,
+  [SuiteType.Route]: EvalSystemHealthI18nKey.RunTrendsKindRoute,
 };

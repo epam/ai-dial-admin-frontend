@@ -65,6 +65,11 @@ export async function getTestCaseRunResults(filters: FilterDto[]) {
   return analyticsApi.getTestCaseRunResults(filters, token);
 }
 
+export async function getRunTrends(page: number, size: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return analyticsApi.getRunTrends(page, size, token);
+}
+
 export async function getTestCaseRunResultDetails(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return analyticsApi.getTestCaseRunResultDetails(id, token);

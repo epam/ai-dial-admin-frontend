@@ -4,6 +4,8 @@ import { FC } from 'react';
 
 import ActivityCardRow from '@/src/components/EvalSystemHealth/ActivityCardRow';
 import CoverageCardRow from '@/src/components/EvalSystemHealth/CoverageCardRow';
+import HealthDistributionPlaceholder from '@/src/components/EvalSystemHealth/HealthDistributionPlaceholder';
+import RunTrendsSection from '@/src/components/EvalSystemHealth/RunTrendsSection';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -16,6 +18,10 @@ const SystemHealth: FC = () => {
       <div className="flex flex-col gap-4">
         <CoverageCardRow />
         <ActivityCardRow />
+        <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
+          <RunTrendsSection />
+          <HealthDistributionPlaceholder />
+        </div>
       </div>
     </div>
   );

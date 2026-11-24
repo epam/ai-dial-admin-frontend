@@ -2,8 +2,9 @@ import { Token } from '@/src/models/auth';
 import { EvalSummaryExportRequestDto, EvalSummaryPreviewResponse } from '@/src/models/evaluation/export';
 import { MetricSnapshot } from '@/src/models/evaluation/metric';
 import { RunComparisonResponse } from '@/src/models/evaluation/run-comparison';
+import { SuiteRunTrend } from '@/src/models/evaluation/run-trend';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
-import { FilterDto } from '@/src/models/request';
+import { EvaluationPageData, FilterDto } from '@/src/models/request';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
 import { getApiHeaders } from '@/src/utils/auth/api-headers';
@@ -13,6 +14,7 @@ export const ANALYTICS_URL = `${API}/analytics`;
 export const ANALYTICS_RESULTS_URL = `${ANALYTICS_URL}/eval-summaries`;
 export const ANALYTICS_RUN_METRIC_SNAPSHOTS_URL = `${ANALYTICS_URL}/run-metric-snapshots`;
 export const ANALYTICS_METRIC_SCORES_COMPARISON_URL = `${ANALYTICS_URL}/metric-scores/comparison`;
+export const ANALYTICS_RUN_TRENDS_URL = `${ANALYTICS_URL}/test-suites/run-trends`;
 
 export class AnalyticsApi extends BaseApi {
   getTestCaseRunResults(filters: FilterDto[], token: Token): Promise<{ content: AnalyticsResult[] } | null> {
@@ -33,6 +35,11 @@ export class AnalyticsApi extends BaseApi {
   getMetricScoresComparison(runIds: [string, string], token: Token): Promise<RunComparisonResponse | null> {
     const params = new URLSearchParams({ runIds: runIds.join(',') });
     return this.get<RunComparisonResponse>(`${ANALYTICS_METRIC_SCORES_COMPARISON_URL}?${params.toString()}`, token);
+  }
+
+  getRunTrends(page: number, size: number, token: Token): Promise<EvaluationPageData<SuiteRunTrend> | null> {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    return this.get<EvaluationPageData<SuiteRunTrend>>(`${ANALYTICS_RUN_TRENDS_URL}?${params.toString()}`, token);
   }
 
   exportPreview(runId: string, token: Token): Promise<EvalSummaryPreviewResponse | null> {
