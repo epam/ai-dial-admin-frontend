@@ -40,9 +40,9 @@ A `[Preview]` or `[Deprecated]` marker after a section title is that group's `ba
   - **Toolsets**
     - **Key**: `Toolsets`
     - **Description**: Navigate to the assets toolsets page to manage toolset assets.
-  - **Routers**
+  - **Auto Routers**
     - **Key**: `PlatformRouters`
-    - **Description**: Navigate to the routers page to manage the routers DIAL Core uses to pick the deployment serving a request, in proxy or decision mode.
+    - **Description**: Navigate to the auto routers page to manage the auto routers DIAL Core uses to pick the deployment serving a request, in proxy or decision mode.
   - **Translators**
     - **Key**: `PlatformTranslators`
     - **Description**: Navigate to the translators page to manage the interface translators DIAL Core applies between LLM API dialects.

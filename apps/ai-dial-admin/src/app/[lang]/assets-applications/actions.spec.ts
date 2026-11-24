@@ -27,6 +27,7 @@ import {
   importApps,
   exportApps,
   getAssetTools,
+  getAssetAllowedTools,
   getConfigFileApplication,
   getConfigFileApplications,
   signInExternalService,
@@ -364,6 +365,54 @@ describe('Assets application :: server actions', () => {
     );
   });
 
+  test('updateApp forwards discovery_url and dynamically_registered of external services, a blank one clearing it', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateApp(
+      appResource({
+        folderId: 'public',
+        version: '1.0',
+        external_services: {
+          registration: {
+            auth_settings: { authentication_type: 'OAUTH', discovery_url: 'https://mcp.example.com/mcp' },
+          },
+          registered: {
+            auth_settings: {
+              client_id: 'id',
+              discovery_url: 'https://mcp.example.com/mcp',
+              dynamically_registered: true,
+              user_level_auth_status: 'SIGNED_OUT',
+            },
+          },
+          cleared: { auth_settings: { client_id: 'id', discovery_url: '' } },
+        },
+      } as any),
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public/my-app__1.0',
+      expect.objectContaining({
+        external_services: {
+          registration: {
+            auth_settings: { authentication_type: 'OAUTH', discovery_url: 'https://mcp.example.com/mcp' },
+          },
+          registered: {
+            auth_settings: {
+              client_id: 'id',
+              discovery_url: 'https://mcp.example.com/mcp',
+              dynamically_registered: true,
+            },
+          },
+          cleared: { auth_settings: { client_id: 'id', discovery_url: '' } },
+        },
+      }),
+      { etag: 'etag' },
+    );
+  });
+
   test('updateApp passes interfaces through unchanged before calling Core', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
@@ -561,6 +610,33 @@ describe('Assets application :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(toolsetOpsApi.discoveredTools).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.APPLICATION);
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test.each(['public/folder/my-app__1.0', 'platform/my-app'])(
+    'getAssetAllowedTools authenticates and returns effective definitions for %s',
+    async (path) => {
+      const response = {
+        success: true,
+        response: { tools: [{ name: 'one' }, { name: 'two', description: 'Details' }] },
+      };
+      vi.mocked(toolsetOpsApi.allowedApplicationTools).mockResolvedValue(response);
+
+      const result = await getAssetAllowedTools(path);
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(toolsetOpsApi.allowedApplicationTools).toHaveBeenCalledWith(TOKEN_MOCK, path, true);
+      expect(result).toEqual(response);
+    },
+  );
+
+  test('getAssetAllowedTools propagates discovery failures', async () => {
+    const failure = { success: false, status: 500, errorHeader: 'DiscoveryFailed', errorMessage: 'Tools unavailable' };
+    vi.mocked(toolsetOpsApi.allowedApplicationTools).mockResolvedValue(failure);
+
+    const result = await getAssetAllowedTools('public/my-app');
+
+    expect(toolsetOpsApi.allowedApplicationTools).toHaveBeenCalledWith(TOKEN_MOCK, 'public/my-app', true);
+    expect(result).toEqual(failure);
   });
 
   test('signInExternalService URL-encodes each path segment of a spaced app path', async () => {

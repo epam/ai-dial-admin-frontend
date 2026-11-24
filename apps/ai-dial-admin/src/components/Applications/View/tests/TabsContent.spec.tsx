@@ -2,17 +2,17 @@ import { render, screen } from '@testing-library/react';
 import { useEffect, useRef } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
+import * as applicationActions from '@/src/app/[lang]/applications/actions';
+import * as assetApplicationActions from '@/src/app/[lang]/assets-applications/actions';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import TabsContent from '../TabsContent';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
-let capturedResourceDependenciesProps: { etag?: string; originalApplication?: unknown } | undefined;
+let capturedResourceDependenciesProps: { originalApplication?: unknown } | undefined;
 
 vi.mock('@/src/components/Assets/Entities/Apps/ResourceDependencies/ResourceDependencies', () => ({
   default: (props: typeof capturedResourceDependenciesProps) => {
@@ -72,6 +72,57 @@ const baseProps = {
   isEditorEnabled: false,
   onChangeApplication: vi.fn(),
 };
+
+describe('TabsContent — runner application tools', () => {
+  test('uses read-only tools for a schema source even when no runner matches', async () => {
+    const getAllowedTools = vi.spyOn(applicationActions, 'getAllowedTools').mockResolvedValue({
+      success: true,
+      response: { tools: [{ name: 'weather' }] },
+    });
+    const application: DialApplication = {
+      name: 'assistant',
+      source: { $type: SOURCE_TYPE.SCHEMA, applicationTypeSchemaId: 'runner' },
+    };
+    render(
+      <TabsContent
+        {...baseProps}
+        activeTab={EntityViewTab.Tools}
+        view={ApplicationRoute.Applications}
+        selectedApplication={application}
+        originalApplication={application}
+      />,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'weather' })).toBeInTheDocument();
+    expect(screen.queryByText(ToolsetI18nKey.UseAllTools)).not.toBeInTheDocument();
+    expect(getAllowedTools).toHaveBeenCalledWith('assistant');
+  });
+
+  test('recognizes the schema id on an asset application without a matched runner', async () => {
+    const getAllowedTools = vi.spyOn(assetApplicationActions, 'getAssetAllowedTools').mockResolvedValue({
+      success: true,
+      response: { tools: [{ name: 'weather' }] },
+    });
+    const application = {
+      name: 'assistant',
+      application_type_schema_id: 'runner',
+      _metadata: { path: 'public/assistant__1' },
+    } as unknown as DialApplication;
+    render(
+      <TabsContent
+        {...baseProps}
+        activeTab={EntityViewTab.Tools}
+        view={ApplicationRoute.AssetsApplications}
+        selectedApplication={application}
+        originalApplication={application}
+      />,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'weather' })).toBeInTheDocument();
+    expect(screen.queryByText(ToolsetI18nKey.UseAllTools)).not.toBeInTheDocument();
+    expect(getAllowedTools).toHaveBeenCalledWith('public/assistant__1');
+  });
+});
 
 describe('TabsContent — Roles tab', () => {
   test('renders AssetRoles for the AssetsApplications view, presenting `user_roles` as `userRoles`', () => {
@@ -182,7 +233,7 @@ describe('TabsContent — Discard remount scope (Issue #4477)', () => {
 describe('TabsContent — Resource Dependencies tab', () => {
   const original = { name: 'app', path: 'public/app' } as unknown as DialApplication;
 
-  test('renders the tab with the saved application and etag on the AssetsApplications view', () => {
+  test('renders the tab with the saved application on the AssetsApplications view', () => {
     render(
       <TabsContent
         {...baseProps}
@@ -190,12 +241,10 @@ describe('TabsContent — Resource Dependencies tab', () => {
         view={ApplicationRoute.AssetsApplications}
         selectedApplication={original}
         originalApplication={original}
-        etag="etag-7"
       />,
     );
 
     expect(screen.getByLabelText('resource-dependencies')).toBeInTheDocument();
-    expect(capturedResourceDependenciesProps?.etag).toBe('etag-7');
     expect(capturedResourceDependenciesProps?.originalApplication).toBe(original);
   });
 

@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -6,10 +7,7 @@ import { ApiRoute } from '@/src/constants/api-routes';
 import { ButtonsI18nKey, ProjectI18nKey } from '@/src/constants/i18n';
 import ContextFilesPicker from '../ContextFilesPicker';
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification }),
-}));
+const { showNotification } = notificationMock;
 
 vi.mock('@/src/context/assets/FileFolderContext', () => ({
   FileFolderProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,

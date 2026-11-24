@@ -4,14 +4,13 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import { GhostButton, GhostIconButton, Input, Label, Textarea, Select } from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
+import { GhostButton, Input, Label, Textarea, Select } from '@epam/ai-dial-ui-kit';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import AllowedValuesField from '@/src/components/Analytics/Pipelines/Enrich/AllowedValuesField';
 import { createOutputRow, toOutputRows, toOutputs } from '@/src/components/Analytics/Pipelines/Enrich/outputs';
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { AnalyticsPipelinesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { TransformOutput, TransformPreset, TransformType } from '@/src/models/analytics/pipeline';
 import { OutputRefinementKind, OutputRow } from '@/src/models/analytics/pipeline-ui';
@@ -115,9 +114,8 @@ const OutputsEditor: FC<Props> = ({
     new Set(rows.filter((row) => row.id !== currentId && row.name).map((row) => row.name));
 
   const deleteButton = (row: OutputRow) => (
-    <GhostIconButton
+    <RemoveButton
       className="mb-1 shrink-0"
-      icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
       aria-label={t(ButtonsI18nKey.Delete)}
       disabled={isDisabled}
       onClick={() => commit(rows.filter((candidate) => candidate.id !== row.id))}

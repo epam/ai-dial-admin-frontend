@@ -1,9 +1,9 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { AssetListItem, BucketType } from '@/src/models/dial/asset-list-item';
 import { AssetSource } from '@/src/models/dial/asset-source';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -12,7 +12,6 @@ import { getFlatAssetColumns } from '../columns';
 import { FlatAssets } from '../models';
 import { PlatformModalType, usePlatformAssetActions } from '../use-platform-asset-actions';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn() }));
 vi.mock('../use-platform-asset-actions', () => ({
   PlatformModalType: { Duplicate: 'duplicate', Delete: 'delete' },
   usePlatformAssetActions: vi.fn(),
@@ -38,13 +37,23 @@ vi.mock('@/src/components/Common/FileManager/utils', () => ({ isItemOpenable: ()
 // The real grid is covered by its own specs; this stand-in exposes what the component hands it: a link per row, the
 // action-menu items of every row and the selection hooks.
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ rowData, columnDefs, additionalGridOptions, emptyDataProps, onGridReady }: any) => {
+  default: ({
+    rowData,
+    columnDefs,
+    additionalGridOptions,
+    emptyDataProps,
+    onGridReady,
+    selectionMode,
+    gridClassName,
+  }: any) => {
     const actions = columnDefs.find((column: any) => column.cellRendererParams?.items)?.cellRendererParams.items ?? [];
     const costObject = columnDefs.find((column: any) => column.colId === 'costObject');
     return (
       <div>
         <span>columns:{columnDefs.map((column: any) => column.colId ?? column.field).join(',')}</span>
-        <span>selection:{additionalGridOptions.rowSelection ? 'on' : 'off'}</span>
+        <span>selection:{additionalGridOptions.rowSelection || selectionMode ? 'on' : 'off'}</span>
+        <span>kit-selection:{selectionMode ?? 'none'}</span>
+        <span>selection-visibility:{gridClassName ?? 'hover'}</span>
         <span>empty-description:{emptyDataProps.description}</span>
         <span>name-radio-group:{columnDefs[0].cellRendererParams?.groupName ?? 'none'}</span>
         <button onClick={() => onGridReady({ api: (globalThis as any).gridApi })}>grid-ready</button>
@@ -140,7 +149,7 @@ describe('FlatAssetGrid :: Platform source', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     armActions();
   });
 
@@ -178,7 +187,7 @@ describe('FlatAssetGrid :: Platform source', () => {
   });
 
   test('offers only open to a read-only admin and turns selection off', () => {
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     renderGrid();
 
     expect(screen.queryByRole('button', { name: /Duplicate/ })).not.toBeInTheDocument();
@@ -187,11 +196,16 @@ describe('FlatAssetGrid :: Platform source', () => {
     expect(screen.getByText('selection:off')).toBeInTheDocument();
   });
 
-  test('has no selection column or bulk toolbar on the Platform tab', () => {
-    renderGrid();
+  test('offers filtered multi-selection on the Platform listing', async () => {
+    const onSelectionChange = vi.fn();
+    renderGrid({ onSelectionChange });
 
-    expect(screen.getByText('selection:off')).toBeInTheDocument();
-    expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
+    expect(screen.getByText('selection:on')).toBeInTheDocument();
+    expect(screen.getByText('kit-selection:MULTIPLE')).toBeInTheDocument();
+    expect(screen.getByText('selection-visibility:hover')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'select-all' }));
+    expect(screen.getByText('selection-visibility:dial-kit-grid-selection-visible')).toBeInTheDocument();
+    expect(onSelectionChange).toHaveBeenCalledWith([row('gpt'), row('claude')]);
   });
 
   test('shows a spinner while the first read is pending', () => {
@@ -211,6 +225,17 @@ describe('FlatAssetGrid :: Platform source', () => {
     renderGrid();
     await user.click(screen.getByRole('button', { name: 'delete-modal:gpt' }));
     expect(onDelete).toHaveBeenCalled();
+  });
+
+  test('clears the listing selection after confirmed deletion succeeds', async () => {
+    const onSelectionChange = vi.fn();
+    onDelete.mockResolvedValueOnce(true);
+    armActions({ modalType: PlatformModalType.Delete, deletedItems: [row('gpt')] });
+    renderGrid({ onSelectionChange });
+
+    await user.click(screen.getByRole('button', { name: 'delete-modal:gpt' }));
+
+    await vi.waitFor(() => expect(onSelectionChange).toHaveBeenLastCalledWith([]));
   });
 
   test('renders the key duplicate modal for keys', () => {
@@ -243,7 +268,7 @@ describe('FlatAssetGrid :: Platform source', () => {
 describe('FlatAssetGrid :: empty state', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     armActions();
   });
 
@@ -265,7 +290,7 @@ describe('FlatAssetGrid :: config.json source', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     armActions();
   });
 
@@ -313,7 +338,7 @@ describe('FlatAssetGrid :: select mode', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     armActions();
   });
 

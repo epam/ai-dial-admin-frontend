@@ -4,6 +4,11 @@ import createFetchMock from 'vitest-fetch-mock';
 
 import { CallerDeploymentKind, CoreUtilityApi } from '../core-utility-api';
 
+const JSON_HEADERS = { 'content-type': 'application/json' };
+
+/** The SDK hands `fetch` a `Request`; its `url` is the final, already-interpolated path. */
+const requestedUrl = (): string => (fetch.mock.calls[0][0] as Request).url;
+
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
 
@@ -14,35 +19,6 @@ describe('Server :: Core :: CoreUtilityApi', () => {
 
   beforeEach(() => {
     fetch.resetMocks();
-  });
-
-  test('checkDeploymentByName calls the Core deployments route, not the admin-BE api/ path', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ name: 'my-app' }));
-
-    await instance.checkDeploymentByName('my-app', TOKEN_MOCK);
-
-    const [calledUrl] = fetch.mock.calls[0];
-    expect(calledUrl).toContain('/v1/deployments/my-app');
-    expect(calledUrl).not.toContain('/api/');
-  });
-
-  test('checkDeploymentByName resolves to null when the deployment does not exist', async () => {
-    fetch.mockResponseOnce('Not Found', { status: 404 });
-
-    const result = await instance.checkDeploymentByName('missing-app', TOKEN_MOCK);
-    expect(result).toBeNull();
-  });
-
-  test('getAllDeployments calls the Core deployments route', async () => {
-    fetch.mockResponseOnce(JSON.stringify([{ name: 'model1' }]), {
-      headers: { 'content-type': 'application/json' },
-    });
-
-    const result = await instance.getAllDeployments(TOKEN_MOCK);
-
-    const [calledUrl] = fetch.mock.calls[0];
-    expect(calledUrl).toContain('/v1/deployments');
-    expect(result.response).toEqual([{ name: 'model1' }]);
   });
 
   test('getCoreVersion calls the Core version route and returns its plain-text response', async () => {
@@ -60,6 +36,14 @@ describe('Server :: Core :: CoreUtilityApi', () => {
 
     const [calledUrl] = fetch.mock.calls[0];
     expect(calledUrl).not.toContain('/api/');
+  });
+
+  test('getCoreVersion returns the version when Core sends it without a content type', async () => {
+    fetch.mockResponseOnce('0.43.0');
+
+    const result = await instance.getCoreVersion(TOKEN_MOCK);
+
+    expect(result).toBe('0.43.0');
   });
 
   test('getCoreVersion returns null when Core rejects the request', async () => {
@@ -161,5 +145,88 @@ describe('Server :: Core :: CoreUtilityApi', () => {
 
     expect(result.success).toBe(false);
     expect(result.status).toBe(404);
+  });
+});
+
+describe.each([
+  ['checkDeploymentByName', (api: CoreUtilityApi) => api.checkDeploymentByName.bind(api)],
+  ['getDeploymentById', (api: CoreUtilityApi) => api.getDeploymentById.bind(api)],
+])('Server :: Core :: CoreUtilityApi.%s', (_, lookup) => {
+  const call = lookup(new CoreUtilityApi({ host: CORE_TEST_URL }));
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('GETs the Core deployment route, not the OpenAI one, and returns the body', async () => {
+    const body = { object: 'model', id: 'gpt-4' };
+    fetch.mockResponseOnce(JSON.stringify(body), { headers: JSON_HEADERS });
+
+    const result = await call('gpt-4', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.objectContaining({ url: 'http://core.test/v1/deployments/gpt-4', method: 'GET' }),
+      expect.anything(),
+    );
+    expect(result).toEqual(body);
+  });
+
+  test('resolves a missing deployment to null', async () => {
+    fetch.mockResponseOnce('', { status: 404, headers: { 'content-length': '0' } });
+
+    expect(await call('missing', TOKEN_MOCK)).toBeNull();
+  });
+
+  test('resolves a forbidden lookup to undefined, so a name is not reported as free', async () => {
+    fetch.mockResponseOnce('Forbidden', { status: 403 });
+
+    expect(await call('secret', TOKEN_MOCK)).toBeUndefined();
+  });
+
+  test('resolves any other failure to null', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ error: { message: 'boom' } }), { status: 500, headers: JSON_HEADERS });
+
+    expect(await call('broken', TOKEN_MOCK)).toBeNull();
+  });
+
+  test('resolves an aborted lookup to null', async () => {
+    fetch.mockRejectOnce(new DOMException('Aborted', 'AbortError'));
+
+    expect(await call('gpt-4', TOKEN_MOCK)).toBeNull();
+  });
+});
+
+describe('Server :: Core :: CoreUtilityApi deployment lookup encoding', () => {
+  const instance = new CoreUtilityApi({ host: CORE_TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+    fetch.mockResponseOnce('', { status: 404, headers: { 'content-length': '0' } });
+  });
+
+  test.each([
+    ['a?b', 'a%3Fb'],
+    ['a#b', 'a%23b'],
+    ['50%', '50%25'],
+    ['my app', 'my%20app'],
+  ])('checkDeploymentByName keeps %s one encoded segment', async (name, encoded) => {
+    await instance.checkDeploymentByName(name, TOKEN_MOCK);
+
+    const url = new URL(requestedUrl());
+    expect(url.pathname).toBe(`/v1/deployments/${encoded}`);
+    expect(url.search).toBe('');
+    expect(url.hash).toBe('');
+  });
+
+  test('checkDeploymentByName leaves a slash as a path separator', async () => {
+    await instance.checkDeploymentByName('a/b', TOKEN_MOCK);
+
+    expect(requestedUrl()).toBe('http://core.test/v1/deployments/a/b');
+  });
+
+  test('getDeploymentById sends a Core-issued id unchanged, without encoding it twice', async () => {
+    await instance.getDeploymentById('applications/bucket/My%20App', TOKEN_MOCK);
+
+    expect(requestedUrl()).toBe('http://core.test/v1/deployments/applications/bucket/My%20App');
   });
 });

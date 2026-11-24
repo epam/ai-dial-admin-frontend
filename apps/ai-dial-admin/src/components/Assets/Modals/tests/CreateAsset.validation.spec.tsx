@@ -10,7 +10,7 @@ import CreateAsset from '../CreateAsset';
 // The real validation context and the real properties form: the bug this guards against is an
 // ordering one between the ID control's mount validation and CreateAsset's own effects, which a
 // mocked `dispatch` cannot see.
-vi.mock('@/src/context/SaveValidationContext', async () => vi.importActual('@/src/context/SaveValidationContext'));
+vi.unmock('@/src/context/SaveValidationContext');
 
 vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   bulkDeleteApps: vi.fn(),

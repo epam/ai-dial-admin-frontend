@@ -1,17 +1,11 @@
-import {
-  ButtonAppearance,
-  ButtonVariant,
-  ButtonDropdown,
-  DangerButton,
-  OutlinedButton,
-  DropdownItem,
-} from '@epam/ai-dial-ui-kit';
-import { IconPlayerPause, IconPlayerPlay, IconPlus, IconTrashX } from '@tabler/icons-react';
+import { ButtonAppearance, ButtonVariant, ButtonDropdown, OutlinedButton, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { IconPlayerPause, IconPlayerPlay, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { deleteContainer, runContainer, stopContainer } from '@/src/app/actions/deployments';
 import { AssetFolderContextMap } from '@/src/components/Assets/BaseAssetList/utils';
 import CreateSeededAsset from '@/src/components/Assets/Modals/CreateSeededAsset';
@@ -247,11 +241,9 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                     />
                   ))}
 
-                <DangerButton
+                <RemoveButton
                   className={buttonsClassNames}
                   label={t(ButtonsI18nKey.Delete)}
-                  appearance={ButtonAppearance.Outlined}
-                  iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenDeleteModal}
                 />
                 <>

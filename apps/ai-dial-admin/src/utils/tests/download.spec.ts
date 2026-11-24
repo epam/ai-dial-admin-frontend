@@ -7,8 +7,6 @@ describe('Utils :: downloadFile', () => {
   let revokeObjectURLSpy: MockInstance;
 
   beforeEach(() => {
-    global.URL.createObjectURL = vi.fn(() => mockUrl);
-    global.URL.revokeObjectURL = vi.fn();
     createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue(mockUrl);
     revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
   });

@@ -19,6 +19,7 @@ interface Props {
 const AiSidePanel: FC<Props> = ({ isOpen, isOverlay, onToggle, children }) => {
   const t = useI18n();
   const panelId = useId();
+  const headingId = useId();
   const expandRef = useRef<HTMLButtonElement>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
   const isFocusMoved = useRef(false);
@@ -57,14 +58,19 @@ const AiSidePanel: FC<Props> = ({ isOpen, isOverlay, onToggle, children }) => {
   return (
     <aside
       id={panelId}
-      aria-label={t(QueryBuilderI18nKey.AskAi)}
+      aria-labelledby={headingId}
       className={classNames(
-        'flex w-[400px] max-w-full shrink-0 flex-col gap-2 border-l border-tertiary py-3 pl-4',
-        isOverlay && 'absolute inset-y-0 right-0 z-10 bg-layer-1 pr-4 shadow-lg',
+        'flex w-[400px] max-w-full shrink-0 flex-col border-l border-tertiary',
+        isOverlay && 'absolute inset-y-0 right-0 z-10 bg-layer-1 shadow-lg',
       )}
     >
-      <div ref={controlsRef} className="flex shrink-0 justify-end">
+      <div ref={controlsRef} className="flex shrink-0 items-center gap-2 border-b border-tertiary px-4 py-3">
+        <IconSparkles size={18} className="shrink-0 text-accent-primary" aria-hidden />
+        <h2 id={headingId} className="dial-small-semi-text text-primary">
+          {t(QueryBuilderI18nKey.AskAi)}
+        </h2>
         <GhostIconButton
+          className="ml-auto"
           size={ElementSize.Small}
           aria-label={t(QueryBuilderI18nKey.AiPanelCollapse)}
           aria-expanded="true"
@@ -73,7 +79,7 @@ const AiSidePanel: FC<Props> = ({ isOpen, isOverlay, onToggle, children }) => {
           onClick={() => onToggleWithFocus(false)}
         />
       </div>
-      <div className="min-h-0 flex-1">{children}</div>
+      <div className="min-h-0 flex-1 p-4">{children}</div>
     </aside>
   );
 };

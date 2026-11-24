@@ -1,3 +1,6 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { notificationMock } from '@/test-mocks/notification';
+import { navigationMock } from '@/test-mocks/navigation';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ReactNode } from 'react';
@@ -28,7 +31,13 @@ import {
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
-import { ChartConfig, ChartType, QueryResultView, QuerySourceProblem } from '@/src/models/analytics/query-builder';
+import {
+  ChartConfig,
+  ChartLegendPosition,
+  ChartType,
+  QueryResultView,
+  QuerySourceProblem,
+} from '@/src/models/analytics/query-builder';
 import { ReadFailure } from '@/src/models/server-action';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope, SavedQueryTimeMode } from '@/src/models/analytics/saved-query';
 import { QueryOutcome } from '@/src/components/Analytics/Common/use-analytics-query';
@@ -48,20 +57,12 @@ vi.mock('@/src/components/Analytics/Common/use-analytics-query', () => ({
 
 vi.mock('@/src/app/[lang]/queries/actions');
 
-const mockPush = vi.fn();
-const mockRefresh = vi.fn();
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush, refresh: mockRefresh }),
-}));
+const { push: mockPush, refresh: mockRefresh } = navigationMock.router;
+const { showNotification: mockShowNotification } = notificationMock;
 
-const mockShowNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: mockShowNotification, removeNotification: vi.fn() }),
-}));
-
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => ({ featureFlags: {}, isFullAdmin: true })),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: {}, isFullAdmin: true }));
+});
 
 const setFullAdmin = (isFullAdmin: boolean) =>
   vi.mocked(useAppContext).mockReturnValue({ featureFlags: {}, isFullAdmin } as never);
@@ -99,9 +100,17 @@ vi.mock('@/src/components/Analytics/QueryBuilder/Result/ResultArea', () => ({
       <span>
         chart: {chartConfig.type}/{chartConfig.xField ?? 'none'}
       </span>
+      <span>legend: {chartConfig.legend?.position ?? 'none'}</span>
       <button onClick={() => onChangeView(QueryResultView.Chart)}>use chart view</button>
       <button onClick={() => onChangeChartConfig({ type: ChartType.Pie, xField: 'project_id', yFields: ['count'] })}>
         change axes
+      </button>
+      <button
+        onClick={() =>
+          onChangeChartConfig({ ...chartConfig, legend: { isVisible: true, position: ChartLegendPosition.Right } })
+        }
+      >
+        move legend
       </button>
     </div>
   ),
@@ -414,6 +423,21 @@ describe('QueryBuilder — a stored saved query', () => {
     expect(saveButton()).toBeInTheDocument();
   });
 
+  test('reports unsaved changes when the chart legend is moved', async () => {
+    const user = userEvent.setup();
+    renderPage(
+      savedQuery({
+        result_view: QueryResultView.Chart,
+        chart: { type: ChartType.Bar, x_field: 'project_id', y_field: ['count'] },
+      }),
+    );
+
+    expect(saveButton()).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'move legend' }));
+
+    expect(saveButton()).toBeInTheDocument();
+  });
+
   test('saves the edited query and re-reads it', async () => {
     const user = userEvent.setup();
     renderPage();
@@ -527,6 +551,24 @@ describe('QueryBuilder — a stored saved query', () => {
     await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
 
     expect(await screen.findByText(`chart: ${ChartType.Line}/project_id`)).toBeInTheDocument();
+  });
+
+  test('keeps the legend settings across a later run that resets the axes', async () => {
+    const user = userEvent.setup();
+    renderPage(
+      savedQuery({
+        result_view: QueryResultView.Chart,
+        chart: { type: ChartType.Line, x_field: 'project_id', y_field: ['count'] },
+      }),
+    );
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+    expect(await screen.findByText(`chart: ${ChartType.Line}/project_id`)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'move legend' }));
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+
+    expect(await screen.findByText(`chart: ${ChartType.Bar}/none`)).toBeInTheDocument();
+    expect(screen.getByText(`legend: ${ChartLegendPosition.Right}`)).toBeInTheDocument();
   });
 
   test('offers no Save or Edit on a common query to a caller who cannot write it', async () => {
@@ -965,7 +1007,7 @@ describe('QueryBuilder — a stored saved query', () => {
       );
 
       const [notification] = mockShowNotification.mock.lastCall ?? [];
-      notification.action.onClick();
+      notification?.action?.onClick();
 
       expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/^\/queries\/.*sq_new/));
     });
@@ -1040,8 +1082,8 @@ describe('QueryBuilder — a stored saved query', () => {
 
       await screen.findByLabelText('sql-editor');
       await user.click(viewRadio('QueryBuilder.ViewForm'));
-      expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
+      expect(await screen.findByText('QueryBuilder.SwitchToBuilderHeader')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'QueryBuilder.StayInSql' }));
 
       await user.click(screen.getByRole('button', { name: 'use chart view' }));
       await saveInPlace(user);
@@ -1083,7 +1125,7 @@ describe('QueryBuilder — a stored saved query', () => {
       await screen.findByLabelText('sql-editor');
       await user.click(viewRadio('QueryBuilder.ViewForm'));
 
-      expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+      expect(await screen.findByText('QueryBuilder.SwitchToBuilderHeader')).toBeInTheDocument();
       expect(screen.getByLabelText('sql-editor')).toHaveValue(formatSql(STORED_SQL));
     });
 
@@ -1095,7 +1137,7 @@ describe('QueryBuilder — a stored saved query', () => {
       await screen.findByLabelText('sql-editor');
       await user.click(viewRadio('QueryBuilder.ViewForm'));
 
-      expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+      expect(await screen.findByText('QueryBuilder.SwitchToBuilderHeader')).toBeInTheDocument();
     });
 
     test('a successful save keeps the result on screen', async () => {

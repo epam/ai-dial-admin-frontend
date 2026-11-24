@@ -104,6 +104,10 @@ Prefer existing building blocks over custom HTML/components:
   what the current component and prop names are rather than working from a list, which goes stale on
   every version bump.
 - **Buttons:** use ui-kit button components; don't hand-roll buttons unless truly necessary.
+- **Shared equivalent first:** before writing a control that already has a shared component, use it; if
+  a variant is missing, add it to the shared component rather than copying its markup. Delete/remove is
+  the standing example — use `Common/RemoveButton` (borderless icon when icon-only, bordered danger
+  button when it has a `label`); never hand-roll a trash `IconButton`.
 - **Typography:** use ui-kit Typography font classes; avoid custom font styling.
 - **Tabular data:** use ag-grid (`GridView` → `AgGridWrapper`) — never build tables with CSS grid/flex.
 - **Common behaviors:** reuse existing deps — `re-resizable` (resizable panels), `react-dnd`

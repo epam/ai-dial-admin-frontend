@@ -44,6 +44,11 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {label}
     </button>
   ),
+  GhostIconButton: ({ 'aria-label': ariaLabel, onClick, icon }: any) => (
+    <button type="button" aria-label={ariaLabel} onClick={onClick}>
+      {icon}
+    </button>
+  ),
   Spinner: () => <span role="status" />,
 }));
 
@@ -67,7 +72,6 @@ vi.mock('@/src/components/Common/RemoveButton/RemoveButton', () => ({
 }));
 
 vi.mock('@/src/hooks/use-is-mobile-screen', () => ({ useIsMobileScreen: () => false }));
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 
 import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import { getResolvedRunnerSchema, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';

@@ -2,6 +2,7 @@
 import { FC, useCallback, useEffect, useRef, useMemo, useState } from 'react';
 
 import {
+  Checkbox,
   NotificationVariant,
   Notification,
   NotificationType,
@@ -40,12 +41,14 @@ import {
   getDeploymentExportComponents,
 } from '@/src/components/ExportConfig/deployment-utils';
 import { ButtonsI18nKey, ExportI18nKey, ImportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { useAnalyticsAccessGrant } from '@/src/hooks/use-analytics-access-grant';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportDependenciesConfig, ExportRequest } from '@/src/models/export';
+import { AnalyticsExportEntityType } from '@/src/types/analytics/export';
 import { ExportComponentType, ExportFormat, ExportType } from '@/src/types/export';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -80,6 +83,7 @@ const ExportConfig: FC<Props> = ({
   const [customExportData, setCustomExportData] = useState<Record<string, EntitiesGridData[]>>({});
   const [isExportDisable, setIsExportDisable] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [isAccessIncluded, setIsAccessIncluded] = useState(false);
 
   const isAdminContext = selectedComponentType === ExportComponentType.ADMIN;
 
@@ -126,11 +130,28 @@ const ExportConfig: FC<Props> = ({
   }, [selectedExportType, selectedExportFormat, dependencies, customExportData, selectedTopics]);
 
   const isAnalyticsContext = selectedComponentType === ExportComponentType.ANALYTICS;
+  const canGrantAccess = useAnalyticsAccessGrant(isAnalyticsContext);
 
   const analyticsExportRequest = useMemo(
-    () => buildCatalogExportRequest(selectedExportType, customExportData),
-    [selectedExportType, customExportData],
+    () => buildCatalogExportRequest(selectedExportType, customExportData, isAccessIncluded),
+    [selectedExportType, customExportData, isAccessIncluded],
   );
+
+  const onChangeAccessIncluded = useCallback((isIncluded: boolean) => {
+    setIsAccessIncluded(isIncluded);
+    if (!isIncluded) {
+      setCustomExportData((prev) => ({
+        ...prev,
+        [AnalyticsExportEntityType.TABLE]: (prev[AnalyticsExportEntityType.TABLE] ?? []).filter(
+          (table) => !table.isSystem,
+        ),
+      }));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!canGrantAccess) setIsAccessIncluded(false);
+  }, [canGrantAccess]);
 
   const prevComponentTypeRef = useRef(selectedComponentType);
   const onChangeComponentType = useCallback((key: string) => {
@@ -140,6 +161,7 @@ const ExportConfig: FC<Props> = ({
 
     setSelectedComponentType(newType);
     setCustomExportData({});
+    setIsAccessIncluded(false);
 
     if (newType === ExportComponentType.ANALYTICS) {
       setSelectedExportType(ExportType.Full);
@@ -312,6 +334,7 @@ const ExportConfig: FC<Props> = ({
             customExportData={customExportData}
             setCustomExportData={setCustomExportData}
             isFull={selectedExportType === ExportType.Full}
+            isAccessIncluded={isAccessIncluded}
           />
         );
       default:
@@ -368,14 +391,24 @@ const ExportConfig: FC<Props> = ({
                 />
               )}
               {isAnalyticsContext && (
-                <RadioGroup
-                  items={toRadioItems(exportTypes)}
-                  value={selectedExportType}
-                  id="analyticsExportType"
-                  labelProps={{ label: t(ExportI18nKey.ExportType) }}
-                  orientation={RadioGroupOrientation.Column}
-                  onChange={onChangeExportType}
-                />
+                <>
+                  <RadioGroup
+                    items={toRadioItems(exportTypes)}
+                    value={selectedExportType}
+                    id="analyticsExportType"
+                    labelProps={{ label: t(ExportI18nKey.ExportType) }}
+                    orientation={RadioGroupOrientation.Column}
+                    onChange={onChangeExportType}
+                  />
+                  <Checkbox
+                    id="analyticsIncludeAccess"
+                    isSelected={isAccessIncluded}
+                    disabled={!canGrantAccess}
+                    labelProps={{ label: t(ExportI18nKey.AnalyticsIncludeAccess) }}
+                    caption={t(ExportI18nKey.AnalyticsIncludeAccessCaption)}
+                    onChange={onChangeAccessIncluded}
+                  />
+                </>
               )}
               {isAdminContext && (
                 <>

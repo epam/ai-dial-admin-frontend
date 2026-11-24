@@ -7,7 +7,7 @@ import { IconCaretDownFilled, IconCaretRightFilled } from '@tabler/icons-react';
 
 import QueryRow from '@/src/components/Analytics/QueryBuilder/SourcePanel/QueryRow';
 import { useSourcePanel } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
-import { QueryGroup } from '@/src/components/Analytics/QueryBuilder/SourcePanel/models';
+import { QueryGroup, QueryRowIndent } from '@/src/components/Analytics/QueryBuilder/SourcePanel/models';
 import { getQueryGroupKey } from '@/src/components/Analytics/QueryBuilder/SourcePanel/utils/source-panel';
 import { QuerySourcePanelI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -33,7 +33,7 @@ const QueryTagGroup: FC<Props> = ({ group, currentQueryId }) => {
         aria-label={t(QuerySourcePanelI18nKey.QueryTag, { tag: group.tag })}
         aria-expanded={isExpanded}
         aria-controls={isExpanded ? listId : undefined}
-        className="flex h-8 w-full shrink-0 items-center gap-1 rounded px-3 text-secondary hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha"
+        className="flex h-8 w-full shrink-0 items-center gap-1 rounded-lg px-3 text-secondary hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha"
         onClick={() => onToggleGroup(key)}
       >
         <span className="flex size-4 shrink-0 items-center justify-center">
@@ -45,7 +45,12 @@ const QueryTagGroup: FC<Props> = ({ group, currentQueryId }) => {
       {isExpanded && (
         <ul id={listId} className="flex flex-col gap-0.5">
           {group.queries.map((query) => (
-            <QueryRow key={query.id} query={query} isCurrent={query.id === currentQueryId} isNested />
+            <QueryRow
+              key={query.id}
+              query={query}
+              isCurrent={query.id === currentQueryId}
+              indent={QueryRowIndent.Nested}
+            />
           ))}
         </ul>
       )}

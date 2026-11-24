@@ -4,6 +4,8 @@ import { useCallback, useEffect } from 'react';
 
 import { Input, Select } from '@epam/ai-dial-ui-kit';
 
+import BaseUrlControl from '@/src/components/BaseControls/BaseUrlControl/BaseUrlControl';
+import { isPluginUrl } from '@/src/components/BaseControls/BaseUrlControl/utils';
 import InterfaceDefaultsButton from '@/src/components/BaseControls/InterfacesField/InterfaceDefaultsButton';
 import InterfaceFeaturesButton from '@/src/components/BaseControls/InterfacesField/InterfaceFeaturesButton';
 import {
@@ -14,11 +16,12 @@ import {
 import OverridePathsField from '@/src/components/BaseControls/InterfacesField/OverridePathsField';
 import TranslatorField from '@/src/components/BaseControls/InterfacesField/TranslatorField';
 import KeyValueGrid from '@/src/components/Common/KeyValueGrid/KeyValueGrid';
-import { ButtonsI18nKey, EntityFieldsI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DeploymentInterfaceType, InterfaceMode, TranslatorReference } from '@/src/models/dial/interfaces';
 import { FieldError } from '@/src/models/error';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrlError } from '@/src/utils/validation/url-error';
@@ -41,6 +44,8 @@ interface Props<V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue> {
   // render exactly as before.
   isAsset?: boolean;
   translators?: ResourceInfo[];
+  isPluginEnabled?: boolean;
+  plugins?: PluginOptions;
   // The entity-level base URL Core's passthroughBaseUrl falls back to when this row's base URL is
   // empty, making the row's own value optional. Absent on surfaces with no such field (entity
   // Models/Applications/Interceptors, platform Interceptors), where the row stays unconditionally
@@ -62,6 +67,8 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
   onDelete,
   isAsset,
   translators,
+  isPluginEnabled,
+  plugins,
   entityBaseUrl,
   isTranslatorDisabled,
   view,
@@ -75,10 +82,15 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
   const isRequired = !entityBaseUrl;
   const baseUrlValidationField = `${fieldId}-base-url`;
   const translatorValidationField = `${fieldId}-translator`;
+  const overridePathsValidationField = `${fieldId}-plugin-override-paths`;
+  const hasPluginOverrideConflict =
+    !!isPluginEnabled &&
+    isPassthrough &&
+    isPluginUrl(baseUrl || entityBaseUrl) &&
+    !!Object.keys(value.overridePaths || {}).length;
 
-  // Derived, not stored: the error always reflects the current value, so it cannot go stale when the
-  // value, the required-ness (entity base URL) or the mode changes under a mounted row.
-  const error: FieldError | null = isPassthrough ? getUrlError(baseUrl, t, isRequired) : null;
+  // The plugin-aware control owns its own validation when enabled.
+  const error: FieldError | null = isPassthrough && !isPluginEnabled ? getUrlError(baseUrl, t, isRequired) : null;
   const isBaseUrlValid = !error;
   const hasTranslator = !!value.translator;
 
@@ -89,6 +101,11 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
     dispatch({ type: ValidationActionType.SetField, field: baseUrlValidationField, isValid: isBaseUrlValid });
     dispatch({
       type: ValidationActionType.SetField,
+      field: overridePathsValidationField,
+      isValid: !hasPluginOverrideConflict,
+    });
+    dispatch({
+      type: ValidationActionType.SetField,
       field: translatorValidationField,
       isValid: isPassthrough || hasTranslator,
     });
@@ -96,8 +113,10 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
     baseUrlValidationField,
     dispatch,
     hasTranslator,
+    hasPluginOverrideConflict,
     isBaseUrlValid,
     isPassthrough,
+    overridePathsValidationField,
     resetCounter,
     translatorValidationField,
   ]);
@@ -106,8 +125,9 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
     () => () => {
       dispatch({ type: ValidationActionType.RemoveField, field: baseUrlValidationField });
       dispatch({ type: ValidationActionType.RemoveField, field: translatorValidationField });
+      dispatch({ type: ValidationActionType.RemoveField, field: overridePathsValidationField });
     },
-    [baseUrlValidationField, dispatch, translatorValidationField],
+    [baseUrlValidationField, dispatch, overridePathsValidationField, translatorValidationField],
   );
 
   const onChangeBaseUrl = useCallback(
@@ -185,7 +205,7 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
             />
           )}
         </div>
-        {!disabled && <RemoveButton aria-label={t(ButtonsI18nKey.Delete)} onClick={onDelete} />}
+        {!disabled && <RemoveButton onClick={onDelete} />}
       </div>
 
       {isAsset && (
@@ -202,7 +222,21 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
       )}
 
       <div className="flex items-start gap-x-2">
-        {isPassthrough ? (
+        {isPassthrough && isPluginEnabled && (
+          <BaseUrlControl
+            id={fieldId}
+            label={t(InterfacesI18nKey.BaseUrl)}
+            placeholder={t(InterfacesI18nKey.BaseUrlPlaceholder, { type: typeLabel })}
+            value={baseUrl}
+            onChange={onChangeBaseUrl}
+            required={isRequired}
+            isReadOnly={disabled}
+            plugins={plugins?.options}
+            optionsError={plugins?.error}
+            containerClassName="w-full"
+          />
+        )}
+        {isPassthrough && !isPluginEnabled && (
           <Input
             id={fieldId}
             labelProps={{ label: t(InterfacesI18nKey.BaseUrl), required: isRequired }}
@@ -214,17 +248,26 @@ const InterfaceRow = <V extends BaseUrlInterfaceValue = BaseUrlInterfaceValue>({
             invalid={!isBaseUrlValid}
             containerClassName="w-full"
           />
-        ) : (
+        )}
+        {!isPassthrough && (
           <TranslatorField
             fieldId={fieldId}
             type={type}
             translator={value.translator}
             translators={translators || []}
+            plugins={plugins}
+            isPluginEnabled={isPluginEnabled}
             disabled={disabled}
             onChange={onChangeTranslator}
           />
         )}
       </div>
+
+      {hasPluginOverrideConflict && (
+        <p role="alert" className="text-error dial-small-text">
+          {t(InterfacesI18nKey.PluginOverridePathsError)}
+        </p>
+      )}
 
       {isAsset && isPassthrough && (
         <OverridePathsField

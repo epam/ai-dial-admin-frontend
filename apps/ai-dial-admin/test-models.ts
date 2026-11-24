@@ -1,5 +1,6 @@
 export interface EditorMockOptions {
   readOnly?: boolean;
+  ariaLabel?: string;
 }
 
 export interface EditorMockProps {

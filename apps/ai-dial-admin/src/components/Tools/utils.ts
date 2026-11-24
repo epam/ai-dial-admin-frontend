@@ -1,5 +1,31 @@
+import { ToolsContext, ToolsContextParams } from '@/src/components/Tools/models';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Tool } from '@/src/models/dial/toolset';
+import { ApplicationRoute } from '@/src/types/routes';
 import { ToolFilter } from './type';
+
+export const getToolsContext = ({
+  view,
+  originalEntity,
+  selectedEntity,
+  isAsset,
+  isMcpToolset,
+  isRunnerApplication,
+  disabled,
+  appRunner,
+}: ToolsContextParams): ToolsContext => {
+  const isApplicationTools = view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications;
+  const savedAssetPath = (originalEntity as AssetToolset | undefined)?._metadata?.path;
+  const selectedToolSetName = isAsset ? (selectedEntity as AssetToolset)?._metadata?.path : selectedEntity?.name;
+
+  return {
+    isApplicationTools,
+    isAssetToolset: !!isAsset && !isApplicationTools,
+    isAssetApplication: !!isAsset && !!savedAssetPath,
+    isManagementVisible: !disabled && !isMcpToolset && !appRunner && !isRunnerApplication,
+    toolSetName: isRunnerApplication ? (savedAssetPath ?? originalEntity?.name ?? '') : selectedToolSetName || '',
+  };
+};
 
 export const getFilteredTools = (tools: string[], selectedFilters: ToolFilter[], availableTools: Tool[]) => {
   const filteredTools: string[] = [];

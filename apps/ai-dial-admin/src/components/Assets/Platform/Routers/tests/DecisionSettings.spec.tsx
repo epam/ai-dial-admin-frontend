@@ -6,10 +6,6 @@ import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { RouterDecision } from '@/src/models/dial/router';
 import DecisionSettings from '../DecisionSettings';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 const renderSettings = (decision?: RouterDecision, onChange = vi.fn()) =>
   render(<DecisionSettings decision={decision} onChange={onChange} />);
 

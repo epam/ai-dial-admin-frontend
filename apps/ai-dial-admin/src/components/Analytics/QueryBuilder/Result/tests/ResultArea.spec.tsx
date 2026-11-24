@@ -3,7 +3,7 @@ import { FC, useState } from 'react';
 import { ColDef, GetRowIdParams, ValueFormatterParams, ValueGetterParams } from 'ag-grid-community';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ResultArea from '@/src/components/Analytics/QueryBuilder/Result/ResultArea';
 import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
@@ -133,9 +133,28 @@ const renderArea = (overrides: Partial<AreaProps> = {}) => {
 };
 
 describe('QueryBuilder :: ResultArea', () => {
+  beforeEach(() => localStorage.setItem('query-builder-chart-panel-open', 'true'));
+
   test('shows the pre-run empty state', () => {
     renderArea();
-    expect(screen.getByText('QueryBuilder.ResultsEmptyDescription')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.ResultsReadyTitle')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.ResultsReadyDescription')).toBeInTheDocument();
+  });
+
+  test('says the query changed instead of the row count when the shown result is out of date', () => {
+    renderArea({ result: AGG_RESULT, meta: AGG_META, isQueryChanged: true });
+
+    expect(screen.getByRole('status')).toHaveTextContent(/^QueryBuilder.ResultsQueryChanged$/);
+    expect(screen.getByText('grid rows: 2')).toBeInTheDocument();
+  });
+
+  test.each([
+    ['dims an out-of-date result', true, true],
+    ['leaves a current result at full strength', false, false],
+  ])('%s', (_case, isQueryChanged, isDimmed) => {
+    renderArea({ result: AGG_RESULT, meta: AGG_META, isQueryChanged });
+
+    expect(!!screen.getByText('grid rows: 2').closest('.opacity-60')).toBe(isDimmed);
   });
 
   test('reports the returned rows out of the total and renders the grid for a result', () => {
@@ -225,6 +244,18 @@ describe('QueryBuilder :: ResultArea', () => {
     renderArea({
       result: { columns: ['event_id', 'project_id'], rows: [{ event_id: '1', project_id: 'p' }] },
       meta: { ...AGG_META, dimensionColumns: ['event_id', 'project_id'], aggregateColumns: [] },
+    });
+
+    await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
+
+    expect(screen.getByText('QueryBuilder.ChartNoValueColumn')).toBeInTheDocument();
+  });
+
+  test('chart view shows the no-value-column hint for an ungrouped total that is not a number', async () => {
+    const user = userEvent.setup();
+    renderArea({
+      result: { columns: ['latest'], rows: [{ latest: 'n/a' }] },
+      meta: { ...AGG_META, dimensionColumns: [], aggregateColumns: ['latest'] },
     });
 
     await user.click(screen.getByRole('radio', { name: 'QueryBuilder.ViewChart' }));
@@ -426,6 +457,7 @@ describe('QueryBuilder :: ResultArea :: access hint', () => {
 
     expect(screen.getByText('QueryBuilder.NoRows')).toBeInTheDocument();
     expect(screen.queryByText('QueryBuilder.NoRowsForAccess')).not.toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.NoRowsDescription')).toBeInTheDocument();
   });
 
   test('asks nothing for a SQL run, which names no source', async () => {

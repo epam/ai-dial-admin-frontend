@@ -1,3 +1,5 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { notificationMock } from '@/test-mocks/notification';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -8,10 +10,7 @@ import { CatalogEntityType } from '@/src/models/dial/catalog-schema';
 import { DialCatalogSchemaResource } from '@/src/models/dial/resource';
 import CatalogSchemaView from '../View';
 
-const showNotificationSpy = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationSpy, removeNotification: vi.fn() }),
-}));
+const { showNotification: showNotificationSpy } = notificationMock;
 
 vi.mock('@/src/app/[lang]/platform-catalog-schemas/actions', () => ({
   updateCatalogSchema: vi.fn().mockResolvedValue({ success: true }),
@@ -32,13 +31,11 @@ vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
 }));
 
 const setEntityReadOnly = vi.fn();
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ setEntityReadOnly }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ setEntityReadOnly }));
+});
 
 vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
-
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const schema = (overrides: Partial<DialCatalogSchemaResource> = {}): DialCatalogSchemaResource =>
   ({

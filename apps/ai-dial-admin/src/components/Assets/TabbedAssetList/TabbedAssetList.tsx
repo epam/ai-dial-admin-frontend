@@ -3,12 +3,14 @@
 import { PrimaryButton, TabItem, Tabs } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
+import classNames from 'classnames';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import BaseAssetList from '@/src/components/Assets/BaseAssetList/BaseAssetList';
 import { getFileManagerLabel } from '@/src/components/Assets/BaseAssetList/utils';
 import FlatAssetGrid from '@/src/components/Assets/FlatAssetGrid/FlatAssetGrid';
+import { FlatAssetGridHandle } from '@/src/components/Assets/FlatAssetGrid/models';
 import CreatePlatformEntity from '@/src/components/Assets/Platform/CreatePlatformEntity';
 import ResetFiltersButton from '@/src/components/ListView/Header/ResetFiltersButton';
 import { listViewTitleMap } from '@/src/components/ListView/constants';
@@ -17,11 +19,14 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useFlatAssets } from '@/src/hooks/use-flat-assets';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
 import { AssetSource } from '@/src/models/dial/asset-source';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
@@ -33,13 +38,16 @@ import {
   hasPublicTree,
   parseSourceParam,
 } from '@/src/utils/files/asset-sources';
+import BulkActionsPanel from './BulkActionsPanel';
 import { TAB_QUERY_PARAM } from './constants';
+import { ListingSelection } from './models';
 
 interface Props {
   view: ApplicationRoute;
   /** For the application create form on the Platform tab. */
   runners?: DialApplicationScheme[];
   translators?: ResourceInfo[];
+  plugins?: PluginOptions;
   isUnsafeImportEnabled?: boolean;
 }
 
@@ -54,19 +62,23 @@ const TAB_LABEL_KEYS: Record<AssetSource, AssetTabsI18nKey> = {
  * a tab row for the sources that exist, and the active source's body. Public is the file manager on the single
  * `public/` root; Platform and config.json are flat grids.
  */
-const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImportEnabled }) => {
+const TabbedAssetList: FC<Props> = ({ view, runners, translators, plugins, isUnsafeImportEnabled }) => {
   const t = useI18n();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { isUnitMode } = useAppContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const isMobileScreen = useIsMobileScreen();
   const isTabletScreen = useIsTabletScreen();
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selection, setSelection] = useState<ListingSelection | null>(null);
+  const flatGridRef = useRef<FlatAssetGridHandle>(null);
 
   const sources = useMemo(() => getAvailableSources(view, isUnitMode), [view, isUnitMode]);
   const activeSource = parseSourceParam(view, searchParams.get(TAB_QUERY_PARAM), sources);
+  useEffect(() => setSelection(null), [activeSource]);
   const platform = useFlatAssets(view, AssetSource.Platform, sources.includes(AssetSource.Platform));
   const configFile = useFlatAssets(view, AssetSource.ConfigFile, sources.includes(AssetSource.ConfigFile));
   // A flat Public source is read like the others; a public tree is the file manager's own and is never read here.
@@ -85,6 +97,7 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
         params.set(TAB_QUERY_PARAM, id);
       }
       setGridApi(null);
+      setSelection(null);
       const query = params.toString();
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     },
@@ -120,6 +133,26 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
   );
   const hasTabs = sources.length > 1;
   const onCloseCreate = useCallback(() => setIsCreateOpen(false), []);
+  const onSelectionChange = useCallback(
+    (rows: AssetListItem[]) => setSelection({ source: activeSource, rows }),
+    [activeSource],
+  );
+  const selectedRows = useMemo(() => {
+    if (selection?.source !== activeSource) return [];
+    const selectedPaths = new Set(selection.rows.map((row) => row.path || row.name));
+    const rows = activeSource === AssetSource.Public ? flatPublic.rows : platform.rows;
+    return rows.filter((row) => selectedPaths.has(row.path || row.name));
+  }, [activeSource, flatPublic.rows, platform.rows, selection]);
+  const onDeleteSelected = useCallback(() => {
+    flatGridRef.current?.openDelete(selectedRows.map((row) => ({ ...row })));
+  }, [selectedRows]);
+  const onClearSelection = useCallback(() => {
+    if (gridApi && !gridApi.isDestroyed()) {
+      gridApi.deselectAll();
+    }
+    setSelection(null);
+  }, [gridApi]);
+  const isBulkActionsVisible = canCreate && selectedRows.length > 0;
   // With a tab row the button ends that row; a listing with a single source has no tab row, so it stays in the header.
   const createButton = canCreate ? (
     <PrimaryButton
@@ -159,9 +192,20 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
           {createButton}
         </div>
       )}
-      <div className="min-h-0 flex-1">
+      <div
+        className={classNames('relative min-h-0 flex-1', {
+          '[&_.ag-body-viewport]:pb-16': isMobileScreen && isBulkActionsVisible,
+        })}
+      >
         {activeSource === AssetSource.Public && hasFlatPublic(view) && (
-          <FlatAssetGrid view={view} source={AssetSource.Public} assets={flatPublic} onGridApiChange={setGridApi} />
+          <FlatAssetGrid
+            ref={flatGridRef}
+            view={view}
+            source={AssetSource.Public}
+            assets={flatPublic}
+            onGridApiChange={setGridApi}
+            onSelectionChange={onSelectionChange}
+          />
         )}
         {activeSource === AssetSource.Public && !hasFlatPublic(view) && (
           <BaseAssetList
@@ -172,10 +216,25 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
           />
         )}
         {activeSource === AssetSource.Platform && (
-          <FlatAssetGrid view={view} source={AssetSource.Platform} assets={platform} onGridApiChange={setGridApi} />
+          <FlatAssetGrid
+            ref={flatGridRef}
+            view={view}
+            source={AssetSource.Platform}
+            assets={platform}
+            onGridApiChange={setGridApi}
+            onSelectionChange={onSelectionChange}
+          />
         )}
         {activeSource === AssetSource.ConfigFile && (
           <FlatAssetGrid view={view} source={AssetSource.ConfigFile} assets={configFile} onGridApiChange={setGridApi} />
+        )}
+        {isBulkActionsVisible && (
+          <BulkActionsPanel
+            selectedCount={selectedRows.length}
+            isCompact={isMobileScreen}
+            onClearSelection={onClearSelection}
+            onDelete={onDeleteSelected}
+          />
         )}
       </div>
       {isCreateOpen && (
@@ -187,6 +246,7 @@ const TabbedAssetList: FC<Props> = ({ view, runners, translators, isUnsafeImport
             bucket={activeSource === AssetSource.Public ? AssetSource.Public : AssetSource.Platform}
             runners={runners}
             translators={translators}
+            plugins={plugins}
             onClose={onCloseCreate}
           />
         </SaveValidationContextProvider>

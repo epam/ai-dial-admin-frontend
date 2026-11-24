@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { importAnalyticsConfig } from '@/src/app/[lang]/import-config/actions';
 import { ImportI18nKey } from '@/src/constants/i18n';
+import { useAnalyticsAccessGrant } from '@/src/hooks/use-analytics-access-grant';
 import { CatalogImportResult } from '@/src/models/analytics/catalog-import';
 import { CatalogImportOutcome, CatalogResolutionPolicy } from '@/src/types/analytics/import';
 import { ExportComponentType } from '@/src/types/export';
@@ -24,18 +25,35 @@ vi.mock('@/src/utils/notification', async (importOriginal) => ({
 
 vi.mock('@/src/components/EntityListView/Import/utils', () => ({ isLargeFile: () => false }));
 
+vi.mock('@/src/hooks/use-analytics-access-grant', () => ({ useAnalyticsAccessGrant: vi.fn() }));
+
 interface FilesMockProps {
   onChangeConfigScope: (scope: string) => void;
   onChangeFiles: (files: File[]) => void;
   onChangeAnalyticsPolicy: (policy: CatalogResolutionPolicy) => void;
+  isAccessIncluded: boolean;
+  canGrantAccess: boolean;
+  onChangeAccessIncluded: (isIncluded: boolean) => void;
   onNextStep: () => void;
 }
 
 // The steps' own behavior is covered by `Files.spec.tsx` and the ConfigurationPreview specs; here they only drive
 // the page's state.
 vi.mock('@/src/components/ImportConfig/Files/Files', () => ({
-  default: ({ onChangeConfigScope, onChangeFiles, onChangeAnalyticsPolicy, onNextStep }: FilesMockProps) => (
+  default: ({
+    onChangeConfigScope,
+    onChangeFiles,
+    onChangeAnalyticsPolicy,
+    isAccessIncluded,
+    canGrantAccess,
+    onChangeAccessIncluded,
+    onNextStep,
+  }: FilesMockProps) => (
     <>
+      <p>{`access-${isAccessIncluded}-grant-${canGrantAccess}`}</p>
+      <button type="button" onClick={() => onChangeAccessIncluded(!isAccessIncluded)}>
+        toggle-access
+      </button>
       <button type="button" onClick={() => onChangeConfigScope(ExportComponentType.ANALYTICS)}>
         pick-analytics
       </button>
@@ -84,6 +102,7 @@ const RESULT: CatalogImportResult = {
 describe('ImportConfig — Analytics import', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useAnalyticsAccessGrant).mockReturnValue(true);
   });
 
   const reachConfiguration = async () => {
@@ -108,6 +127,7 @@ describe('ImportConfig — Analytics import', () => {
       expect.any(FormData),
       CatalogResolutionPolicy.SKIP_IF_EXISTS,
       true,
+      false,
     );
   });
 
@@ -130,7 +150,50 @@ describe('ImportConfig — Analytics import', () => {
       expect.any(FormData),
       CatalogResolutionPolicy.SKIP_IF_EXISTS,
       false,
+      false,
     );
+  });
+
+  test('sends the access choice on the import', async () => {
+    vi.mocked(importAnalyticsConfig).mockResolvedValue({ success: true, response: RESULT });
+    const user = userEvent.setup();
+    render(<ImportConfig isAnalyticsEnabled />);
+    await user.click(screen.getByRole('button', { name: 'pick-analytics' }));
+    await user.click(screen.getByRole('button', { name: 'pick-file' }));
+    await user.click(screen.getByRole('button', { name: 'toggle-access' }));
+    await user.click(screen.getByRole('button', { name: 'next' }));
+
+    await user.click(screen.getByRole('button', { name: 'import' }));
+
+    expect(await screen.findByText('result-completed')).toBeInTheDocument();
+    expect(importAnalyticsConfig).toHaveBeenCalledWith(
+      expect.any(FormData),
+      CatalogResolutionPolicy.FAIL_IF_EXISTS,
+      false,
+      true,
+    );
+  });
+
+  test('clears the result when the access choice changes', async () => {
+    vi.mocked(importAnalyticsConfig).mockResolvedValue({ success: true, response: RESULT });
+    const user = await reachConfiguration();
+    await user.click(screen.getByRole('button', { name: 'import' }));
+    expect(await screen.findByText('result-completed')).toBeInTheDocument();
+
+    await user.click(screen.getByText(ImportI18nKey.Files));
+    await user.click(screen.getByRole('button', { name: 'toggle-access' }));
+    await user.click(screen.getByRole('button', { name: 'next' }));
+
+    expect(screen.getByText('no-result')).toBeInTheDocument();
+  });
+
+  test('tells the Files step that a caller without the grant permission cannot include access', async () => {
+    vi.mocked(useAnalyticsAccessGrant).mockReturnValue(false);
+    const user = userEvent.setup();
+    render(<ImportConfig isAnalyticsEnabled />);
+    await user.click(screen.getByRole('button', { name: 'pick-analytics' }));
+
+    expect(await screen.findByText('access-false-grant-false')).toBeInTheDocument();
   });
 
   test('reports a refused import in the service words and shows no result', async () => {

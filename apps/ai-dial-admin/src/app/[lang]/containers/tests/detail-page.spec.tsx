@@ -6,12 +6,6 @@ import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/t
 
 vi.mock('@/src/server/logger', () => ({ errorObjLog: vi.fn() }));
 vi.mock('@/src/utils/auth/auth-request', () => ({ getUserToken: vi.fn().mockResolvedValue('token') }));
-vi.mock('next/navigation', () => ({
-  notFound: vi.fn(() => {
-    throw new Error('NEXT_NOT_FOUND');
-  }),
-}));
-
 vi.mock('@/src/app/actions/deployments', () => ({
   getContainer: vi.fn(),
   getContainers: vi.fn(),

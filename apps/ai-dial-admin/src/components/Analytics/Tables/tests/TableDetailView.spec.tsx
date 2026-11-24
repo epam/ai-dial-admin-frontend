@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -25,9 +26,9 @@ import { AnalyticsTable, AnalyticsTableType, PartitionGranularity, TableStatus }
 // The view is only reachable with analytics on in practice, so that is the default here; the flag-off
 // case is asserted explicitly below.
 const featureFlags = { analyticsEnabled: true };
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ featureFlags }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags }));
+});
 
 // The Audit tab's own contract (the projected entity, the view and the view mode it hands EntityAudit)
 // is covered in TableAudit.spec.tsx; here it stands in for "the activities list rendered", and its
@@ -65,8 +66,6 @@ vi.mock('@/src/components/Common/JsonEditorBase/JsonEditorBase', () => ({
 }));
 
 vi.mock('@/src/app/[lang]/tables/actions');
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
 // Mock the ellipsis tooltip so the delete confirmation's Name value is plain, assertable text.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();

@@ -1,8 +1,16 @@
 'use client';
 
+import { GridSelectionMode } from '@epam/ai-dial-react-file-manager';
 import { Spinner } from '@epam/ai-dial-ui-kit';
-import { ColDef, GridApi, GridReadyEvent, RowSelectedEvent, SelectionChangedEvent } from 'ag-grid-community';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ColDef,
+  GetRowIdParams,
+  GridApi,
+  GridReadyEvent,
+  RowSelectedEvent,
+  SelectionChangedEvent,
+} from 'ag-grid-community';
+import { FC, Ref, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 import { getEmptyStateContent } from '@/src/components/Assets/BaseAssetList/utils';
 import DeletePlatformAssetsModal from '@/src/components/Assets/Modals/DeletePlatformAssetsModal';
@@ -14,7 +22,7 @@ import GridView from '@/src/components/Grid/GridView/GridView';
 import { ASSETS_ROW_HEIGHT } from '@/src/components/Grid/constants';
 import { MULTI_ROW_SELECTION, SINGLE_ROW_SELECTION_NO_CHECKBOX } from '@/src/constants/ag-grid';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { AssetTabsI18nKey, PolicyAssignmentsI18nKey } from '@/src/constants/i18n';
+import { AssetTabsI18nKey, BasicI18nKey, PolicyAssignmentsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
@@ -24,7 +32,7 @@ import { DialKeyResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { appendUrlQuery, getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { getFlatAssetColumns } from './columns';
-import { FlatAssets, FlatAssetSource } from './models';
+import { FlatAssetGridHandle, FlatAssets, FlatAssetSource } from './models';
 import { PlatformModalType, usePlatformAssetActions } from './use-platform-asset-actions';
 
 interface Props {
@@ -40,6 +48,7 @@ interface Props {
   /** Reports the rows the user has selected; a selection applied from `selectedNames` is not reported back. */
   onSelectionChange?: (rows: AssetListItem[]) => void;
   onGridApiChange?: (api: GridApi | null) => void;
+  ref?: Ref<FlatAssetGridHandle>;
 }
 
 const SELECT_RADIO_GROUP_NAME = 'flat-asset-selection';
@@ -59,14 +68,36 @@ const FlatAssetGrid: FC<Props> = ({
   selectedNames,
   onSelectionChange,
   onGridApiChange,
+  ref,
 }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
+  const [hasSelectedRows, setHasSelectedRows] = useState(false);
+  const isMounted = useRef(false);
   const canWrite = source !== AssetSource.ConfigFile && !isReadOnlyAdmin && !isSelectMode;
 
   const actions = usePlatformAssetActions({ view, source, refetch: assets.refetch });
-  const { onOpenDuplicate, onOpenDelete } = actions;
+  const { onOpenDuplicate, onOpenDelete, onDelete: deleteAssets } = actions;
+
+  useImperativeHandle(ref, () => ({ openDelete: onOpenDelete }), [onOpenDelete]);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const onDelete = useCallback(async () => {
+    const isDeleted = await deleteAssets();
+    if (isDeleted && isMounted.current) {
+      if (gridApi && !gridApi.isDestroyed()) {
+        gridApi.deselectAll();
+      }
+      setHasSelectedRows(false);
+      onSelectionChange?.([]);
+    }
+  }, [deleteAssets, gridApi, onSelectionChange]);
 
   // A config.json row opens read-only through `configFile=true`; Catalog Schemas resolve by `$id` instead.
   const getHref = useCallback(
@@ -132,14 +163,23 @@ const FlatAssetGrid: FC<Props> = ({
   const onSelectionChanged = useCallback(
     (event: SelectionChangedEvent) => {
       // A selection the picker applied from `selectedNames` is already known to it.
-      if (event.source === 'api') {
+      if (isSelectMode && event.source === 'api') {
         return;
       }
 
-      onSelectionChange?.(event.api.getSelectedRows() as AssetListItem[]);
+      const rows = event.api.getSelectedRows() as AssetListItem[];
+      if (!isSelectMode) setHasSelectedRows(rows.length > 0);
+      onSelectionChange?.(rows);
     },
-    [onSelectionChange],
+    [isSelectMode, onSelectionChange],
   );
+
+  useEffect(() => {
+    if (canWrite && hasSelectedRows && assets.rows.length === 0 && !assets.hasError && !assets.isLoading) {
+      setHasSelectedRows(false);
+      onSelectionChange?.([]);
+    }
+  }, [assets.rows, assets.hasError, assets.isLoading, canWrite, hasSelectedRows, onSelectionChange]);
 
   // `RadioNameCellRenderer` reads the node's selection state on render, so the row is refreshed when it changes.
   const onRowSelected = useCallback((event: RowSelectedEvent) => {
@@ -167,6 +207,8 @@ const FlatAssetGrid: FC<Props> = ({
     });
   }, [gridApi, isSelectMode, selectedNames, assets.rows]);
 
+  const getRowId = useCallback(({ data }: GetRowIdParams<AssetListItem>) => data.path || data.name, []);
+  const getSelectRowLabel = useCallback((row: AssetListItem) => t(BasicI18nKey.SelectRow, { name: row.name }), [t]);
   const names = useMemo(() => assets.rows.map((row) => row.name), [assets.rows]);
   const emptyState = getEmptyStateContent(view, t);
   // The description points at the Create button, which a picker and the read-only config.json tab do not have.
@@ -183,7 +225,12 @@ const FlatAssetGrid: FC<Props> = ({
           rowData={assets.rows}
           columnDefs={columnDefs}
           storageKey={`${view}:${source}`}
-          getRowId={({ data }) => data.path || data.name}
+          getRowId={getRowId}
+          isLiveData={canWrite}
+          selectionMode={canWrite ? GridSelectionMode.MULTIPLE : undefined}
+          gridClassName={canWrite && hasSelectedRows ? 'dial-kit-grid-selection-visible' : undefined}
+          selectRowLabel={canWrite ? getSelectRowLabel : undefined}
+          selectAllLabel={canWrite ? t(BasicI18nKey.SelectAll) : undefined}
           getHref={isSelectMode ? undefined : getHref}
           emptyDataProps={{ title: emptyState.title, description: emptyDescription }}
           additionalGridOptions={{
@@ -219,7 +266,7 @@ const FlatAssetGrid: FC<Props> = ({
           view={view}
           isOpen
           itemsToDelete={actions.deletedItems as never}
-          onRemove={actions.onDelete}
+          onRemove={onDelete}
           onClose={actions.onCloseModal}
         />
       )}

@@ -219,24 +219,27 @@ AND `process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT` is present (non-empty); otherw
 - **WHEN** `ANALYTICS_ENABLED` is falsy
 - **THEN** `featureFlags.queryAssistantEnabled` is `false` regardless of the deployment variable
 
-### Requirement: AI panel accepts a plain-language prompt with suggestions
+### Requirement: AI panel accepts a plain-language prompt
 
-In the AI view the rail SHALL render a heading, an explanatory description, a conversation transcript,
-a multi-line text input for a plain-language request, and a Send action. While the transcript is empty
-the rail SHALL additionally render a set of suggested-prompt chips; once at least one message has been
-sent the chips SHALL no longer be shown. Clicking a suggested-prompt chip SHALL populate the text input
-with that chip's prompt text. The Send action SHALL be disabled while the input is empty or a
-generation request is in flight. All text SHALL be provided through i18n.
+The open panel SHALL render a header carrying a spark icon, the title Ask AI and the collapse control,
+then the conversation transcript, and at its foot a multi-line text input for a plain-language request
+with a Send icon action inside it. While the transcript is empty the panel SHALL show an empty state in
+its place: the assistant illustration, the title "Build a query with AI", and lines saying what the
+assistant does and that every change is reviewed before it is applied; there SHALL be no suggested
+prompts. The input SHALL grow with its text up to a maximum height and scroll beyond it.
+Enter SHALL send the request and Shift+Enter SHALL insert a line break. The Send action SHALL be
+disabled while the input is empty or a generation request is in flight. All text SHALL be provided
+through i18n.
 
-#### Scenario: Suggested prompt fills the input
+#### Scenario: Empty state before the first message
 
-- **WHEN** the AI view is shown, the transcript is empty, and the user clicks a suggested-prompt chip
-- **THEN** the text input is populated with that chip's prompt text
+- **WHEN** the panel is open and the transcript is empty
+- **THEN** the empty state is shown with its title and description, and no suggested prompts are offered
 
-#### Scenario: Suggestions hidden once a conversation has started
+#### Scenario: Enter sends, Shift+Enter breaks the line
 
-- **WHEN** at least one message has been sent in the AI view
-- **THEN** the suggested-prompt chips are no longer shown
+- **WHEN** the user presses Shift+Enter in the input and then Enter
+- **THEN** Shift+Enter inserts a line break without sending, and Enter sends the whole multi-line request
 
 #### Scenario: Send disabled when input empty
 
@@ -260,8 +263,8 @@ read out of the queried store can reach the assistant deployment by construction
 
 On success the assistant's reply SHALL be appended as a new message in the transcript, rendered as-is
 (no SQL extraction applied to the rendered text). When the reply contains an extractable SQL block, that
-message additionally renders the extracted SQL read-only with its own Copy and Run actions (see "Each
-assistant message with extracted SQL offers inline Run and Copy"). On failure the system SHALL surface an
+message renders its prose without the SQL block, followed by its proposed-query actions (see "Each assistant
+message with extracted SQL offers a proposed query with Run"). On failure the system SHALL surface an
 error notification (this app's own title, the service's message, and request id when available); the just-sent user message SHALL
 remain visible in the transcript and no assistant message SHALL be appended, so the user can retry or
 continue the conversation without losing what they asked.
@@ -286,7 +289,7 @@ continue the conversation without losing what they asked.
 #### Scenario: Reply without SQL is a plain conversational turn
 
 - **WHEN** the assistant reply contains no SQL block
-- **THEN** the assistant's message is shown in the transcript with no Run or Copy action, and any
+- **THEN** the assistant's message is shown in the transcript with no proposed-query actions, and any
   previously loaded query is left untouched
 
 #### Scenario: Generation failure notifies and preserves the transcript
@@ -324,46 +327,71 @@ several assistant turns can have several messages each carrying their own extrac
 - **WHEN** a conversation has multiple assistant messages, some with SQL blocks and some without
 - **THEN** each message's extraction result reflects only that message's own content
 
-### Requirement: Each assistant message with extracted SQL offers inline Run and Copy
+### Requirement: Each assistant message with extracted SQL offers Dismiss and Apply and Run
 
-An assistant message whose content yields a non-null result from `extractSql` SHALL render that SQL
-read-only beneath the message, with its own Copy action and its own Run action. A message with no
-extracted SQL SHALL render neither action. The Run action SHALL be disabled while any message's Run is
-already in progress (translating or executing), and SHALL also be disabled on the message that is
-currently the loaded query (see "Running a message's query loads it into the builder and executes it")
-— that disabled state is the only indicator of which message is current; there is no separate badge.
+An assistant message whose content yields a non-null result from `extractSql` SHALL render its prose
+without the SQL block, followed by two actions: Dismiss and Apply and Run. Assistant prose SHALL be rendered as Markdown (paragraphs, lists, emphasis, inline code, links), never as raw HTML. The SQL itself SHALL NOT be
+shown in the transcript: Apply and Run loads it into the builder, where it can be read and edited, and
+runs it. A proposed query SHALL be in one of three states, kept by the page so they survive the panel
+collapsing:
 
-#### Scenario: SQL-bearing message shows Run and Copy
+- **Pending** — before either action: both actions are offered.
+- **Applied** — once the query run by Apply and Run succeeds: Dismiss is no longer offered, Apply and Run stays so the
+  query can be applied again, and a note reads "Applied. The query and result were updated.". The
+  state stays Applied after another message is applied.
+- **Dismissed** — once Dismiss is clicked: neither action is offered, a Dismissed badge is shown, and a
+  note reads "Dismissed. The builder was not changed.". Dismissing SHALL NOT change the builder or the
+  result.
 
-- **WHEN** an assistant message has extracted SQL
-- **THEN** that message renders the SQL read-only with a Copy action and a Run action
+A message with no extracted SQL SHALL render neither action. Apply and Run SHALL be disabled while any
+message's run is already in progress (translating or executing), and SHALL also be disabled on the
+message that is currently the loaded query (see "Running an assistant message loads its query and
+executes it"). The notes are shown by the console and are not part of the transcript sent to the
+assistant.
 
-#### Scenario: Plain message shows neither action
+#### Scenario: SQL-bearing message offers both actions
+
+- **WHEN** an assistant message has extracted SQL and neither action has been clicked
+- **THEN** that message offers Dismiss and Apply and Run, and the SQL text is not shown
+
+#### Scenario: An applied proposed query says so
+
+- **WHEN** the user clicks Apply and Run on a proposed query and the query runs
+- **THEN** the applied note is shown, Dismiss is no longer offered, and the note stays after another
+  message is applied
+
+#### Scenario: A dismissed proposed query leaves the builder alone
+
+- **WHEN** the user clicks Dismiss on a proposed query
+- **THEN** the Dismissed badge and note are shown, no action is offered on that message, and the builder
+  and the result are unchanged
+
+#### Scenario: Plain message offers no action
 
 - **WHEN** an assistant message has no extracted SQL
-- **THEN** that message renders no Copy action and no Run action
+- **THEN** that message offers neither Dismiss nor Apply and Run
 
-#### Scenario: Run disabled while another run is in progress
+#### Scenario: Apply and Run disabled while another run is in progress
 
-- **WHEN** a message's Run has been clicked and its translate-and-execute is still in flight
-- **THEN** every message's Run action in the transcript is disabled until it completes
+- **WHEN** a message's Apply and Run has been clicked and its translate-and-execute is still in flight
+- **THEN** every message's Apply and Run action in the transcript is disabled until it completes
 
-#### Scenario: Run disabled on the currently loaded message
+#### Scenario: Apply and Run disabled on the currently loaded message
 
 - **WHEN** a message's query is the currently loaded query
-- **THEN** that message's Run action is disabled, while other SQL-bearing messages' Run actions remain
-  enabled
+- **THEN** that message's Apply and Run action is disabled, while other pending or applied messages'
+  Apply and Run actions remain enabled
 
 ### Requirement: Running a message survives a failed translation round trip
 
 When translating a message's SQL, or reading the schema its query targets, fails in transit, running that
 message SHALL behave as for a refused translation: the raw SQL is shown in the SQL view and executed via
 the SQL path. A failure while loading a
-message's query SHALL NOT leave the transcript's Run actions disabled.
+message's query SHALL NOT leave the transcript's Apply and Run actions disabled.
 
 #### Scenario: Translation rejected in transit
 
-- **WHEN** the user clicks Run on a message and the translation request fails in transit
+- **WHEN** the user clicks Apply and Run on a message and the translation request fails in transit
 - **THEN** the query executes via the SQL path and Run actions on other messages remain enabled
 
 #### Scenario: Schema read rejected in transit
@@ -545,7 +573,7 @@ neither the panel nor its collapsed control.
 
 The panel SHALL start collapsed. Collapsed, it SHALL be a narrow vertical control carrying a spark icon
 and the label Ask AI, exposing its collapsed state; activating it SHALL open the panel. Open, the panel
-SHALL hold the assistant — its heading, suggestions, prompt and transcript — and a control that
+SHALL hold the assistant — its header, transcript and prompt — and a control that
 collapses it. Whether the panel is open SHALL be remembered in the browser and applied after mount, so
 the server render and the first client render agree.
 
@@ -1156,10 +1184,11 @@ edited SQL buffer, the SQL SHALL first be translated to the structured DSL via
 `POST /v1/queries/translate-sql`. If the translation succeeds and the resulting query is representable
 by the chips, the builder SHALL be hydrated from that query and the view SHALL switch with no
 confirmation and no data loss. If the translation fails (`400` — parse failure or an unsupported
-construct) or the resulting query is not representable by the chips, a confirmation popup (danger
-variant) SHALL warn that switching will drop the current query and reset the builder to its starting
-point. Confirming SHALL discard the SQL, reset the builder state to its initial defaults for the page's
-table, and switch to the Builder view. Cancelling SHALL keep the user in the view they were in with the
+construct) or the resulting query is not representable by the chips, a confirmation popup titled
+"Switch to the builder?" SHALL say that the query is too complex for the builder to show and that
+switching will replace it with a new builder query, offering Stay in SQL and Switch to builder.
+Switch to builder SHALL discard the SQL, reset the builder state to its initial defaults for the page's
+table, and switch to the Builder view. Stay in SQL SHALL keep the user in the view they were in with the
 query intact. Switching to the Builder SHALL NOT prompt when nothing would be lost (empty or unedited
 generated SQL; SQL that translates to a representable query).
 
@@ -1179,18 +1208,18 @@ switch views before the loaded query has landed.
 #### Scenario: SQL the chips cannot show asks for confirmation
 
 - **WHEN** the user edits SQL that the backend rejects, or that translates to a query the chips cannot show, and selects the Builder view
-- **THEN** a confirmation popup warns that the current query will be dropped and the builder reset
+- **THEN** the "Switch to the builder?" popup says the query is too complex for the builder and will be replaced
 
-#### Scenario: Confirming drops the SQL and resets the builder
+#### Scenario: Switch to builder drops the SQL and resets the builder
 
-- **WHEN** the confirmation popup is shown and the user confirms
+- **WHEN** the confirmation popup is shown and the user chooses Switch to builder
 - **THEN** the view switches to the Builder view
 - **AND** the SQL is discarded
 - **AND** the chips show the builder's initial defaults for the page's table
 
-#### Scenario: Cancelling keeps the SQL
+#### Scenario: Stay in SQL keeps the SQL
 
-- **WHEN** the confirmation popup is shown and the user cancels
+- **WHEN** the confirmation popup is shown and the user chooses Stay in SQL
 - **THEN** the user remains in the view they were in
 - **AND** the SQL text is unchanged
 
@@ -1198,7 +1227,7 @@ switch views before the loaded query has landed.
 
 - **WHEN** the user runs an assistant message whose SQL the chips cannot show and then selects the Builder view
 - **THEN** the confirmation popup is shown instead of the chips showing their earlier query
-- **AND** cancelling keeps the SQL view
+- **AND** Stay in SQL keeps the SQL view
 
 #### Scenario: The view switcher waits for a message to load
 
@@ -1297,40 +1326,41 @@ the following hold:
 
 ### Requirement: Running an assistant message loads its query and executes it
 
-Clicking a message's Run action SHALL translate that message's SQL into a structured query and, when
+Clicking a message's Apply and Run action SHALL translate that message's SQL into a structured query and, when
 the chips can show it, hydrate the builder state so the Builder and SQL views both reflect it; when the
 chips cannot show it (or translation fails), the raw SQL SHALL remain runnable and visible in the SQL
 view instead. In the same action, the system SHALL execute the query (via the structured or SQL
 execution path, matching whichever form was loaded) and show the result in the results area. The view
 SHALL switch to the one that shows the loaded query — Builder for a query the chips can show, SQL
-otherwise — and the assistant panel SHALL stay open. The message whose Run was most recently
-clicked SHALL have its Run action disabled to indicate it is the currently loaded query (see "Each
-assistant message with extracted SQL offers inline Run and Copy") — no separate visual badge is used.
+otherwise — and the assistant panel SHALL stay open. The message whose Apply and Run was most recently
+clicked SHALL have its Apply and Run action disabled to indicate it is the currently loaded query, and
+its proposed query SHALL be Applied (see "Each assistant message with extracted SQL offers a proposed
+query with Run").
 
 #### Scenario: A query the chips can show loads and runs
 
-- **WHEN** the user clicks Run on a message whose query the chips can show
+- **WHEN** the user clicks Apply and Run on a message whose query the chips can show
 - **THEN** the Builder view is selected with its chips showing that query, the query executes, and the
   result appears in the results area
 
 #### Scenario: A query the chips cannot show still runs via SQL
 
-- **WHEN** the user clicks Run on a message whose query the chips cannot show (or translation fails)
+- **WHEN** the user clicks Apply and Run on a message whose query the chips cannot show (or translation fails)
 - **THEN** the SQL view is selected with the raw SQL in its editor, and the query still executes via the
   SQL path
 
 #### Scenario: Running an earlier message updates which query is loaded
 
-- **WHEN** a later message's Run was previously clicked and the user then clicks an earlier message's
-  Run
-- **THEN** the earlier message's Run action becomes disabled, the later message's Run action becomes
-  enabled again, and the Builder and SQL views reflect the earlier query instead
+- **WHEN** a later message's Apply and Run was previously clicked and the user then clicks an earlier
+  message's Apply and Run
+- **THEN** the earlier message's Apply and Run action becomes disabled, the later message's Apply and Run
+  action becomes enabled again, and the Builder and SQL views reflect the earlier query instead
 
 ### Requirement: Run and Copy do not depend on the assistant panel
 
 The view switcher row SHALL show its Run action whether the assistant panel is open or collapsed, and
-its Copy action in the SQL view only. A message's own Run and Copy actions on the transcript are
-specified in "Each assistant message with extracted SQL offers inline Run and Copy".
+its Copy action in the SQL view only. A message's own actions on the transcript are specified in
+"Each assistant message with extracted SQL offers Dismiss and Apply and Run".
 
 #### Scenario: Run stays available with the panel open
 
@@ -1353,7 +1383,7 @@ was left SHALL NOT appear on the next one.
 #### Scenario: Reopening the panel shows the same conversation
 
 - **WHEN** the user has run a message, collapses the assistant panel, and opens it again
-- **THEN** the earlier messages are shown and the run message's Run action is still disabled
+- **THEN** the earlier messages are shown and the run message's Apply and Run action is still disabled
 
 #### Scenario: A new reply after reopening is runnable
 

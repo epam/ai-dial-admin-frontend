@@ -2,23 +2,16 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 
-import {
-  ButtonAppearance,
-  ButtonVariant,
-  Button,
-  Spinner,
-  PrimaryButton,
-  Textarea,
-  ElementSize,
-} from '@epam/ai-dial-ui-kit';
-import { IconPlayerPlay, IconSparkles } from '@tabler/icons-react';
-import classNames from 'classnames';
+import { NoDataContent } from '@epam/ai-dial-ui-kit';
 
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import EmptyIllustration from '@/public/images/ai-query-empty.svg';
+
+import AssistantMessageText from '@/src/components/Analytics/QueryBuilder/Ai/AssistantMessageText';
+import AiPromptInput from '@/src/components/Analytics/QueryBuilder/Ai/AiPromptInput';
+import { ProposedQueryStatus } from '@/src/components/Analytics/QueryBuilder/Ai/models';
+import ProposedQueryActions from '@/src/components/Analytics/QueryBuilder/Ai/ProposedQueryActions';
 import { useAiConversation } from '@/src/components/Analytics/QueryBuilder/Ai/use-ai-conversation';
 import { splitMessageAroundSql } from '@/src/components/Analytics/QueryBuilder/utils/extract-sql';
-import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
-import { QUERY_ASSISTANT_SUGGESTIONS } from '@/src/constants/analytics/query-assistant';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { QueryAssistantRole } from '@/src/models/analytics/query-assistant';
@@ -27,12 +20,19 @@ interface Props {
   conversation: ReturnType<typeof useAiConversation>;
   onRunMessage: (sql: string, messageIndex: number) => void;
   loadedMessageIndex: number | null;
+  messageStatuses: Record<number, ProposedQueryStatus>;
+  onDismissMessage: (messageIndex: number) => void;
   runInFlight: boolean;
 }
 
-const LOADER_SIZE = 18;
-
-const AiPanel: FC<Props> = ({ conversation, onRunMessage, loadedMessageIndex, runInFlight }) => {
+const AiPanel: FC<Props> = ({
+  conversation,
+  onRunMessage,
+  loadedMessageIndex,
+  messageStatuses,
+  onDismissMessage,
+  runInFlight,
+}) => {
   const t = useI18n();
   const { messages, isSending } = conversation;
 
@@ -54,106 +54,58 @@ const AiPanel: FC<Props> = ({ conversation, onRunMessage, loadedMessageIndex, ru
     await conversation.send(prompt);
   };
 
-  const sendDisabled = !input.trim() || isSending;
-
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3">
-      <div className="flex items-center gap-2 text-accent-primary">
-        <IconSparkles size={18} stroke={2} />
-        <h2 className="dial-h6">{t(QueryBuilderI18nKey.AiPanelHeading)}</h2>
-      </div>
-      <p className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.AiPanelDescription)}</p>
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      {messages.length === 0 ? (
+        <NoDataContent
+          className="min-h-0 flex-1"
+          icon={<EmptyIllustration />}
+          title={t(QueryBuilderI18nKey.AiEmptyTitle)}
+          description={t(QueryBuilderI18nKey.AiEmptyDescription)}
+        />
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+          {messages.map((message, index) => {
+            const isUser = message.role === QueryAssistantRole.User;
+            const isLastUserMessage =
+              isUser && !messages.slice(index + 1).some((m) => m.role === QueryAssistantRole.User);
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
-        {messages.map((message, index) => {
-          const isUser = message.role === QueryAssistantRole.User;
-          const split = isUser ? null : splitMessageAroundSql(message.content);
-          const isLoaded = index === loadedMessageIndex;
-          const isLastUserMessage =
-            isUser && !messages.slice(index + 1).some((m) => m.role === QueryAssistantRole.User);
-          return (
-            <div
-              key={index}
-              ref={isLastUserMessage ? lastUserMessageRef : undefined}
-              className={classNames(
-                'flex max-w-[92%] flex-col gap-2 rounded border p-3',
-                isUser ? 'self-end border-transparent bg-layer-3' : 'self-start border-primary bg-layer-1',
-              )}
-            >
-              {split === null ? (
-                <p className="dial-small-text whitespace-pre-wrap text-primary">{message.content}</p>
-              ) : (
-                <>
-                  {split.before && <p className="dial-small-text whitespace-pre-wrap text-primary">{split.before}</p>}
-                  <div className="flex flex-col gap-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.SqlQuery)}</span>
-                      <div className="flex items-center gap-1">
-                        <CopyButton
-                          value={split.sql}
-                          valueLabel={t(QueryBuilderI18nKey.SqlQuery)}
-                          size={ElementSize.Small}
-                        />
-                        <Button
-                          label={t(QueryBuilderI18nKey.Run)}
-                          iconBefore={<IconPlayerPlay size={14} stroke={2} />}
-                          appearance={ButtonAppearance.Outlined}
-                          variant={ButtonVariant.Secondary}
-                          size={ElementSize.Small}
-                          onClick={() => onRunMessage(split.sql, index)}
-                          disabled={runInFlight || isLoaded}
-                        />
-                      </div>
-                    </div>
-                    {/* Formatted for reading only; copy and Run take the SQL exactly as the assistant wrote it.
-                        It scrolls rather than wraps, so a wrapped line never reads as a clause of its own. */}
-                    <pre className="dial-small-text overflow-x-auto rounded border border-primary bg-layer-3 p-2 font-mono">
-                      {formatSql(split.sql)}
-                    </pre>
-                  </div>
-                  {split.after && <p className="dial-small-text whitespace-pre-wrap text-primary">{split.after}</p>}
-                </>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            if (isUser) {
+              return (
+                <div
+                  key={index}
+                  ref={isLastUserMessage ? lastUserMessageRef : undefined}
+                  className="dial-small-text max-w-[85%] self-end whitespace-pre-wrap rounded border border-tertiary bg-layer-3 px-3 py-2 text-primary"
+                >
+                  {message.content}
+                </div>
+              );
+            }
 
-      {messages.length === 0 && (
-        <div className="flex flex-wrap gap-2">
-          {QUERY_ASSISTANT_SUGGESTIONS.map((key) => (
-            <Button
-              key={key}
-              label={t(key)}
-              appearance={ButtonAppearance.Ghost}
-              variant={ButtonVariant.Secondary}
-              onClick={() => setInput(t(key))}
-              disabled={isSending}
-            />
-          ))}
+            const split = splitMessageAroundSql(message.content);
+            if (split === null) {
+              return <AssistantMessageText key={index} content={message.content} />;
+            }
+
+            const status = messageStatuses[index] ?? ProposedQueryStatus.Pending;
+
+            return (
+              <div key={index} className="flex flex-col gap-2">
+                {split.before && <AssistantMessageText content={split.before} />}
+                {split.after && <AssistantMessageText content={split.after} />}
+                <ProposedQueryActions
+                  status={status}
+                  isApplyDisabled={runInFlight || index === loadedMessageIndex}
+                  onApply={() => onRunMessage(split.sql, index)}
+                  onDismiss={() => onDismissMessage(index)}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        <Textarea
-          id="query-assistant-prompt"
-          aria-label={t(QueryBuilderI18nKey.AiPanelHeading)}
-          placeholder={t(QueryBuilderI18nKey.AiPromptPlaceholder)}
-          value={input}
-          onChange={setInput}
-          disabled={isSending}
-          rows={3}
-        />
-        <div className="flex items-center justify-end gap-2">
-          {isSending && <Spinner size={LOADER_SIZE} fullWidth={false} ariaLabel={t(QueryBuilderI18nKey.AiSending)} />}
-          <PrimaryButton
-            label={t(QueryBuilderI18nKey.AiSend)}
-            iconBefore={<IconSparkles size={18} stroke={2} />}
-            onClick={onSend}
-            disabled={sendDisabled}
-          />
-        </div>
-      </div>
+      <AiPromptInput value={input} isSending={isSending} onChange={setInput} onSend={onSend} />
     </div>
   );
 };

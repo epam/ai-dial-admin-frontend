@@ -28,7 +28,6 @@ import { useAdminConsent } from './use-admin-consent';
 interface Props {
   selectedApplication: DialApplication;
   originalApplication: AssetApp;
-  etag: string;
   onChangeApplication: (application: DialApplication) => void;
 }
 
@@ -39,14 +38,13 @@ interface ModalState {
 
 const NEW_DEPENDENCY: DependencyFormValues = { linkId: '', path: '', access: [ResourceAccess.Read], isRequired: false };
 
-const ResourceDependencies: FC<Props> = ({ selectedApplication, originalApplication, etag, onChangeApplication }) => {
+const ResourceDependencies: FC<Props> = ({ selectedApplication, originalApplication, onChangeApplication }) => {
   const t = useI18n();
   const [modal, setModal] = useState<ModalState | null>(null);
 
   const appPath = originalApplication.path ?? originalApplication._metadata?.path ?? '';
   const { status, isLoading, hasFailed, isMutating, approve, revoke } = useAdminConsent(
     appPath,
-    etag,
     originalApplication.resource_dependencies,
   );
 

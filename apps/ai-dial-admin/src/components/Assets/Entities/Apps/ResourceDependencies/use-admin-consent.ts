@@ -17,12 +17,13 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { toApprovedResources } from './utils/resources';
 
 /**
- * Reads Core's admin-consent status for the application and re-reads it whenever `etag` changes (a
- * successful Save) and after every approve / revoke, so the block never shows a state older than the
+ * Reads Core's admin-consent status for the application and re-reads it whenever the saved
+ * dependencies change (a successful Save, once its `router.refresh()` has delivered the new server
+ * data) and after every approve / revoke, so the block never shows a state older than the
  * last action. Any failed read — 403 for a non-admin, 404 for a Core without the feature — is reported
  * as `hasFailed`, which the tab renders as its no-data state.
  */
-export const useAdminConsent = (appPath: string, etag: string, savedDependencies?: ResourceDependency[]) => {
+export const useAdminConsent = (appPath: string, savedDependencies?: ResourceDependency[]) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
@@ -35,19 +36,28 @@ export const useAdminConsent = (appPath: string, etag: string, savedDependencies
   const refresh = useCallback(async () => {
     const readId = ++latestReadRef.current;
     setIsLoading(true);
-    const res: ServerActionResponse<AdminConsentStatus> = await getReqRef.current(getAdminConsentStatus, appPath);
-    // A newer read supersedes this one, whichever finishes last.
-    if (readId !== latestReadRef.current) {
-      return;
+    let res: ServerActionResponse<AdminConsentStatus> | undefined;
+    try {
+      res = await getReqRef.current(getAdminConsentStatus, appPath);
+    } catch {
+      res = undefined;
+    } finally {
+      // A newer read supersedes this one, whichever finishes last.
+      if (readId === latestReadRef.current) {
+        setStatus(res?.success ? res.response : undefined);
+        setHasFailed(!res?.success || !res.response);
+        setIsLoading(false);
+      }
     }
-    setStatus(res.success ? res.response : undefined);
-    setHasFailed(!res.success || !res.response);
-    setIsLoading(false);
   }, [appPath]);
 
+  // Keyed on the server-provided dependencies, not the view's local etag: the etag is set the moment a
+  // Save succeeds, before `router.push` / `router.refresh()` run, and a server action in flight during
+  // that navigation never resolves, leaving the block loading. The saved dependencies only change once
+  // the refreshed data has landed, so the read can't be interrupted.
   useEffect(() => {
     void refresh();
-  }, [refresh, etag]);
+  }, [refresh, savedDependencies]);
 
   const mutate = useCallback(
     async (

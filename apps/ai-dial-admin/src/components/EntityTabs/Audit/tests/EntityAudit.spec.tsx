@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -9,11 +10,11 @@ import { TabsI18nKey } from '@/src/constants/i18n';
 import { DEFAULT_TIME_PERIOD, SINCE_CREATION_PERIOD_ID } from '@/src/constants/global-time-filter';
 import { useAppContext } from '@/src/context/AppContext';
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => {
+beforeEach(() => {
+  appContextMock.use(() => {
     return { featureFlags: { dashboardEnabled: true } };
-  }),
-}));
+  });
+});
 
 const listPropsSpy = vi.fn();
 vi.mock('@/src/components/ActivityAudit/List/List', () => ({

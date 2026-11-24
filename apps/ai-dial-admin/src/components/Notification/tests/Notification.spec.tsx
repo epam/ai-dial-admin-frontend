@@ -56,6 +56,25 @@ describe('Notification', () => {
     expect(toast).toHaveTextContent('Basic.RequestId');
   });
 
+  test('lets a long unbroken description and the request id wrap inside the card', () => {
+    const path = 'conversations/public/' + 'a'.repeat(120);
+    render(
+      <Notification
+        id="id"
+        type={NotificationType.error}
+        title="Forbidden"
+        description={path}
+        requestId="trace-1"
+        onClose={vi.fn()}
+      />,
+    );
+
+    const textBlock = screen.getByText(path).parentElement;
+
+    expect(textBlock).toHaveClass('min-w-0', 'break-words', 'whitespace-pre-wrap');
+    expect(screen.getByText('Basic.RequestId').parentElement).toBe(textBlock);
+  });
+
   test('runs the action and closes the notification when its button is clicked', async () => {
     const user = userEvent.setup();
     const onClick = vi.fn();

@@ -15,6 +15,7 @@ import { AssetSource } from '@/src/models/dial/asset-source';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import CreatePlatformEntityForm from './CreatePlatformEntityForm';
@@ -28,6 +29,7 @@ interface Props {
   bucket?: AssetSource.Public | AssetSource.Platform;
   runners?: DialApplicationScheme[];
   translators?: ResourceInfo[];
+  plugins?: PluginOptions;
   /** Seeds the form, e.g. from the app runner or MCP container the entity is created for. */
   initialValues?: Partial<AssetWithVersion>;
   /** Rendered above the form, for an entry point that lets the user choose the destination. */
@@ -51,6 +53,7 @@ const CreatePlatformEntity: FC<Props> = ({
   bucket,
   runners,
   translators,
+  plugins,
   initialValues,
   topSlot,
   onClose,
@@ -98,6 +101,7 @@ const CreatePlatformEntity: FC<Props> = ({
           view={view}
           isOpen={isOpen}
           names={names}
+          plugins={plugins}
           initialValues={seed}
           topSlot={topSlot}
           createEntity={createEntity}

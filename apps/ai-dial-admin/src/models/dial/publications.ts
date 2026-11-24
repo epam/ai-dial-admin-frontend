@@ -30,7 +30,7 @@ export interface PublicationEntity {
   sourceUrl: string;
   targetUrl: string;
   reviewUrl: string;
-  action: ActionType;
+  action?: ActionType;
 }
 
 export interface PublicationFile extends PublicationEntity {

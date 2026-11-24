@@ -1,16 +1,12 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { FeaturesI18nKey } from '@/src/constants/i18n';
 import { DialModelResource, DialModelResourceStatus } from '@/src/models/dial/resource';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import ModelResourceFeatures from '../Features';
 import { modelResourceFeatureLabelMap, modelResourceSwitchGroups, modelResourceTextFeatures } from '../constants';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   Label: ({ label }: any) => <span>{label}</span>,
@@ -150,12 +146,12 @@ describe('ModelResourceFeatures', () => {
   });
 
   test('disables switches for a read-only admin', () => {
-    (useIsReadOnlyAdmin as any).mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
 
     render(<ModelResourceFeatures entity={baseEntity} onChangeEntity={vi.fn()} />);
 
     expect(screen.getByRole('switch', { name: modelResourceFeatureLabelMap.cache_supported })).toBeDisabled();
 
-    (useIsReadOnlyAdmin as any).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
   });
 });

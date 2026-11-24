@@ -52,6 +52,10 @@ const GridView = <T extends object>({
   isLiveData,
   getRowId,
   getHref,
+  selectionMode,
+  gridClassName,
+  selectRowLabel,
+  selectAllLabel,
 }: GridViewProps<T>) => {
   const staticPanelContainerClassName = classNames('bg-blackout z-[15]', showColumnsPanel ? 'flex' : 'hidden');
 
@@ -263,6 +267,10 @@ const GridView = <T extends object>({
             isLiveData={isLiveData}
             getRowId={getRowId}
             getHref={getHref}
+            selectionMode={selectionMode}
+            gridClassName={gridClassName}
+            selectRowLabel={selectRowLabel}
+            selectAllLabel={selectAllLabel}
           />
           {showColumnsPanel && (
             <div className={panelContainerClassName}>

@@ -355,7 +355,6 @@ const AppView: FC<Props> = ({
             isSkipRefresh={isSkipRefresh}
             discardKey={discardKey}
             isChanged={isChanged}
-            etag={etag}
             frameRef={frameRef}
             frameCallbacks={frameCallbacks}
             onSave={onSaveChanges}

@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
@@ -46,9 +47,9 @@ vi.mock('@epam/ai-dial-react-file-manager', async (importOriginal) => {
 const platformRoot = { name: 'platform', path: 'platform/', nodeType: 'FOLDER', items: [] } as unknown as Asset;
 const publicRoot = { name: 'public', path: 'public/', nodeType: 'FOLDER', items: [] } as unknown as Asset;
 
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({ isUnitMode: false }),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ isUnitMode: false }));
+});
 
 const renderFilePath = (files: Asset[], view = ApplicationRoute.AssetsApplications) => {
   const fetchFiles = vi.fn();

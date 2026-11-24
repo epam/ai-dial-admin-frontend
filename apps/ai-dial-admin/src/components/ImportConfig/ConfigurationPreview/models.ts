@@ -1,4 +1,4 @@
-import { CatalogImportEntry } from '@/src/models/analytics/catalog-import';
+import { CatalogAccessImportEntry, CatalogImportEntry } from '@/src/models/analytics/catalog-import';
 
 /** A preview or result entry flattened for the grid; `entry` keeps the service's object for Compare. */
 export interface AnalyticsImportRow {
@@ -8,6 +8,9 @@ export interface AnalyticsImportRow {
   canEnable?: string;
   differs?: string;
   status?: string;
+  table?: string;
+  role?: string;
+  ineffectiveGrants?: string;
   isInvalid: boolean;
-  entry: CatalogImportEntry;
+  entry: CatalogImportEntry | CatalogAccessImportEntry;
 }

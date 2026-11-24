@@ -1,32 +1,64 @@
-import { render, screen } from '@testing-library/react';
+import { appContextMock } from '@/test-mocks/app-context';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { GridApi } from 'ag-grid-community';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Ref, useImperativeHandle } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { FlatAssets } from '@/src/components/Assets/FlatAssetGrid/models';
-import { AssetTabsI18nKey, ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { FlatAssetGridHandle, FlatAssets } from '@/src/components/Assets/FlatAssetGrid/models';
+import { AssetListItem } from '@/src/models/dial/asset-list-item';
+import { AssetTabsI18nKey, BasicI18nKey, ButtonsI18nKey, FileManagerI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useFlatAssets } from '@/src/hooks/use-flat-assets';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { AssetSource } from '@/src/models/dial/asset-source';
 import { ApplicationRoute } from '@/src/types/routes';
 import TabbedAssetList from '../TabbedAssetList';
 
 const appContext = vi.hoisted(() => ({ isUnitMode: false }));
+const openDelete = vi.hoisted(() => vi.fn());
+const gridApi = vi.hoisted(() => ({ deselectAll: vi.fn(), isDestroyed: () => false }));
 
-vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => appContext }));
+beforeEach(() => {
+  appContextMock.use(() => appContext);
+});
 vi.mock('@/src/hooks/use-flat-assets', () => ({ useFlatAssets: vi.fn() }));
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn() }));
+
 vi.mock('@/src/hooks/use-is-tablet-screen', () => ({ useIsTabletScreen: () => false }));
 vi.mock('@/src/components/ListView/Header/ResetFiltersButton', () => ({ default: () => null }));
 vi.mock('@/src/components/Assets/BaseAssetList/BaseAssetList', () => ({
   default: ({ view }: { view: string }) => <div>public-tree:{view}</div>,
 }));
 vi.mock('@/src/components/Assets/FlatAssetGrid/FlatAssetGrid', () => ({
-  default: ({ source, assets }: { source: string; assets: { rows: unknown[] } }) => (
-    <div>
-      flat-grid:{source}:{assets.rows.length}
-    </div>
-  ),
+  default: ({
+    source,
+    assets,
+    onSelectionChange,
+    onGridApiChange,
+    ref,
+  }: {
+    source: string;
+    assets: { rows: AssetListItem[] };
+    onSelectionChange?: (rows: AssetListItem[]) => void;
+    onGridApiChange?: (api: GridApi) => void;
+    ref?: Ref<FlatAssetGridHandle>;
+  }) => {
+    useImperativeHandle(ref, () => ({ openDelete }));
+    return (
+      <div>
+        flat-grid:{source}:{assets.rows.length}
+        {onSelectionChange && (
+          <button
+            onClick={() => {
+              onGridApiChange?.(gridApi as unknown as GridApi);
+              onSelectionChange(assets.rows);
+            }}
+          >
+            select rows
+          </button>
+        )}
+      </div>
+    );
+  },
 }));
 vi.mock('@/src/components/Assets/Platform/CreatePlatformEntity', () => ({
   default: ({ view, names, bucket }: { view: string; names: string[]; bucket: string }) => (
@@ -78,7 +110,7 @@ describe('TabbedAssetList', () => {
     };
     vi.mocked(useRouter).mockReturnValue({ replace } as never);
     vi.mocked(usePathname).mockReturnValue('/assets-applications');
-    vi.mocked(useIsReadOnlyAdmin).mockReturnValue(false);
+    appContextMock.set({ isReadOnlyAdmin: false });
     vi.mocked(useFlatAssets).mockImplementation(((_: unknown, source: AssetSource) => counts[source]) as never);
   });
 
@@ -213,6 +245,67 @@ describe('TabbedAssetList', () => {
     });
   });
 
+  describe('bulk actions panel', () => {
+    test.each([ApplicationRoute.PlatformModels, ApplicationRoute.PlatformKeys, ApplicationRoute.AssetsAliases])(
+      'shows the selected count and Delete in the bottom toolbar for %s',
+      async (view) => {
+        renderList(view);
+
+        expect(screen.queryByRole('button', { name: ButtonsI18nKey.Delete })).not.toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: 'select rows' }));
+        const toolbar = screen.getByRole('toolbar', { name: ButtonsI18nKey.BulkActions });
+        const source = view === ApplicationRoute.AssetsAliases ? AssetSource.Public : AssetSource.Platform;
+        expect(within(toolbar).getByRole('status')).toHaveTextContent(String(counts[source].rows.length));
+        expect(within(toolbar).getByText(FileManagerI18nKey.SelectedItems)).toBeInTheDocument();
+        await user.click(within(toolbar).getByRole('button', { name: ButtonsI18nKey.Delete }));
+
+        expect(openDelete).toHaveBeenCalledWith(counts[source].rows);
+        expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeInTheDocument();
+      },
+    );
+
+    test('uses refreshed rows by path and excludes rows removed since selection', async () => {
+      const { rerender } = renderList(ApplicationRoute.PlatformModels);
+      await user.click(screen.getByRole('button', { name: 'select rows' }));
+      const updatedRow = { ...counts[AssetSource.Platform].rows[0], name: 'updated' };
+      counts[AssetSource.Platform] = flat(1, { rows: [updatedRow] });
+      rerender(<TabbedAssetList view={ApplicationRoute.PlatformModels} />);
+
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Delete }));
+
+      expect(openDelete).toHaveBeenCalledWith([updatedRow]);
+    });
+
+    test('clears the grid selection and hides the panel', async () => {
+      renderList(ApplicationRoute.PlatformModels);
+      await user.click(screen.getByRole('button', { name: 'select rows' }));
+      const toolbar = screen.getByRole('toolbar', { name: ButtonsI18nKey.BulkActions });
+
+      await user.click(within(toolbar).getByRole('button', { name: BasicI18nKey.ClearSelection }));
+
+      expect(gridApi.deselectAll).toHaveBeenCalledOnce();
+      expect(screen.queryByRole('toolbar', { name: ButtonsI18nKey.BulkActions })).not.toBeInTheDocument();
+    });
+
+    test('clears the selection when switching tabs', async () => {
+      renderList(ApplicationRoute.PlatformModels);
+      await user.click(screen.getByRole('button', { name: 'select rows' }));
+      expect(screen.getByRole('button', { name: ButtonsI18nKey.Delete })).toBeInTheDocument();
+
+      await user.click(screen.getByRole('tab', { name: new RegExp(AssetTabsI18nKey.ConfigFile) }));
+
+      expect(screen.queryByRole('button', { name: ButtonsI18nKey.Delete })).not.toBeInTheDocument();
+    });
+
+    test('does not show Delete to a read-only admin', async () => {
+      appContextMock.set({ isReadOnlyAdmin: true });
+      renderList(ApplicationRoute.PlatformModels);
+
+      await user.click(screen.getByRole('button', { name: 'select rows' }));
+      expect(screen.queryByRole('button', { name: ButtonsI18nKey.Delete })).not.toBeInTheDocument();
+    });
+  });
+
   describe('Create button', () => {
     test('is shown on the Platform tab and opens the platform create popup with the platform names', async () => {
       renderList(ApplicationRoute.PlatformModels);
@@ -249,7 +342,7 @@ describe('TabbedAssetList', () => {
     });
 
     test('is hidden for a read-only admin', () => {
-      vi.mocked(useIsReadOnlyAdmin).mockReturnValue(true);
+      appContextMock.set({ isReadOnlyAdmin: true });
 
       renderList(ApplicationRoute.PlatformModels);
 

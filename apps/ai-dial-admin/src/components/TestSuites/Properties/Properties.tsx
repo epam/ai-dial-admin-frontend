@@ -9,6 +9,7 @@ import classNames from 'classnames';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import InputPopup from '@/src/components/Common/InputPopup/InputPopup';
+import { useApplicationDeploymentRoute } from '@/src/components/Runs/Summary/use-application-deployment-route';
 import { useDeploymentType } from '@/src/components/Runs/Summary/use-deployment-type';
 import { useModelDeploymentRoute } from '@/src/components/Runs/Summary/use-model-deployment-route';
 import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
@@ -41,6 +42,10 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
     isModal ? undefined : testSuite.deploymentRef?.id,
     deploymentType,
   );
+  const { applicationRoute, isLoading: isApplicationRouteLoading } = useApplicationDeploymentRoute(
+    isModal ? undefined : testSuite.deploymentRef?.id,
+    deploymentType,
+  );
 
   const isMcpSuite =
     testSuite.suiteType === SuiteType.McpTool || (!!testSuite.mcpDeploymentRef?.id && !testSuite.deploymentRef?.id);
@@ -59,8 +64,9 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
       return null;
     }
 
-    return resolveDeploymentNavigationTarget(testSuite.deploymentRef, deploymentType, [], { modelRoute });
+    return resolveDeploymentNavigationTarget(testSuite.deploymentRef, deploymentType, { modelRoute, applicationRoute });
   }, [
+    applicationRoute,
     deploymentType,
     isMcpSuite,
     isRouteSuite,
@@ -91,7 +97,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
     fromCanonicalRouteName(testSuite.routesRef?.name);
   const versionSuffix = testSuite.deploymentRef?.version ? ` (version: ${testSuite.deploymentRef.version})` : '';
   const selectedApplicationValue = `${applicationName}${versionSuffix}`;
-  const isResolvingLink = !isModal && (isTypeLoading || isModelRouteLoading);
+  const isResolvingLink = !isModal && (isTypeLoading || isModelRouteLoading || isApplicationRouteLoading);
 
   return (
     <div className="flex flex-col gap-y-8">

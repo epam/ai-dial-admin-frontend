@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Column, ColumnVisibleEvent, GridApi, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
@@ -28,11 +29,7 @@ vi.mock('@/src/app/[lang]/sessions/actions', () => ({
   getSessions: (...args: unknown[]) => getSessions(...args),
 }));
 
-const showNotificationSpy = vi.fn();
-
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: showNotificationSpy }),
-}));
+const { showNotification: showNotificationSpy } = notificationMock;
 
 let datasource: IDatasource | undefined;
 let columnState: { colId: string; hide: boolean }[] = [];

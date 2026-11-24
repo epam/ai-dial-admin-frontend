@@ -1,3 +1,4 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { ColDef } from 'ag-grid-community';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -39,10 +40,7 @@ vi.mock('@/src/app/[lang]/skills/actions', () => ({
   moveSkills: vi.fn(),
 }));
 
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification }),
-}));
+const { showNotification } = notificationMock;
 
 const refresh = vi.fn();
 const push = vi.fn();

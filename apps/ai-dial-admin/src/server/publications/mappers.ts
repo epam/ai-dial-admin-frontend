@@ -1,25 +1,29 @@
-import { ActionType, Publication } from '@/src/models/dial/publications';
+import { ActionType, Publication, PublicationStatus } from '@/src/models/dial/publications';
 import { DialRule, RuleFunction } from '@/src/models/dial/rule';
 import { ResourceType } from '@/src/types/resource-type';
 import {
-  CorePublication,
   CorePublicationResource,
   CorePublicationRule,
   CoreResourceAction,
   CoreResourceType,
+  ListedPublication,
+  SdkPublication,
 } from './models';
 import { PUBLICATIONS_PREFIX } from '@/src/constants/publications-core';
 import { decodeCorePath, stripPrefix } from './path';
 import { PublishableResourceType } from './resolver/types';
 
-const CORE_ACTION_TO_ACTION_TYPE: Record<CoreResourceAction, ActionType> = {
+type CoreAction = NonNullable<CorePublicationResource['action']>;
+
+const CORE_ACTION_TO_ACTION_TYPE: Record<CoreAction, ActionType> = {
   [CoreResourceAction.ADD]: ActionType.ADD,
   [CoreResourceAction.ADD_IF_ABSENT]: ActionType.ADD_IF_ABSENT,
   [CoreResourceAction.DELETE]: ActionType.DELETE,
 };
 
-export const coreActionToActionType = (action: CoreResourceAction): ActionType => {
-  return CORE_ACTION_TO_ACTION_TYPE[action];
+/** The SDK types a resource's `action` optional; Core always sends it, and an absent one maps to `undefined`. */
+export const coreActionToActionType = (action: CoreAction | undefined): ActionType | undefined => {
+  return action == null ? undefined : CORE_ACTION_TO_ACTION_TYPE[action];
 };
 
 const ACTION_TYPE_TO_CORE_ACTION: Record<ActionType, CoreResourceAction> = {
@@ -28,8 +32,8 @@ const ACTION_TYPE_TO_CORE_ACTION: Record<ActionType, CoreResourceAction> = {
   [ActionType.DELETE]: CoreResourceAction.DELETE,
 };
 
-export const actionTypeToCore = (action: ActionType): CoreResourceAction => {
-  return ACTION_TYPE_TO_CORE_ACTION[action];
+export const actionTypeToCore = (action: ActionType | undefined): CoreResourceAction | undefined => {
+  return action == null ? undefined : ACTION_TYPE_TO_CORE_ACTION[action];
 };
 
 export const mapRulesToCore = (rules?: DialRule[]): CorePublicationRule[] => {
@@ -75,7 +79,9 @@ export const resourceTypeToCore = (type: PublishableResourceType): CoreResourceT
   return RESOURCE_TYPE_TO_CORE_RESOURCE_TYPE[type];
 };
 
-export const resolvePublicationResourceType = (types?: CoreResourceType[]): PublishableResourceType | undefined => {
+export const resolvePublicationResourceType = (
+  types?: SdkPublication['resourceTypes'],
+): PublishableResourceType | undefined => {
   if (!types?.length) {
     return undefined;
   }
@@ -88,7 +94,10 @@ export const derivePublicationAction = (
   resources: CorePublicationResource[] | undefined,
   resourceType: ResourceType,
 ): ActionType | undefined => {
-  const actions = (resources ?? []).filter(Boolean).map((resource) => resource.action);
+  const actions = (resources ?? [])
+    .filter(Boolean)
+    .map((resource) => resource.action)
+    .filter((action): action is CoreAction => action != null);
   if (!actions.length) {
     return undefined;
   }
@@ -111,15 +120,25 @@ export const mapRules = (rules?: CorePublicationRule[]): DialRule[] | undefined 
   if (!rules) {
     return undefined;
   }
+  // The SDK types every rule field optional and `function` wider than the admin enum. Core's values pass through
+  // unchanged: an unknown `function` stays, a missing `source` / `targets` stays absent, so none is defaulted.
   return rules.map((rule) => ({
-    source: rule.source,
+    source: rule.source as string,
     function: rule.function as RuleFunction,
-    targets: rule.targets,
+    targets: rule.targets as string[],
   }));
 };
 
+/** `undefined` for a publication Core sent without a `url` or a `status`: it cannot be shown or resolved. */
+export const toListedPublication = (core: SdkPublication): ListedPublication | undefined => {
+  if (!core.url || !core.status) {
+    return undefined;
+  }
+  return { ...core, url: core.url, status: core.status as PublicationStatus };
+};
+
 /** Maps the publication-level fields shared by list items and the detail view. */
-export const mapPublicationBase = (core: CorePublication): Publication => {
+export const mapPublicationBase = (core: ListedPublication): Publication => {
   return {
     path: stripPrefix(core.url, PUBLICATIONS_PREFIX),
     requestName: core.name ?? '',

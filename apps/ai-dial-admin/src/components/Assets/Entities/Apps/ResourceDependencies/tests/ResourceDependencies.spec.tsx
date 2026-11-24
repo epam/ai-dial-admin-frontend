@@ -21,8 +21,6 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   withdrawAdminConsent: vi.fn(),
 }));
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: vi.fn(() => false) }));
-
 vi.mock('../DependenciesGrid', () => ({
   default: ({
     dependencies,
@@ -79,21 +77,19 @@ describe('ResourceDependencies', () => {
     vi.mocked(withdrawAdminConsent).mockResolvedValue({ success: true });
   });
 
-  const renderTab = (
-    saved: ResourceDependency[] | undefined,
-    props?: { selected?: ResourceDependency[]; etag?: string },
-  ) => {
-    const original = makeApplication(saved);
-    const element = (etag: string, selected = props?.selected ?? saved) => (
+  const renderTab = (saved: ResourceDependency[] | undefined, props?: { selected?: ResourceDependency[] }) => {
+    const element = (original: AssetApp, selected = props?.selected ?? saved) => (
       <ResourceDependencies
         originalApplication={original}
         selectedApplication={{ ...original, resource_dependencies: selected } as DialApplication}
-        etag={etag}
         onChangeApplication={onChangeApplication}
       />
     );
-    const view = render(element(props?.etag ?? 'etag-1'));
-    return { ...view, rerenderWithEtag: (etag: string) => view.rerender(element(etag)) };
+    const view = render(element(makeApplication(saved)));
+    return {
+      ...view,
+      rerenderWithSaved: (next: ResourceDependency[]) => view.rerender(element(makeApplication(next))),
+    };
   };
 
   const lastChange = () => onChangeApplication.mock.calls.at(-1)?.[0].resource_dependencies;
@@ -127,11 +123,11 @@ describe('ResourceDependencies', () => {
       expect(screen.getByLabelText(ResourceDependenciesI18nKey.ConsentLoading)).toBeTruthy();
     });
 
-    test('re-reads the status when the saved etag changes', async () => {
-      const { rerenderWithEtag } = renderTab([makeDependency('a')]);
+    test('re-reads the status when the saved dependencies change', async () => {
+      const { rerenderWithSaved } = renderTab([makeDependency('a')]);
       await screen.findByText(ResourceDependenciesI18nKey.NotApproved);
 
-      rerenderWithEtag('etag-2');
+      rerenderWithSaved([makeDependency('a')]);
 
       await vi.waitFor(() => expect(getAdminConsentStatus).toHaveBeenCalledTimes(2));
     });

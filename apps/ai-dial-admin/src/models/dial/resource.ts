@@ -254,6 +254,11 @@ export interface DialModelResource extends CoreDeploymentResource {
   endpoint?: string;
   responsesEndpoint?: string;
   interceptors?: string[];
+  provider?: string;
+  /** `YYYY-MM-DD`, informational; Core neither validates nor enforces it. */
+  deprecationDate?: string;
+  /** `YYYY-MM-DD`, informational; Core neither validates nor enforces it. */
+  endOfService?: string;
 }
 
 /**
@@ -543,10 +548,15 @@ export interface DialToolsetResourceAuthSettings {
   /** Read-only: Core returns the stored secret's trailing characters here and never `client_secret`. */
   client_secret_hint?: string;
   redirect_uri?: string;
+  /** Where Core reads OAuth metadata from. External services only: Core rejects it for toolsets. A blank value clears the stored one; an omitted one keeps it. */
+  discovery_url?: string;
+  /** Read-only: true when Core registered the client itself. Core ignores it on write. */
+  dynamically_registered?: boolean;
   authorization_endpoint?: string;
   code_challenge?: string;
   code_verifier?: string;
-  code_challenge_method?: ToolsetCodeChallengeMethod;
+  /** A blank value removes PKCE on update ("None"); an omitted one keeps the stored method. */
+  code_challenge_method?: ToolsetCodeChallengeMethod | '';
   token_endpoint?: string;
   token_endpoint_auth_method?: TokenEndpointAuthMethod;
   /** RFC 8707 resource indicator. A blank value tells Core to clear it; an omitted one keeps the stored value. */
@@ -557,7 +567,7 @@ export interface DialToolsetResourceAuthSettings {
 export enum TokenEndpointAuthMethod {
   CLIENT_SECRET_POST = 'client_secret_post',
   CLIENT_SECRET_BASIC = 'client_secret_basic',
-  CLIENT_SECRET_NONE = 'client_secret_none',
+  CLIENT_SECRET_NONE = 'none',
 }
 
 export enum ToolsetCodeChallengeMethod {

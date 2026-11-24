@@ -1,43 +1,31 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { MenuI18nKey, ReadOnlyI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { WelcomeViewI18nKey } from './i18n';
 import WelcomeView from './WelcomeView';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-
-const isReadOnlyAdminMock = vi.fn(() => false);
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: () => isReadOnlyAdminMock(),
-}));
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { navigationMock } from '@/test-mocks/navigation';
 
 const adminApiEnabled = { value: true };
 const fullAdmin = { value: true };
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: () => ({
+beforeEach(() => {
+  appContextMock.use(() => ({
     featureFlags: { adminApiEnabled: adminApiEnabled.value },
     isFullAdmin: fullAdmin.value,
-  }),
-}));
-
-const router: ApplicationRoute[] = [];
-vi.mock('next/navigation', () => ({
-  useRouter: () => router,
-  usePathname: vi.fn(),
-}));
+  }));
+});
 
 describe('WelcomeView', () => {
-  beforeAll(() => {
-    global.window.open = vi.fn();
-  });
-
   beforeEach(() => {
-    isReadOnlyAdminMock.mockReturnValue(false);
+    vi.stubGlobal('open', vi.fn());
+    appContextMock.set({ isReadOnlyAdmin: false });
     adminApiEnabled.value = true;
     fullAdmin.value = true;
   });
 
   test('renders read-only banner for read-only admin', () => {
-    isReadOnlyAdminMock.mockReturnValue(true);
+    appContextMock.set({ isReadOnlyAdmin: true });
     fullAdmin.value = false;
     render(<WelcomeView disableMenuItems={[]} dialLink="link" docLink="link" />);
 
@@ -76,8 +64,9 @@ describe('WelcomeView', () => {
     fireEvent.click(importBtn);
     fireEvent.click(exportBtn);
 
-    expect(global.window.open).toHaveBeenCalledWith('link', '_blank');
-    expect(router).toEqual([ApplicationRoute.ImportConfig, ApplicationRoute.ExportConfig]);
+    expect(window.open).toHaveBeenCalledWith('link', '_blank');
+    expect(navigationMock.router.push).toHaveBeenNthCalledWith(1, ApplicationRoute.ImportConfig);
+    expect(navigationMock.router.push).toHaveBeenNthCalledWith(2, ApplicationRoute.ExportConfig);
     expect(screen.getByText(WelcomeViewI18nKey.QuickActions)).toBeInTheDocument();
   });
 });

@@ -3,6 +3,9 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
+  DialItemType,
+  DIAL_ICON_SIZE,
+  FileIcon,
   ButtonDropdown,
   ButtonVariant,
   GhostButton,
@@ -10,34 +13,35 @@ import {
   NoDataContent,
   PrimaryButton,
   SegmentedControl,
-  Badge,
-  BadgeColor,
-  BadgeVariant,
   Button,
 } from '@epam/ai-dial-ui-kit';
 import type { DropdownItem, SegmentedControlItem } from '@epam/ai-dial-ui-kit';
-import { IconCopy, IconPencilMinus, IconPlayerPlay, IconTable, IconTrashX } from '@tabler/icons-react';
+import { IconCopy, IconPencilMinus, IconPlayerPlay } from '@tabler/icons-react';
 import classNames from 'classnames';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import { getEntitySchema, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/queries/actions';
 import { useAnalyticsQuery } from '@/src/components/Analytics/Common/use-analytics-query';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import AiPanel from '@/src/components/Analytics/QueryBuilder/Ai/AiPanel';
 import AiSidePanel from '@/src/components/Analytics/QueryBuilder/Ai/AiSidePanel';
 import { useAiConversation } from '@/src/components/Analytics/QueryBuilder/Ai/use-ai-conversation';
+import { ProposedQueryStatus } from '@/src/components/Analytics/QueryBuilder/Ai/models';
 import AddToDashboardButton from '@/src/components/Analytics/CustomDashboards/AddToDashboard/AddToDashboardButton';
 import ChipBar from '@/src/components/Analytics/QueryBuilder/Chips/ChipBar';
 import { PeriodControl } from '@/src/components/Analytics/QueryBuilder/Chips/models';
 import BuilderArea from '@/src/components/Analytics/QueryBuilder/Layout/BuilderArea';
 import QueryHeader from '@/src/components/Analytics/QueryBuilder/Layout/QueryHeader';
+import ScopeBadge from '@/src/components/Analytics/QueryBuilder/Common/ScopeBadge';
 import SourceProblemIcon from '@/src/components/Analytics/QueryBuilder/Layout/SourceProblemIcon';
 import DeleteQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DeleteQueryPopup';
-import DiscardQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DiscardQueryPopup';
+import SwitchToBuilderPopup from '@/src/components/Analytics/QueryBuilder/Modals/SwitchToBuilderPopup';
 import ResetQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/ResetQueryPopup';
 import {
   useSourcePanelUnsavedWork,
   useSourceTableDescription,
 } from '@/src/components/Analytics/QueryBuilder/SourcePanel/context';
+import { ScorecardTrendSource } from '@/src/components/Analytics/QueryBuilder/Result/models';
 import ResultArea from '@/src/components/Analytics/QueryBuilder/Result/ResultArea';
 import SqlEditor from '@/src/components/Analytics/QueryBuilder/Sql/SqlEditor';
 import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
@@ -58,7 +62,6 @@ import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-for
 import { createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { SAVED_QUERY_SCOPE_I18N } from '@/src/constants/analytics/queries';
 import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
 import { ButtonsI18nKey, QueriesI18nKey, QueryBuilderI18nKey, QueryChipsI18nKey } from '@/src/constants/i18n';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -70,7 +73,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryFunction } from '@/src/models/analytics/query-function';
-import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query';
+import { SavedQuery } from '@/src/models/analytics/saved-query';
 import { StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import {
   ChartConfig,
@@ -105,12 +108,6 @@ interface Props {
 }
 
 const AI_PANEL_STORAGE_KEY = 'query-builder-ai-panel-open';
-
-const SCOPE_BADGE_COLOR: Record<SavedQueryScope, BadgeColor> = {
-  [SavedQueryScope.Personal]: BadgeColor.Violet,
-  [SavedQueryScope.Common]: BadgeColor.Green,
-};
-
 const COPY_HEADER_I18N: Record<QueryCopyMode, QueriesI18nKey> = {
   [QueryCopyMode.SaveDraft]: QueriesI18nKey.SaveAsQuery,
   [QueryCopyMode.Duplicate]: QueriesI18nKey.DuplicateQuery,
@@ -179,6 +176,7 @@ const QueryBuilder: FC<Props> = ({
   const [aiLoading, setAiLoading] = useState(false);
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
   const [aiLoadedMessageIndex, setAiLoadedMessageIndex] = useState<number | null>(null);
+  const [aiMessageStatuses, setAiMessageStatuses] = useState<Record<number, ProposedQueryStatus>>({});
   const aiConversation = useAiConversation();
   const timeFilter = useTimeFilter();
 
@@ -190,7 +188,7 @@ const QueryBuilder: FC<Props> = ({
       isChartConfigKept.current = false;
       return;
     }
-    setChartConfig(DEFAULT_CHART_CONFIG);
+    setChartConfig((current) => ({ ...DEFAULT_CHART_CONFIG, legend: current.legend ?? DEFAULT_CHART_CONFIG.legend }));
   }, [result]);
 
   useEffect(() => {
@@ -216,6 +214,16 @@ const QueryBuilder: FC<Props> = ({
   const shownSourceProblem = fieldsLoaded ? null : sourceProblem;
   const timestampField = useMemo(() => findTimestampField(state.fields), [state.fields]);
   const { getCurrentTimeRange } = timeFilter;
+  const scorecardTrend = useMemo<ScorecardTrendSource>(
+    () => ({
+      query: lastRequest?.kind === QueryRequestKind.Structured ? lastRequest.query : null,
+      timeField: timestampField ?? null,
+      range: getCurrentTimeRange(),
+    }),
+    // The range is captured when a run lands, so the trend matches the shown number until the next run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [lastRequest, timestampField],
+  );
   const boundPeriod = timeFilter.isCustom ? undefined : timeFilter.timePeriod;
   const timeBoundOf = useCallback(
     (range: TimeRange, period?: string): QueryTimeBound | null =>
@@ -267,6 +275,19 @@ const QueryBuilder: FC<Props> = ({
   ];
 
   const sqlEdited = !!sqlText.trim() && sqlText !== lastGeneratedSql.current;
+  const queryFingerprint = useMemo(
+    () =>
+      sqlEdited
+        ? `sql:${sqlText}`
+        : JSON.stringify({ query: buildQuery(state), period: boundPeriod ?? getCurrentTimeRange() }),
+    [sqlEdited, sqlText, state, boundPeriod, getCurrentTimeRange],
+  );
+  const [ranFingerprint, setRanFingerprint] = useState<string | null>(null);
+  useEffect(() => {
+    setRanFingerprint(result ? queryFingerprint : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result]);
+  const isQueryChanged = !!result && ranFingerprint !== null && ranFingerprint !== queryFingerprint;
 
   const resolveFieldsForEntity = async (entityName: string): Promise<AnalyticsEntityField[]> => {
     if (!entityName || entityName === state.entityName) return state.fields;
@@ -379,6 +400,9 @@ const QueryBuilder: FC<Props> = ({
     if (sqlError) setSqlError(null);
   };
 
+  const onDismissAiMessage = (index: number) =>
+    setAiMessageStatuses((statuses) => ({ ...statuses, [index]: ProposedQueryStatus.Dismissed }));
+
   // Clicking a chat message's Run both loads the query (translate → hydrate, or fall back to raw SQL —
   // same path the old generate-time auto-load used) and immediately executes it. Building the request
   // from `hydrateBuilderFromQuery`'s return value (not the `state` closure) picks up both the hydrated
@@ -430,6 +454,7 @@ const QueryBuilder: FC<Props> = ({
       setResult(response);
       setResultMeta(buildExecutedMeta(request, response, runFields, runEntityName, translated));
       setLastRequest(request);
+      setAiMessageStatuses((statuses) => ({ ...statuses, [index]: ProposedQueryStatus.Applied }));
     } else {
       showNotification(getErrorNotification(t(QueryBuilderI18nKey.RunFailed), runRes.error, runRes.requestId));
     }
@@ -559,12 +584,7 @@ const QueryBuilder: FC<Props> = ({
   const renderSavedActions = () => (
     <>
       {savedQueryPage.isWritable && (
-        <GhostButton
-          className="text-error"
-          label={t(ButtonsI18nKey.Delete)}
-          iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-          onClick={savedQueryPage.onOpenDelete}
-        />
+        <RemoveButton label={t(ButtonsI18nKey.Delete)} onClick={savedQueryPage.onOpenDelete} />
       )}
       {savedQueryPage.isWritable && (
         <GhostButton
@@ -631,7 +651,7 @@ const QueryBuilder: FC<Props> = ({
     return (
       <div className="flex h-full min-h-0 flex-col gap-2">
         {sqlError && <span className="text-error dial-tiny-text">{sqlError}</span>}
-        <div className="min-h-0 flex-1 overflow-hidden rounded border border-primary">
+        <div className="min-h-0 flex-1 overflow-hidden">
           {sqlLoading ? (
             <div className="flex h-full items-center justify-center">
               <Spinner size={32} fullWidth />
@@ -644,6 +664,10 @@ const QueryBuilder: FC<Props> = ({
     );
   };
 
+  const sourceName = savedQueryPage.savedQuery
+    ? state.entityName || savedQueryPrimarySource(savedQueryPage.savedQuery)
+    : '';
+
   const isAddToDashboardShown =
     featureFlags.analyticsCustomDashboardsEnabled && !!savedQueryPage.savedQuery && !savedQueryPage.isDirty;
 
@@ -653,20 +677,18 @@ const QueryBuilder: FC<Props> = ({
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 pr-4">
           <QueryHeader
             title={name ?? t(QueriesI18nKey.Title)}
-            badge={
-              savedQueryPage.savedQuery && (
-                <Badge
-                  variant={BadgeVariant.Filled}
-                  color={SCOPE_BADGE_COLOR[savedQueryPage.savedQuery.scope]}
-                  label={t(SAVED_QUERY_SCOPE_I18N[savedQueryPage.savedQuery.scope])}
-                />
-              )
-            }
+            badge={savedQueryPage.savedQuery && <ScopeBadge scope={savedQueryPage.savedQuery.scope} />}
             subtitle={
               savedQueryPage.savedQuery && (
                 <span className="flex items-center gap-2 text-secondary dial-small-text">
-                  <IconTable size={16} className="shrink-0 text-success" aria-hidden />
-                  {state.entityName || savedQueryPrimarySource(savedQueryPage.savedQuery)}
+                  <FileIcon
+                    type={DialItemType.File}
+                    name={sourceName}
+                    fileExtension="csv"
+                    size={DIAL_ICON_SIZE.SM}
+                    decorative
+                  />
+                  {sourceName}
                   {shownSourceProblem && <SourceProblemIcon problem={shownSourceProblem} />}
                 </span>
               )
@@ -715,12 +737,14 @@ const QueryBuilder: FC<Props> = ({
                 result={result}
                 meta={resultMeta}
                 isRunning={isRunning}
+                isQueryChanged={isQueryChanged}
                 view={resultView}
                 onChangeView={setResultView}
                 chartConfig={chartConfig}
                 onChangeChartConfig={setChartConfig}
                 isExporting={isExporting}
                 onExportCsv={onExportCsv}
+                trendSource={scorecardTrend}
                 actions={
                   isAddToDashboardShown &&
                   savedQueryPage.savedQuery && <AddToDashboardButton savedQuery={savedQueryPage.savedQuery} />
@@ -735,6 +759,8 @@ const QueryBuilder: FC<Props> = ({
               conversation={aiConversation}
               onRunMessage={onRunAiMessage}
               loadedMessageIndex={aiLoadedMessageIndex}
+              messageStatuses={aiMessageStatuses}
+              onDismissMessage={onDismissAiMessage}
               runInFlight={aiLoading || isRunning}
             />
           </AiSidePanel>
@@ -778,7 +804,9 @@ const QueryBuilder: FC<Props> = ({
 
       {isResetOpen && <ResetQueryPopup onConfirm={onConfirmReset} onCancel={() => setIsResetOpen(false)} />}
 
-      {pendingView !== null && <DiscardQueryPopup onConfirm={onConfirmDiscard} onCancel={() => setPendingView(null)} />}
+      {pendingView !== null && (
+        <SwitchToBuilderPopup onConfirm={onConfirmDiscard} onCancel={() => setPendingView(null)} />
+      )}
     </QueryBuilderContext.Provider>
   );
 };

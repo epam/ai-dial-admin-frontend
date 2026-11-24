@@ -2,15 +2,12 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { DialRouterResource } from '@/src/models/dial/resource';
 import { RouterMode } from '@/src/models/dial/router';
 import RouterAssetProperties from '../Properties';
-
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
 
 vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
@@ -90,6 +87,38 @@ describe('Router asset Properties', () => {
     renderProperties({ baseUrl: 'http://localhost:4848' });
 
     expect(screen.getByDisplayValue('http://localhost:4848')).toBeInTheDocument();
+  });
+
+  test('offers plugin options for the router and interface base URLs and reports partial reads', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const asset = {
+      ...baseAsset,
+      baseUrl: 'dial-plugin://first/v2',
+      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'dial-plugin://other' } },
+    };
+    render(
+      <RouterAssetProperties
+        asset={asset}
+        onChange={onChange}
+        plugins={{ options: ['first', 'other'], error: EntitiesI18nKey.OptionListPartial }}
+      />,
+    );
+
+    const selects = screen.getAllByRole('combobox', { name: BasicI18nKey.Plugin });
+    expect(selects).toHaveLength(2);
+    expect(
+      screen
+        .getAllByRole('status', { name: '' })
+        .filter((status) => status.textContent === EntitiesI18nKey.OptionListPartial),
+    ).toHaveLength(2);
+    await user.selectOptions(selects[0], 'dial-plugin://other');
+    expect(onChange).toHaveBeenLastCalledWith({ ...asset, baseUrl: 'dial-plugin://other' });
+    await user.selectOptions(selects[1], 'dial-plugin://first');
+    expect(onChange).toHaveBeenLastCalledWith({
+      ...asset,
+      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'dial-plugin://first' } },
+    });
   });
 
   describe('Editor URL', () => {

@@ -1,3 +1,5 @@
+import { appContextMock } from '@/test-mocks/app-context';
+import { notificationMock } from '@/test-mocks/notification';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -11,18 +13,11 @@ import { SavedQuery, SavedQueryRequest, SavedQueryScope, SavedQueryTimeMode } fr
 
 vi.mock('@/src/app/[lang]/queries/actions');
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
-}));
+const { showNotification: mockShowNotification } = notificationMock;
 
-const mockShowNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: mockShowNotification, removeNotification: vi.fn() }),
-}));
-
-vi.mock('@/src/context/AppContext', () => ({
-  useAppContext: vi.fn(() => ({ isFullAdmin: false })),
-}));
+beforeEach(() => {
+  appContextMock.use(() => ({ isFullAdmin: false }));
+});
 
 const setFullAdmin = (isFullAdmin: boolean) => vi.mocked(useAppContext).mockReturnValue({ isFullAdmin } as never);
 

@@ -1,12 +1,10 @@
+import { notificationMock } from '@/test-mocks/notification';
 import { renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 // Override the global NotificationContext mock, whose showNotification is a fresh spy per call and so
 // cannot be asserted against.
-const showNotification = vi.fn();
-vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification, removeNotification: vi.fn() }),
-}));
+const { showNotification } = notificationMock;
 
 vi.mock('@/src/utils/download', () => ({
   downloadFile: vi.fn(),

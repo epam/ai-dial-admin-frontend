@@ -5,10 +5,6 @@ import { RolesI18nKey } from '@/src/constants/i18n';
 import { DialRoleResource } from '@/src/models/dial/resource';
 import RoleAssetProperties from '../Properties';
 
-vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
-  useIsReadOnlyAdmin: vi.fn(() => false),
-}));
-
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: () => <section aria-label="role-sharing" />,
 }));

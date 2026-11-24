@@ -2,13 +2,12 @@
 
 import { FC } from 'react';
 
-import { GhostButton, GhostIconButton, Label } from '@epam/ai-dial-ui-kit';
-import { IconTrashX } from '@tabler/icons-react';
+import { GhostButton, Label } from '@epam/ai-dial-ui-kit';
 
+import RemoveButton from '@/src/components/Common/RemoveButton/RemoveButton';
 import EnrichmentRouteFields from '@/src/components/Analytics/Common/EnrichmentRouteFields';
 import { useEnrichmentRouteSuggestions } from '@/src/components/Analytics/Common/use-enrichment-route-suggestions';
 import { AnalyticsPipelinesI18nKey, SystemPropertiesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { isRouteListFull } from '@/src/utils/analytics/enrichment-routes';
@@ -64,9 +63,8 @@ const EnrichmentRoutes: FC<Props> = ({ routes }) => {
                 className="min-w-0 flex-1"
                 onChange={(patch) => onChangeRow(row.id, patch)}
               />
-              <GhostIconButton
+              <RemoveButton
                 className="shrink-0"
-                icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" aria-hidden />}
                 aria-label={`${t(SystemPropertiesI18nKey.EnrichmentRoutesRemove)}${position}`}
                 disabled={isDisabled}
                 onClick={() => onRemoveRow(row.id)}

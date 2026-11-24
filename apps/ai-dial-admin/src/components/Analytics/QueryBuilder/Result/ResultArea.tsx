@@ -6,13 +6,16 @@ import { ColDef, GetRowIdParams } from 'ag-grid-community';
 import { Spinner, NoDataContent, SegmentedControl, GhostButton } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlItem } from '@epam/ai-dial-ui-kit';
 import { IconChartBar, IconDownload, IconTable } from '@tabler/icons-react';
+import classNames from 'classnames';
 
+import ReadyToRunIllustration from '@/public/images/query-ready-to-run.svg';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { ResultGridRow } from '@/src/components/Analytics/QueryBuilder/Result/models';
+import { ResultGridRow, ScorecardTrendSource } from '@/src/components/Analytics/QueryBuilder/Result/models';
 import ResultChart from '@/src/components/Analytics/QueryBuilder/Result/ResultChart';
 import { getValueClassColumn } from '@/src/components/Analytics/QueryBuilder/Result/result-column-format';
 import ResultValueCell from '@/src/components/Analytics/QueryBuilder/Result/ResultValueCell';
 import { useRowsRestricted } from '@/src/components/Analytics/QueryBuilder/Result/use-rows-restricted';
+import { getScorecardColumns } from '@/src/components/Analytics/QueryBuilder/utils/chart-types';
 import { getResultColumns, getResultTotal } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { EXPORT_ROW_LIMIT } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey, QueryChipsI18nKey } from '@/src/constants/i18n';
@@ -30,6 +33,7 @@ interface Props {
   result: StructuredQueryResult | null;
   meta: ExecutedQueryMeta | null;
   isRunning: boolean;
+  isQueryChanged?: boolean;
   // Controlled by the orchestrator: both are members of a saved query's payload, so they have to be
   // readable at save time and restorable when a stored query opens.
   view: QueryResultView;
@@ -39,6 +43,7 @@ interface Props {
   isExporting?: boolean;
   onExportCsv?: () => void;
   actions?: ReactNode;
+  trendSource?: ScorecardTrendSource;
 }
 
 const getRowId = ({ data }: GetRowIdParams<ResultGridRow>): string => String(data.index);
@@ -47,6 +52,7 @@ const ResultArea: FC<Props> = ({
   result,
   meta,
   isRunning,
+  isQueryChanged = false,
   view,
   onChangeView,
   chartConfig,
@@ -54,6 +60,7 @@ const ResultArea: FC<Props> = ({
   isExporting = false,
   onExportCsv,
   actions,
+  trendSource,
 }) => {
   const t = useI18n();
   const exportHintId = useId();
@@ -74,11 +81,14 @@ const ResultArea: FC<Props> = ({
   const isRowsRestricted = useRowsRestricted(meta?.source, !!result && !rows.length && !isRunning);
 
   const chartAvailable =
-    !!meta && rows.length > 0 && meta.dimensionColumns.length > 0 && meta.aggregateColumns.length > 0;
+    !!meta &&
+    rows.length > 0 &&
+    ((meta.dimensionColumns.length > 0 && meta.aggregateColumns.length > 0) ||
+      getScorecardColumns(rows, meta).length > 0);
 
   const chartUnavailableKey = (): QueryBuilderI18nKey => {
     if (!rows.length) return QueryBuilderI18nKey.ChartNoRows;
-    if (!meta?.dimensionColumns.length) return QueryBuilderI18nKey.ChartNoDimension;
+    if (!meta?.dimensionColumns.length && !meta?.aggregateColumns.length) return QueryBuilderI18nKey.ChartNoDimension;
     return QueryBuilderI18nKey.ChartNoValueColumn;
   };
 
@@ -120,7 +130,7 @@ const ResultArea: FC<Props> = ({
         />
         {hasResult && (
           <span role="status" className="text-secondary dial-small-text">
-            {resultCount}
+            {isQueryChanged ? t(QueryBuilderI18nKey.ResultsQueryChanged) : resultCount}
           </span>
         )}
         <div className="ml-auto flex items-center gap-3">
@@ -153,21 +163,38 @@ const ResultArea: FC<Props> = ({
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div
+        className={classNames(
+          'flex min-h-0 flex-1 flex-col transition-opacity',
+          isQueryChanged && !isRunning && 'opacity-60',
+        )}
+      >
         {isRunning ? (
           <Spinner size={40} fullWidth />
         ) : !hasResult ? (
-          <NoDataContent title={t(QueryBuilderI18nKey.ResultsEmptyDescription)} />
+          <NoDataContent
+            icon={<ReadyToRunIllustration />}
+            title={t(QueryBuilderI18nKey.ResultsReadyTitle)}
+            description={t(QueryBuilderI18nKey.ResultsReadyDescription)}
+          />
         ) : isChartView ? (
           chartAvailable && meta ? (
-            <ResultChart result={result} meta={meta} config={chartConfig} onChangeConfig={onChangeChartConfig} />
+            <ResultChart
+              result={result}
+              meta={meta}
+              config={chartConfig}
+              onChangeConfig={onChangeChartConfig}
+              trendSource={trendSource}
+            />
           ) : (
             <NoDataContent title={t(chartUnavailableKey())} />
           )
         ) : !rows.length ? (
           <NoDataContent
             title={t(QueryBuilderI18nKey.NoRows)}
-            description={isRowsRestricted ? t(QueryBuilderI18nKey.NoRowsForAccess) : undefined}
+            description={t(
+              isRowsRestricted ? QueryBuilderI18nKey.NoRowsForAccess : QueryBuilderI18nKey.NoRowsDescription,
+            )}
           />
         ) : (
           <div className="min-h-0 flex-1">

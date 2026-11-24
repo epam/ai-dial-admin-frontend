@@ -35,6 +35,20 @@ const BANNED = {
   'a timeout on waitForElementToBeRemoved': 'await waitForElementToBeRemoved(el, { timeout: 5000 });',
   'a real sleep': 'await new Promise((resolve) => setTimeout(resolve, 50));',
   'a bare setTimeout': 'setTimeout(() => done(), 10);',
+  'an assignment to a global': 'global.fetch = vi.fn();',
+  'an assignment to a nested global': 'global.URL.createObjectURL = vi.fn();',
+  'an assignment to a window property': 'window.innerWidth = 800;',
+  'an Object.assign onto navigator': 'Object.assign(navigator, { clipboard: { writeText } });',
+  'a write to process.env': "process.env.APP_NAME = 'DIAL';",
+  'a delete from process.env': 'delete process.env.APP_NAME;',
+  'a computed delete from process.env': 'delete process.env[key];',
+  'a second mock of next/navigation': "vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));",
+  'a second mock of SaveValidationContext': "vi.mock('@/src/context/SaveValidationContext');",
+  'a second mock of AppContext': "vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => ({}) }));",
+  'a second mock of NotificationContext':
+    "vi.mock('@/src/context/NotificationContext', () => ({ useNotification: () => ({ showNotification }) }));",
+  'a mock of the read-only admin hook':
+    "vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => true }));",
 };
 
 const ALLOWED = {
@@ -49,6 +63,16 @@ const ALLOWED = {
   'a click before waitFor': 'await user.click(button);\nawait waitFor(() => expect(button).toBeEnabled());',
   'advancing fake timers': 'await vi.advanceTimersByTimeAsync(150);',
   'a microtask flush': 'await act(async () => {});',
+  'a stubbed global': "vi.stubGlobal('fetch', vi.fn());",
+  'a stubbed env variable': "vi.stubEnv('APP_NAME', 'DIAL');",
+  'a spy on a global method': "vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:x');",
+  'DOM set-up through document.body': 'document.body.innerHTML = \'<div role="tree"></div>\';',
+  'a configurable property on navigator':
+    "Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });",
+  'a mock of an uncontrolled module': "vi.mock('@/src/app/[lang]/pipelines/actions');",
+  'unmocking a controlled module': "vi.unmock('@/src/context/SaveValidationContext');",
+  'steering a controller': 'appContextMock.set({ isReadOnlyAdmin: true });',
+  'reading process.env': "const name = process.env.APP_NAME ?? 'DIAL';",
 };
 
 for (const [name, source] of Object.entries(BANNED)) {

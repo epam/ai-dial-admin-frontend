@@ -9,6 +9,12 @@ import {
   toStoredDeploymentId,
 } from '@/src/components/EvalTrendsTab/build-suites-for-deployment-query';
 import {
+  chunkSuiteIds,
+  combineSuitePassRateSummaries,
+  EMPTY_SUITE_PASS_RATE_SUMMARY,
+  SuitePassRateSummary,
+} from '@/src/components/EvalTrendsTab/suite-pass-rate';
+import {
   loadSuiteRecentRunAverages,
   SuiteRecentRunAverage,
 } from '@/src/components/EvalTrendsTab/suite-recent-run-averages';
@@ -21,13 +27,30 @@ import { DialRouteResource } from '@/src/models/dial/resource';
 import { DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Metric } from '@/src/models/evaluation/metric';
-import { DeploymentPeriodCosts, EMPTY_DEPLOYMENT_COSTS, RunTestSuiteParams } from '@/src/models/evaluation/run';
+import {
+  DeploymentPeriodCosts,
+  EMPTY_DEPLOYMENT_COSTS,
+  RunTestSuiteParams,
+  SuitePassRateResponse,
+} from '@/src/models/evaluation/run';
 import { TestSuite, TryOutVariablesByRequest } from '@/src/models/evaluation/test-suite';
 import { FilterDto, SortDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+
+const mapSuitePassRateResponse = (response: SuitePassRateResponse | null): SuitePassRateSummary => {
+  if (!response) {
+    return { ...EMPTY_SUITE_PASS_RATE_SUMMARY };
+  }
+  return {
+    passRate: response.passRate ?? null,
+    previousPassRate: response.previousPassRate ?? null,
+    suiteCount: response.suiteCount,
+    previousSuiteCount: response.previousSuiteCount,
+  };
+};
 
 export async function removeTestSuite(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -121,6 +144,30 @@ export async function getDeploymentPeriodCosts(
 export async function getSuiteRecentRunAverages(suiteIds: string[]): Promise<SuiteRecentRunAverage[]> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return loadSuiteRecentRunAverages(suiteIds, (query) => structuredQueryApi.execute(query, token));
+}
+
+/**
+ * Mean latest-run and previous-run pass rates across the given suite ids.
+ * Batches at 100 ids and combines with a suite-weighted mean. An empty list skips the API.
+ * A null batch response fails the whole call so the card never shows a partial average.
+ */
+export async function getSuitePassRate(suiteIds: string[]): Promise<SuitePassRateSummary> {
+  const batches = chunkSuiteIds(suiteIds);
+  if (batches.length === 0) {
+    return { ...EMPTY_SUITE_PASS_RATE_SUMMARY };
+  }
+
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const summaries = await Promise.all(
+    batches.map(async (batch) => {
+      const response = await runsApi.getSuitePassRate({ suiteIds: batch }, token);
+      if (!response) {
+        throw new Error('Suite pass-rate request failed');
+      }
+      return mapSuitePassRateResponse(response);
+    }),
+  );
+  return combineSuitePassRateSummaries(summaries);
 }
 
 export async function getTestSuiteByName(name: string) {

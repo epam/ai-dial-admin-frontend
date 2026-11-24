@@ -3,7 +3,7 @@ import { FILES_PREFIX, PUBLICATIONS_PREFIX } from '@/src/constants/publications-
 import { Publication, PublicationFile } from '@/src/models/dial/publications';
 import { ResourceType } from '@/src/types/resource-type';
 import { actionTypeToCore, mapRulesToCore, resourceTypeToCore } from './mappers';
-import { CorePublicationResource, CorePublicationUpdateDto, CoreResourceType } from './models';
+import { CorePublicationResource, CoreResourceType, SdkPublication } from './models';
 import { buildEncodedPath, encodeCorePath, encodeFolderPath, ensureTrailingSlash, replaceVersionedName } from './path';
 import { PUBLICATION_TYPE_REGISTRY } from './resolver/registry';
 import { PublishableResourceType } from './resolver/types';
@@ -23,7 +23,7 @@ interface ResourceWrapper {
   [key: string]: unknown;
 }
 
-type FileResource = Pick<ResourceWrapper, 'action' | 'sourceUrl' | 'file'>;
+type FileResource = Pick<ResourceWrapper, 'sourceUrl' | 'file'> & Partial<Pick<ResourceWrapper, 'action'>>;
 
 export interface ResourcePut {
   asset: object;
@@ -31,7 +31,7 @@ export interface ResourcePut {
 }
 
 export interface UpdatePlan {
-  dto: CorePublicationUpdateDto;
+  dto: SdkPublication & { resources: CorePublicationResource[] };
   resourcePuts: ResourcePut[];
 }
 
@@ -140,7 +140,7 @@ export const buildUpdatePlan = (publication: UpdatablePublication): UpdatePlan =
     resourceTypes.push(CoreResourceType.FILE);
   }
 
-  const dto: CorePublicationUpdateDto = {
+  const dto: UpdatePlan['dto'] = {
     url: PUBLICATIONS_PREFIX + publication.path,
     name: publication.requestName,
     targetFolder: encodeFolderPath(folderId),

@@ -24,6 +24,10 @@ interface Props {
   isSelected: boolean;
   disabled?: boolean;
   withLoginVisible?: boolean;
+  isDiscoveryUrlSupported?: boolean;
+  isDiscoveryUrlLocked?: boolean;
+  isDynamicRegistrationOffered?: boolean;
+  redirectUri?: string;
   onClick?: (type: ToolsetAuthType) => void;
   authSettings?: DialToolsetResourceAuthSettings;
   onChange?: (authSettings: DialToolsetResourceAuthSettings) => void;
@@ -38,6 +42,10 @@ const ResourceAuthTypeSection: FC<Props> = ({
   authSettings,
   onChange,
   withLoginVisible = true,
+  isDiscoveryUrlSupported,
+  isDiscoveryUrlLocked,
+  isDynamicRegistrationOffered,
+  redirectUri,
   ...props
 }) => {
   const t = useI18n();
@@ -118,7 +126,15 @@ const ResourceAuthTypeSection: FC<Props> = ({
           )}
 
           {selectedAuthType === AuthType.With_config_and_login && config.id === ToolsetAuthType.OAUTH && (
-            <ResourceOAuthSection disabled={disabled} authSettings={authSettings} onChange={onChange} />
+            <ResourceOAuthSection
+              disabled={disabled}
+              authSettings={authSettings}
+              isDiscoveryUrlSupported={isDiscoveryUrlSupported}
+              isDiscoveryUrlLocked={isDiscoveryUrlLocked}
+              isDynamicRegistrationOffered={isDynamicRegistrationOffered}
+              redirectUri={redirectUri}
+              onChange={onChange}
+            />
           )}
         </div>
       )}

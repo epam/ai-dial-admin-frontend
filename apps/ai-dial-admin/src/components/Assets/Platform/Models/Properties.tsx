@@ -1,8 +1,10 @@
+import { Input } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
 import CatalogSchemaField from '@/src/components/CatalogProperties/CatalogSchemaField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
+import BaseUrlControl from '@/src/components/BaseControls/BaseUrlControl/BaseUrlControl';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import IconControl from '@/src/components/BaseControls/Icon';
@@ -26,23 +28,29 @@ import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoi
 import { CATALOG_SCHEMA_PICKER_ENTITY_TYPE } from '@/src/constants/catalog-schemas';
 import { MODEL_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialModelResource, DialModelResourceType } from '@/src/models/dial/resource';
 import type { CatalogSchemaOptions } from '@/src/server/catalog-schemas/read-options';
+import type { PluginOptions } from '@/src/server/config-entities/read-plugin-options';
 import type { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModelDeploymentId } from '@/src/utils/models/deployment-id';
 import { supportsResponsesInterface } from '@/src/utils/models/responses-interface';
+import LifecycleDateField from './LifecycleDateField';
 
 interface Props {
   asset: DialModelResource;
   translators?: ResourceInfo[];
+  plugins?: PluginOptions;
   catalogSchemas?: CatalogSchemaOptions;
   onChange: (asset: DialModelResource) => void;
 }
 
-const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, onChange }) => {
+const ModelAssetProperties: FC<Props> = ({ asset, translators, plugins, catalogSchemas, onChange }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const showResponsesDefaults = supportsResponsesInterface(asset);
 
   return (
@@ -81,6 +89,29 @@ const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, o
         />
         <DescriptionControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
         <IntroControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
+        <Input
+          containerClassName={STANDARD_CONTROL_WIDTH}
+          id="provider"
+          labelProps={{ label: t(EntityFieldsI18nKey.provider) }}
+          placeholder={t(EntityPlaceholdersI18nKey.Provider)}
+          value={asset.provider}
+          onChange={(provider?: string) => onChange({ ...asset, provider: provider || undefined })}
+          disabled={isReadOnlyAdmin}
+        />
+        <div className="flex flex-wrap gap-x-6 gap-y-8">
+          <LifecycleDateField
+            id="deprecationDate"
+            label={t(EntityFieldsI18nKey.deprecationDate)}
+            value={asset.deprecationDate}
+            onChange={(deprecationDate) => onChange({ ...asset, deprecationDate })}
+          />
+          <LifecycleDateField
+            id="endOfService"
+            label={t(EntityFieldsI18nKey.endOfService)}
+            value={asset.endOfService}
+            onChange={(endOfService) => onChange({ ...asset, endOfService })}
+          />
+        </div>
 
         <ModelTypeControl
           entity={asset}
@@ -89,12 +120,15 @@ const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, o
         />
         <OverrideNameControl entity={asset} onChangeEntity={onChange} />
 
-        <EndpointControl
+        <BaseUrlControl
+          containerClassName={STANDARD_CONTROL_WIDTH}
           id="base_url"
           label={t(EntityFieldsI18nKey.baseUrl)}
           placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-          endpoint={asset.baseUrl}
+          value={asset.baseUrl}
           onChange={(baseUrl) => onChange({ ...asset, baseUrl })}
+          plugins={plugins?.options}
+          optionsError={plugins?.error}
         />
 
         <InterfacesField
@@ -102,6 +136,8 @@ const ModelAssetProperties: FC<Props> = ({ asset, translators, catalogSchemas, o
           onChangeInterfaces={(interfaces) => onChange({ ...asset, interfaces })}
           allowedTypes={MODEL_INTERFACE_TYPES}
           translators={translators}
+          plugins={plugins}
+          isPluginEnabled
           entityBaseUrl={asset.baseUrl}
           view={ApplicationRoute.PlatformModels}
           isAsset

@@ -73,7 +73,7 @@ const PluginCreateProperties: FC<Props> = ({ entity, names, isUniqueNameError, o
       <Input
         id="plugin-type"
         labelProps={{ label: t(PluginI18nKey.Type), required: true }}
-        placeholder={t(PluginI18nKey.TypePlaceholder)}
+        placeholder={t(isModal ? EntityPlaceholdersI18nKey.Type : PluginI18nKey.TypePlaceholder)}
         value={entity.type ?? ''}
         error={isTypeInvalid && entity.type != null ? t(PluginI18nKey.TypeRequired) : undefined}
         invalid={isTypeInvalid && entity.type != null}

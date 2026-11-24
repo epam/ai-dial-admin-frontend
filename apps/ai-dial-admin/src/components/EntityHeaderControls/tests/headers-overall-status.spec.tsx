@@ -1,3 +1,4 @@
+import { appContextMock } from '@/test-mocks/app-context';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -14,7 +15,9 @@ vi.mock('@/src/components/EntityHeaderControls/Tabs/HeaderTabs', () => ({ defaul
 vi.mock('@/src/components/Common/SyncCoreStatus/SyncCoreStatus', () => ({
   default: () => <span>core-sync-badge</span>,
 }));
-vi.mock('@/src/context/AppContext', () => ({ useAppContext: () => ({ featureFlags: { adminApiEnabled: true } }) }));
+beforeEach(() => {
+  appContextMock.use(() => ({ featureFlags: { adminApiEnabled: true } }));
+});
 
 const metadata = (status?: DialModelResourceStatus) => ({ _metadata: { status } });
 
