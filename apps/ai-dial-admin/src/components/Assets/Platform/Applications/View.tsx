@@ -119,32 +119,27 @@ const PlatformApplicationView: FC<Props> = ({
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [discardKey, setDiscardKey] = useState(0);
-  const [appRunner, setAppRunner] = useState<DialApplicationScheme | undefined>();
 
   const selectedAppUserRoles = (selectedApp as unknown as DialPlatformApplicationResource).user_roles;
+
+  const [appRunner, setAppRunner] = useState<DialApplicationScheme | undefined>(undefined);
   const schemaId = (selectedApp as unknown as DialPlatformApplicationResource).application_type_schema_id;
-  const foundRunner = getAppRunner(selectedApp, schemes);
 
   useEffect(() => {
     let isCancelled = false;
-    setAppRunner(undefined);
+    const foundRunner = getAppRunner(selectedApp, schemes);
 
-    const resolveRunner = async () => {
-      try {
-        const { runner, scheme } = await resolveAppRunnerScheme(
-          foundRunner ?? (schemaId ? { $id: schemaId } : undefined),
-        );
-        if (!isCancelled) setAppRunner(scheme ?? runner);
-      } catch {
-        if (!isCancelled) setAppRunner(foundRunner);
+    resolveAppRunnerScheme(foundRunner ?? { $id: schemaId }).then(({ runner, scheme }) => {
+      if (!isCancelled) {
+        setAppRunner(scheme ?? runner);
       }
-    };
+    });
 
-    void resolveRunner();
     return () => {
       isCancelled = true;
     };
-  }, [foundRunner, schemaId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schemaId]);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
