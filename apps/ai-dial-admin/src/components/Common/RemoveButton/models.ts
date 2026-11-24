@@ -4,10 +4,7 @@ export interface RemoveIconButtonProps extends Omit<IconButtonProps, 'icon' | 'v
   label?: undefined;
 }
 
-export interface RemoveLabelledButtonProps extends Omit<
-  ButtonProps,
-  'label' | 'variant' | 'appearance' | 'iconBefore' | 'iconAfter'
-> {
+export interface RemoveLabelledButtonProps extends Omit<ButtonProps, 'label' | 'variant' | 'iconBefore' | 'iconAfter'> {
   label: string;
 }
 

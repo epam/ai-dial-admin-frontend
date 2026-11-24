@@ -17,6 +17,7 @@ import {
 } from '@/src/components/Assets/BaseAssetList/utils';
 import { BaseAssetRoute, CreateAssetRoute } from '@/src/components/Assets/BaseAssetList/types';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { AssetTabsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AssetListItem } from '@/src/models/dial/asset-list-item';
@@ -31,6 +32,9 @@ import { AssetSource } from '@/src/models/dial/asset-source';
 import { FlatAssetSource } from './models';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+
+// The grid can unmount while a delete is in flight, so the guard must outlive it.
+const pendingDeletes = new Set<string>();
 
 export enum PlatformModalType {
   Duplicate = 'duplicate',
@@ -106,36 +110,59 @@ export const usePlatformAssetActions = ({ view, source, refetch }: Params) => {
     [isDualBucket, onCloseModal, refetch, router, showNotification, source, t, view],
   );
 
-  const onOpenDelete = useCallback((rows: AssetListItem[]) => {
-    if (!rows.length) {
-      return;
-    }
+  const onOpenDelete = useCallback(
+    (rows: AssetListItem[]) => {
+      if (!rows.length || pendingDeletes.has(`${view}:${source}`)) {
+        return;
+      }
 
-    setDeletedItems(rows);
-    setModalType(PlatformModalType.Delete);
-  }, []);
+      setDeletedItems([...rows]);
+      setModalType(PlatformModalType.Delete);
+    },
+    [source, view],
+  );
 
-  const onDelete = useCallback(async () => {
+  const onDelete = useCallback(async (): Promise<boolean> => {
     const rows = deletedItems;
-    if (!rows) {
-      return;
+    const deleteKey = `${view}:${source}`;
+    if (!rows || pendingDeletes.has(deleteKey)) {
+      return false;
     }
 
+    pendingDeletes.add(deleteKey);
     const bulkDelete =
       (isDualBucket ? PlatformBulkDeleteAssetActionMap[view] : undefined) ??
       BulkDeleteAssetActionMap[view as BaseAssetRoute];
     onCloseModal();
-    const res = await bulkDelete(rows.map((row) => ({ path: row.path, etag: row.etag || DEFAULT_ETAG })));
-    if (!res.success) {
-      showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-      return;
-    }
+    let isDeleted = false;
+    try {
+      try {
+        const res = await bulkDelete(rows.map((row) => ({ path: row.path, etag: row.etag || DEFAULT_ETAG })));
+        if (!res.success) {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        } else {
+          isDeleted = true;
+          const notifications = getDeleteNotificationContent(view, rows as unknown as DialFile[], t);
+          const list = Array.isArray(notifications) ? notifications : [notifications];
+          list.forEach(({ title, description }) => showNotification(getSuccessNotification(title, description)));
+        }
+      } catch (error) {
+        showNotification(
+          getErrorNotification(t(ErrorI18nKey.ServerError), error instanceof Error ? error.message : undefined),
+        );
+      }
 
-    void refetch();
-    const notifications = getDeleteNotificationContent(view, rows as unknown as DialFile[], t);
-    const list = Array.isArray(notifications) ? notifications : [notifications];
-    list.forEach(({ title, description }) => showNotification(getSuccessNotification(title, description)));
-  }, [deletedItems, isDualBucket, onCloseModal, refetch, showNotification, t, view]);
+      try {
+        await refetch();
+      } catch {
+        showNotification(getErrorNotification(t(AssetTabsI18nKey.LoadError)));
+        return false;
+      }
+      return isDeleted;
+    } finally {
+      pendingDeletes.delete(deleteKey);
+    }
+  }, [deletedItems, isDualBucket, onCloseModal, refetch, showNotification, source, t, view]);
 
   return { modalType, duplicateItem, deletedItems, onOpenDuplicate, onDuplicate, onOpenDelete, onDelete, onCloseModal };
 };
