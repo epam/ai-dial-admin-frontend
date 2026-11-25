@@ -71,6 +71,7 @@ const HighlightedEditor: FC<Props> = ({ text, language, highlights }) => {
         readOnly: true,
         minimap: { enabled: false },
         scrollBeyondLastLine: false,
+        stickyScroll: { enabled: false },
         wordWrap: 'on',
         lineNumbers: 'on',
         folding: language === 'json',
