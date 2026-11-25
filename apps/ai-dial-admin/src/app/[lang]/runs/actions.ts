@@ -7,6 +7,7 @@ import { buildRunsQuery, mapRunsQueryResult } from '@/src/components/ListView/Ev
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { FilterDto, SortDto } from '@/src/models/request';
+import { EvalPeriodCosts } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
 
 export async function getRuns(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
@@ -45,6 +46,26 @@ export async function getRunsTotalCosts(runIds: string[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return runsApi.getRunsTotalCosts({ runIds }, token);
 }
+
+/**
+ * Platform-wide evaluation cost for the current and the previous window, requested together. A window whose
+ * request failed is `null`, so a caller can tell a failure from a window with no recorded cost. `== null` also
+ * catches the `undefined` the API client returns for a 403.
+ */
+export async function getEvalPeriodCosts(
+  currentFromMs: number,
+  currentToMs: number,
+  previousFromMs: number,
+  previousToMs: number,
+): Promise<EvalPeriodCosts> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const [current, previous] = await Promise.all([
+    runsApi.getTotalCosts(currentFromMs, currentToMs, token),
+    runsApi.getTotalCosts(previousFromMs, previousToMs, token),
+  ]);
+  return { current: current ?? null, previous: previous ?? null };
+}
+
 export async function removeRun(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return runsApi.removeRun(id, token);

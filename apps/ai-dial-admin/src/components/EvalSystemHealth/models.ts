@@ -92,6 +92,18 @@ export interface ActivityCardModel {
   evaluateeCount: number | null;
 }
 
+export interface EvalCostCardModel {
+  status: CoverageStatus;
+  /** Cost of all evaluation traffic in the current period; `null` while not ready or when none was recorded. */
+  total: number | null;
+  /** The part of `total` spent running test cases against the evaluatees. */
+  evaluateesCost: number | null;
+  /** The part of `total` spent on the judge calls that score the answers. */
+  judgesCost: number | null;
+  /** Signed difference against the previous period (`+$342`); `null` when there is none to show. */
+  deltaLabel: string | null;
+}
+
 /** One row of the run-trends table, flattened from a suite so the cells render it without further logic. */
 export interface RunTrendRow {
   suiteId: string;

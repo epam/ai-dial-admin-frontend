@@ -12,6 +12,7 @@ import {
   executeStructuredQueries,
   exportRunPreview,
   getRun,
+  getEvalPeriodCosts,
   getRunResults,
   getRuns,
   getHealthDistribution,
@@ -163,6 +164,31 @@ describe('Runs :: server actions', () => {
     (analyticsApi.getHealthDistribution as any).mockResolvedValue(null);
 
     expect(await getHealthDistribution(5, 0.75)).toBeNull();
+  });
+
+  test('Should request both windows of getEvalPeriodCosts with the token', async () => {
+    const current = { totalCost: 5, testCaseCost: 3, metricEvalCost: 2 };
+    const previous = { totalCost: 4 };
+    (runsApi.getTotalCosts as any).mockResolvedValueOnce(current).mockResolvedValueOnce(previous);
+
+    const result = await getEvalPeriodCosts(10, 20, 1, 2);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(runsApi.getTotalCosts).toHaveBeenCalledWith(10, 20, TOKEN_MOCK);
+    expect(runsApi.getTotalCosts).toHaveBeenCalledWith(1, 2, TOKEN_MOCK);
+    expect(result).toEqual({ current, previous });
+  });
+
+  test('Should return null only for the getEvalPeriodCosts window that failed', async () => {
+    (runsApi.getTotalCosts as any).mockResolvedValueOnce({ totalCost: 5 }).mockResolvedValueOnce(null);
+
+    expect(await getEvalPeriodCosts(10, 20, 1, 2)).toEqual({ current: { totalCost: 5 }, previous: null });
+  });
+
+  test('Should turn the undefined of a forbidden getEvalPeriodCosts window into null', async () => {
+    (runsApi.getTotalCosts as any).mockResolvedValueOnce(undefined).mockResolvedValueOnce({ totalCost: 4 });
+
+    expect(await getEvalPeriodCosts(10, 20, 1, 2)).toEqual({ current: null, previous: { totalCost: 4 } });
   });
 
   test('Should call getMetricSnapshots action and return snapshots', async () => {

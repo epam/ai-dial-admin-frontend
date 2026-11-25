@@ -4,7 +4,15 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { RUN_CANCEL_URL, RUN_RESULTS_URL, RUNS_URL, RUN_URL, RunsApi, SUITE_PASS_RATE_URL } from '../runs-api';
+import {
+  RUN_CANCEL_URL,
+  RUN_RESULTS_URL,
+  RUNS_URL,
+  RUN_URL,
+  RunsApi,
+  SUITE_PASS_RATE_URL,
+  TOTAL_COSTS_URL,
+} from '../runs-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -136,6 +144,33 @@ describe('Server :: RunsApi', () => {
       const result = await instance.getSuitePassRate(request, TOKEN_MOCK);
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('getTotalCosts', () => {
+    const costs = { totalCost: 12.5, testCaseCost: 10, metricEvalCost: 2.5 };
+
+    test('Should POST the window as from and to, without deployment ids', async () => {
+      fetch.mockResponseOnce(JSON.stringify(costs), JSON_HEADERS);
+
+      await instance.getTotalCosts(1000, 2000, TOKEN_MOCK);
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${TEST_URL}${TOTAL_COSTS_URL}`,
+        expect.objectContaining({ method: 'POST', body: JSON.stringify({ from: 1000, to: 2000 }) }),
+      );
+    });
+
+    test('Should return the parsed costs', async () => {
+      fetch.mockResponseOnce(JSON.stringify(costs), JSON_HEADERS);
+
+      expect(await instance.getTotalCosts(1000, 2000, TOKEN_MOCK)).toEqual(costs);
+    });
+
+    test('Should return null when the API responds with a non-ok status', async () => {
+      fetch.mockResponseOnce('', { status: 502 });
+
+      expect(await instance.getTotalCosts(1000, 2000, TOKEN_MOCK)).toBeNull();
     });
   });
 });

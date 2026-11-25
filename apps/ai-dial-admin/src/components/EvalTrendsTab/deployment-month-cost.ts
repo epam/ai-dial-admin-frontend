@@ -91,15 +91,18 @@ export const formatGroupedMonthCost = (value: number): string => {
   });
 };
 
-/** Signed delta for the MoM badge (`+$214` / `-$214`); null when either side is missing or equal. */
+/**
+ * Signed delta for the MoM badge (`+$214` / `-$214`); null when either side is missing or the two differ by
+ * less than a cent, which the label could only show as `$0`.
+ */
 export const formatMonthCostDelta = (latest: number | null, previous: number | null): string | null => {
   if (latest == null || previous == null) {
     return null;
   }
-  const delta = latest - previous;
-  if (delta === 0) {
+  const deltaCents = Math.round((latest - previous) * 100);
+  if (deltaCents === 0) {
     return null;
   }
-  const absLabel = formatGroupedMonthCost(Math.abs(delta));
-  return delta > 0 ? `+${absLabel}` : `-${absLabel}`;
+  const absLabel = formatGroupedMonthCost(Math.abs(deltaCents) / 100);
+  return deltaCents > 0 ? `+${absLabel}` : `-${absLabel}`;
 };

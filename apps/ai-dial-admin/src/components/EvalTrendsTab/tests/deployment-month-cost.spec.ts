@@ -62,4 +62,14 @@ describe('formatMonthCostDelta', () => {
     expect(formatMonthCostDelta(null, 10)).toBeNull();
     expect(formatMonthCostDelta(10, null)).toBeNull();
   });
+
+  test('hides a difference under one cent instead of showing +$0', () => {
+    expect(formatMonthCostDelta(10.003, 10)).toBeNull();
+    expect(formatMonthCostDelta(10, 10.004)).toBeNull();
+  });
+
+  test('shows a difference that rounds to a cent or more', () => {
+    expect(formatMonthCostDelta(10.01, 10)).toBe('+$0.01');
+    expect(formatMonthCostDelta(10, 10.5)).toBe('-$0.50');
+  });
 });
