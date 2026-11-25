@@ -107,23 +107,39 @@ describe('UnitRolesCard', () => {
     expect(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue })).toHaveValue('');
   });
 
-  test.each(['email', 'roles', 'sub'])('refuses the reserved claim name %s', async (key) => {
-    const user = userEvent.setup();
-    const onAdd = vi.fn();
-    renderCard({ onAdd });
-    const editor = within(screen.getByRole('group', { name: 'editor' }));
+  test.each(['email', 'roles', 'sub', ' email ', ' roles ', ' sub '])(
+    'explains the reserved claim name %s without invalidating the value',
+    async (key) => {
+      const user = userEvent.setup();
+      const onAdd = vi.fn();
+      renderCard({ onAdd });
+      const editor = within(screen.getByRole('group', { name: 'editor' }));
 
-    await user.click(editor.getByRole('radio', { name: FoldersI18nKey.HolderClaim }));
-    await user.type(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimKey }), key);
-    await user.type(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue }), 'v');
+      await user.click(editor.getByRole('radio', { name: FoldersI18nKey.HolderClaim }));
+      const claimKey = editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimKey });
+      const claimValue = editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue });
+      const add = editor.getByRole('button', { name: ButtonsI18nKey.Add });
+      await user.type(claimKey, key);
 
-    expect(editor.queryByText(FoldersI18nKey.HolderClaimKeyReserved)).toBeNull();
-    expect(editor.queryByText(FoldersI18nKey.HolderInvalid)).toBeNull();
-    expect(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimKey })).not.toBeInvalid();
-    expect(editor.getByRole('textbox', { name: FoldersI18nKey.HolderClaimValue })).not.toBeInvalid();
-    expect(editor.getByRole('button', { name: ButtonsI18nKey.Add })).toBeDisabled();
-    expect(onAdd).not.toHaveBeenCalled();
-  });
+      expect(editor.getByText(FoldersI18nKey.HolderClaimKeyReserved)).toBeTruthy();
+      expect(claimKey).toBeInvalid();
+      expect(claimValue).not.toBeInvalid();
+      expect(add).toBeDisabled();
+
+      await user.type(claimValue, 'v');
+      expect(editor.getByText(FoldersI18nKey.HolderClaimKeyReserved)).toBeTruthy();
+      expect(editor.queryByText(FoldersI18nKey.HolderInvalid)).toBeNull();
+      expect(claimValue).not.toBeInvalid();
+      expect(add).toBeDisabled();
+      expect(onAdd).not.toHaveBeenCalled();
+
+      await user.clear(claimKey);
+      await user.type(claimKey, 'department');
+      expect(editor.queryByText(FoldersI18nKey.HolderClaimKeyReserved)).toBeNull();
+      expect(claimKey).not.toBeInvalid();
+      expect(add).toBeEnabled();
+    },
+  );
 
   test('keeps an incomplete custom claim disabled without showing validation errors', async () => {
     const user = userEvent.setup();
