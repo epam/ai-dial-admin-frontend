@@ -7,7 +7,9 @@ import classNames from 'classnames';
 import ScoreCellValue from '@/src/components/Common/ScoreCell/ScoreCellValue';
 import { TRUNCATE_THRESHOLD } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import { formatFieldValue } from '@/src/components/Runs/Details/BottomDrawer/utils';
+import HighlightedText from '@/src/components/Runs/Details/RowDetails/HighlightedText';
 import ThresholdScoreValue from '@/src/components/Runs/Details/RowDetails/ThresholdScoreValue';
+import { parseMetricHighlight } from '@/src/components/Runs/Details/RowDetails/utils/metric-highlight';
 import { getScoreFieldValue } from '@/src/components/Runs/Details/RowDetails/utils/score-field-value';
 import { parseScoreRaw } from '@/src/components/Runs/utils/test-case-scores';
 
@@ -67,6 +69,25 @@ const FieldValue: FC<Props> = ({
   const thresholdScore = parseScoreRaw(raw);
   if (raw != null && threshold != null && thresholdScore != null) {
     return <ThresholdScoreValue raw={raw} score={thresholdScore} threshold={threshold} />;
+  }
+
+  const highlight = parseMetricHighlight(raw);
+  if (highlight != null) {
+    if (singleLine) {
+      return <HighlightedText highlight={highlight} className="truncate min-w-0" />;
+    }
+    if (fill) {
+      return (
+        <span ref={textRef} className="min-w-0 self-stretch overflow-y-auto">
+          <HighlightedText highlight={highlight} />
+        </span>
+      );
+    }
+    return (
+      <span ref={textRef} className={classNames(clampClassName, 'min-w-0')}>
+        <HighlightedText highlight={highlight} />
+      </span>
+    );
   }
 
   const displayText = formatFieldValue(raw);

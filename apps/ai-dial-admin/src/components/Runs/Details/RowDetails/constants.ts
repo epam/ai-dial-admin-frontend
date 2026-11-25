@@ -43,6 +43,8 @@ export const EXECUTION_RESULT_DEFAULT_HIDDEN_FIELDS = new Set<string>([ROW_DETAI
 export const METRIC_INFO_REASON_KEY = 'reason';
 export const METRIC_INFO_LOGS_KEY = 'verbose_logs';
 export const METRIC_INFO_ERROR_KEY = 'error';
+/** Scored text chunks shown as a pivot column next to the leaf's numeric output. */
+export const METRIC_INFO_HIGHLIGHT_KEY = 'highlight';
 
 /** Every other key of a leaf's entry is the metric's own and goes to `details`. */
 export const METRIC_INFO_CARD_KEYS = new Set<string>([
@@ -50,3 +52,9 @@ export const METRIC_INFO_CARD_KEYS = new Set<string>([
   METRIC_INFO_LOGS_KEY,
   METRIC_INFO_ERROR_KEY,
 ]);
+
+/** Pivot field key for a leaf's highlight column (`precision` → `precision:highlight`). */
+export const getMetricHighlightFieldKey = (leafKey: string): string => `${leafKey}:${METRIC_INFO_HIGHLIGHT_KEY}`;
+
+export const isMetricHighlightFieldKey = (fieldKey: string): boolean =>
+  fieldKey.endsWith(`:${METRIC_INFO_HIGHLIGHT_KEY}`);

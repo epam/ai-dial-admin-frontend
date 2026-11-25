@@ -53,6 +53,24 @@ describe('buildComparisonSections', () => {
     expect(metricSection!.rows.length).toBe(2);
   });
 
+  it('adds a highlight row next to a metric leaf that has metricInfos.highlight', () => {
+    const highlight = { corpus: [{ text: 'good', score: 1 }] };
+    const result = makeResult({
+      metricValues: { 'eval.accuracy': { f1: 0.5 } },
+      metricInfos: { 'eval.accuracy': { f1: { highlight, reason: 'ok' } } },
+    });
+    const sections = buildComparisonSections(result, null, defaultVisibility, defaultOrder, defaultHidden);
+    const rows = sections.find((s) => s.key === 'metric:eval.accuracy')!.rows;
+    const f1Index = rows.findIndex((r) => r.fieldKey === 'f1');
+
+    expect(rows[f1Index + 1]).toMatchObject({
+      fieldKey: 'f1:highlight',
+      label: 'highlight',
+      isNumeric: false,
+    });
+    expect(rows[f1Index + 1].values[0].raw).toContain('"corpus"');
+  });
+
   it('attaches reason, logs and the group error to a metric field from metricInfos', () => {
     const active = makeResult({
       metricValues: { 'eval.accuracy': { f1: 0.5 }, 'eval.judge': { error: null } },
