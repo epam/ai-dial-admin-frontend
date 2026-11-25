@@ -1,13 +1,11 @@
-import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
-import { ElementSize, EllipsisTooltip, ErrorText, GhostIconButton, Label, Tag } from '@epam/ai-dial-ui-kit';
-import { IconX } from '@tabler/icons-react';
-import classNames from 'classnames';
+import { EllipsisTooltip, Tag } from '@epam/ai-dial-ui-kit';
 
-import { MultiValueOption } from '@/src/components/Common/MultiValueAutocomplete/MultiValueAutocomplete';
-import Suggestions from '@/src/components/Common/Suggestions/Suggestions';
+import AutocompleteField from '@/src/components/Common/AutocompleteField/AutocompleteField';
+import { MultiValueOption } from '@/src/components/Common/AutocompleteField/models';
+import { useAutocomplete } from '@/src/components/Common/AutocompleteField/use-autocomplete';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -34,78 +32,15 @@ const SingleValueAutocomplete: FC<Props> = ({
   onChange,
 }) => {
   const t = useI18n();
-  const [inputValue, setInputValue] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [highlight, setHighlight] = useState(0);
 
-  const filteredSuggestions = useMemo(
-    () =>
-      availableItems
-        .filter(
-          (opt) =>
-            opt.label.toLowerCase().includes(inputValue.toLowerCase()) ||
-            opt.value.toLowerCase().includes(inputValue.toLowerCase()),
-        )
-        .slice(0, 5),
-    [availableItems, inputValue],
-  );
+  const onSelect = useCallback((item: MultiValueOption) => onChange(item.value), [onChange]);
+  const autocomplete = useAutocomplete({ availableItems, onSelect });
 
-  const shouldShowSuggestions = useMemo(
-    () => showSuggestions && filteredSuggestions.length > 0,
-    [filteredSuggestions.length, showSuggestions],
-  );
-
-  const commit = useCallback(
-    (item: MultiValueOption | string) => {
-      const newValue = typeof item === 'string' ? item.trim() : item.value;
-      if (!newValue) return;
-      onChange(newValue);
-      setInputValue('');
-      setShowSuggestions(false);
-      setHighlight(0);
-    },
-    [onChange],
-  );
-
-  const handleInputChange: ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
-    setInputValue(e.target.value);
-    setHighlight(0);
-    setShowSuggestions(true);
-  }, []);
-
-  const handleRemoveValue = useCallback(() => {
+  const onRemoveValue = useCallback(() => {
     if (!disabled) {
       onChange('');
     }
   }, [disabled, onChange]);
-
-  const handleInputBlur = useCallback(() => setShowSuggestions(false), []);
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setShowSuggestions(true);
-        setHighlight((h) => (h + 1) % Math.max(filteredSuggestions.length, 1));
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setShowSuggestions(true);
-        setHighlight((h) => (h - 1 + filteredSuggestions.length) % Math.max(filteredSuggestions.length, 1));
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (filteredSuggestions[highlight]) {
-          commit(filteredSuggestions[highlight]);
-        } else if (inputValue.trim()) {
-          commit(inputValue);
-        }
-      } else if (e.key === 'Escape') {
-        setShowSuggestions(false);
-      }
-    },
-    [commit, filteredSuggestions, highlight, inputValue],
-  );
-
-  const handleSetHighlight = useCallback((idx: number) => setHighlight(idx), []);
 
   const selectedLabel = useMemo(
     () => availableItems.find((opt) => opt.value === value)?.label ?? value,
@@ -113,53 +48,36 @@ const SingleValueAutocomplete: FC<Props> = ({
   );
 
   return (
-    <div className={classNames('flex flex-col gap-y-2', STANDARD_CONTROL_WIDTH)}>
-      {label && <Label htmlFor={elementId} label={label} />}
-      <div className={classNames('dial-kit-input h-auto min-h-[40px] p-[6px]', error && 'dial-kit-input-error')}>
-        <div className="flex flex-wrap items-center gap-2">
-          {value && (
-            <div className="flex max-w-full min-w-0 items-center">
-              <EllipsisTooltip
-                className="min-w-0 flex-1"
-                contentClassName="max-w-full"
-                text={<Tag label={selectedLabel} className="max-w-full" />}
+    <AutocompleteField
+      autocomplete={autocomplete}
+      elementId={elementId}
+      label={label}
+      placeholder={placeholder}
+      error={error}
+      caption={caption}
+      disabled={disabled}
+      isUpperCased={false}
+      rowClassName="items-center"
+      inputMinWidthClassName="min-w-[120px]"
+    >
+      {value && (
+        <div className="flex h-6 max-w-full min-w-0 items-center">
+          <EllipsisTooltip
+            className="min-w-0 flex-1"
+            contentClassName="max-w-full"
+            text={
+              <Tag
+                label={selectedLabel}
+                closable={!disabled}
+                removeLabel={`${t(ButtonsI18nKey.Remove)} ${selectedLabel}`}
+                onRemove={onRemoveValue}
+                className="h-6 rounded-md border border-secondary bg-layer-sunken"
               />
-              <GhostIconButton
-                size={ElementSize.Small}
-                aria-label={t(ButtonsI18nKey.Remove)}
-                icon={<IconX size={16} aria-hidden />}
-                onClick={handleRemoveValue}
-                disabled={disabled}
-              />
-            </div>
-          )}
-          <div className="flex items-center gap-2 flex-1 min-w-[120px]">
-            <input
-              id={elementId}
-              value={inputValue}
-              onChange={handleInputChange}
-              onBlur={handleInputBlur}
-              onKeyDown={handleKeyDown}
-              disabled={disabled}
-              className="outline-hidden border-none w-full flex-1 p-1 dial-kit-input h-auto"
-              placeholder={placeholder || ''}
-            />
-          </div>
+            }
+          />
         </div>
-      </div>
-
-      {shouldShowSuggestions && (
-        <Suggestions
-          suggestions={filteredSuggestions}
-          highlightIndex={highlight}
-          onSelectSuggestion={commit}
-          onHightLightSuggestion={handleSetHighlight}
-          isUpperCased={false}
-        />
       )}
-      {!disabled && <ErrorText text={error} />}
-      {caption && <div className="text-secondary dial-tiny-text pt-2">{caption}</div>}
-    </div>
+    </AutocompleteField>
   );
 };
 
