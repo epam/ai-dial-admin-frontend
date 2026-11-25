@@ -154,7 +154,7 @@ const PricingRateControl = ({ elementId, label, value, disabled, onChange }: Pro
           value={node.test.operator}
           id={`${elementId}-operator`}
           options={operatorOptions}
-          fieldClassName="w-[80px]"
+          fieldClassName="gap-x-1 w-[80px]"
           className="w-[80px]"
           labelProps={{ label: t(ModelViewI18nKey.Operator) }}
           onChange={(operator) => onChangeOperator(operator as string)}
