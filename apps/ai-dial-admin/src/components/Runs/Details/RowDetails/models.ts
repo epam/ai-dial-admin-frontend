@@ -66,3 +66,21 @@ export enum PivotColumnWidthTier {
   Default = 'default',
   Text = 'text',
 }
+
+/** One scored text chunk of a metric's `highlight` leaf. */
+export interface MetricHighlightChunk {
+  text: string;
+  score: number;
+  title?: string;
+}
+
+/** One named source (e.g. `corpus`) inside a highlight value, or an unnamed bare array. */
+export interface MetricHighlightSource {
+  key: string | null;
+  chunks: MetricHighlightChunk[];
+}
+
+/** Parsed shape of a metric `highlight` value: one or more chunk arrays under optional keys. */
+export interface MetricHighlight {
+  sources: MetricHighlightSource[];
+}
