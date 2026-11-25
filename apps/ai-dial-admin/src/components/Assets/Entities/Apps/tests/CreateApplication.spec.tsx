@@ -13,6 +13,7 @@ import { NotificationType } from '@/src/models/notification';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { CODE_APP_SOURCE_TYPE } from '@/src/utils/entities/application-source';
+import { saveValidationMock } from '@/test-mocks/save-validation';
 import CreateApplication from '../CreateApplication';
 
 const mockSourceField = vi.fn();
@@ -39,8 +40,8 @@ vi.mock('@/src/components/BaseControls/Description', () => ({
 }));
 vi.mock('@/src/components/Assets/Resources/ResourceSourceField', () => ({
   default: (props: {
-    entity: { interfaces?: Record<string, unknown> };
-    onChange: (entity: { interfaces?: Record<string, unknown> }) => void;
+    entity: { interfaces?: Record<string, unknown>; mcp?: { endpoint: string } };
+    onChange: (entity: { interfaces?: Record<string, unknown>; mcp?: { endpoint: string } }) => void;
     onSourceChange: (source: string) => void;
   }) => {
     mockSourceField(props);
@@ -61,6 +62,12 @@ vi.mock('@/src/components/Assets/Resources/ResourceSourceField', () => ({
       ),
       createElement('button', { onClick: () => props.onSourceChange(CODE_APP_SOURCE_TYPE) }, 'select code app'),
       createElement('button', { onClick: () => props.onSourceChange('interfaces') }, 'select interfaces'),
+      createElement('button', { onClick: () => props.onSourceChange('endpoints') }, 'select endpoints'),
+      createElement(
+        'button',
+        { onClick: () => props.onChange({ ...props.entity, mcp: { endpoint: 'https://example.com/mcp' } }) },
+        'configure MCP',
+      ),
     );
   },
 }));
@@ -235,6 +242,34 @@ describe('CreateApplication', () => {
     expect(showNotification).toHaveBeenCalledOnce();
     expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ type: NotificationType.success }));
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  test('submits an MCP-only endpoint without a chat endpoint', async () => {
+    const onCreate = vi.fn().mockResolvedValue({ success: true });
+    renderCreateApplication({ onCreate });
+    const user = await advanceToSource();
+
+    await user.click(screen.getByRole('button', { name: 'select endpoints' }));
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'configure MCP' }));
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Create }));
+
+    await vi.waitFor(() => expect(onCreate).toHaveBeenCalledOnce());
+    expect(onCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ mcp: { endpoint: 'https://example.com/mcp' }, name: 'app' }),
+    );
+    expect(onCreate).toHaveBeenCalledWith(expect.not.objectContaining({ endpoint: expect.anything() }));
+  });
+
+  test('keeps Create disabled when shared field validation fails despite a valid MCP endpoint', async () => {
+    renderCreateApplication();
+    const user = await advanceToSource();
+    await user.click(screen.getByRole('button', { name: 'select endpoints' }));
+    saveValidationMock.set({ isValid: false });
+    await user.click(screen.getByRole('button', { name: 'configure MCP' }));
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Create })).toBeDisabled();
   });
 
   test('submits the Interfaces draft without a source discriminator', async () => {

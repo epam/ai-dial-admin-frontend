@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import ApplicationEndpoint from '@/src/components/SourceField/Endpoints/ApplicationEndpoint';
+import { SourceI18nKey } from '@/src/constants/i18n';
 import { ApplicationMCPConfigDelivery, DialApplication } from '@/src/models/dial/application';
 
 vi.mock('@epam/ai-dial-ui-kit', async () => {
@@ -117,7 +118,7 @@ describe('ApplicationEndpoint', () => {
     render(<ApplicationEndpoint entity={makeEntity()} onChange={vi.fn()} />);
 
     expect(screen.getByTestId('checkbox-chat_endpoint')).toBeInTheDocument();
-    expect(screen.getByTestId('checkbox-mcp_endpoint')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: SourceI18nKey.McpEndpoint })).toBeInTheDocument();
   });
 
   test('chat endpoint input writes to entity.endpoint', () => {
@@ -135,7 +136,7 @@ describe('ApplicationEndpoint', () => {
     const onChange = vi.fn();
     render(<ApplicationEndpoint entity={makeEntity()} onChange={onChange} />);
 
-    const mcpCheckbox = screen.getByTestId('checkbox-mcp_endpoint');
+    const mcpCheckbox = screen.getByRole('checkbox', { name: SourceI18nKey.McpEndpoint });
     fireEvent.click(mcpCheckbox);
 
     const mcpInput = screen.getByTestId('endpoint-mcp_endpoint');
@@ -158,7 +159,7 @@ describe('ApplicationEndpoint', () => {
     // force initial state — when mcp is set and endpoint is not, chat checkbox defaults false per useState init
     render(<ApplicationEndpoint entity={entity} onChange={vi.fn()} />);
 
-    const mcpCheckbox = screen.getByTestId('checkbox-mcp_endpoint') as HTMLInputElement;
+    const mcpCheckbox = screen.getByRole('checkbox', { name: SourceI18nKey.McpEndpoint }) as HTMLInputElement;
     expect(mcpCheckbox.checked).toBe(true);
     expect(mcpCheckbox.disabled).toBe(true);
   });
@@ -195,7 +196,7 @@ describe('ApplicationEndpoint', () => {
     const onChange = vi.fn();
     render(<ApplicationEndpoint entity={makeEntity()} onChange={onChange} />);
 
-    fireEvent.click(screen.getByTestId('checkbox-mcp_endpoint'));
+    fireEvent.click(screen.getByRole('checkbox', { name: SourceI18nKey.McpEndpoint }));
     const mcpInput = screen.getByTestId('endpoint-mcp_endpoint');
     fireEvent.change(mcpInput, { target: { value: 'https://mcp.example.com' } });
 
@@ -262,7 +263,7 @@ describe('ApplicationEndpoint — prefix / container mode', () => {
   test('MCP checkbox is interactive (not auto-disabled) when prefix is provided', () => {
     render(<ApplicationEndpoint entity={makeEntity()} onChange={vi.fn()} prefix={PREFIX} />);
 
-    const mcpCheckbox = screen.getByTestId('checkbox-mcp_endpoint') as HTMLInputElement;
+    const mcpCheckbox = screen.getByRole('checkbox', { name: SourceI18nKey.McpEndpoint }) as HTMLInputElement;
     expect(mcpCheckbox.disabled).toBe(false);
   });
 
@@ -302,7 +303,7 @@ describe('ApplicationEndpoint — prefix / container mode', () => {
     });
     render(<ApplicationEndpoint entity={entity} onChange={onChange} prefix={PREFIX} />);
 
-    const mcpCheckbox = screen.getByTestId('checkbox-mcp_endpoint');
+    const mcpCheckbox = screen.getByRole('checkbox', { name: SourceI18nKey.McpEndpoint });
     fireEvent.click(mcpCheckbox);
 
     const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
