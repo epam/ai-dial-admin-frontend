@@ -228,7 +228,7 @@ The dedicated Assets Application creation modal SHALL offer source modes in this
 
 Interfaces SHALL be a creation-editor mode and MUST NOT introduce or persist a new Core `source` discriminator. The asset source selector MUST NOT offer `SOURCE_TYPE.CONTAINER`, `RUNNER`, `ADAPTER`, or `MCP_REGISTRY`. No `getContainers` prop SHALL be passed for the AssetsApplications view.
 
-Validation SHALL treat `SCHEMA` as valid iff `entity.application_type_schema_id` is truthy; `ENDPOINTS` is valid iff `entity.endpoint` is a valid URL. The default Interfaces mode SHALL be valid when the resource identity fields are valid; interfaces remain optional until a configured interface imposes its own field validation.
+Validation SHALL treat `SCHEMA` as valid iff `entity.application_type_schema_id` is truthy; in the creation modal `ENDPOINTS` is valid iff `entity.endpoint` or `entity.mcp.endpoint` is a valid URL. Each enabled endpoint field SHALL also pass its own validation before Create is enabled. The default Interfaces mode SHALL be valid when the resource identity fields are valid; interfaces remain optional until a configured interface imposes its own field validation.
 
 #### Scenario: AssetApp source editor offers two options
 
@@ -263,6 +263,22 @@ Validation SHALL treat `SCHEMA` as valid iff `entity.application_type_schema_id`
 - **WHEN** any consumer (e.g. `getAppRunner`, the interceptor views) needs an AssetApp's schema id
 - **THEN** it reads `entity.application_type_schema_id`
 - **AND** no legacy `entity.source.applicationTypeSchemaId` fallback remains
+
+#### Scenario: MCP-only endpoint creation
+
+- **WHEN** an administrator selects Endpoints, enables only MCP, and enters a valid MCP URL with all other required fields valid
+- **THEN** Create is enabled
+- **AND** the created resource contains the URL in `mcp.endpoint` without requiring a chat endpoint
+
+#### Scenario: Invalid enabled endpoint
+
+- **WHEN** an administrator enables an endpoint field but leaves it empty or enters an invalid URL
+- **THEN** Create is disabled, even if another endpoint contains a valid URL
+
+#### Scenario: Chat-only endpoint creation
+
+- **WHEN** an administrator selects Endpoints, enables only chat, and enters a valid chat URL with all other required fields valid
+- **THEN** Create is enabled
 
 ### Requirement: Runner editor keeps EndpointAndMCPContainer
 

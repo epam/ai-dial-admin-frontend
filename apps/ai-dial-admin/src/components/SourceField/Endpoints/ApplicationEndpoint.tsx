@@ -281,7 +281,7 @@ const ApplicationEndpoint: FC<Props> = ({
             <Checkbox
               isSelected={checkboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT]}
               labelProps={{ label: t(SourceI18nKey.McpEndpoint) }}
-              id={ApplicationEndpointCheckbox.MCP_ENDPOINT}
+              id={`${ApplicationEndpointCheckbox.MCP_ENDPOINT}_checkbox`}
               onChange={(value) => toggleCheckbox(ApplicationEndpointCheckbox.MCP_ENDPOINT, value)}
               disabled={
                 isContainerMode
