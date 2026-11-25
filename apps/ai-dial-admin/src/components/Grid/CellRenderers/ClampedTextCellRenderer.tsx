@@ -32,7 +32,7 @@ const ClampedTextCellRenderer = ({ value, lines = 2 }: ClampedTextCellRendererPa
             {text}
           </span>
         </TooltipTrigger>
-        <TooltipContent className="text-primary">{text}</TooltipContent>
+        <TooltipContent>{text}</TooltipContent>
       </TooltipContainer>
     </div>
   );
