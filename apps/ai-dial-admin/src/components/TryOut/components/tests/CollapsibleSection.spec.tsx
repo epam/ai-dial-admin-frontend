@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import CollapsibleSection from '../components/CollapsibleSection';
+import CollapsibleSection from '../CollapsibleSection';
 
 describe('CollapsibleSection', () => {
   const title = 'Test Section';

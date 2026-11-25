@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { TabsI18nKey } from '@/src/constants/i18n';
-import TryOutEventsSection from '../components/TryOutEventsSection';
+import TryOutEventsSection from '../TryOutEventsSection';
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   default: ({ entity, text }: { entity: unknown; text?: string }) => (

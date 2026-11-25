@@ -7,6 +7,7 @@ export enum ApiRoute {
   AnalyticsQueryCsv = '/api/analytics/query/export-csv',
   AuthMePicture = '/api/auth/me/picture',
   AuthSignin = '/api/auth/signin',
+  DeploymentTryOut = '/api/deployments/try-out',
   Events = '/api/events',
   FilesDownload = '/api/files/download',
   FilesImport = '/api/files/import',
