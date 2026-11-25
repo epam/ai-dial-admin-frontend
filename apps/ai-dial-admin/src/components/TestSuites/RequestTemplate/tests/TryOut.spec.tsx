@@ -64,7 +64,7 @@ vi.mock('../components/Variables', () => ({
   default: () => <div>Variables</div>,
 }));
 
-vi.mock('../components/CollapsibleSection', () => ({
+vi.mock('@/src/components/TryOut/components/CollapsibleSection', () => ({
   default: ({ title, children }: { title: string; children: ReactNode }) => (
     <div>
       <span>{title}</span>

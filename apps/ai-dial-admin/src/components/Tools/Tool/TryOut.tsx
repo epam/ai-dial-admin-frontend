@@ -1,15 +1,7 @@
 'use client';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  CloseButton,
-  Spinner,
-  PrimaryButton,
-  Select,
-  JsonSchema,
-  SelectOption,
-  ElementSize,
-} from '@epam/ai-dial-ui-kit';
+import { Spinner, PrimaryButton, Select, JsonSchema, SelectOption, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { tryOutTool } from '@/src/app/[lang]/applications/actions';
 import { tryOutAssetTool } from '@/src/app/[lang]/assets-toolsets/actions';
@@ -18,8 +10,8 @@ import { tryOutContainerTool } from '@/src/app/actions/deployments';
 import Divider from '@/src/components/Common/Divider/Divider';
 import SchemaUiRenderer from '@/src/components/Common/SchemaUIRenderer/SchemaUIRenderer';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import TryOutHeader from '@/src/components/TryOut/components/TryOutHeader';
 import { BasicI18nKey, ButtonsI18nKey, CompareI18nKey, EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
-import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { Tool } from '@/src/models/dial/toolset';
 import { ParamsView } from '@/src/types/parameters';
@@ -37,7 +29,6 @@ interface Props {
 
 const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, containerId, view }) => {
   const t = useI18n();
-  const { sidebar, toggleSidebar } = useAppContext();
 
   const [responseView, setResponseView] = useState(ParamsView.FORM);
   const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
@@ -93,14 +84,6 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, co
     setRequestBody(config);
   }, []);
 
-  const close = useCallback(() => {
-    if (sidebar.isMenuClosed) {
-      toggleSidebar();
-      sidebar.toggleIsMenuClosed?.();
-    }
-    sidebar.closeSidebar();
-  }, [sidebar, toggleSidebar]);
-
   useEffect(() => {
     setResponse({});
     setRequestBody({});
@@ -108,13 +91,11 @@ const TryOut: FC<Props> = ({ tool, toolSetName, isAssetToolset, isMcpToolset, co
 
   return (
     <div className="flex flex-col gap-y-8 size-full min-h-0">
-      <div className="flex items-center justify-between">
-        <h1 className="truncate">{t(ButtonsI18nKey.TryOut)}</h1>
-        <div className="flex flex-row items-center gap-x-4">
+      <TryOutHeader
+        trailingActions={
           <PrimaryButton label={t(ButtonsI18nKey.SendRequest)} onClick={() => sendRequest()} disabled={isRequestSend} />
-          <CloseButton onClose={close} />
-        </div>
-      </div>
+        }
+      />
       <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0">
         <div className="flex-1 min-h-0 flex flex-col">
           <div className="flex flex-row items-center justify-between mb-4">

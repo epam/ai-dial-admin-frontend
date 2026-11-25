@@ -27,7 +27,7 @@ const escapeTraceQlString = (value: string): string => value.replace(/[\\"]/g, '
  */
 const escapeDeploymentPath = (path: string): string => escapeTraceQlString(escapeRegex(encodeCorePath(path)));
 
-const buildExploreUrl = ({ baseUrl, datasourceUid, orgId }: GrafanaConfig, query: string): string => {
+export const buildExploreUrl = ({ baseUrl, datasourceUid, orgId }: GrafanaConfig, query: string): string => {
   const panes = {
     [GRAFANA_PANE_ID]: {
       datasource: datasourceUid,

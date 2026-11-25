@@ -273,4 +273,23 @@ describe('PlatformApplicationView', () => {
       expect(screen.queryByRole('button', { name: GrafanaLinksI18nKey.Traces })).toBeNull();
     });
   });
+
+  test('shows the Try out button beside Delete', () => {
+    render(
+      <PlatformApplicationView
+        etag={mockEtag}
+        originalApp={mockOriginalApp}
+        models={mockModels}
+        applications={mockApplications}
+        schemes={mockSchemes}
+        roles={mockRoles}
+        interceptors={mockInterceptors}
+      />,
+    );
+
+    const tryOut = screen.getByRole('button', { name: ButtonsI18nKey.TryOut });
+    const deleteButtons = screen.getAllByRole('button', { name: ButtonsI18nKey.Delete });
+
+    expect(deleteButtons.some((button) => button.parentElement?.contains(tryOut))).toBe(true);
+  });
 });

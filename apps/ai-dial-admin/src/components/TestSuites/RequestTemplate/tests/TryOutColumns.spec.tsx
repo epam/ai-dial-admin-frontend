@@ -20,7 +20,7 @@ vi.mock('@/src/components/TestSuites/utils/evaluate-columns', async (importOrigi
   };
 });
 
-vi.mock('../components/CollapsibleSection', () => ({
+vi.mock('@/src/components/TryOut/components/CollapsibleSection', () => ({
   default: ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div>
       <span data-testid="collapsible-title">{title}</span>

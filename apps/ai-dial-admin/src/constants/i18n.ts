@@ -854,6 +854,31 @@ export enum GrafanaLinksI18nKey {
   AllTraces = 'GrafanaLinks.AllTraces',
   ErrorTraces = 'GrafanaLinks.ErrorTraces',
   OpensInNewTab = 'GrafanaLinks.OpensInNewTab',
+  OpenTrace = 'GrafanaLinks.OpenTrace',
+}
+
+export enum DeploymentTryOutI18nKey {
+  Mode = 'DeploymentTryOut.Mode',
+  ModeSimple = 'DeploymentTryOut.ModeSimple',
+  ModeAdvanced = 'DeploymentTryOut.ModeAdvanced',
+  Interface = 'DeploymentTryOut.Interface',
+  InterfaceChatCompletions = 'DeploymentTryOut.InterfaceChatCompletions',
+  InterfaceResponses = 'DeploymentTryOut.InterfaceResponses',
+  InterfaceMessages = 'DeploymentTryOut.InterfaceMessages',
+  Message = 'DeploymentTryOut.Message',
+  MessagePlaceholder = 'DeploymentTryOut.MessagePlaceholder',
+  RealRequestNote = 'DeploymentTryOut.RealRequestNote',
+  InterfacesUnknownNote = 'DeploymentTryOut.InterfacesUnknownNote',
+  Unavailable = 'DeploymentTryOut.Unavailable',
+  InvalidJson = 'DeploymentTryOut.InvalidJson',
+  NoAccess = 'DeploymentTryOut.NoAccess',
+  NotFound = 'DeploymentTryOut.NotFound',
+  Rejected = 'DeploymentTryOut.Rejected',
+  ServerFailure = 'DeploymentTryOut.ServerFailure',
+  NetworkFailure = 'DeploymentTryOut.NetworkFailure',
+  StatusSending = 'DeploymentTryOut.StatusSending',
+  StatusDone = 'DeploymentTryOut.StatusDone',
+  StatusFailed = 'DeploymentTryOut.StatusFailed',
 }
 
 export enum TelemetryI18nKey {
