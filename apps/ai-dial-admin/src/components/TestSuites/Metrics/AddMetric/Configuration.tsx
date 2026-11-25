@@ -160,7 +160,7 @@ const MetricConfiguration: FC<Props> = ({
             />
           </div>
         ) : (
-          <div className="flex-1 min-h-0 overflow-auto flex flex-col gap-5">
+          <div className="relative flex-1 min-h-0 overflow-auto flex flex-col gap-5">
             <div className="flex flex-col gap-4">
               <p className="dial-small-semi text-primary">{t(TabsI18nKey.Properties)}</p>
               <Input
