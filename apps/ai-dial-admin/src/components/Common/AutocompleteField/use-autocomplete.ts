@@ -67,7 +67,7 @@ export const useAutocomplete = ({
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setShowSuggestions(true);
-        setHighlight((h) => (h - 1 + filteredSuggestions.length) % count);
+        setHighlight((h) => (h - 1 + count) % count);
       } else if (e.key === 'Enter' || addKeys.includes(e.key)) {
         e.preventDefault();
         if (filteredSuggestions[highlight]) {

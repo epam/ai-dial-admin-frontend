@@ -37,10 +37,8 @@ const SingleValueAutocomplete: FC<Props> = ({
   const autocomplete = useAutocomplete({ availableItems, onSelect });
 
   const onRemoveValue = useCallback(() => {
-    if (!disabled) {
-      onChange('');
-    }
-  }, [disabled, onChange]);
+    onChange('');
+  }, [onChange]);
 
   const selectedLabel = useMemo(
     () => availableItems.find((opt) => opt.value === value)?.label ?? value,
