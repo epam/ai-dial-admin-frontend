@@ -4853,6 +4853,7 @@ export enum EvalSystemHealthI18nKey {
   TotalModels = 'EvalSystemHealth.TotalModels',
   TotalApplications = 'EvalSystemHealth.TotalApplications',
   TotalToolsets = 'EvalSystemHealth.TotalToolsets',
+  TotalRoutes = 'EvalSystemHealth.TotalRoutes',
   CoverageCaption = 'EvalSystemHealth.CoverageCaption',
   CoverageInfoLabel = 'EvalSystemHealth.CoverageInfoLabel',
   CoverageInfoTooltip = 'EvalSystemHealth.CoverageInfoTooltip',

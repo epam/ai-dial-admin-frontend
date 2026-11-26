@@ -41,6 +41,27 @@ const costCard = (overrides: Partial<EvalCostCardModel> = {}): EvalCostCardModel
 });
 
 describe('ActivityCardRow', () => {
+  test('draws its children before the activity cards', () => {
+    vi.mocked(useActivityData).mockReturnValue({
+      cards: [card(ActivityKind.SuitesRun), card(ActivityKind.SuitesAdded)],
+      windows: WINDOWS,
+    });
+    vi.mocked(useEvalCostData).mockReturnValue(costCard());
+
+    render(
+      <ActivityCardRow>
+        <section aria-label="leading card" />
+      </ActivityCardRow>,
+    );
+
+    expect(screen.getAllByRole('region').map((region) => region.getAttribute('aria-label'))).toEqual([
+      'leading card',
+      EvalSystemHealthI18nKey.SuitesRunThisMonth,
+      EvalSystemHealthI18nKey.SuitesAddedThisMonth,
+      EvalSystemHealthI18nKey.EvalCostThisMonth,
+    ]);
+  });
+
   test('renders the two count cards and the eval cost card in order', () => {
     vi.mocked(useActivityData).mockReturnValue({
       cards: [card(ActivityKind.SuitesRun), card(ActivityKind.SuitesAdded)],

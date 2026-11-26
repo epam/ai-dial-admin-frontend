@@ -9,8 +9,11 @@ import { buildHealthDistributionOption } from '@/src/components/EvalSystemHealth
 import { useChartColors } from '@/src/hooks/use-chart-colors';
 import { useI18n } from '@/src/locales/client';
 
-/** The height of the skeleton this chart replaced, so the row of the page does not move as it loads. */
-export const HEALTH_DISTRIBUTION_CHART_HEIGHT = 320;
+/**
+ * Fixed, so the row of the page does not move as it loads. It also sets the height of the card block beside
+ * the chart, which stretches to match, so it is kept short enough that those cards are not mostly empty.
+ */
+export const HEALTH_DISTRIBUTION_CHART_HEIGHT = 160;
 
 interface Props {
   bars: HealthDistributionBar[];

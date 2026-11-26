@@ -1,4 +1,4 @@
-import { COVERAGE_KIND_ORDER } from '@/src/components/EvalSystemHealth/constants';
+import { COVERAGE_KIND_ORDER, COVERAGE_KIND_SOURCES } from '@/src/components/EvalSystemHealth/constants';
 import {
   CoverageCardModel,
   CoverageKind,
@@ -15,8 +15,8 @@ interface KindCount {
 const NOT_READY_COUNT: KindCount = { total: 0, covered: 0 };
 
 /** Error wins over loading: a card that already knows it cannot be drawn should not keep spinning. */
-const statusOf = ({ deployments, covered }: CoverageSources): CoverageStatus => {
-  const statuses = [deployments.status, covered.status];
+const statusOf = (sources: CoverageSources, kind: CoverageKind): CoverageStatus => {
+  const statuses = COVERAGE_KIND_SOURCES[kind].map((key) => sources[key].status);
   if (statuses.includes(CoverageStatus.Error)) {
     return CoverageStatus.Error;
   }
@@ -26,50 +26,57 @@ const statusOf = ({ deployments, covered }: CoverageSources): CoverageStatus => 
   return CoverageStatus.Ready;
 };
 
-/** Counts each deployed id once, however it is written, and how many of them the coverage set holds. */
-const countKind = (listedIds: string[], coveredIds: Set<string>): KindCount => {
-  const deployed = new Set(listedIds.map(normalizeDeploymentId));
-  let covered = 0;
-  for (const id of deployed) {
-    if (coveredIds.has(id)) {
-      covered += 1;
+/** Counts each listed evaluatee once, however it is written, and how many of them the covered set holds. */
+const countKind = (listed: string[], covered: Set<string>, toKey: (id: string) => string): KindCount => {
+  const existing = new Set(listed.map(toKey));
+  let coveredCount = 0;
+  for (const key of existing) {
+    if (covered.has(key)) {
+      coveredCount += 1;
     }
   }
-  return { total: deployed.size, covered };
+  return { total: existing.size, covered: coveredCount };
 };
 
-const countsByKind = ({ deployments, covered }: CoverageSources): Record<CoverageKind, KindCount> => {
-  const listed = deployments.value;
-  const coveredIds = covered.value;
-  if (listed == null || coveredIds == null) {
-    return {
-      [CoverageKind.Evaluatees]: NOT_READY_COUNT,
-      [CoverageKind.Models]: NOT_READY_COUNT,
-      [CoverageKind.Applications]: NOT_READY_COUNT,
-      [CoverageKind.Toolsets]: NOT_READY_COUNT,
-    };
-  }
+const keepAsWritten = (name: string): string => name;
 
-  const models = countKind(listed.models, coveredIds);
-  const applications = countKind(listed.applications, coveredIds);
-  const toolsets = countKind(listed.toolsets, coveredIds);
+const sumCounts = (counts: KindCount[]): KindCount => ({
+  total: counts.reduce((sum, count) => sum + count.total, 0),
+  covered: counts.reduce((sum, count) => sum + count.covered, 0),
+});
+
+/** Each kind counts from only its own sources, so a kind whose sources are not all in gets the not-ready count. */
+const countsByKind = ({ deployments, routes, covered }: CoverageSources): Record<CoverageKind, KindCount> => {
+  const listed = deployments.value;
+  const listedRoutes = routes.value;
+  const coveredIds = covered.value;
+
+  const models =
+    listed && coveredIds ? countKind(listed.models, coveredIds.deployments, normalizeDeploymentId) : NOT_READY_COUNT;
+  const applications =
+    listed && coveredIds
+      ? countKind(listed.applications, coveredIds.deployments, normalizeDeploymentId)
+      : NOT_READY_COUNT;
+  const toolsets =
+    listed && coveredIds ? countKind(listed.toolsets, coveredIds.deployments, normalizeDeploymentId) : NOT_READY_COUNT;
+  const routeCount =
+    listedRoutes && coveredIds ? countKind(listedRoutes, coveredIds.routes, keepAsWritten) : NOT_READY_COUNT;
+
   return {
     [CoverageKind.Models]: models,
     [CoverageKind.Applications]: applications,
     [CoverageKind.Toolsets]: toolsets,
-    [CoverageKind.Evaluatees]: {
-      total: models.total + applications.total + toolsets.total,
-      covered: models.covered + applications.covered + toolsets.covered,
-    },
+    [CoverageKind.Routes]: routeCount,
+    [CoverageKind.Evaluatees]: sumCounts([models, applications, toolsets, routeCount]),
   };
 };
 
-/** The four coverage cards, in display order. Both sources feed every card, so they share one status. */
+/** The five coverage cards, in display order. Each one's status follows only the sources it needs. */
 export const buildCoverageCards = (sources: CoverageSources): CoverageCardModel[] => {
-  const status = statusOf(sources);
   const counts = countsByKind(sources);
 
   return COVERAGE_KIND_ORDER.map((kind) => {
+    const status = statusOf(sources, kind);
     const { total, covered } = status === CoverageStatus.Ready ? counts[kind] : NOT_READY_COUNT;
     return {
       kind,

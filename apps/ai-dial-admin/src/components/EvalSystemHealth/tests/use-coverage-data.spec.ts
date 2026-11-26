@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 
 import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
-import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
+import { getDeployments, listPlatformRoutes } from '@/src/app/[lang]/test-suites/actions';
 import { CoverageCardModel, CoverageKind, CoverageStatus } from '@/src/components/EvalSystemHealth/models';
 import { useCoverageData } from '@/src/components/EvalSystemHealth/use-coverage-data';
 import { buildCoverageQuery } from '@/src/components/EvalSystemHealth/utils/build-coverage-query';
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({ executeStructuredQuery: vi.fn() }));
-vi.mock('@/src/app/[lang]/test-suites/actions', () => ({ getDeployments: vi.fn() }));
+vi.mock('@/src/app/[lang]/test-suites/actions', () => ({ getDeployments: vi.fn(), listPlatformRoutes: vi.fn() }));
 
 const NOW = new Date('2026-11-19T12:00:00Z').getTime();
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -25,6 +25,13 @@ const LISTING = {
   ],
 };
 
+const ROUTES = [
+  { name: 'route-0', folderId: 'platform/', path: 'route-0', nodeType: 'item' },
+  { name: 'route-1', folderId: 'platform/', path: 'route-1', nodeType: 'item' },
+];
+
+const mockRoutes = (rows: unknown) => vi.mocked(listPlatformRoutes).mockResolvedValue(rows as never);
+
 const mockListing = (listing: unknown = LISTING) => vi.mocked(getDeployments).mockResolvedValue(listing as never);
 
 const mockCoverage = () =>
@@ -33,6 +40,7 @@ const mockCoverage = () =>
       { 'deployment_ref::id': 'model-0', 'mcp_deployment_ref::id': null },
       { 'deployment_ref::id': 'app-0', 'mcp_deployment_ref::id': null },
       { 'deployment_ref::id': null, 'mcp_deployment_ref::id': 'toolset-0' },
+      { 'routes_ref::name': 'routes/platform/route-0' },
     ],
   });
 
@@ -42,14 +50,18 @@ const cardOf = (cards: CoverageCardModel[], kind: CoverageKind) =>
 const isEveryCard = (cards: CoverageCardModel[], status: CoverageStatus) =>
   cards.every((card) => card.status === status);
 
+const statusOf = (cards: CoverageCardModel[], kind: CoverageKind) => cardOf(cards, kind).status;
+
 describe('useCoverageData', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useRealTimers();
+    mockRoutes(ROUTES);
   });
 
   test('starts with every card loading', () => {
     vi.mocked(getDeployments).mockReturnValue(new Promise(() => undefined));
+    vi.mocked(listPlatformRoutes).mockReturnValue(new Promise(() => undefined));
     vi.mocked(executeStructuredQuery).mockReturnValue(new Promise(() => undefined));
 
     const { result } = renderHook(() => useCoverageData());
@@ -57,7 +69,7 @@ describe('useCoverageData', () => {
     expect(isEveryCard(result.current, CoverageStatus.Loading)).toBe(true);
   });
 
-  test('returns every card ready with its counts once both sources succeed', async () => {
+  test('returns every card ready with its counts once all sources succeed', async () => {
     mockListing();
     mockCoverage();
 
@@ -67,7 +79,53 @@ describe('useCoverageData', () => {
     expect(cardOf(result.current, CoverageKind.Models)).toMatchObject({ total: 3, covered: 1, uncovered: 2 });
     expect(cardOf(result.current, CoverageKind.Applications)).toMatchObject({ total: 2, covered: 1, uncovered: 1 });
     expect(cardOf(result.current, CoverageKind.Toolsets)).toMatchObject({ total: 1, covered: 1, uncovered: 0 });
-    expect(cardOf(result.current, CoverageKind.Evaluatees)).toMatchObject({ total: 6, covered: 3, uncovered: 3 });
+    expect(cardOf(result.current, CoverageKind.Routes)).toMatchObject({ total: 2, covered: 1, uncovered: 1 });
+    expect(cardOf(result.current, CoverageKind.Evaluatees)).toMatchObject({ total: 8, covered: 4, uncovered: 4 });
+  });
+
+  test('reads the routes with one request, alongside the other two', async () => {
+    mockListing();
+    mockCoverage();
+
+    const { result } = renderHook(() => useCoverageData());
+    await waitFor(() => expect(isEveryCard(result.current, CoverageStatus.Ready)).toBe(true));
+
+    expect(listPlatformRoutes).toHaveBeenCalledOnce();
+    expect(listPlatformRoutes).toHaveBeenCalledWith();
+  });
+
+  test('counts the routes the listing holds and leaves out folders', async () => {
+    mockListing();
+    mockCoverage();
+    mockRoutes([...ROUTES, { name: 'a-folder', folderId: 'platform/', path: 'a-folder/', nodeType: 'folder' }]);
+
+    const { result } = renderHook(() => useCoverageData());
+    await waitFor(() => expect(isEveryCard(result.current, CoverageStatus.Ready)).toBe(true));
+
+    expect(cardOf(result.current, CoverageKind.Routes)).toMatchObject({ total: 2 });
+  });
+
+  test('takes a row with no node type for a route', async () => {
+    mockListing();
+    mockCoverage();
+    mockRoutes([{ name: 'route-0', folderId: 'platform/', path: 'route-0' }]);
+
+    const { result } = renderHook(() => useCoverageData());
+    await waitFor(() => expect(isEveryCard(result.current, CoverageStatus.Ready)).toBe(true));
+
+    expect(cardOf(result.current, CoverageKind.Routes)).toMatchObject({ total: 1, covered: 1 });
+  });
+
+  test('shows the deployment cards while the route listing is still pending', async () => {
+    mockListing();
+    mockCoverage();
+    vi.mocked(listPlatformRoutes).mockReturnValue(new Promise(() => undefined));
+
+    const { result } = renderHook(() => useCoverageData());
+
+    await waitFor(() => expect(statusOf(result.current, CoverageKind.Models)).toBe(CoverageStatus.Ready));
+    expect(statusOf(result.current, CoverageKind.Routes)).toBe(CoverageStatus.Loading);
+    expect(statusOf(result.current, CoverageKind.Evaluatees)).toBe(CoverageStatus.Loading);
   });
 
   test('reads the deployments with one unfiltered listing request', async () => {
@@ -93,22 +151,54 @@ describe('useCoverageData', () => {
     expect(executeStructuredQuery).toHaveBeenCalledWith(buildCoverageQuery(NOW - THIRTY_DAYS_MS));
   });
 
-  test('errors every card when the deployment listing fails', async () => {
+  test('errors the deployment cards and the evaluatees, not routes, when the deployment listing fails', async () => {
     mockListing({ success: false });
     mockCoverage();
 
     const { result } = renderHook(() => useCoverageData());
 
-    await waitFor(() => expect(isEveryCard(result.current, CoverageStatus.Error)).toBe(true));
+    await waitFor(() => expect(statusOf(result.current, CoverageKind.Models)).toBe(CoverageStatus.Error));
+    expect(statusOf(result.current, CoverageKind.Evaluatees)).toBe(CoverageStatus.Error);
+    expect(statusOf(result.current, CoverageKind.Routes)).toBe(CoverageStatus.Ready);
   });
 
-  test('errors every card when the deployment listing throws instead of leaving them loading', async () => {
+  test('errors them too when the deployment listing throws instead of leaving them loading', async () => {
     vi.mocked(getDeployments).mockRejectedValue(new Error('boom'));
     mockCoverage();
 
     const { result } = renderHook(() => useCoverageData());
 
-    await waitFor(() => expect(isEveryCard(result.current, CoverageStatus.Error)).toBe(true));
+    await waitFor(() => expect(statusOf(result.current, CoverageKind.Toolsets)).toBe(CoverageStatus.Error));
+    expect(statusOf(result.current, CoverageKind.Routes)).toBe(CoverageStatus.Ready);
+  });
+
+  test.each([
+    ['null', null],
+    ['undefined', undefined],
+  ])('errors routes and the evaluatees only when the route listing returns %s', async (_label, value) => {
+    mockListing();
+    mockCoverage();
+    mockRoutes(value);
+
+    const { result } = renderHook(() => useCoverageData());
+
+    await waitFor(() => expect(statusOf(result.current, CoverageKind.Routes)).toBe(CoverageStatus.Error));
+    expect(statusOf(result.current, CoverageKind.Evaluatees)).toBe(CoverageStatus.Error);
+    expect(statusOf(result.current, CoverageKind.Models)).toBe(CoverageStatus.Ready);
+    expect(statusOf(result.current, CoverageKind.Applications)).toBe(CoverageStatus.Ready);
+    expect(statusOf(result.current, CoverageKind.Toolsets)).toBe(CoverageStatus.Ready);
+  });
+
+  test('errors routes and the evaluatees only when the route listing throws', async () => {
+    mockListing();
+    mockCoverage();
+    vi.mocked(listPlatformRoutes).mockRejectedValue(new Error('boom'));
+
+    const { result } = renderHook(() => useCoverageData());
+
+    await waitFor(() => expect(statusOf(result.current, CoverageKind.Routes)).toBe(CoverageStatus.Error));
+    expect(statusOf(result.current, CoverageKind.Evaluatees)).toBe(CoverageStatus.Error);
+    expect(statusOf(result.current, CoverageKind.Models)).toBe(CoverageStatus.Ready);
   });
 
   test('errors every card when the coverage query returns null', async () => {
@@ -132,6 +222,7 @@ describe('useCoverageData', () => {
   test('reads a successful listing with no body as an empty one', async () => {
     mockListing({ success: true });
     mockCoverage();
+    mockRoutes([]);
 
     const { result } = renderHook(() => useCoverageData());
 
@@ -150,6 +241,7 @@ describe('useCoverageData', () => {
       await vi.advanceTimersByTimeAsync(0);
     });
     expect(getDeployments).toHaveBeenCalledOnce();
+    expect(listPlatformRoutes).toHaveBeenCalledOnce();
     expect(isEveryCard(result.current, CoverageStatus.Ready)).toBe(true);
 
     await act(async () => {
@@ -157,6 +249,7 @@ describe('useCoverageData', () => {
     });
 
     expect(getDeployments).toHaveBeenCalledTimes(2);
+    expect(listPlatformRoutes).toHaveBeenCalledTimes(2);
     expect(executeStructuredQuery).toHaveBeenLastCalledWith(buildCoverageQuery(Date.now() - THIRTY_DAYS_MS));
     expect(isEveryCard(result.current, CoverageStatus.Ready)).toBe(true);
   });

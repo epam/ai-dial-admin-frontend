@@ -84,7 +84,6 @@ const HealthDistributionSection: FC = () => {
           onReset={reset}
         />
       }
-      isFillHeight={false}
     >
       {content}
     </SummarySection>

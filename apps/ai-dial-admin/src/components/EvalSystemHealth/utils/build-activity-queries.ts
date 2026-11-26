@@ -12,6 +12,7 @@ import { buildExistingSuiteIdsQuery } from '@/src/components/EvalSystemHealth/ut
 import {
   DEPLOYMENT_REF_ID_FIELD,
   MCP_DEPLOYMENT_REF_ID_FIELD,
+  ROUTES_REF_NAME_FIELD,
   TEST_SUITE_RUNS_ENTITY,
   TEST_SUITES_ENTITY,
 } from '@/src/components/ListView/Evaluation/utils/constants';
@@ -60,7 +61,11 @@ const suitesRunQuery = (period: ActivityPeriod): StructuredQuery =>
 const suitesAddedQuery = (period: ActivityPeriod): StructuredQuery =>
   rowQuery({
     entity: TEST_SUITES_ENTITY,
-    select: [col(field(DEPLOYMENT_REF_ID_FIELD)), col(field(MCP_DEPLOYMENT_REF_ID_FIELD))],
+    select: [
+      col(field(DEPLOYMENT_REF_ID_FIELD)),
+      col(field(MCP_DEPLOYMENT_REF_ID_FIELD)),
+      col(field(ROUTES_REF_NAME_FIELD)),
+    ],
     filter: and(withinPeriod(SUITE_CREATED_AT_FIELD, period)),
     page: offsetPage(0, SUITES_ADDED_ROW_LIMIT, true),
   });

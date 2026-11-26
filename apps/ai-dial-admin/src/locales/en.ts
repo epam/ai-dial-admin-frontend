@@ -5086,10 +5086,11 @@ export default {
     TotalModels: 'Total models',
     TotalApplications: 'Total applications',
     TotalToolsets: 'Total toolsets',
+    TotalRoutes: 'Total routes',
     CoverageCaption: '{total} total · {uncovered} uncovered',
     CoverageInfoLabel: 'How coverage is calculated',
     CoverageInfoTooltip:
-      'Coverage: each evaluatee (model, application, or toolset) is covered if at least one test suite has run on it in the last {days} days. Uncovered evaluatees have no quality signal.',
+      'Coverage: each evaluatee (model, application, toolset, or route) is covered if at least one test suite has run on it in the last {days} days. Uncovered evaluatees have no quality signal.',
     CoverageLoadFailed: 'Failed to load coverage',
     SuitesRunThisMonth: 'Test suites run this month',
     SuitesAddedThisMonth: 'Test suites added this month',

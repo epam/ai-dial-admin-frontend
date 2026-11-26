@@ -6,6 +6,7 @@ export enum CoverageKind {
   Models = 'models',
   Applications = 'applications',
   Toolsets = 'toolsets',
+  Routes = 'routes',
 }
 
 export enum CoverageStatus {
@@ -21,10 +22,15 @@ export interface CoverageSource<T> {
 }
 
 /**
- * Ids of the evaluatees a run in the coverage window targeted, whichever ref carried them: a suite that
- * reaches an application through an MCP tool covers it as much as one that calls it directly.
+ * What a run in the coverage window targeted, whichever ref carried it: a suite that reaches an application
+ * through an MCP tool covers it as much as one that calls it directly. Deployment ids and route names are
+ * kept apart, so a reference of one kind never covers an evaluatee of the other.
  */
-export type CoveredIds = Set<string>;
+export interface CoveredIds {
+  deployments: Set<string>;
+  /** Route names as the route listing writes them, without the platform route prefix. */
+  routes: Set<string>;
+}
 
 /** The listed deployment ids of each evaluatee kind. */
 export interface ListedDeploymentIds {
@@ -33,9 +39,10 @@ export interface ListedDeploymentIds {
   toolsets: string[];
 }
 
-/** The deployment listing and the coverage query: every card needs both. */
+/** The three reads behind the cards; `COVERAGE_KIND_SOURCES` says which each card waits for. */
 export interface CoverageSources {
   deployments: CoverageSource<ListedDeploymentIds>;
+  routes: CoverageSource<string[]>;
   covered: CoverageSource<CoveredIds>;
 }
 

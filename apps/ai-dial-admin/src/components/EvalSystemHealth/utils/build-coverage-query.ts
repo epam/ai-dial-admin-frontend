@@ -8,6 +8,7 @@ import { buildExistingSuiteIdsQuery } from '@/src/components/EvalSystemHealth/ut
 import {
   DEPLOYMENT_REF_ID_FIELD,
   MCP_DEPLOYMENT_REF_ID_FIELD,
+  ROUTES_REF_NAME_FIELD,
   TEST_SUITE_RUNS_ENTITY,
 } from '@/src/components/ListView/Evaluation/utils/constants';
 import { StructuredQuery, ValueType } from '@/src/models/evaluation/structured-query';
@@ -15,7 +16,8 @@ import { aggregateQuery, and, col, field, fn, ge, inSubquery, offsetPage } from 
 
 /**
  * One row per distinct evaluatee that a run started on or after `windowStartMs` targeted, by the ref that
- * carried it (`deployment_ref` for models and applications, `mcp_deployment_ref` for toolsets). Runs of a
+ * carried it (`deployment_ref` for models and applications, `mcp_deployment_ref` for toolsets, `routes_ref`
+ * for routes). Runs of a
  * suite that no longer exists are left out. `windowStartMs` is a parameter so the builder stays deterministic.
  */
 export const buildCoverageQuery = (windowStartMs: number): StructuredQuery =>
@@ -24,12 +26,13 @@ export const buildCoverageQuery = (windowStartMs: number): StructuredQuery =>
     select: [
       col(field(DEPLOYMENT_REF_ID_FIELD)),
       col(field(MCP_DEPLOYMENT_REF_ID_FIELD)),
+      col(field(ROUTES_REF_NAME_FIELD)),
       col(fn('max', [field(RUN_STARTED_AT_FIELD)]), LAST_RUN_ALIAS),
     ],
     filter: and([
       ge(RUN_STARTED_AT_FIELD, ValueType.Long, String(windowStartMs)),
       inSubquery(RUN_SUITE_ID_FIELD, buildExistingSuiteIdsQuery()),
     ]),
-    groupBy: [DEPLOYMENT_REF_ID_FIELD, MCP_DEPLOYMENT_REF_ID_FIELD],
+    groupBy: [DEPLOYMENT_REF_ID_FIELD, MCP_DEPLOYMENT_REF_ID_FIELD, ROUTES_REF_NAME_FIELD],
     page: offsetPage(0, COVERAGE_ROW_LIMIT),
   });

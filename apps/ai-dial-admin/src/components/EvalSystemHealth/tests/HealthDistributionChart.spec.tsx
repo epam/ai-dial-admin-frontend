@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import ReactECharts from 'echarts-for-react';
 
-import HealthDistributionChart from '@/src/components/EvalSystemHealth/HealthDistributionChart';
+import HealthDistributionChart, {
+  HEALTH_DISTRIBUTION_CHART_HEIGHT,
+} from '@/src/components/EvalSystemHealth/HealthDistributionChart';
 import { HealthDistributionBar } from '@/src/components/EvalSystemHealth/models';
 
 const bars: HealthDistributionBar[] = [
@@ -43,6 +45,6 @@ describe('HealthDistributionChart', () => {
   test('gives the chart a fixed height so the row does not move as it loads', () => {
     render(<HealthDistributionChart bars={bars} />);
 
-    expect(chartMock.mock.calls[0][0].style).toMatchObject({ height: 320 });
+    expect(chartMock.mock.calls[0][0].style).toMatchObject({ height: HEALTH_DISTRIBUTION_CHART_HEIGHT });
   });
 });

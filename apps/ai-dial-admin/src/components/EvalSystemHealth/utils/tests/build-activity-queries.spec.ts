@@ -75,6 +75,7 @@ describe('buildActivityQueries', () => {
     expect(query.select?.map((column) => (column.expr as { name: string }).name)).toEqual([
       'deployment_ref::id',
       'mcp_deployment_ref::id',
+      'routes_ref::name',
     ]);
     expect(from.op).toBe('ge');
     expect(fieldOf(from)).toEqual({ type: ExprType.Field, name: 'created_at_ms' });

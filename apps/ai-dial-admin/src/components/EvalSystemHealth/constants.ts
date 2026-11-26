@@ -1,4 +1,4 @@
-import { ActivityKind, CoverageKind } from '@/src/components/EvalSystemHealth/models';
+import { ActivityKind, CoverageKind, CoverageSources } from '@/src/components/EvalSystemHealth/models';
 import { EvalSystemHealthI18nKey } from '@/src/constants/i18n';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { SuiteType } from '@/src/models/evaluation/run-trend';
@@ -27,13 +27,24 @@ export const COVERAGE_KIND_ORDER: CoverageKind[] = [
   CoverageKind.Models,
   CoverageKind.Applications,
   CoverageKind.Toolsets,
+  CoverageKind.Routes,
 ];
+
+/** The sources a card needs; it is in error as soon as any of them failed, and loading until all have returned. */
+export const COVERAGE_KIND_SOURCES: Record<CoverageKind, (keyof CoverageSources)[]> = {
+  [CoverageKind.Evaluatees]: ['deployments', 'routes', 'covered'],
+  [CoverageKind.Models]: ['deployments', 'covered'],
+  [CoverageKind.Applications]: ['deployments', 'covered'],
+  [CoverageKind.Toolsets]: ['deployments', 'covered'],
+  [CoverageKind.Routes]: ['routes', 'covered'],
+};
 
 export const COVERAGE_KIND_TITLE_KEY: Record<CoverageKind, EvalSystemHealthI18nKey> = {
   [CoverageKind.Evaluatees]: EvalSystemHealthI18nKey.TotalEvaluatees,
   [CoverageKind.Models]: EvalSystemHealthI18nKey.TotalModels,
   [CoverageKind.Applications]: EvalSystemHealthI18nKey.TotalApplications,
   [CoverageKind.Toolsets]: EvalSystemHealthI18nKey.TotalToolsets,
+  [CoverageKind.Routes]: EvalSystemHealthI18nKey.TotalRoutes,
 };
 
 export const SUITE_CREATED_AT_FIELD = 'created_at_ms';

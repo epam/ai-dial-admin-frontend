@@ -59,12 +59,63 @@ describe('countTargetedEvaluatees', () => {
     ).toBe(1);
   });
 
-  test('adds nothing for a row that targets neither, as a suite on a route does', () => {
+  test('adds nothing for a row that targets nothing', () => {
     expect(
       countTargetedEvaluatees({
-        rows: [{ 'deployment_ref::id': null, 'mcp_deployment_ref::id': null }, { 'deployment_ref::id': '' }, {}],
+        rows: [
+          { 'deployment_ref::id': null, 'mcp_deployment_ref::id': null, 'routes_ref::name': null },
+          { 'deployment_ref::id': '', 'routes_ref::name': '' },
+          {},
+        ],
       }),
     ).toBe(0);
+  });
+
+  test('counts a route-targeted suite as one evaluatee', () => {
+    expect(countTargetedEvaluatees({ rows: [{ 'routes_ref::name': 'routes/platform/echo' }] })).toBe(1);
+  });
+
+  test('counts suites on the same route once', () => {
+    expect(
+      countTargetedEvaluatees({
+        rows: [
+          { 'routes_ref::name': 'routes/platform/echo' },
+          { 'routes_ref::name': 'routes/platform/echo' },
+          { 'routes_ref::name': 'routes/platform/echo' },
+        ],
+      }),
+    ).toBe(1);
+  });
+
+  test('counts a route written prefixed and plain once', () => {
+    expect(
+      countTargetedEvaluatees({
+        rows: [{ 'routes_ref::name': 'routes/platform/echo' }, { 'routes_ref::name': 'echo' }],
+      }),
+    ).toBe(1);
+  });
+
+  test('adds routes to the deployments and toolsets', () => {
+    expect(
+      countTargetedEvaluatees({
+        rows: [
+          { 'deployment_ref::id': 'gpt-4o' },
+          { 'deployment_ref::id': 'claude' },
+          { 'mcp_deployment_ref::id': 'github' },
+          { 'routes_ref::name': 'routes/platform/a' },
+          { 'routes_ref::name': 'routes/platform/b' },
+          { 'routes_ref::name': 'routes/platform/c' },
+        ],
+      }),
+    ).toBe(6);
+  });
+
+  test('counts a route and a deployment of the same name as two evaluatees', () => {
+    expect(
+      countTargetedEvaluatees({
+        rows: [{ 'deployment_ref::id': 'echo' }, { 'routes_ref::name': 'routes/platform/echo' }],
+      }),
+    ).toBe(2);
   });
 
   test('reads a result without rows as targeting nothing', () => {
