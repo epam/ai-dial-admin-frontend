@@ -25,7 +25,7 @@ const RulesItemOperator: FC<Props> = ({ folderName, isEmpty, isReadonly }) => {
       {isEmpty && isReadonly ? (
         <span className="dial-small-text">{message}</span>
       ) : (
-        <span className="border border-accent-primary rounded bg-accent-primary-alpha inline-block px-2">
+        <span className="border border-accent rounded bg-control-accent-alpha inline-block px-2">
           {t(BasicI18nKey.Or)}
         </span>
       )}

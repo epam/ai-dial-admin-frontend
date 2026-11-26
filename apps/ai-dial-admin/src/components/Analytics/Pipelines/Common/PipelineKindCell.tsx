@@ -13,8 +13,8 @@ const KIND_LABEL: Record<PipelineKind, AnalyticsPipelinesI18nKey> = {
 };
 
 const KIND_COLOR: Record<PipelineKind, string> = {
-  [PipelineKind.Enrich]: 'text-accent-secondary',
-  [PipelineKind.Aggregate]: 'text-accent-tertiary',
+  [PipelineKind.Enrich]: 'text-green-2',
+  [PipelineKind.Aggregate]: 'text-violet-1',
 };
 
 interface Props {

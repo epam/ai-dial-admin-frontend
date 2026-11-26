@@ -90,7 +90,7 @@ const QueueGroupEvaluationPopup: FC<Props> = ({
           <p className="dial-body-text text-primary">{t(AnalyticsPipelinesI18nKey.GroupsQueueWaiting)}</p>
         )}
 
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-4 rounded border border-secondary bg-layer-2 p-4 sm:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))]">
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-4 rounded border border-secondary bg-layer-raised p-4 sm:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))]">
           <GroupFact label={t(AnalyticsPipelinesI18nKey.GroupsColumnKey)}>
             <GroupKey value={group.group_key} />
           </GroupFact>

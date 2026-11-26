@@ -30,7 +30,7 @@ const TestCasesByRunCard: FC<Props> = ({ segments, runOrder, isLoading, hasError
   return (
     <section
       className={classNames(
-        'flex w-full shrink-0 flex-col gap-4 rounded-lg border border-secondary bg-layer-3 p-4 xl:w-[379px]',
+        'flex w-full shrink-0 flex-col gap-4 rounded-lg border border-secondary bg-layer-sunken p-4 xl:w-[379px]',
         className,
       )}
       aria-label={labels.title}

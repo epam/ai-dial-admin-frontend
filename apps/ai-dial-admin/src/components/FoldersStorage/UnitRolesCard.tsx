@@ -38,7 +38,7 @@ const UnitRolesCard: FC<Props> = ({ roles, holders, isReadonly, onAdd, onRemove 
             key={role.name}
             role="group"
             aria-label={role.name}
-            className="flex flex-col gap-3 bg-layer-2 py-4 px-6 rounded-lg min-w-0"
+            className="flex flex-col gap-3 bg-layer-raised py-4 px-6 rounded-lg min-w-0"
           >
             <div className="flex flex-col gap-1 min-w-0">
               <h3 className="truncate">{role.name}</h3>

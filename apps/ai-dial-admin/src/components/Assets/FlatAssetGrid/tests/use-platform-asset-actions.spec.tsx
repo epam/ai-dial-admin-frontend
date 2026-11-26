@@ -17,10 +17,14 @@ import {
 } from '@/src/app/[lang]/assets-toolsets/actions';
 import { bulkDeleteAliases, createAlias, getAlias } from '@/src/app/[lang]/assets-aliases/actions';
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/platform-models/actions';
+import { bulkDeletePolicies } from '@/src/app/[lang]/platform-policies/actions';
+import { bulkDeletePolicyAssignments } from '@/src/app/[lang]/platform-policy-assignments/actions';
+import { AssetTabsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { AssetListItem, BucketType } from '@/src/models/dial/asset-list-item';
 import { AssetSource } from '@/src/models/dial/asset-source';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { NotificationType } from '@/src/models/notification';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { PlatformModalType, usePlatformAssetActions } from '../use-platform-asset-actions';
@@ -62,6 +66,16 @@ vi.mock('@/src/app/[lang]/platform-models/actions', async (importOriginal) => ({
   bulkDeleteModels: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+vi.mock('@/src/app/[lang]/platform-policies/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/platform-policies/actions')>()),
+  bulkDeletePolicies: vi.fn().mockResolvedValue({ success: true }),
+}));
+
+vi.mock('@/src/app/[lang]/platform-policy-assignments/actions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/src/app/[lang]/platform-policy-assignments/actions')>()),
+  bulkDeletePolicyAssignments: vi.fn().mockResolvedValue({ success: true }),
+}));
+
 const row = (name: string): AssetListItem => ({ name, path: `platform/${name}`, bucket: BucketType.Platform });
 
 describe('usePlatformAssetActions', () => {
@@ -76,6 +90,7 @@ describe('usePlatformAssetActions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    refetch.mockResolvedValue(undefined);
     vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>);
   });
 
@@ -187,27 +202,136 @@ describe('usePlatformAssetActions', () => {
 
     act(() => result.current.onOpenDelete([row('gpt')]));
     await act(async () => {
-      await result.current.onDelete();
+      expect(await result.current.onDelete()).toBe(true);
     });
 
     expect(bulkDeleteModels).toHaveBeenCalledOnce();
+    expect(refetch).toHaveBeenCalledOnce();
+    expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ type: NotificationType.success }));
   });
 
-  test('reports the error and does not refetch when a delete fails', async () => {
-    vi.mocked(bulkDeleteModels).mockResolvedValueOnce({
-      success: false,
-      errorHeader: 'Conflict',
-      errorMessage: 'In use',
-    });
-    const { result } = renderActions(ApplicationRoute.PlatformModels);
+  test.each([
+    [ApplicationRoute.PlatformPolicies, bulkDeletePolicies],
+    [ApplicationRoute.PlatformPolicyAssignments, bulkDeletePolicyAssignments],
+  ] as const)('deletes %s records by their full cost-object paths', async (view, bulkDelete) => {
+    const { result } = renderActions(view);
+    const selected = [
+      { ...row('cap'), path: 'platform/team-a/cap' },
+      { ...row('cap'), path: 'platform/team-b/cap' },
+    ];
 
-    act(() => result.current.onOpenDelete([row('gpt')]));
+    act(() => result.current.onOpenDelete(selected));
     await act(async () => {
       await result.current.onDelete();
     });
 
-    expect(showNotification).toHaveBeenCalledWith(getErrorNotification('Conflict', 'In use', undefined));
-    expect(refetch).not.toHaveBeenCalled();
+    expect(bulkDelete).toHaveBeenCalledWith([
+      { path: 'platform/team-a/cap', etag: expect.anything() },
+      { path: 'platform/team-b/cap', etag: expect.anything() },
+    ]);
+  });
+
+  test('reports the error and refreshes after a partial delete failure', async () => {
+    vi.mocked(bulkDeleteModels).mockResolvedValueOnce({
+      success: false,
+      errorHeader: 'Conflict',
+      errorMessage: 'In use',
+      requestId: 'request-123',
+    });
+    const { result } = renderActions(ApplicationRoute.PlatformModels);
+
+    act(() => result.current.onOpenDelete([row('first'), row('second')]));
+    await act(async () => {
+      expect(await result.current.onDelete()).toBe(false);
+    });
+
+    expect(showNotification).toHaveBeenCalledOnce();
+    expect(showNotification).toHaveBeenCalledWith(getErrorNotification('Conflict', 'In use', 'request-123'));
+    expect(refetch).toHaveBeenCalledOnce();
+  });
+
+  test('reports a rejected delete and refreshes without a success notification', async () => {
+    vi.mocked(bulkDeleteModels).mockRejectedValueOnce(new Error('Network error'));
+    const { result } = renderActions(ApplicationRoute.PlatformModels);
+
+    act(() => result.current.onOpenDelete([row('gpt')]));
+    await act(async () => {
+      expect(await result.current.onDelete()).toBe(false);
+    });
+
+    expect(showNotification).toHaveBeenCalledOnce();
+    expect(showNotification).toHaveBeenCalledWith(getErrorNotification(ErrorI18nKey.ServerError, 'Network error'));
+    expect(refetch).toHaveBeenCalledOnce();
+  });
+
+  test('reports a rejected refresh separately from a successful delete', async () => {
+    refetch.mockRejectedValueOnce(new Error('Refresh failed'));
+    const { result } = renderActions(ApplicationRoute.PlatformModels);
+
+    act(() => result.current.onOpenDelete([row('gpt')]));
+    await act(async () => {
+      expect(await result.current.onDelete()).toBe(false);
+    });
+
+    expect(showNotification).toHaveBeenCalledWith(expect.objectContaining({ type: NotificationType.success }));
+    expect(showNotification).toHaveBeenCalledWith(getErrorNotification(AssetTabsI18nKey.LoadError));
+    expect(refetch).toHaveBeenCalledOnce();
+  });
+
+  test('prevents duplicate requests across an unmount and refreshes the original source', async () => {
+    let finishDelete: () => void = () => {};
+    const pending = new Promise<void>((resolve) => {
+      finishDelete = resolve;
+    });
+    vi.mocked(bulkDeleteAliases).mockImplementationOnce(async () => {
+      await pending;
+      return { success: true };
+    });
+    const publicRefetch = vi.fn().mockResolvedValue(undefined);
+    const platformRefetch = vi.fn().mockResolvedValue(undefined);
+    const { result, unmount } = renderHook(() =>
+      usePlatformAssetActions({
+        view: ApplicationRoute.AssetsAliases,
+        source: AssetSource.Public,
+        refetch: publicRefetch,
+      }),
+    );
+    act(() => result.current.onOpenDelete([{ name: 'a', path: 'public/a', bucket: BucketType.Public }]));
+    const onDelete = result.current.onDelete;
+    let deletion!: Promise<boolean>;
+    act(() => {
+      deletion = onDelete();
+    });
+    expect(await onDelete()).toBe(false);
+    unmount();
+
+    const platform = renderHook(() =>
+      usePlatformAssetActions({
+        view: ApplicationRoute.AssetsAliases,
+        source: AssetSource.Platform,
+        refetch: platformRefetch,
+      }),
+    );
+    const publicAgain = renderHook(() =>
+      usePlatformAssetActions({
+        view: ApplicationRoute.AssetsAliases,
+        source: AssetSource.Public,
+        refetch: publicRefetch,
+      }),
+    );
+    act(() => publicAgain.result.current.onOpenDelete([{ name: 'a', path: 'public/a', bucket: BucketType.Public }]));
+    expect(publicAgain.result.current.modalType).toBeNull();
+    expect(bulkDeleteAliases).toHaveBeenCalledOnce();
+
+    await act(async () => {
+      finishDelete();
+      expect(await deletion).toBe(true);
+    });
+    expect(publicRefetch).toHaveBeenCalledOnce();
+    expect(platformRefetch).not.toHaveBeenCalled();
+    act(() => publicAgain.result.current.onOpenDelete([{ name: 'a', path: 'public/a', bucket: BucketType.Public }]));
+    expect(publicAgain.result.current.modalType).toBe(PlatformModalType.Delete);
+    platform.unmount();
   });
 
   test('opens no delete modal for an empty selection', () => {
@@ -263,19 +387,22 @@ describe('usePlatformAssetActions', () => {
       expect(push).toHaveBeenCalledWith('/assets-aliases/assistant-copy');
     });
 
-    test('bulk deletes alias rows of either bucket through the alias action', async () => {
-      const { result } = renderActions(ApplicationRoute.AssetsAliases, AssetSource.Public);
+    test.each([AssetSource.Public, AssetSource.Platform] as const)(
+      'bulk deletes %s aliases without touching the other bucket',
+      async (source) => {
+        const { result } = renderActions(ApplicationRoute.AssetsAliases, source);
 
-      act(() => result.current.onOpenDelete([aliasRow('a', 'public'), aliasRow('b', 'public')]));
-      await act(async () => {
-        await result.current.onDelete();
-      });
+        act(() => result.current.onOpenDelete([aliasRow('same-name', source), aliasRow('other', source)]));
+        await act(async () => {
+          await result.current.onDelete();
+        });
 
-      expect(bulkDeleteAliases).toHaveBeenCalledWith([
-        { path: 'public/a', etag: expect.anything() },
-        { path: 'public/b', etag: expect.anything() },
-      ]);
-      expect(refetch).toHaveBeenCalledOnce();
-    });
+        expect(bulkDeleteAliases).toHaveBeenCalledWith([
+          { path: `${source}/same-name`, etag: expect.anything() },
+          { path: `${source}/other`, etag: expect.anything() },
+        ]);
+        expect(refetch).toHaveBeenCalledOnce();
+      },
+    );
   });
 });

@@ -53,7 +53,7 @@ const MetricCardDescription: FC<Props> = ({ lines = 2, children, className }) =>
       {(isOverflowing || isExpanded) && (
         <button
           type="button"
-          className="flex w-fit items-center gap-1 dial-tiny-semi-text text-accent-primary"
+          className="flex w-fit items-center gap-1 dial-tiny-semi-text text-accent"
           onClick={() => setIsExpanded((prev) => !prev)}
         >
           {isExpanded ? t(ButtonsI18nKey.ShowLess) : t(ButtonsI18nKey.ShowMore)}

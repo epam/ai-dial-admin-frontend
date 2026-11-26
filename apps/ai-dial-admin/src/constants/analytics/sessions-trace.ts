@@ -486,22 +486,22 @@ export const GRID_FILTER_TYPE_OPERATOR: Record<GridFilterType, SessionScalarOper
 };
 
 // One colour per origin, from theme tokens. Every value here clears WCAG AA for normal text against
-// `bg-layer-1` through `bg-layer-4`, which the grid's header row and the detail rail both draw on:
+// `bg-layer-base` through `bg-control-neutral-hover-muted`, which the grid's header row and the detail rail both draw on:
 // accent-primary 7.8:1 → 5.7:1, accent-secondary 8.1:1 → 5.9:1, warning 11.7:1 → 8.6:1. `accent-tertiary`
-// is the unused accent and would have been the obvious third hue, but it reads 4.32:1 on `bg-layer-4` —
+// is the unused accent and would have been the obvious third hue, but it reads 4.32:1 on `bg-control-neutral-hover-muted` —
 // under the 4.5:1 floor for the 12px semibold the group header uses.
 // An unnamed enrichment takes `text-secondary` (7.8:1 → 5.7:1) rather than a fourth hue: sharing a colour
 // with a named origin would say the two are the same source.
 export const PROVENANCE_TEXT_CLASS: Record<ColumnProvenance, string> = {
-  [ColumnProvenance.Sessions]: 'text-accent-primary',
-  [ColumnProvenance.Insights]: 'text-accent-secondary',
+  [ColumnProvenance.Sessions]: 'text-accent',
+  [ColumnProvenance.Insights]: 'text-green-2',
   [ColumnProvenance.Feedback]: 'text-warning',
-  [ColumnProvenance.Tertiary]: 'text-accent-tertiary',
+  [ColumnProvenance.Tertiary]: 'text-violet-1',
   [ColumnProvenance.Info]: 'text-info',
   [ColumnProvenance.Other]: 'text-secondary',
 };
 
-export const COST_TEXT_CLASS = 'text-accent-secondary';
+export const COST_TEXT_CLASS = 'text-green-2';
 
 // One palette, one taxonomy. The tree's rows, its filter controls and the detail badge all read `SpanKind`,
 // so a row can no longer describe itself in one vocabulary while its own detail uses another.
@@ -512,15 +512,15 @@ export const COST_TEXT_CLASS = 'text-accent-secondary';
 
 // Filled rather than outlined — a rail badge is not a filter control — but the same hue as the kind's node.
 export const SPAN_KIND_CLASS: Record<SpanKind, string> = {
-  [SpanKind.Llm]: 'bg-accent-primary-alpha text-accent-primary',
-  [SpanKind.Mcp]: 'bg-accent-tertiary-alpha text-accent-tertiary',
-  [SpanKind.Embeddings]: 'bg-accent-secondary-alpha text-accent-secondary',
+  [SpanKind.Llm]: 'bg-control-accent-alpha text-accent',
+  [SpanKind.Mcp]: 'bg-violet-2 text-violet-1',
+  [SpanKind.Embeddings]: 'bg-success text-green-2',
   [SpanKind.Route]: 'bg-warning text-warning',
   // Rating shares the neutral hue with the generic kind, by kinship: a rating is not part of the turn's work
   // at all — it arrives as its own single-hop trace afterwards — and the two therefore never render beside
   // each other, so sharing costs the reader nothing. Each still states its kind in words.
-  [SpanKind.Rating]: 'bg-layer-4 text-secondary',
-  [SpanKind.Other]: 'bg-layer-4 text-secondary',
+  [SpanKind.Rating]: 'bg-control-neutral-hover-muted text-secondary',
+  [SpanKind.Other]: 'bg-control-neutral-hover-muted text-secondary',
 };
 
 // Failure is its own axis, so it has its own class rather than a member of the kind palette.
@@ -531,7 +531,7 @@ export const SPAN_FAILED_CLASS = 'bg-error text-error';
 export const HOP_STATUS_OK_CLASS = 'bg-success text-success';
 
 // The verb the request was sent with, marked like the kind badges in the tree, and stated in words too.
-export const HOP_METHOD_CLASS = 'bg-accent-primary-alpha text-accent-primary';
+export const HOP_METHOD_CLASS = 'bg-control-accent-alpha text-accent';
 
 export const INSIGHTS_ABSENCE_KEY: Record<Exclude<SessionInsightsState, SessionInsightsState.Available>, string> = {
   [SessionInsightsState.NotEvaluated]: SessionsTraceI18nKey.DetailInsightsNotEvaluated,
@@ -567,18 +567,18 @@ export const MESSAGE_ROLE_LABEL_KEY: Record<MessageRole, string> = {
 };
 
 export const SPAN_KIND_RAIL_CLASS: Record<SpanKind, string> = {
-  [SpanKind.Llm]: 'border-accent-primary',
+  [SpanKind.Llm]: 'border-accent',
   [SpanKind.Mcp]: 'border-accent-tertiary',
-  [SpanKind.Embeddings]: 'border-accent-secondary',
+  [SpanKind.Embeddings]: 'border-success',
   [SpanKind.Route]: 'border-warning',
   [SpanKind.Rating]: 'border-primary',
   [SpanKind.Other]: 'border-primary',
 };
 
 export const SPAN_KIND_CHIP_CLASS: Record<SpanKind, string> = {
-  [SpanKind.Llm]: 'border-accent-primary text-accent-primary',
-  [SpanKind.Mcp]: 'border-accent-tertiary text-accent-tertiary',
-  [SpanKind.Embeddings]: 'border-accent-secondary text-accent-secondary',
+  [SpanKind.Llm]: 'border-accent text-accent',
+  [SpanKind.Mcp]: 'border-accent-tertiary text-violet-1',
+  [SpanKind.Embeddings]: 'border-success text-green-2',
   [SpanKind.Route]: 'border-warning text-warning',
   [SpanKind.Rating]: 'border-primary text-secondary',
   [SpanKind.Other]: 'border-primary text-secondary',
@@ -586,10 +586,10 @@ export const SPAN_KIND_CHIP_CLASS: Record<SpanKind, string> = {
 
 export const NEUTRAL_CHIP_CLASS = 'border-primary text-secondary';
 
-// A chosen filter, in the accent the console uses for an action rather than in a lighter grey box. `bg-layer-4`
-// against a `bg-layer-2` panel read as a slab of background rather than as a selection, and the row of them
+// A chosen filter, in the accent the console uses for an action rather than in a lighter grey box. `bg-control-neutral-hover-muted`
+// against a `bg-layer-raised` panel read as a slab of background rather than as a selection, and the row of them
 // read as disabled. Every token here is one the palette defines.
-export const SELECTED_CHIP_CLASS = 'border-accent-primary bg-accent-primary-alpha text-accent-primary';
+export const SELECTED_CHIP_CLASS = 'border-accent bg-control-accent-alpha text-accent';
 
 // The outcome axis carries its own colour rather than borrowing one from the kind palette, so a failure reads
 // as a failure whatever kind of call it happened to.

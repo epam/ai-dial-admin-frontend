@@ -3,9 +3,9 @@ const escapeHtml = (str: string) => str.replace(/&/g, '&amp;').replace(/</g, '&l
 export const highlightJson = (json: string): string => {
   const escaped = escapeHtml(json);
   return escaped
-    .replace(/(&quot;|")((?:\\.|[^"\\])*)(&quot;|")\s*:/g, '<span class="text-accent-secondary">"$2"</span>:')
-    .replace(/:\s*(&quot;|")((?:\\.|[^"\\])*)(&quot;|")/g, ': <span class="text-accent-tertiary">"$2"</span>')
-    .replace(/:\s*(\d+\.?\d*)/g, ': <span class="text-accent-primary">$1</span>')
+    .replace(/(&quot;|")((?:\\.|[^"\\])*)(&quot;|")\s*:/g, '<span class="text-green-2">"$2"</span>:')
+    .replace(/:\s*(&quot;|")((?:\\.|[^"\\])*)(&quot;|")/g, ': <span class="text-violet-1">"$2"</span>')
+    .replace(/:\s*(\d+\.?\d*)/g, ': <span class="text-accent">$1</span>')
     .replace(/:\s*(true|false)/g, ': <span class="text-warning">$1</span>')
     .replace(/:\s*(null)/g, ': <span class="text-secondary italic">$1</span>');
 };

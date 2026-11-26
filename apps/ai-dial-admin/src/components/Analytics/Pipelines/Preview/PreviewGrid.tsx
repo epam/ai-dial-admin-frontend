@@ -7,21 +7,27 @@ import { ColDef, GetRowIdParams, ITooltipParams, ValueFormatterParams, ValueGett
 import GridView from '@/src/components/Grid/GridView/GridView';
 import ResultValueCell from '@/src/components/Analytics/QueryBuilder/Result/ResultValueCell';
 import { isFullValueNeeded, renderCell } from '@/src/components/Analytics/QueryBuilder/utils/result';
+import EvaluatedKeyCell from '@/src/components/Analytics/Pipelines/Preview/EvaluatedKeyCell';
 import PreviewColumnHeader from '@/src/components/Analytics/Pipelines/Preview/PreviewColumnHeader';
 import {
   PREVIEW_GRID_MAX_HEIGHT_PX,
   PREVIEW_HEADER_HEIGHT_PX,
   PREVIEW_ROW_HEIGHT_PX,
 } from '@/src/components/Analytics/Pipelines/Preview/constants';
-import { PreviewGridRow } from '@/src/components/Analytics/Pipelines/Preview/models';
+import { PreviewGridModelRun, PreviewGridRow } from '@/src/components/Analytics/Pipelines/Preview/models';
+import { getModelColumnNames } from '@/src/components/Analytics/Pipelines/Preview/utils/model-run';
 import { PipelinePreviewI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { PreviewColumn, PreviewRow } from '@/src/models/analytics/pipeline-preview';
+import { ModelRunStatus } from '@/src/models/analytics/pipeline-model-run';
+import { PreviewColumn, PreviewColumnRole, PreviewRow } from '@/src/models/analytics/pipeline-preview';
 
 interface Props {
   columns: PreviewColumn[];
   rows: PreviewRow[];
+  modelRun?: PreviewGridModelRun;
 }
+
+const UNSORTABLE = { sortable: false, filter: false, floatingFilter: false };
 
 const GRID_BORDER_PX = 2;
 
@@ -37,7 +43,7 @@ const getRowId = ({ data }: GetRowIdParams<PreviewGridRow>): string => String(da
  * The sampled rows, one column per entry the service returned, in its order. A column is addressed by its literal
  * name — an enrichment's column is `table.column`, which `field` alone would read as a nested path.
  */
-const PreviewGrid: FC<Props> = ({ columns, rows }) => {
+const PreviewGrid: FC<Props> = ({ columns, rows, modelRun }) => {
   const t = useI18n();
 
   const gridRows = useMemo(() => rows.map((values, index): PreviewGridRow => ({ index, values })), [rows]);
@@ -57,14 +63,75 @@ const PreviewGrid: FC<Props> = ({ columns, rows }) => {
           return isFullValueNeeded(text) ? undefined : text;
         },
         cellRenderer: ResultValueCell,
+        ...(modelRun &&
+          column.role === PreviewColumnRole.GrainKey && {
+            cellRenderer: EvaluatedKeyCell,
+            cellRendererParams: {
+              evaluatedIndex: modelRun.evaluatedIndex,
+              isPanelExpanded: modelRun.isPanelExpanded,
+              onTogglePanel: modelRun.onTogglePanel,
+            },
+          }),
         // A sample of a few rows, shown in the order the service chose: sorting would reorder what "newest first" says,
         // and a filter row would take header height from the rows the tab is there to show.
-        sortable: false,
-        filter: false,
-        floatingFilter: false,
+        ...UNSORTABLE,
       })),
-    [columns, t],
+    [columns, modelRun, t],
   );
+
+  const modelColumnDefs = useMemo<ColDef[]>(() => {
+    if (!modelRun) return [];
+
+    const { evaluation, evaluatedIndex } = modelRun;
+    const isEvaluated = (data?: PreviewGridRow) => data?.index === evaluatedIndex;
+
+    const outcomeText = (data?: PreviewGridRow): string => {
+      if (!isEvaluated(data)) return t(PipelinePreviewI18nKey.CellPreviewOnly);
+      if (evaluation.status === ModelRunStatus.Ok) return t(PipelinePreviewI18nKey.CellOk);
+
+      return t(PipelinePreviewI18nKey.CellFailed, {
+        stage: evaluation.stage ?? t(PipelinePreviewI18nKey.UnknownStage),
+      });
+    };
+
+    const outcome: ColDef = {
+      colId: '__model_outcome',
+      headerName: t(PipelinePreviewI18nKey.ModelColumn),
+      headerComponent: PreviewColumnHeader,
+      headerComponentParams: {
+        previewColumn: {
+          name: t(PipelinePreviewI18nKey.ModelColumn),
+          type: t(PipelinePreviewI18nKey.ModelColumnCaption),
+        },
+      },
+      valueGetter: ({ data }: ValueGetterParams<PreviewGridRow>) => outcomeText(data),
+      ...UNSORTABLE,
+    };
+
+    const outputs: ColDef[] = getModelColumnNames(evaluation).map((name) => ({
+      colId: `__model_output_${name}`,
+      headerName: name,
+      headerComponent: PreviewColumnHeader,
+      headerComponentParams: { previewColumn: { name, type: t(PipelinePreviewI18nKey.FromModel) } },
+      valueGetter: ({ data }: ValueGetterParams<PreviewGridRow>) =>
+        isEvaluated(data) ? evaluation.outputs?.[name] : undefined,
+      valueFormatter: ({ value, data }: ValueFormatterParams<PreviewGridRow>) => {
+        if (!isEvaluated(data)) return '—';
+        return value == null ? t(PipelinePreviewI18nKey.CellNull) : renderCell(value);
+      },
+      cellRenderer: ResultValueCell,
+      ...UNSORTABLE,
+    }));
+
+    return [outcome, ...outputs];
+  }, [modelRun, t]);
+
+  const allColumnDefs = useMemo(() => {
+    if (modelColumnDefs.length === 0) return columnDefs;
+
+    const [outcome, ...outputs] = modelColumnDefs;
+    return [outcome, ...columnDefs, ...outputs];
+  }, [columnDefs, modelColumnDefs]);
 
   const height = Math.min(
     PREVIEW_HEADER_HEIGHT_PX + rows.length * PREVIEW_ROW_HEIGHT_PX + GRID_BORDER_PX,
@@ -74,7 +141,7 @@ const PreviewGrid: FC<Props> = ({ columns, rows }) => {
   return (
     <div style={{ height }} className="min-h-0 w-full">
       <GridView
-        columnDefs={columnDefs}
+        columnDefs={allColumnDefs}
         rowData={gridRows}
         getRowId={getRowId}
         isLiveData

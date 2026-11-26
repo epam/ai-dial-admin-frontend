@@ -9,6 +9,11 @@ import { FC, ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import ResourceSourceField, { getInitialSource } from '@/src/components/Assets/Resources/ResourceSourceField';
+import { CreateApplicationStep } from '@/src/components/Assets/Entities/Apps/constants';
+import {
+  getInitialApplicationAsset,
+  isApplicationCreationSourceValid,
+} from '@/src/components/Assets/Entities/Apps/utils';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import {
@@ -16,7 +21,6 @@ import {
   ASSET_APPLICATION_INTERFACES_SOURCE_TYPE,
 } from '@/src/components/SourceField/constants';
 import { ButtonsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
-import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -41,13 +45,7 @@ import {
 import { isPlatformBucketPath, PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import { isValidEndpoint } from '@/src/utils/validation/url-error';
 import AssetProperties from '@/src/components/EntityMainProperties/Properties/AssetProperties';
-
-enum CreateStep {
-  Details = 'details',
-  Source = 'source',
-}
 
 interface Props {
   isOpen: boolean;
@@ -90,19 +88,10 @@ const CreateApplication: FC<Props> = ({
   const isPlatform = isPlatformCreate ?? isPlatformBucketPath(folderContext?.filePath);
   const folderId = isPlatform ? `${PLATFORM_ROOT_FOLDER}/` : (folderContext?.filePath ?? '');
   const initialAsset = useMemo(
-    () =>
-      ({
-        name: '',
-        displayName: '',
-        description: '',
-        interfaces: {},
-        folderId,
-        ...(isPlatform ? { user_roles: [] } : { version: DEFAULT_NEW_ENTITY_VERSION }),
-        ...initialValues,
-      }) as DialApplicationResource,
+    () => getInitialApplicationAsset(folderId, isPlatform, initialValues),
     [isPlatform, folderId, initialValues],
   );
-  const [step, setStep] = useState(CreateStep.Details);
+  const [step, setStep] = useState(CreateApplicationStep.Details);
   const [asset, setAsset] = useState(initialAsset);
   const [source, setSource] = useState(() =>
     initialValues ? getInitialSource(initialAsset, codeAppEditorUrl) : ASSET_APPLICATION_INTERFACES_SOURCE_TYPE,
@@ -111,7 +100,7 @@ const CreateApplication: FC<Props> = ({
   const [isUniqueNameError, setIsUniqueNameError] = useState(false);
 
   const onCloseAndReset = useCallback(() => {
-    setStep(CreateStep.Details);
+    setStep(CreateApplicationStep.Details);
     setAsset(initialAsset);
     setSource(ASSET_APPLICATION_INTERFACES_SOURCE_TYPE);
     setIsUniqueNameError(false);
@@ -120,13 +109,13 @@ const CreateApplication: FC<Props> = ({
 
   const onNext = useCallback(async () => {
     if (!isPlatform) {
-      setStep(CreateStep.Source);
+      setStep(CreateApplicationStep.Source);
       return;
     }
 
     const isUnique = await checkIsUniqueDeploymentName(asset.name?.trim() || '');
     setIsUniqueNameError(!isUnique);
-    if (isUnique) setStep(CreateStep.Source);
+    if (isUnique) setStep(CreateApplicationStep.Source);
   }, [asset.name, isPlatform]);
 
   const onCreateApplication = useCallback(async () => {
@@ -170,20 +159,16 @@ const CreateApplication: FC<Props> = ({
     !!asset.displayName &&
     !isUniqueNameError &&
     (!isPlatform ? isValid && !!asset.version && !versionError : true);
-  const isSourceValid =
-    (source === ASSET_APPLICATION_INTERFACES_SOURCE_TYPE && Object.keys(asset.interfaces ?? {}).length) ||
-    (source === 'schema' && !!asset.application_type_schema_id) ||
-    (source === CODE_APP_SOURCE_TYPE && !!codeAppEditorUrl) ||
-    (source === 'endpoints' && !!asset.endpoint && isValidEndpoint(asset.endpoint));
-  const isSourceStep = step === CreateStep.Source;
+  const isSourceValid = isApplicationCreationSourceValid(asset, source, codeAppEditorUrl);
+  const isSourceStep = step === CreateApplicationStep.Source;
 
   const onChangeStep = useCallback(
     (id: string) => {
-      if (id === CreateStep.Source) {
+      if (id === CreateApplicationStep.Source) {
         void onNext();
         return;
       }
-      setStep(id as CreateStep);
+      setStep(id as CreateApplicationStep);
     },
     [onNext],
   );
@@ -191,12 +176,12 @@ const CreateApplication: FC<Props> = ({
   const steps = useMemo<Step[]>(
     () => [
       {
-        id: CreateStep.Details,
+        id: CreateApplicationStep.Details,
         name: t(TabsI18nKey.Properties),
         status: isDetailsValid ? StepStatus.VALID : undefined,
       },
       {
-        id: CreateStep.Source,
+        id: CreateApplicationStep.Source,
         name: t(EntitiesI18nKey.SourceType),
         status: isSourceStep && isSourceValid && isValid ? StepStatus.VALID : undefined,
       },
@@ -216,7 +201,7 @@ const CreateApplication: FC<Props> = ({
           statusLabels={getStepStatusLabels(t)}
         />
         {topSlot}
-        {step === CreateStep.Details && (
+        {step === CreateApplicationStep.Details && (
           <div className="flex flex-col gap-y-8">
             <AssetProperties
               view={ApplicationRoute.AssetsApplications}

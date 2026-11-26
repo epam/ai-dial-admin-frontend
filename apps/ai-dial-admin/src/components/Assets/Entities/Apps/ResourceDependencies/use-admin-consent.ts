@@ -1,6 +1,6 @@
 'use client';
 
-import { startTransition, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   getAdminConsentStatus,
@@ -17,12 +17,13 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { toApprovedResources } from './utils/resources';
 
 /**
- * Reads Core's admin-consent status for the application and re-reads it whenever `etag` changes (a
- * successful Save) and after every approve / revoke, so the block never shows a state older than the
+ * Reads Core's admin-consent status for the application and re-reads it whenever the saved
+ * dependencies change (a successful Save, once its `router.refresh()` has delivered the new server
+ * data) and after every approve / revoke, so the block never shows a state older than the
  * last action. Any failed read — 403 for a non-admin, 404 for a Core without the feature — is reported
  * as `hasFailed`, which the tab renders as its no-data state.
  */
-export const useAdminConsent = (appPath: string, etag: string, savedDependencies?: ResourceDependency[]) => {
+export const useAdminConsent = (appPath: string, savedDependencies?: ResourceDependency[]) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
@@ -50,13 +51,13 @@ export const useAdminConsent = (appPath: string, etag: string, savedDependencies
     }
   }, [appPath]);
 
-  // The etag changes when a Save's `router.refresh()` lands. Dispatching the server action inside a
-  // transition queues it behind that refresh instead of racing it, which left the read unresolved.
+  // Keyed on the server-provided dependencies, not the view's local etag: the etag is set the moment a
+  // Save succeeds, before `router.push` / `router.refresh()` run, and a server action in flight during
+  // that navigation never resolves, leaving the block loading. The saved dependencies only change once
+  // the refreshed data has landed, so the read can't be interrupted.
   useEffect(() => {
-    startTransition(() => {
-      void refresh();
-    });
-  }, [refresh, etag]);
+    void refresh();
+  }, [refresh, savedDependencies]);
 
   const mutate = useCallback(
     async (

@@ -129,7 +129,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
   const firstPredicate = draft.predicates[0];
 
   return (
-    <div className="flex flex-col gap-2 bg-layer-0 rounded p-2 z-50 shadow">
+    <div className="flex flex-col gap-2 bg-control-neutral rounded p-2 z-50 shadow">
       <div className="flex items-center gap-2">
         <div className={FIELD_COL}>
           <Select
@@ -165,7 +165,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
           <button
             type="button"
             aria-label={t(ButtonsI18nKey.Delete)}
-            className="hover:text-accent-primary"
+            className="hover:text-accent"
             onClick={() => {
               onRemovePredicate(0);
             }}
@@ -211,7 +211,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
                 <button
                   type="button"
                   aria-label={t(ButtonsI18nKey.Delete)}
-                  className="hover:text-accent-primary"
+                  className="hover:text-accent"
                   onClick={() => {
                     onRemovePredicate(i + 1);
                   }}

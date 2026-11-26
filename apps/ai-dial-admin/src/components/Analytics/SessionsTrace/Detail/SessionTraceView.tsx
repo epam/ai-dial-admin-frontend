@@ -59,7 +59,7 @@ interface StatProps {
 }
 
 const Stat: FC<StatProps> = ({ label, value, valueClassName }) => (
-  <div className="flex min-w-[88px] flex-col items-center gap-0.5 rounded border border-secondary bg-layer-3 px-3.5 py-2">
+  <div className="flex min-w-[88px] flex-col items-center gap-0.5 rounded border border-secondary bg-layer-sunken px-3.5 py-2">
     <span className={classNames('text-primary dial-body-semi-text', valueClassName)}>{value}</span>
     <span className="text-secondary dial-tiny-text">{label}</span>
   </div>
@@ -176,7 +176,7 @@ const SessionTraceView: FC<Props> = ({
           />
           <div className="flex min-w-0 flex-col gap-0.5">
             <h2 className="flex min-w-0 items-center gap-2 text-primary">
-              <IconSubtask size={ICON_SIZE} aria-hidden className="shrink-0 text-accent-primary" />
+              <IconSubtask size={ICON_SIZE} aria-hidden className="shrink-0 text-accent" />
               <span className="min-w-0">
                 <EllipsisTooltip text={title ?? figures.traceId} />
               </span>
@@ -229,7 +229,7 @@ const SessionTraceView: FC<Props> = ({
       )}
 
       <div className="flex min-h-0 flex-1 rounded border border-secondary">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-layer-1">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-layer-base">
           {hasBodies ? (
             <SplitPane ariaLabel={t(SessionsTraceI18nKey.BodiesSplitLabel)} top={stream} bottom={bodies} />
           ) : (

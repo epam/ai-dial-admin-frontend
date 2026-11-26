@@ -1,3 +1,4 @@
+import { GridSelectionMode } from '@epam/ai-dial-react-file-manager';
 import { GridColorScheme } from '@epam/ai-dial-ui-kit';
 import { act, render } from '@testing-library/react';
 import type { ColDef, GridColumnsChangedEvent } from 'ag-grid-community';
@@ -86,6 +87,20 @@ describe('AgGridWrapper', () => {
     );
 
     expect(mockState.lastProps?.className).toBeUndefined();
+  });
+
+  test('forwards kit selection mode and the selection visibility class', () => {
+    render(
+      <AgGridWrapper
+        columnDefs={[{ field: 'id' }]}
+        rowData={[]}
+        selectionMode={GridSelectionMode.MULTIPLE}
+        gridClassName="dial-kit-grid-selection-visible"
+      />,
+    );
+
+    expect(mockState.lastProps?.selectionMode).toBe(GridSelectionMode.MULTIPLE);
+    expect(mockState.lastProps?.className).toBe('dial-kit-grid-selection-visible');
   });
 
   test('forwards the grid-ready callback with the api once the kit grid exposes it', () => {

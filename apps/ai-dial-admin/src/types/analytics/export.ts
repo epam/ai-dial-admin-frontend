@@ -16,4 +16,5 @@ export enum AnalyticsExportPreviewTab {
   OBJECTS = 'objects',
   REQUIRED_SYSTEM_TABLES = 'required-system-tables',
   SKIPPED = 'skipped',
+  ACCESS = 'access',
 }

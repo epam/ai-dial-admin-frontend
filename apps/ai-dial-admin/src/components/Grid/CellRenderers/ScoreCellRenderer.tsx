@@ -87,7 +87,7 @@ const ScoreCellRenderer = ({ value, column, context, mode = ScoreColorMode.Absol
 
   const borderClasses = isHidden && classes ? classNames(classes.border, 'border-r border-b') : undefined;
   const isBorderless = !isHidden && !isZeroDelta;
-  const zeroDeltaClasses = isZeroDelta ? 'bg-layer-2 border-r border-tertiary' : undefined;
+  const zeroDeltaClasses = isZeroDelta ? 'bg-layer-raised border-r border-tertiary' : undefined;
 
   return (
     <div

@@ -19,7 +19,7 @@ const PipelineEnabledBadge: FC<Props> = ({ enabled, className }) => {
   return (
     <StatusPill
       label={t(enabled ? AnalyticsPipelinesI18nKey.StatusEnabled : AnalyticsPipelinesI18nKey.StatusDisabled)}
-      toneClassName={enabled ? 'text-success bg-success' : 'text-secondary bg-layer-4'}
+      toneClassName={enabled ? 'text-success bg-success' : 'text-secondary bg-control-neutral-hover-muted'}
       className={className}
     />
   );

@@ -233,7 +233,7 @@ const AccessTab: FC<Props> = ({
         <p className="dial-small-text text-secondary">
           {t(AnalyticsTableAccessI18nKey.EnrichmentNote)}{' '}
           {!!sourceTable && (
-            <Link href={tableDetailHref(sourceTable)} className="text-accent-primary underline">
+            <Link href={tableDetailHref(sourceTable)} className="text-accent underline">
               {sourceTable}
             </Link>
           )}

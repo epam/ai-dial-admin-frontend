@@ -36,7 +36,7 @@ const DualValueCard: FC<Props> = ({
           { label: secondaryLabel, value: secondary },
         ].map(({ label, value }) => (
           <div key={label} className="flex flex-col items-center">
-            <span className="text-accent-primary font-semibold md:text-4xl text-2xl nowrap">
+            <span className="text-accent font-semibold md:text-4xl text-2xl nowrap">
               {value === null ? '—' : formatNumberWithExponent(value)}
             </span>
             <span className="text-secondary font-extralight text-xs">

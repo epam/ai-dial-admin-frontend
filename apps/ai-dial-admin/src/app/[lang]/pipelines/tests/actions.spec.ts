@@ -15,6 +15,7 @@ import {
   requeueFailures,
   resumePipeline,
   resumePipelineBackfill,
+  runPipelineWithModel,
   startPipelineBackfill,
 } from '@/src/app/[lang]/pipelines/actions';
 import { DlqLane } from '@/src/models/analytics/pipeline-dlq';
@@ -299,5 +300,41 @@ describe('previewPipeline server action', () => {
     vi.mocked(analyticsDataApi.previewPipeline).mockResolvedValue(failure);
 
     expect(await previewPipeline('retrieval-quality')).toEqual(failure);
+  });
+});
+
+describe('runPipelineWithModel server action', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getUserToken).mockResolvedValue(TOKEN_MOCK);
+    vi.mocked(getIsEnableAuthToggle).mockReturnValue(true);
+  });
+
+  test('asks the runner for the named pipeline with the caller token', async () => {
+    asConfigured(true);
+    const run = { preview: { columns: [], rows: [], notes: [] }, evaluations: [] };
+    runner.runWithModel.mockResolvedValue({ success: true, response: run });
+
+    const res = await runPipelineWithModel('ticket-summary');
+
+    expect(runner.runWithModel).toHaveBeenCalledWith('ticket-summary', TOKEN_MOCK);
+    expect(res).toEqual({ success: true, response: run });
+  });
+
+  test('answers runner_not_configured without a request when no host is set', async () => {
+    asConfigured(false);
+
+    const res = await runPipelineWithModel('ticket-summary');
+
+    expect(res).toEqual({ success: false, errorHeader: RUNNER_NOT_CONFIGURED });
+    expect(runner.runWithModel).not.toHaveBeenCalled();
+  });
+
+  test("returns the runner's refusal untouched", async () => {
+    asConfigured(true);
+    const failure = { success: false, status: 409, errorHeader: 'dry_run_in_progress', errorMessage: 'busy' };
+    runner.runWithModel.mockResolvedValue(failure);
+
+    expect(await runPipelineWithModel('ticket-summary')).toEqual(failure);
   });
 });

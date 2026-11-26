@@ -13,7 +13,7 @@ vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   ),
 }));
 
-vi.mock('../components/CollapsibleSection', () => ({
+vi.mock('@/src/components/TryOut/components/CollapsibleSection', () => ({
   default: ({ title, children }: { title: string; children: ReactNode }) => (
     <div>
       <span data-testid="collapsible-title">{title}</span>

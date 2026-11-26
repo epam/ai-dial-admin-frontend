@@ -121,7 +121,7 @@ const MetricConfiguration: FC<Props> = ({
   return (
     <div className="h-full flex gap-8 min-h-0">
       <div className="w-[400px] shrink-0 flex flex-col gap-3 overflow-auto">
-        <div className="bg-layer-4 rounded p-3 flex flex-col gap-2 min-w-0 overflow-hidden">
+        <div className="bg-control-neutral-hover-muted rounded p-3 flex flex-col gap-2 min-w-0 overflow-hidden">
           <div className="flex flex-col gap-1 min-w-0">
             <p className="dial-tiny-text text-secondary">{t(TestSuitesI18nKey.Metric)}</p>
             <p className="text-base font-semibold text-primary leading-6 break-words">{displayName}</p>
@@ -134,7 +134,7 @@ const MetricConfiguration: FC<Props> = ({
         </div>
 
         {(selectedMetricOutputs?.length ?? 0) > 0 ? (
-          <div className="bg-layer-4 rounded p-3">
+          <div className="bg-control-neutral-hover-muted rounded p-3">
             <MetricOutputs title={t(TestSuitesI18nKey.Outputs)} fields={selectedMetricOutputs || []} />
           </div>
         ) : null}
@@ -160,7 +160,7 @@ const MetricConfiguration: FC<Props> = ({
             />
           </div>
         ) : (
-          <div className="flex-1 min-h-0 overflow-auto flex flex-col gap-5">
+          <div className="relative flex-1 min-h-0 overflow-auto flex flex-col gap-5">
             <div className="flex flex-col gap-4">
               <p className="dial-small-semi text-primary">{t(TabsI18nKey.Properties)}</p>
               <Input

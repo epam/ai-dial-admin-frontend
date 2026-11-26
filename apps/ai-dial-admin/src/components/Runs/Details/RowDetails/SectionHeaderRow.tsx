@@ -22,7 +22,7 @@ const SectionHeaderRow: FC<Props> = ({ label, isCollapsed, onToggle, iconSize = 
   <button
     type="button"
     className={mergeClasses(
-      'cursor-pointer hover:bg-layer-2 p-3 border-b border-tertiary bg-layer-3 text-left w-full',
+      'cursor-pointer hover:bg-layer-raised p-3 border-b border-tertiary bg-layer-sunken text-left w-full',
       className,
     )}
     style={{ gridColumn: '1 / -1' }}

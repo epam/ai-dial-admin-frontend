@@ -374,7 +374,7 @@ const FilterCondition: FC<Props> = ({
                   'px-4 py-1 font-mono dial-tiny-text',
                   node.value === v
                     ? classNames(BOOLEAN_ACTIVE.chipBg, BOOLEAN_ACTIVE.chipText)
-                    : 'text-secondary hover:bg-layer-4',
+                    : 'text-secondary hover:bg-control-neutral-hover-muted',
                 )}
                 onClick={() => setValue(v)}
               >

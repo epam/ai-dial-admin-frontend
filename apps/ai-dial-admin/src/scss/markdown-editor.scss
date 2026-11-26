@@ -59,7 +59,7 @@
     }
 
     a {
-      @apply text-accent-primary;
+      @apply text-accent;
 
       &:hover,
       &:focus {
@@ -72,7 +72,7 @@
     }
 
     pre {
-      @apply p-4 mt-4 bg-layer-2 rounded;
+      @apply p-4 mt-4 bg-layer-raised rounded;
     }
 
     code {

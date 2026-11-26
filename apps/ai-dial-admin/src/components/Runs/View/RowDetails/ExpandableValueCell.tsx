@@ -45,7 +45,7 @@ const ExpandableValueCell: FC<Props> = ({ field, onOpen }) => {
           EXECUTION_ROW_DETAIL_CELL_BASE,
           'group/cell',
           isRightAlignedRowDetailField(field) && 'justify-end text-right',
-          hasScore ? 'p-0' : 'group-hover:bg-accent-primary-alpha',
+          hasScore ? 'p-0' : 'group-hover:bg-control-accent-alpha',
         )}
       >
         {isStatusRow ? (

@@ -5,10 +5,10 @@ import { Spinner } from '@epam/ai-dial-ui-kit';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import { toTryOutJsonEditorProps } from '@/src/components/TestSuites/utils/tryout-json-editor';
+import { toTryOutJsonEditorProps } from '@/src/components/TryOut/utils/tryout-json-editor';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import CollapsibleSection from './CollapsibleSection';
+import CollapsibleSection from '@/src/components/TryOut/components/CollapsibleSection';
 
 interface Props {
   streaming?: boolean;
@@ -39,7 +39,9 @@ const TryOutEventsSection: FC<Props> = ({ streaming, events, isLoading }) => {
       growOnOpen={false}
     >
       {isLoading ? (
-        <Spinner size={18} fullWidth />
+        <div className="flex h-16 items-center justify-center overflow-hidden">
+          <Spinner size={18} />
+        </div>
       ) : (
         <div className="h-64 min-h-64">
           <JsonEditor

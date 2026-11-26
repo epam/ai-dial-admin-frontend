@@ -21,8 +21,8 @@ const UsageEmptyState: FC<Props> = ({ pill, title, lines, figure, className }) =
   <div className={classNames('flex flex-col items-center justify-center gap-3 text-center', className)}>
     {figure}
     {pill && (
-      <span className="flex items-center gap-2 rounded-full border border-secondary bg-layer-0 px-3 py-1.5 dial-small-text text-primary">
-        <span aria-hidden className="size-1.5 rounded-full bg-controls-disable" />
+      <span className="flex items-center gap-2 rounded-full border border-secondary bg-control-neutral px-3 py-1.5 dial-small-text text-primary">
+        <span aria-hidden className="size-1.5 rounded-full bg-control-disable-primary" />
         {pill}
       </span>
     )}

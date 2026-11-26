@@ -42,7 +42,7 @@ const IngestFailureDetail: FC<Props> = ({ failure }) => {
   const isPending = failure.state === IngestFailureState.Pending;
 
   return (
-    <div className="flex flex-col gap-4 bg-layer-2 p-4">
+    <div className="flex flex-col gap-4 bg-layer-raised p-4">
       <div className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2">
         <LabelledText label={t(IngestFailuresI18nKey.Key)}>
           <CopyableText

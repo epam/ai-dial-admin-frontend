@@ -106,7 +106,7 @@ const RemoveUnitModal: FC<Props> = ({ unit, subUnits, onClose, onRemoved }) => {
       description={
         <div className="flex flex-col gap-y-3">
           <span>{t(FoldersI18nKey.RemoveUnitDescription)}</span>
-          <div className="flex flex-col gap-y-1 bg-layer-4 rounded px-4 py-3">
+          <div className="flex flex-col gap-y-1 bg-control-neutral-hover-muted rounded px-4 py-3">
             <div className="flex flex-row items-center gap-x-1 text-primary dial-small">
               <span className="shrink-0 text-secondary">{t(FoldersI18nKey.UnitName)}:</span>
               <EllipsisTooltip text={unit.name} />
@@ -131,7 +131,7 @@ const RemoveUnitModal: FC<Props> = ({ unit, subUnits, onClose, onRemoved }) => {
           {blockingContent && (
             <div role="alert" className="flex flex-col gap-y-1">
               <span className="text-error">{t(FoldersI18nKey.RemoveUnitHoldsContent)}</span>
-              <ul className="flex flex-col gap-y-1 bg-layer-4 rounded px-4 py-3 text-primary dial-small">
+              <ul className="flex flex-col gap-y-1 bg-control-neutral-hover-muted rounded px-4 py-3 text-primary dial-small">
                 {blockingContent.map((name) => (
                   <li key={name}>
                     <EllipsisTooltip text={name} />

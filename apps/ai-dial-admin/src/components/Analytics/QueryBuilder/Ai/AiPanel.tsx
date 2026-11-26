@@ -75,7 +75,7 @@ const AiPanel: FC<Props> = ({
                 <div
                   key={index}
                   ref={isLastUserMessage ? lastUserMessageRef : undefined}
-                  className="dial-small-text max-w-[85%] self-end whitespace-pre-wrap rounded border border-tertiary bg-layer-3 px-3 py-2 text-primary"
+                  className="dial-small-text max-w-[85%] self-end whitespace-pre-wrap rounded border border-tertiary bg-layer-sunken px-3 py-2 text-primary"
                 >
                   {message.content}
                 </div>

@@ -1,6 +1,7 @@
 import { Token } from '@/src/models/auth';
 import { DlqFilters, DlqPage, DlqRequeueResponse } from '@/src/models/analytics/pipeline-dlq';
 import { GroupListOrder, PipelineGroupsPage } from '@/src/models/analytics/pipeline-groups';
+import { PipelineModelRun } from '@/src/models/analytics/pipeline-model-run';
 import {
   PausedPipeline,
   PausedPipelinesResponse,
@@ -22,6 +23,7 @@ export const RUNNER_PIPELINES_URL = 'v1/pipelines';
 export const RUNNER_PAUSED_URL = `${RUNNER_PIPELINES_URL}/paused`;
 export const RUNNER_CACHE_URL = `${RUNNER_PIPELINES_URL}/cache`;
 export const RUNNER_RESUME_URL = (name: string): string => `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/resume`;
+export const RUNNER_TRY_URL = (name: string): string => `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/try`;
 export const RUNNER_RUNTIME_URL = (name: string): string =>
   `${RUNNER_PIPELINES_URL}/${encodeURIComponent(name)}/runtime`;
 
@@ -157,6 +159,17 @@ export class AnalyticsRunnerApi extends BaseApi {
 
     const view = res.response as PipelineRuntimeView | null;
     return view?.status?.state ? { ...res, response: view } : { ...res, success: false };
+  }
+
+  async runWithModel(name: string, token: Token): Promise<ServerActionResponse<PipelineModelRun>> {
+    const res = await this.sendActionRequest(RUNNER_TRY_URL(name), 'POST', token);
+
+    if (!res.success) return res;
+
+    const run = res.response as PipelineModelRun | null;
+    return run?.preview && Array.isArray(run.evaluations)
+      ? { ...res, response: run }
+      : { success: false, status: res.status, requestId: res.requestId };
   }
 
   // Answers 204 with no body, so it sends none: a JSON object here would be a body the endpoint does not

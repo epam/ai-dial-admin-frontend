@@ -26,7 +26,7 @@ const ReadinessSummary: FC<Props> = ({ readyWhen }) => {
   return (
     <section
       aria-label={t(AnalyticsPipelinesI18nKey.GroupsSummaryLabel)}
-      className="flex flex-col gap-4 rounded border border-secondary bg-layer-2 p-4"
+      className="flex flex-col gap-4 rounded border border-secondary bg-layer-raised p-4"
     >
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
@@ -39,9 +39,9 @@ const ReadinessSummary: FC<Props> = ({ readyWhen }) => {
           {triggers.map((item) => (
             <li
               key={item.condition}
-              className="flex items-center gap-2 rounded-full border border-secondary bg-layer-3 px-3 py-1.5"
+              className="flex items-center gap-2 rounded-full border border-secondary bg-layer-sunken px-3 py-1.5"
             >
-              <IconBolt {...BASE_BUTTON_ICON_PROPS} className="shrink-0 text-accent-primary" aria-hidden />
+              <IconBolt {...BASE_BUTTON_ICON_PROPS} className="shrink-0 text-accent" aria-hidden />
               <ReadinessSummaryLine item={item} />
             </li>
           ))}

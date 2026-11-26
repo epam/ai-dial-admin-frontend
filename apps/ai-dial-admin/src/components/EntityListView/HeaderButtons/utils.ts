@@ -10,6 +10,7 @@ import { importFiles } from '@/src/utils/files/import-files';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
 import { extractNameAndVersion } from '@/src/server/publications/path';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
+import { isAssetWithVersion } from '@/src/utils/is-view';
 
 export const getFormDataForUpload = (files: File[]): { body: FormData; fileSize: number } => {
   const body = new FormData();
@@ -90,7 +91,11 @@ export const getFormDataForImport = (
   body.append('config', configBlob, 'config.json');
 
   if (fileType === ImportFileType.ARCHIVE) {
-    body.append('file', file as File);
+    if (route === ApplicationRoute.Prompts || isAssetWithVersion(route)) {
+      body.append('file', file as File, 'archive.zip');
+    } else {
+      body.append('file', file as File);
+    }
   } else if (fileType === ImportFileType.JSON) {
     const fileBlob = new Blob([JSON.stringify(file)], {
       type: APPLICATION_JSON_TYPE,

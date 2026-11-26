@@ -42,6 +42,7 @@ interface Props {
   fileType: ImportFileType;
   configScope: ExportComponentType;
   analyticsPolicy: CatalogResolutionPolicy;
+  isAccessIncluded: boolean;
   analyticsResult?: CatalogImportResult;
   isReusedNamesAcknowledged: boolean;
   onChangeReusedNamesAcknowledged: (isAcknowledged: boolean) => void;
@@ -58,6 +59,7 @@ const ConfigurationPreview: FC<Props> = ({
   fileType,
   configScope,
   analyticsPolicy,
+  isAccessIncluded,
   analyticsResult,
   isReusedNamesAcknowledged,
   onChangeReusedNamesAcknowledged,
@@ -160,7 +162,7 @@ const ConfigurationPreview: FC<Props> = ({
     : t(ImportI18nKey.ImportBlockedTooltip);
 
   const importingOverlay = isImporting && (
-    <div className="size-full absolute bg-blackout z-10">
+    <div className="size-full absolute bg-backdrop z-10">
       <Spinner size={45} fullWidth />
     </div>
   );
@@ -173,6 +175,7 @@ const ConfigurationPreview: FC<Props> = ({
           <AnalyticsImportPreview
             importBody={importBody}
             policy={analyticsPolicy}
+            isAccessIncluded={isAccessIncluded}
             result={analyticsResult}
             isReusedNamesAcknowledged={isReusedNamesAcknowledged}
             onChangeReusedNamesAcknowledged={onChangeReusedNamesAcknowledged}

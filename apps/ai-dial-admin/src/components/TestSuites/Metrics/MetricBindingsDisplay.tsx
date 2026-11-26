@@ -27,7 +27,7 @@ interface TagProps {
 export const MetricCardTag: FC<TagProps> = ({ children, fullWidth }) => (
   <div
     className={classNames(
-      'flex items-center gap-1 rounded bg-layer-3 p-1 dial-tiny-text text-primary',
+      'flex items-center gap-1 rounded bg-layer-sunken p-1 dial-tiny-text text-primary',
       fullWidth ? 'w-full whitespace-pre-wrap' : 'shrink-0 whitespace-nowrap',
     )}
   >

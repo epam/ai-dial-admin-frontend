@@ -80,6 +80,29 @@ describe('FieldValue clamp', () => {
   });
 });
 
+describe('FieldValue metric highlight', () => {
+  const highlightRaw = JSON.stringify({
+    corpus: [
+      { text: 'good', score: 1 },
+      { text: ' bad', score: -1 },
+    ],
+  });
+
+  test('renders a highlight value as colored text instead of raw JSON', () => {
+    render(<FieldValue raw={highlightRaw} isScoreIndicator={false} failedLabel="Failed" fill />);
+
+    expect(screen.getByText('good')).toHaveClass('bg-score-delta-p4');
+    expect(screen.getByText('bad', { exact: false })).toHaveClass('bg-score-delta-n4');
+    expect(screen.queryByText(/"corpus"/)).toBeNull();
+  });
+
+  test('keeps a non-highlight JSON value as plain text', () => {
+    render(<FieldValue raw='{"a":1}' isScoreIndicator={false} failedLabel="Failed" />);
+
+    expect(screen.getByText('{"a":1}')).toBeInTheDocument();
+  });
+});
+
 describe('FieldValue overall score threshold', () => {
   test('puts the above-threshold icon after the value and speaks the result', () => {
     const { container } = render(

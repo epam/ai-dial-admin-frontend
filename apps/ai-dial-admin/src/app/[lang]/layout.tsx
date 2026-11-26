@@ -70,8 +70,10 @@ export default async function Layout({ children, params }: { children: ReactNode
     policiesEnabled: getIsPoliciesEnabled(),
   };
 
-  const themesConfiguration = await themesApi.getThemesConfiguration();
-  const themesImages = await themesApi.getImages();
+  const [themesConfiguration, themesImages] = await Promise.all([
+    themesApi.getThemesConfiguration(),
+    themesApi.getImages(),
+  ]);
 
   // Identity is informational (id, email); access decides everything else and was already resolved by the root layout.
   const [userAccess, userInfo] = await Promise.all([getUserAccess(), coreUtilityApi.getUserInfo(token)]);

@@ -74,7 +74,7 @@ const ValueFile: FC<Props> = ({ value, index, ariaLabel, onValueChange, disabled
         )}
       >
         <Tooltip tooltip={value.fileName} triggerClassName="flex-1 min-w-0">
-          <div className="flex flex-row gap-x-3 text-accent-primary w-full items-center" onClick={handleFileDownload}>
+          <div className="flex flex-row gap-x-3 text-accent w-full items-center" onClick={handleFileDownload}>
             <FileIcon type={DialItemType.File} name={value.fileName as string} decorative />
             <p className="truncate flex-1 min-w-0 text-left items-center">{value.fileName}</p>
           </div>

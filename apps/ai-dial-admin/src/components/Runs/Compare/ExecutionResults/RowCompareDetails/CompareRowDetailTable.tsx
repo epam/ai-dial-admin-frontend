@@ -141,7 +141,7 @@ const CompareRowDetailTable: FC<Props> = ({
           <div className={classNames(ROW_DETAIL_HEADER_CELL_BASE, 'dial-small-semi-text text-secondary')}>
             {DEFAULT_COMPARE_DELTA_HEADER}
           </div>
-          <div className={classNames(ROW_DETAIL_HEADER_CELL_BASE, 'border-r-0 bg-layer-1')} aria-hidden />
+          <div className={classNames(ROW_DETAIL_HEADER_CELL_BASE, 'border-r-0 bg-layer-base')} aria-hidden />
 
           <FilterRow
             searchQuery={searchQuery}

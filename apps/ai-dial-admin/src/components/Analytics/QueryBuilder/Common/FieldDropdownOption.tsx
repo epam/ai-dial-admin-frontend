@@ -35,15 +35,13 @@ const FieldDropdownOption: FC<Props> = ({ option, selected, onPick }) => {
         // The left gutter is always reserved so the check mark can sit beside the name without
         // shifting the row — a tint alone is easy to miss and is a colour-only cue.
         className={classNames(
-          'relative flex w-full flex-col gap-0.5 rounded py-1.5 pl-6 pr-2 text-left hover:bg-layer-4',
+          'relative flex w-full flex-col gap-0.5 rounded py-1.5 pl-6 pr-2 text-left hover:bg-control-neutral-hover-muted',
           // Last so a hovered selected row still reads as selected.
-          selected && 'bg-accent-primary-alpha hover:bg-accent-primary-alpha',
+          selected && 'bg-control-accent-alpha hover:bg-control-accent-alpha',
         )}
         onClick={onPick}
       >
-        {selected && (
-          <IconCheck aria-hidden size={12} className="absolute left-1.5 top-2 shrink-0 text-accent-primary" />
-        )}
+        {selected && <IconCheck aria-hidden size={12} className="absolute left-1.5 top-2 shrink-0 text-accent" />}
         <span className="flex w-full items-center justify-between gap-2">
           <span className="flex min-w-0 items-center gap-1.5">
             <span className="truncate font-mono dial-tiny-text text-primary">{option.display_name || option.name}</span>

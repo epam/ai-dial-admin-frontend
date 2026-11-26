@@ -50,7 +50,7 @@ const RowDetailHeader: FC<Props> = ({
           label={t(RunsI18nKey.RunCompareDisplay)}
           iconBefore={<IconAdjustmentsHorizontal {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onOpenDisplay}
-          className={classNames(isDisplayOpen && 'text-accent-primary')}
+          className={classNames(isDisplayOpen && 'text-accent')}
         />
         <GhostIconButton
           size={ElementSize.Small}

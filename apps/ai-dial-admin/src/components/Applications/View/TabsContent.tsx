@@ -61,8 +61,6 @@ interface Props {
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   setSelectedApplication?: Dispatch<SetStateAction<DialApplication>>;
   isChanged?: boolean;
-  /** Core-direct asset surface only: the saved etag the consent status is re-read against. */
-  etag?: string;
   frameRef?: Ref<FrameRendererHandle>;
   frameCallbacks?: FrameCallbacks;
   onSave?: () => void;
@@ -88,7 +86,6 @@ const TabsContent: FC<Props> = ({
   discardKey,
   isEditorEnabled,
   isChanged,
-  etag,
   frameRef,
   frameCallbacks,
   onSave,
@@ -237,7 +234,6 @@ const TabsContent: FC<Props> = ({
           key={discardKey}
           selectedApplication={selectedApplication}
           originalApplication={originalApplication as AssetApp}
-          etag={etag ?? ''}
           onChangeApplication={onChangeApplication}
         />
       )}

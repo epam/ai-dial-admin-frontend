@@ -52,7 +52,7 @@ const PeriodForm: FC<Props> = ({ form, onChange }) => {
 
   return (
     <div className="flex gap-8">
-      <div className="flex w-[200px] shrink-0 flex-col gap-2 rounded-lg bg-layer-3 p-3">
+      <div className="flex w-[200px] shrink-0 flex-col gap-2 rounded-lg bg-layer-sunken p-3">
         <h3 className="px-2 text-primary dial-small-semi-text">{t(QueryChipsI18nKey.PeriodPresets)}</h3>
         <ul className="flex flex-col gap-0.5">
           {timePeriodOptionsConfig.map((option) => {
@@ -63,8 +63,8 @@ const PeriodForm: FC<Props> = ({ form, onChange }) => {
                   type="button"
                   aria-pressed={isSelected}
                   className={classNames(
-                    'flex h-10 w-full items-center rounded-md px-3 text-primary dial-small-text hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha',
-                    isSelected && 'bg-accent-primary-alpha',
+                    'flex h-10 w-full items-center rounded-md px-3 text-primary dial-small-text hover:bg-control-accent-alpha focus-visible:bg-control-accent-alpha',
+                    isSelected && 'bg-control-accent-alpha',
                   )}
                   onClick={() => onPickPreset(option.value)}
                 >

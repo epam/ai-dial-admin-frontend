@@ -16,7 +16,7 @@ const FilterFunnelButton: FC<Props> = ({ isActive, title }) => (
     aria-label={title}
     className={classNames(
       'shrink-0 flex items-center justify-center size-[22px] rounded-xs cursor-pointer',
-      isActive ? 'text-accent-primary bg-accent-primary-alpha' : 'text-secondary hover:text-primary',
+      isActive ? 'text-accent bg-control-accent-alpha' : 'text-secondary hover:text-primary',
     )}
   >
     <IconFilter2 size={16} aria-hidden />

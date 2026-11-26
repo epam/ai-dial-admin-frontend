@@ -60,7 +60,7 @@ const ConnectWriteTab: FC<Props> = ({
               {writeRoles.map((role) => (
                 <li
                   key={role}
-                  className="border border-secondary rounded bg-layer-3 px-2 py-0.5 font-mono dial-tiny-text"
+                  className="border border-secondary rounded bg-layer-sunken px-2 py-0.5 font-mono dial-tiny-text"
                 >
                   {role}
                 </li>

@@ -51,20 +51,15 @@ const Footer: FC<Props> = ({ beVersion, coreVersions, onChangeCoreVersion, isOnl
       ) : (
         <>
           <span>[BE]{beVersion}</span>
-          <span className="inline-block w-px h-[14px] mx-1 bg-controls-disable"></span>
+          <span className="inline-block w-px h-[14px] mx-1 bg-control-disable-primary"></span>
           <span className="flex">
             {t(CoreSyncI18nKey.Core)}:
-            <span
-              className="flex flex-row hover:text-accent-primary group/version"
-              onClick={() => setIsModalOpen(true)}
-            >
+            <span className="flex flex-row hover:text-accent group/version" onClick={() => setIsModalOpen(true)}>
               {coreVersion}
               <IconButton
                 disabled={!coreVersions}
                 className="size-auto"
-                icon={
-                  <IconPencilMinus size={14} className="text-primary ml-2 group-hover/version:text-accent-primary" />
-                }
+                icon={<IconPencilMinus size={14} className="text-primary ml-2 group-hover/version:text-accent" />}
               />
             </span>
           </span>

@@ -13,7 +13,10 @@ const BackfillSection: FC<Props> = ({ title, children }) => {
   const headingId = useId();
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-y-4 rounded-lg bg-layer-4 p-4">
+    <section
+      aria-labelledby={headingId}
+      className="flex flex-col gap-y-4 rounded-lg bg-control-neutral-hover-muted p-4"
+    >
       <h3 id={headingId} className="text-primary">
         {title}
       </h3>

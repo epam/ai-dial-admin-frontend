@@ -35,7 +35,7 @@ const GroupToggleCellRenderer = ({ data, onToggleGroup, consumeFocusRequest }: P
         type="button"
         aria-label={t(data.isExpanded ? RunsI18nKey.CollapseTestCaseGroup : RunsI18nKey.ExpandTestCaseGroup)}
         aria-expanded={data.isExpanded}
-        className="flex items-center justify-center size-5 shrink-0 rounded hover:bg-layer-3 focus-visible:bg-layer-3"
+        className="flex items-center justify-center size-5 shrink-0 rounded hover:bg-layer-sunken focus-visible:bg-layer-sunken"
         onClick={onToggle}
       >
         {data.isExpanded ? <IconChevronDown size={14} aria-hidden /> : <IconChevronRight size={14} aria-hidden />}

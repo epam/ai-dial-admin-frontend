@@ -7,6 +7,7 @@ import { TokenSet } from 'openid-client';
 import { ApiRoute } from '@/src/constants/api-routes';
 import { NextAuthToken, UserSession } from '@/src/models/auth';
 import { errorObjLog, warnLog } from '@/src/server/logger';
+import { KEYCLOAK_PROVIDER_IDS } from './constants';
 import { NextClient } from './nextauth-client';
 import { getHttpPicture, parseInlinePicture } from './picture';
 import { getListProvidersPassIdToken } from './token';
@@ -62,7 +63,7 @@ const classifyPicture = (value: unknown): SignInPicture | undefined => {
  * Reads it from there when the profile mapped from the ID token has none.
  */
 const getKeycloakUserInfoPicture = async (account: Account, sub?: string): Promise<SignInPicture | undefined> => {
-  if (account.provider !== 'keycloak' || !account.access_token) {
+  if (!(KEYCLOAK_PROVIDER_IDS as readonly string[]).includes(account.provider) || !account.access_token) {
     return undefined;
   }
 

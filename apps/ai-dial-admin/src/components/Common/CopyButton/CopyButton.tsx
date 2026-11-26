@@ -45,7 +45,7 @@ const CopyButton: FC<Props> = ({ buttonLabel, value, valueLabel, className, size
     />
   ) : (
     <IconButton
-      className={classNames('cursor-pointer h-[20px] w-[20px] text-secondary hover:text-accent-primary', className)}
+      className={classNames('cursor-pointer h-[20px] w-[20px] text-secondary hover:text-accent', className)}
       aria-label={copyLabel}
       size={size}
       onClick={onClick}

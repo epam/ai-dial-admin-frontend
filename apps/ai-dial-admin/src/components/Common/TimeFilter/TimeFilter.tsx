@@ -31,24 +31,24 @@ import { formatDate } from '@/src/utils/time-filter/period-label';
  */
 const MODERN_TRIGGER_CLASS = 'dial-kit-input dial-kit-input-small !w-auto gap-x-1 px-2';
 const LEGACY_TRIGGER_CLASS =
-  'dial-kit-input dial-small-text min-h-[25px] !h-auto !bg-layer-4 w-full gap-2 whitespace-nowrap px-1.5 py-1';
+  'dial-kit-input dial-small-text min-h-[25px] !h-auto !bg-control-neutral-hover-muted w-full gap-2 whitespace-nowrap px-1.5 py-1';
 
 /**
- * `Dropdown` already paints its floating container — `rounded bg-layer-0 shadow` — so a nested
+ * `Dropdown` already paints its floating container — `rounded bg-control-neutral shadow` — so a nested
  * surface only ever shows through at the corners. The 2.0 look replaces that container's own
  * classes, which is why each one is forced.
  */
 const MODERN_LIST_CLASS = '!rounded-xl p-1 !shadow-md ![background-color:var(--bg-layer-raised, #fcfcfc)]';
-const LEGACY_OVERLAY_CLASS = 'rounded border border-secondary bg-layer-0 shadow-lg';
+const LEGACY_OVERLAY_CLASS = 'rounded border border-secondary bg-control-neutral shadow-lg';
 
 /** Mirrors `overlayItemClassName`, the row every 2.0 `MenuItem` — and so every `Select` option — is. */
 const MODERN_OPTION_CLASS =
   'flex h-[40px] w-full cursor-pointer items-center gap-2 truncate rounded-lg px-3 dial-small-text text-primary hover:bg-control-accent-alpha-hover focus-visible:outline-3 focus-visible:outline-focus';
 const LEGACY_OPTION_CLASS =
-  'flex w-full items-center whitespace-nowrap px-3 py-2 text-left dial-small-text text-primary hover:bg-layer-3';
+  'flex w-full items-center whitespace-nowrap px-3 py-2 text-left dial-small-text text-primary hover:bg-layer-sunken';
 
 const MODERN_OPTION_SELECTED_CLASS = 'bg-control-accent-alpha';
-const LEGACY_OPTION_SELECTED_CLASS = 'bg-layer-3';
+const LEGACY_OPTION_SELECTED_CLASS = 'bg-layer-sunken';
 
 const MODERN_DIVIDER_CLASS = 'my-1 border-t border-tertiary';
 const LEGACY_DIVIDER_CLASS = 'border-t border-tertiary';

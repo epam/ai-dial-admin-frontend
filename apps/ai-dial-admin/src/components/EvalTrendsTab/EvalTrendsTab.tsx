@@ -118,7 +118,7 @@ const EvalTrendsTab: FC<Props> = ({ deploymentId }) => {
             searchPlaceholder={t(BasicI18nKey.Search)}
             ariaLabel={t(TestSuitesI18nKey.ViewInTestSuite)}
             className="w-auto max-w-[16rem]"
-            fieldClassName="w-auto bg-layer-4"
+            fieldClassName="w-auto bg-control-neutral-hover-muted"
             listClassName="min-w-[20rem]"
             onChange={(next) => {
               setSelectedSuiteId(typeof next === 'string' ? next : null);

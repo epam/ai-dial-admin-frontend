@@ -17,7 +17,7 @@ interface Props {
   onSelect: (result: SchemaTreeSelectResult) => void;
 }
 
-const boxClassName = 'flex flex-col flex-1 min-h-0 rounded-lg bg-layer-2 divide-y divide-tertiary';
+const boxClassName = 'flex flex-col flex-1 min-h-0 rounded-lg bg-layer-raised divide-y divide-tertiary';
 const footerClassName = 'flex shrink-0 h-12 items-center px-2';
 
 // The tree stays mounted while collapsed so its expansion and selection survive; `inert` takes it out of
@@ -38,13 +38,13 @@ const ReferenceFieldsPanel: FC<Props> = ({ responseSchema, onSelect }) => {
         className={classNames('flex-1 min-h-0 gap-y-1', isCollapsed ? 'hidden' : 'flex flex-col')}
       >
         <Label label={label} />
-        <div className={classNames(boxClassName, 'border border-secondary bg-layer-2')}>
+        <div className={classNames(boxClassName, 'border border-secondary bg-layer-raised')}>
           <div className="flex flex-col flex-1 min-h-0 p-4">
             <SchemaTree responseSchema={responseSchema} onSelect={onSelect} />
           </div>
           <div className={classNames(footerClassName, 'justify-end border-t border-secondary')}>
             <IconButton
-              className="text-secondary hover:text-accent-primary cursor-pointer"
+              className="text-secondary hover:text-accent cursor-pointer"
               size={ElementSize.Small}
               aria-label={t(JsonAtaI18nKey.CollapseReferenceFields)}
               aria-expanded
@@ -56,13 +56,13 @@ const ReferenceFieldsPanel: FC<Props> = ({ responseSchema, onSelect }) => {
         </div>
       </div>
       {isCollapsed && (
-        <div className={classNames(boxClassName, 'border border-secondary rounded pt-3 bg-layer-2')}>
+        <div className={classNames(boxClassName, 'border border-secondary rounded pt-3 bg-layer-raised')}>
           <span className="flex-1 min-h-0 text-right dial-small-text text-secondary [writing-mode:vertical-rl] rotate-180 self-center border-b-0">
             {label}
           </span>
           <div className={classNames(footerClassName, 'justify-center border-t border-secondary')}>
             <IconButton
-              className="text-secondary hover:text-accent-primary cursor-pointer"
+              className="text-secondary hover:text-accent cursor-pointer"
               size={ElementSize.Small}
               aria-label={t(JsonAtaI18nKey.ExpandReferenceFields)}
               aria-expanded={false}

@@ -10,10 +10,10 @@ import { ValidityStatus } from '@/src/types/key';
  */
 export const getColorClassName = (status: string, theme: string): string => {
   if (status === ValidityStatus.VALID) {
-    return 'bg-accent-secondary';
+    return 'bg-green-1';
   }
 
-  return theme === 'dark' ? 'bg-red-400' : 'bg-red-800';
+  return theme === 'dark' ? 'bg-control-error-active' : 'bg-red-800';
 };
 
 export const getValidityStatus = (valid: boolean | undefined, t: (t: string) => string) => {

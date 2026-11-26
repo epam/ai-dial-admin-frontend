@@ -38,7 +38,7 @@ const TreeNameCellRenderer = ({
       <div
         className={classNames(
           'flex items-center justify-center w-[18px] h-[18px] shrink-0 rounded',
-          hasChildren && 'cursor-pointer hover:bg-layer-3',
+          hasChildren && 'cursor-pointer hover:bg-layer-sunken',
         )}
         onClick={() => hasChildren && onToggleExpand(data)}
       >

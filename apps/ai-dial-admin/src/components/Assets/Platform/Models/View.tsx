@@ -8,6 +8,8 @@ import { useCustomTranslatorValidation } from '@/src/components/BaseControls/Int
 import { isPluginUrl } from '@/src/components/BaseControls/BaseUrlControl/utils';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
+import DeploymentTryOutButton from '@/src/components/TryOut/Deployment/DeploymentTryOutButton';
+import { getPlatformModelDeploymentId } from '@/src/components/TryOut/Deployment/utils/get-asset-deployment-id';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { isAssetUnavailable } from '@/src/components/EntityView/Roles/utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -173,7 +175,9 @@ const ModelView: FC<Props> = ({
         onChangeActiveTab={setActiveTab}
         onRemove={removeModel}
         getAssetContext={useModelsFolder}
-      />
+      >
+        {originalModel.name && <DeploymentTryOutButton deployment={getPlatformModelDeploymentId(originalModel.name)} />}
+      </SimpleEntityHeader>
 
       <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>
         {isEditorEnabled ? (

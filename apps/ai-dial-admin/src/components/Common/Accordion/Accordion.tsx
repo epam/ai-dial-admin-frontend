@@ -78,7 +78,7 @@ const Accordion: FC<Props> = ({
               {errorIndicator && (
                 <span
                   role="status"
-                  className="flex size-2 rounded no-user-select bg-red-400"
+                  className="flex size-2 rounded no-user-select bg-control-error-active"
                   aria-label={t(ErrorI18nKey.Error)}
                 />
               )}

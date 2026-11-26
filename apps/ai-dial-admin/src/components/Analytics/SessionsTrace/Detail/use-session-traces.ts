@@ -4,27 +4,29 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getSessionTracePage } from '@/src/app/[lang]/sessions/actions';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { SessionTraceGroup, SessionScope } from '@/src/models/analytics/sessions-trace';
+import { SessionScope, SessionTraceCursor, SessionTraceGroup } from '@/src/models/analytics/sessions-trace';
 
 interface Params {
   scope: SessionScope;
   projectId: string | null;
   firstRequestTime: number | string | null;
   lastRequestTime: number | string | null;
+  traceId?: string;
 }
 
-export const useSessionTraces = ({ scope, projectId, firstRequestTime, lastRequestTime }: Params) => {
+export const useSessionTraces = ({ scope, projectId, firstRequestTime, lastRequestTime, traceId }: Params) => {
   const [groups, setGroups] = useState<SessionTraceGroup[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadError, setHasLoadError] = useState(false);
   const getReqRef = useRef(useProtectedRequest());
   // A trace already on screen is never rendered twice, whatever the page returns. A late-arriving row can
-  // lower a trace's earliest recorded time and move it across a page boundary, which offset paging exposes
-  // as a repeat — holding the ids makes the duplicate impossible rather than unlikely.
+  // lower a trace's earliest recorded time and move it past the cursor, so two pages can return it — holding
+  // the ids makes the duplicate impossible rather than unlikely.
   const loadedIdsRef = useRef(new Set<string>());
-  const offsetRef = useRef(0);
+  const cursorRef = useRef<SessionTraceCursor | null>(null);
   const isFetchingRef = useRef(false);
+  const generationRef = useRef(0);
 
   const loadPage = useCallback(async () => {
     if (isFetchingRef.current) {
@@ -32,6 +34,7 @@ export const useSessionTraces = ({ scope, projectId, firstRequestTime, lastReque
     }
     isFetchingRef.current = true;
     setIsLoading(true);
+    const generation = generationRef.current;
 
     try {
       const result = await getReqRef.current(
@@ -40,8 +43,13 @@ export const useSessionTraces = ({ scope, projectId, firstRequestTime, lastReque
         projectId,
         firstRequestTime,
         lastRequestTime,
-        offsetRef.current,
+        cursorRef.current,
+        traceId,
       );
+
+      if (generation !== generationRef.current) {
+        return;
+      }
 
       if (!result?.success) {
         setHasLoadError(true);
@@ -50,32 +58,38 @@ export const useSessionTraces = ({ scope, projectId, firstRequestTime, lastReque
       }
 
       const page = (result.response?.groups ?? []) as SessionTraceGroup[];
-      const fresh = page.filter(({ traceId }) => !loadedIdsRef.current.has(traceId));
-      fresh.forEach(({ traceId }) => loadedIdsRef.current.add(traceId));
+      const fresh = page.filter(({ traceId: groupTraceId }) => !loadedIdsRef.current.has(groupTraceId));
+      fresh.forEach(({ traceId: groupTraceId }) => loadedIdsRef.current.add(groupTraceId));
 
-      offsetRef.current += page.length;
+      cursorRef.current = result.response?.cursor ?? null;
       setGroups((loaded) => [...loaded, ...fresh]);
       setHasMore(result.response?.hasMore ?? false);
       setHasLoadError(false);
     } catch {
-      setHasLoadError(true);
-      setHasMore(false);
+      if (generation === generationRef.current) {
+        setHasLoadError(true);
+        setHasMore(false);
+      }
     } finally {
-      isFetchingRef.current = false;
-      setIsLoading(false);
+      if (generation === generationRef.current) {
+        isFetchingRef.current = false;
+        setIsLoading(false);
+      }
     }
-  }, [scope, projectId, firstRequestTime, lastRequestTime]);
+  }, [scope, projectId, firstRequestTime, lastRequestTime, traceId]);
 
-  // The loaded state belongs to one session, so it is discarded when the session changes. Without
+  // The loaded state belongs to one session and one search, so it is discarded when either changes. Without
   // this a reused instance would append the next session's traces to the previous one's, and the
   // already-loaded ids would suppress genuine rows.
   useEffect(() => {
+    generationRef.current += 1;
     loadedIdsRef.current = new Set<string>();
-    offsetRef.current = 0;
+    cursorRef.current = null;
     isFetchingRef.current = false;
     setGroups([]);
     setHasMore(true);
     setHasLoadError(false);
+    setIsLoading(true);
     void loadPage();
   }, [loadPage]);
 
@@ -85,5 +99,5 @@ export const useSessionTraces = ({ scope, projectId, firstRequestTime, lastReque
     }
   }, [hasMore, loadPage]);
 
-  return { groups, hasMore, isLoading, hasLoadError, onLoadMore };
+  return { groups, hasMore, isLoading, hasLoadError, isSearch: Boolean(traceId), onLoadMore };
 };

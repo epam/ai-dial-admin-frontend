@@ -20,7 +20,7 @@ const FilterChip: FC<Props> = ({ children, onRemove, className, removeAriaLabel 
   return (
     <div
       className={classNames(
-        'flex text-primary dial-small-text rounded bg-layer-3 px-1.5 py-1 cursor-pointer',
+        'flex text-primary dial-small-text rounded bg-layer-sunken px-1.5 py-1 cursor-pointer',
         className,
       )}
     >
@@ -28,7 +28,7 @@ const FilterChip: FC<Props> = ({ children, onRemove, className, removeAriaLabel 
       <button
         type="button"
         aria-label={removeAriaLabel ?? t(ButtonsI18nKey.Delete)}
-        className="hover:text-accent-primary ml-2"
+        className="hover:text-accent ml-2"
         onClick={(e) => {
           e.stopPropagation();
           onRemove();

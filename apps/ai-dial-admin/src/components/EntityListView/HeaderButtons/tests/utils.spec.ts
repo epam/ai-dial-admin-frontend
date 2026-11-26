@@ -75,6 +75,25 @@ describe('getFormDataForImport', () => {
     expect(result.fileSize).toBe(0);
   });
 
+  test.each([ApplicationRoute.Prompts, ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'normalizes the uploaded archive filename for %s',
+    (route) => {
+      const file = new File(['test'], 'custom long name.zip', { type: 'application/zip' });
+      const { body } = getFormDataForImport(
+        'public/',
+        file,
+        ImportFileType.ARCHIVE,
+        ConflictResolutionPolicy.SKIP,
+        undefined,
+        undefined,
+        route,
+      );
+      const uploaded = body.get('file') as File;
+      expect(uploaded.name).toBe('archive.zip');
+      expect(uploaded.size).toBe(file.size);
+    },
+  );
+
   test('returns FormData for JSON', () => {
     const prompts: DialPrompt[] = [
       {

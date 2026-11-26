@@ -1,5 +1,11 @@
 import { Pipeline, PipelineKind, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
 import {
+  ModelRunEvaluation,
+  ModelRunStatus,
+  ModelRunUsageUnit,
+  PipelineModelRun,
+} from '@/src/models/analytics/pipeline-model-run';
+import {
   PipelinePreview,
   PreviewColumn,
   PreviewColumnRole,
@@ -76,5 +82,34 @@ export const previewMock = (overrides: Partial<PipelinePreview> = {}): PipelineP
     { event_id: 'b2', cost_tier: null },
   ],
   notes: [],
+  ...overrides,
+});
+
+export const evaluationMock = (overrides: Partial<ModelRunEvaluation> = {}): ModelRunEvaluation => ({
+  grain_key: 'a1',
+  status: ModelRunStatus.Ok,
+  outputs: { sentiment: 'negative', topic: 'refund' },
+  request: '{"messages":[]}',
+  response: '{"sentiment":"negative","topic":"refund"}',
+  attempts: 1,
+  usage: { amount: 812, unit: ModelRunUsageUnit.Tokens },
+  latency_ms: 1830,
+  ...overrides,
+});
+
+export const llmPreviewMock = (overrides: Partial<PipelinePreview> = {}): PipelinePreview =>
+  previewMock({
+    statement: undefined,
+    columns: [columnMock(), columnMock({ name: 'body', role: PreviewColumnRole.Input })],
+    rows: [
+      { event_id: 'a1', body: 'Refund not received' },
+      { event_id: 'b2', body: 'Cannot log in' },
+    ],
+    ...overrides,
+  });
+
+export const modelRunMock = (overrides: Partial<PipelineModelRun> = {}): PipelineModelRun => ({
+  preview: llmPreviewMock(),
+  evaluations: [evaluationMock()],
   ...overrides,
 });

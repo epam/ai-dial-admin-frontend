@@ -3,7 +3,7 @@ export const ROW_DETAIL_SIDEBAR_CLASS = 'w-1/2 p-0';
 export const ROW_DETAIL_BOTTOM_CLASS = 'p-0';
 
 export const ROW_DETAIL_DISPLAY_PANEL_CLASS =
-  'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-3 border-l border-tertiary shadow-lg z-20';
+  'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-sunken border-l border-tertiary shadow-lg z-20';
 
 export const ROW_DETAIL_PIVOT_LEFT_COL_WIDTH = 212;
 export const ROW_DETAIL_PIVOT_STATUS_COL_WIDTH = 135;
@@ -20,10 +20,10 @@ export const ROW_DETAIL_HEADER_HEIGHT = 40;
 export const ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP = 48;
 
 export const ROW_DETAIL_HEADER_CELL_BASE =
-  'sticky top-0 z-10 bg-layer-1 h-10 px-3 border-b border-r border-tertiary flex items-center';
+  'sticky top-0 z-10 bg-layer-base h-10 px-3 border-b border-r border-tertiary flex items-center';
 /** Height defaults to the compact 28px filter row; callers override it with a later `h-*` class. */
 export const ROW_DETAIL_FILTER_CELL_BASE =
-  'sticky z-10 bg-layer-2 h-7 border-b border-r border-tertiary flex items-center';
+  'sticky z-10 bg-layer-raised h-7 border-b border-r border-tertiary flex items-center';
 export const ROW_DETAIL_FIELD_INDENT = 'pl-16';
 
 export const ROW_DETAIL_EXECUTION_SECTION_KEY = 'execution';
@@ -43,6 +43,8 @@ export const EXECUTION_RESULT_DEFAULT_HIDDEN_FIELDS = new Set<string>([ROW_DETAI
 export const METRIC_INFO_REASON_KEY = 'reason';
 export const METRIC_INFO_LOGS_KEY = 'verbose_logs';
 export const METRIC_INFO_ERROR_KEY = 'error';
+/** Scored text chunks shown as a pivot column next to the leaf's numeric output. */
+export const METRIC_INFO_HIGHLIGHT_KEY = 'highlight';
 
 /** Every other key of a leaf's entry is the metric's own and goes to `details`. */
 export const METRIC_INFO_CARD_KEYS = new Set<string>([
@@ -50,3 +52,12 @@ export const METRIC_INFO_CARD_KEYS = new Set<string>([
   METRIC_INFO_LOGS_KEY,
   METRIC_INFO_ERROR_KEY,
 ]);
+
+/** Pivot field key for a leaf's highlight column (`precision` → `precision:highlight`). */
+export const getMetricHighlightFieldKey = (leafKey: string): string => `${leafKey}:${METRIC_INFO_HIGHLIGHT_KEY}`;
+
+/** Pivot header for a leaf's highlight column (`precision` → `precision highlight`). */
+export const getMetricHighlightLabel = (leafKey: string): string => `${leafKey} ${METRIC_INFO_HIGHLIGHT_KEY}`;
+
+export const isMetricHighlightFieldKey = (fieldKey: string): boolean =>
+  fieldKey.endsWith(`:${METRIC_INFO_HIGHLIGHT_KEY}`);

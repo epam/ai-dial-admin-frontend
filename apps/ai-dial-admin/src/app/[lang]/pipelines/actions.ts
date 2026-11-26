@@ -17,6 +17,7 @@ import {
 } from '@/src/models/analytics/pipeline-backfill';
 import { DlqFilters, DlqPage, DlqRequeueResponse } from '@/src/models/analytics/pipeline-dlq';
 import { GroupListOrder, PipelineGroupsPage } from '@/src/models/analytics/pipeline-groups';
+import { PipelineModelRun } from '@/src/models/analytics/pipeline-model-run';
 import { PipelinePreview } from '@/src/models/analytics/pipeline-preview';
 import {
   PausedPipeline,
@@ -56,6 +57,12 @@ export async function getPipeline(name: string): Promise<ServerActionResponse<Pi
 
 export async function previewPipeline(name: string): Promise<ServerActionResponse<PipelinePreview>> {
   return analyticsDataApi.previewPipeline(name, await token());
+}
+
+export async function runPipelineWithModel(name: string): Promise<ServerActionResponse<PipelineModelRun>> {
+  if (!analyticsRunnerApi.isConfigured) return noRunner();
+
+  return analyticsRunnerApi.runWithModel(name, await token());
 }
 
 export async function createPipeline(dto: CreatePipelineDto): Promise<ServerActionResponse> {

@@ -2,6 +2,7 @@ import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
 import {
   DialItemType,
+  ErrorText,
   FileIcon,
   Label,
   RadioGroup,
@@ -29,6 +30,8 @@ interface Props {
   fileTypes: RadioButtonWithContent[];
   maxFilesCount?: number;
   totalFileSizeExceeded?: boolean;
+  isFileSizeExceeded?: boolean;
+  isFileCountExceeded?: boolean;
   ignorePaths?: boolean;
   setIgnorePaths?: Dispatch<SetStateAction<boolean>>;
   onChangeFile: (files: File[]) => void;
@@ -44,12 +47,23 @@ const ImportFileTypeSelector: FC<Props> = ({
   onChangeFileType,
   isInvalid,
   maxFilesCount,
+  isFileSizeExceeded,
+  isFileCountExceeded,
   ignorePaths,
   setIgnorePaths,
   route,
 }) => {
   const t = useI18n();
   const { maxFileSizeMb, maxMultiFilesSizeMb } = getImportSizeLimits(route);
+  const countError = t(ImportI18nKey.JsonDescription);
+  const sizeError = t(
+    fileType === ImportFileType.ARCHIVE
+      ? ImportI18nKey.ArchiveSizeErrorDescription
+      : ImportI18nKey.FileSizeErrorDescription,
+    { size: maxFileSizeMb },
+  );
+  const countLimitError = isFileCountExceeded ? countError : undefined;
+  const preselectedError = isFileSizeExceeded ? sizeError : countLimitError;
 
   const ignorePathsTitle = useMemo(() => {
     return route ? getIgnorePathTitles(route, t) : '';
@@ -120,6 +134,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             }
             acceptTypes="application/json"
             fileFormatError={t(ImportI18nKey.JsonFileFormatError)}
+            fileCountError={countError}
             isInvalid={isInvalid}
             errorText={t(ImportI18nKey.PromptError)}
             maxFileSize={maxFileSizeMb}
@@ -142,6 +157,7 @@ const ImportFileTypeSelector: FC<Props> = ({
             files={files}
             acceptTypes="/"
             fileFormatError={t(ImportI18nKey.FileErrorType)}
+            fileCountError={countError}
             onChange={onChangeFile}
             isInvalid={isInvalid}
             dynamicIcon={getFileIcon}
@@ -151,6 +167,11 @@ const ImportFileTypeSelector: FC<Props> = ({
             deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
             addButtonLabel={t(ButtonsI18nKey.Add)}
           />
+        )}
+        {preselectedError && (
+          <div role="alert">
+            <ErrorText text={preselectedError} />
+          </div>
         )}
       </div>
     </div>

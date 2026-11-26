@@ -5,6 +5,8 @@
  * through each type's mocked module boundary in tests, since these are passed by reference).
  */
 
+import { MAX_ASSET_IMPORT_CONFIG_SIZE_MB, MAX_ASSET_IMPORT_FILE_SIZE_MB } from '@/src/constants/file';
+import { BYTES_PER_MB } from '@/src/server/zip/constants';
 import { ParsedAssets } from '@/src/models/import-asset';
 import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -31,9 +33,12 @@ export const runAssetImportAction = async (
   fileType: ImportFileType,
   deps: AssetImportDeps,
 ): Promise<ServerActionResponse<{ importResults: ImportResult[] }>> => {
-  const configBlob = body.get('config') as Blob | null;
-  if (!configBlob) {
+  const configBlob = body.get('config');
+  if (!(configBlob instanceof Blob)) {
     return { success: false, errorHeader: 'Bad Request', errorMessage: 'Missing import config' };
+  }
+  if (configBlob.size > MAX_ASSET_IMPORT_CONFIG_SIZE_MB * BYTES_PER_MB) {
+    return { success: false, errorHeader: 'Bad Request', errorMessage: 'Import config exceeds 1 MB' };
   }
   const config = JSON.parse(await configBlob.text()) as {
     path: string;
@@ -41,9 +46,12 @@ export const runAssetImportAction = async (
     flatImport?: boolean;
   };
 
-  const fileBlob = body.get('file') as Blob | null;
-  if (!fileBlob) {
+  const fileBlob = body.get('file');
+  if (!(fileBlob instanceof Blob)) {
     return { success: false, errorHeader: 'Bad Request', errorMessage: 'Missing import file' };
+  }
+  if (fileBlob.size > MAX_ASSET_IMPORT_FILE_SIZE_MB * BYTES_PER_MB) {
+    return { success: false, errorHeader: 'Bad Request', errorMessage: 'Import file exceeds 64 MB' };
   }
 
   let document: ParsedAssets;
