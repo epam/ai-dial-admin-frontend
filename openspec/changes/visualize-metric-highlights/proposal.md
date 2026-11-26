@@ -8,8 +8,8 @@ column in that pivot.
 
 ## What Changes
 
-- When a metric leaf has `metricInfos…highlight`, the pivot gains a `highlight` column
-  immediately after that leaf's numeric column.
+- When a metric leaf has `metricInfos…highlight`, the pivot gains a `{leaf} highlight`
+  column immediately after that leaf's numeric column.
 - The cell renders chunk text colored by score (positive → green delta palette, negative
   → red, `0` → neutral). Non-highlight values are unchanged.
 - The score popup is unchanged — it already surfaces `highlight` and `json_explanation`.

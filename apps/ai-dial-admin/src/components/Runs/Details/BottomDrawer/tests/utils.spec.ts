@@ -65,7 +65,7 @@ describe('buildComparisonSections', () => {
 
     expect(rows[f1Index + 1]).toMatchObject({
       fieldKey: 'f1:highlight',
-      label: 'highlight',
+      label: 'f1 highlight',
       isNumeric: false,
     });
     expect(rows[f1Index + 1].values[0].raw).toContain('"corpus"');

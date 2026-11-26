@@ -56,5 +56,8 @@ export const METRIC_INFO_CARD_KEYS = new Set<string>([
 /** Pivot field key for a leaf's highlight column (`precision` → `precision:highlight`). */
 export const getMetricHighlightFieldKey = (leafKey: string): string => `${leafKey}:${METRIC_INFO_HIGHLIGHT_KEY}`;
 
+/** Pivot header for a leaf's highlight column (`precision` → `precision highlight`). */
+export const getMetricHighlightLabel = (leafKey: string): string => `${leafKey}.${METRIC_INFO_HIGHLIGHT_KEY}`;
+
 export const isMetricHighlightFieldKey = (fieldKey: string): boolean =>
   fieldKey.endsWith(`:${METRIC_INFO_HIGHLIGHT_KEY}`);
