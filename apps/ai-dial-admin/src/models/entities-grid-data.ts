@@ -23,4 +23,7 @@ export interface EntitiesGridData extends BaseEntity {
   topics?: string[];
   descriptionKeywords?: string[];
   isSystem?: boolean;
+  isExportedAlone?: boolean;
+  isAccessOnly?: boolean;
+  accessRoles?: string[];
 }

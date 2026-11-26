@@ -1217,6 +1217,7 @@ export enum ImportI18nKey {
   AnalyticsRole = 'Import.AnalyticsRole',
   AnalyticsIneffectiveGrants = 'Import.AnalyticsIneffectiveGrants',
   AnalyticsResultPipelinesReminder = 'Import.AnalyticsResultPipelinesReminder',
+  AnalyticsNoObjectsWithoutAccess = 'Import.AnalyticsNoObjectsWithoutAccess',
 }
 
 export enum ExportI18nKey {
@@ -1269,6 +1270,21 @@ export enum ExportI18nKey {
   AnalyticsRowPolicy = 'Export.AnalyticsRowPolicy',
   AnalyticsColumnPolicy = 'Export.AnalyticsColumnPolicy',
   CandidatesReadFailed = 'Export.CandidatesReadFailed',
+  AnalyticsDependencies = 'Export.AnalyticsDependencies',
+  AnalyticsDependenciesIncluded = 'Export.AnalyticsDependenciesIncluded',
+  AnalyticsPipelineOnly = 'Export.AnalyticsPipelineOnly',
+  AnalyticsExportColumn = 'Export.AnalyticsExportColumn',
+  AnalyticsTableAndAccess = 'Export.AnalyticsTableAndAccess',
+  AnalyticsAccessOnly = 'Export.AnalyticsAccessOnly',
+  AnalyticsAccessOnlyCaption = 'Export.AnalyticsAccessOnlyCaption',
+  AnalyticsRoles = 'Export.AnalyticsRoles',
+  AnalyticsAllRoles = 'Export.AnalyticsAllRoles',
+  AnalyticsAllRolesValue = 'Export.AnalyticsAllRolesValue',
+  AnalyticsRowOptionsTitle = 'Export.AnalyticsRowOptionsTitle',
+  AnalyticsIncludeDependencies = 'Export.AnalyticsIncludeDependencies',
+  AnalyticsIncludeDependenciesCaption = 'Export.AnalyticsIncludeDependenciesCaption',
+  AnalyticsNoAccessEntries = 'Export.AnalyticsNoAccessEntries',
+  AnalyticsRolesReadFailed = 'Export.AnalyticsRolesReadFailed',
 }
 
 export enum FoldersI18nKey {

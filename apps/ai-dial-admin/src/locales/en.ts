@@ -1268,6 +1268,8 @@ export default {
     AnalyticsRole: 'Role',
     AnalyticsIneffectiveGrants: 'Ineffective grants',
     AnalyticsResultPipelinesReminder: 'Imported pipelines are disabled — enable them on this environment.',
+    AnalyticsNoObjectsWithoutAccess:
+      'This file carries no tables or pipelines. If it was exported with access, turn on Include access.',
   },
   Export: {
     Config: 'Config',
@@ -1321,6 +1323,23 @@ export default {
     AnalyticsRowPolicy: 'row policy',
     AnalyticsColumnPolicy: 'column policy',
     CandidatesReadFailed: 'Could not load the list. The service may be unavailable — try again later.',
+    AnalyticsDependencies: 'Dependencies',
+    AnalyticsDependenciesIncluded: 'Included',
+    AnalyticsPipelineOnly: 'Pipeline only',
+    AnalyticsExportColumn: 'Export',
+    AnalyticsTableAndAccess: 'Table and access',
+    AnalyticsAccessOnly: 'Access only',
+    AnalyticsAccessOnlyCaption:
+      "Export this table's access entries without the table. The target must already have the table.",
+    AnalyticsRoles: 'Roles',
+    AnalyticsAllRoles: 'All roles',
+    AnalyticsAllRolesValue: 'All',
+    AnalyticsRowOptionsTitle: 'Export options',
+    AnalyticsIncludeDependencies: 'Include dependencies',
+    AnalyticsIncludeDependenciesCaption:
+      'Off exports only this pipeline, without access. The target must already have every table it reads and writes; the import preview reports a missing one.',
+    AnalyticsNoAccessEntries: 'No access entries on this table',
+    AnalyticsRolesReadFailed: 'Could not load the roles of this table',
   },
   Folder: {
     Export: 'Export files',

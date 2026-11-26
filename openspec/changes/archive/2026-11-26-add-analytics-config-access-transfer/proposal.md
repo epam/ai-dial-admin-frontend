@@ -28,12 +28,35 @@ never ask, so the capability is unreachable from the admin console.
 
 No **BREAKING** change: with both boxes unchecked the requests are byte-identical to today's.
 
+### Follow-up: selective export
+
+Promoting one changed pipeline, or some roles' access of a table, into an environment that already has the tables
+still drags every dependency along, because the page can only select whole objects. ADAS 0.24 accepts three
+per-component selectors on `POST /v1/catalog/export[/preview]` — `dependencies: false` on a pipeline, `access_only: true`
+and `roles: [...]` on a table (the last two only with `include_access`) — and the page never sends them.
+
+- **Custom Analytics export, Pipelines tab**: a **Dependencies** column (Included / Pipeline only) and an **Edit** row
+  action opening a popup with an **Include dependencies** checkbox, checked by default. Unchecked, the row sends
+  `dependencies: false`.
+- **Custom Analytics export, Tables tab, with Include access checked**: **Export** (Table and access / Access only)
+  and **Roles** (All / the chosen roles) columns and an **Edit** row action opening a popup with an **Access only**
+  checkbox and a **Roles** multi-select over the roles that hold an entry on the table. A row sends `access_only: true`
+  and `roles` only when set; "All roles" sends no `roles`.
+- Unchecking Include access also removes access-only rows from the selection and clears every row's roles.
+- **Import Config, Analytics scope**: an info notice when Include access is off and the preview holds no tables and
+  no pipelines, telling the user the file may carry access only.
+
+Full config offers no row options. A selection without options sends the same body as today.
+
 ## Non-goals
 
 - Role-name mapping between environments — the service copies roles verbatim and offers no mapping.
 - Removing access on the target — that stays on the table's Access page (`DELETE /v1/tables/{name}/access`).
 - Parsing or displaying the downloaded bundle's `access` member.
 - Admin and Deployments scopes — unchanged.
+- Predicting at export time whether the target already has the tables a pipeline alone or an access-only table
+  needs — the import preview reports a missing one.
+- Warning when another selected object pulls an access-only table in whole — the export preview's `reason` shows it.
 
 ## Capabilities
 
@@ -45,7 +68,8 @@ _None._
 
 - `analytics/config-transfer`: the Analytics export and import gain an opt-in access section — the two checkboxes and
   their permission gate, the system-source-table selection, the Access tabs of both previews, the access entries in
-  the import gate and result, and the Reason column of the export's Required system tables.
+  the import gate and result, and the Reason column of the export's Required system tables. The follow-up adds the
+  per-row export options of a Custom selection and the import notice for a file that may carry access only.
 
 ## Impact
 
@@ -58,6 +82,13 @@ _None._
   `server/analytics/analytics-data-api.ts`, `utils/entities/analytics-entities-list-view.ts`,
   `models/analytics/catalog-export.ts`, `models/analytics/catalog-import.ts`, `types/analytics/{export,import}.ts`,
   `constants/i18n.ts`, `locales/en.ts`.
-- **Shared components**: none changed — the import diff modal (`ActivityDetails`) is reused as is.
+- **Backend contract (follow-up)**: ADAS 0.24 "Selective export" — optional `dependencies`, `access_only` and `roles`
+  on each item of `components`; `GET /v1/tables/{name}/access` as the source of the role list (same `TABLE_GRANT`).
+- **Code (follow-up)**: `models/analytics/catalog-export.ts`, `models/entities-grid-data.ts`,
+  `components/ExportConfig/analytics-utils.ts`, `components/ExportConfig/ExportConfig.tsx`,
+  `components/ExportConfig/Content/AnalyticsConfigContent.tsx`, a new row-options popup under
+  `components/ExportConfig/Content/`, `components/ImportConfig/ConfigurationPreview/AnalyticsImportNotices.tsx`.
+- **Shared components**: none changed — the import diff modal (`ActivityDetails`) is reused as is, and the follow-up
+  keeps `TabbedSelectionContent` (shared with the Deployments scope) untouched.
 - **Compatibility**: against ADAS 0.23 the boxes must stay unchecked; a 0.24 bundle is refused there with
   `422 catalog_bundle_version_unsupported` regardless of this change.
