@@ -3,11 +3,11 @@
 import { FC } from 'react';
 
 import { Button, ButtonAppearance, ButtonVariant, EllipsisTooltip } from '@epam/ai-dial-ui-kit';
-import { IconPlayerPlay, IconRefresh } from '@tabler/icons-react';
+import { IconPlayerPlay, IconRefresh, IconSparkles } from '@tabler/icons-react';
 
 import StatChip from '@/src/components/Analytics/QueryBuilder/Result/StatChip';
 import { PREVIEW_GROUP_KEY_MAX_WIDTH_PX } from '@/src/components/Analytics/Pipelines/Preview/constants';
-import { PreviewChip } from '@/src/components/Analytics/Pipelines/Preview/models';
+import { PreviewChip, PreviewRunKind } from '@/src/components/Analytics/Pipelines/Preview/models';
 import { formatCount } from '@/src/components/Analytics/Pipelines/Preview/utils/preview-columns';
 import { PipelinePreviewI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -20,10 +20,15 @@ interface Props {
   groupKey?: string;
   /** Set only when the last rerun moved to another group. */
   previousGroupKey?: string;
-  isRunning: boolean;
+  modelCaptionKey?: PipelinePreviewI18nKey;
+  runningKind?: PreviewRunKind;
   hasResult: boolean;
+  hasModelResult: boolean;
   hasUnsavedEdits: boolean;
+  isModelRunOffered: boolean;
+  isModelRunUnsupported: boolean;
   onRun: () => void;
+  onRunWithModel: () => void;
 }
 
 const runLabelKey = (isRunning: boolean, hasResult: boolean, hasUnsavedEdits: boolean): PipelinePreviewI18nKey => {
@@ -33,17 +38,36 @@ const runLabelKey = (isRunning: boolean, hasResult: boolean, hasUnsavedEdits: bo
   return hasResult ? PipelinePreviewI18nKey.RunAgain : PipelinePreviewI18nKey.RunPreview;
 };
 
+const modelRunLabelKey = (
+  isRunning: boolean,
+  hasModelResult: boolean,
+  hasUnsavedEdits: boolean,
+): PipelinePreviewI18nKey => {
+  if (isRunning) return PipelinePreviewI18nKey.RunningWithModel;
+  if (hasUnsavedEdits) return PipelinePreviewI18nKey.RunSavedVersionWithModel;
+
+  return hasModelResult ? PipelinePreviewI18nKey.RunAgainWithModel : PipelinePreviewI18nKey.RunWithModel;
+};
+
 const PreviewRunBar: FC<Props> = ({
   chips = [],
   captionKey,
   groupKey,
   previousGroupKey,
-  isRunning,
+  modelCaptionKey,
+  runningKind,
   hasResult,
+  hasModelResult,
   hasUnsavedEdits,
+  isModelRunOffered,
+  isModelRunUnsupported,
   onRun,
+  onRunWithModel,
 }) => {
   const t = useI18n();
+
+  const isRunning = runningKind != null;
+  const isPreviewPrimary = !hasResult;
 
   const chipValue = ({ count, total }: PreviewChip): string =>
     total == null
@@ -79,22 +103,41 @@ const PreviewRunBar: FC<Props> = ({
             <StatChip key={chip.labelKey} value={chipValue(chip)} label={t(chip.labelKey)} />
           ))}
         </div>
-        <Button
-          variant={hasResult ? ButtonVariant.Neutral : ButtonVariant.Primary}
-          appearance={hasResult ? ButtonAppearance.Outlined : undefined}
-          label={t(runLabelKey(isRunning, hasResult, hasUnsavedEdits))}
-          iconBefore={
-            hasResult ? (
-              <IconRefresh {...BASE_BUTTON_ICON_PROPS} aria-hidden />
-            ) : (
-              <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} aria-hidden />
-            )
-          }
-          disabled={isRunning}
-          onClick={onRun}
-        />
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {isModelRunUnsupported && (
+            <span className="text-secondary dial-tiny-text">{t(PipelinePreviewI18nKey.ErrUnsupportedBody)}</span>
+          )}
+          <Button
+            variant={isPreviewPrimary ? ButtonVariant.Primary : ButtonVariant.Neutral}
+            appearance={isPreviewPrimary ? undefined : ButtonAppearance.Outlined}
+            label={t(runLabelKey(runningKind === PreviewRunKind.Preview, hasResult, hasUnsavedEdits))}
+            iconBefore={
+              hasResult ? (
+                <IconRefresh {...BASE_BUTTON_ICON_PROPS} aria-hidden />
+              ) : (
+                <IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} aria-hidden />
+              )
+            }
+            disabled={isRunning}
+            onClick={onRun}
+          />
+          {isModelRunOffered && (
+            <Button
+              variant={ButtonVariant.Neutral}
+              appearance={ButtonAppearance.Outlined}
+              label={t(modelRunLabelKey(runningKind === PreviewRunKind.Model, hasModelResult, hasUnsavedEdits))}
+              iconBefore={<IconSparkles {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+              disabled={isRunning || isModelRunUnsupported}
+              onClick={onRunWithModel}
+            />
+          )}
+        </div>
       </div>
-      {captionKey && <span className="text-secondary dial-tiny-text">{t(captionKey)}</span>}
+      {captionKey && (
+        <span className="text-secondary dial-tiny-text">
+          {modelCaptionKey ? `${t(captionKey)} · ${t(modelCaptionKey)}` : t(captionKey)}
+        </span>
+      )}
     </div>
   );
 };

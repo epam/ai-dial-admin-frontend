@@ -93,6 +93,47 @@ describe('Server :: AnalyticsRunnerApi', () => {
       expect.objectContaining({ method: 'POST' }),
     );
   });
+  describe('runWithModel', () => {
+    const run = {
+      preview: { columns: [], rows: [], notes: [] },
+      evaluations: [{ status: 'ok', attempts: 1, latency_ms: 10 }],
+    };
+
+    test('issues POST to the pipeline try path with no body', async () => {
+      fetch.mockResponseOnce(JSON.stringify(run), JSON_HEADERS);
+
+      const res = await instance.runWithModel('ticket summary', TOKEN_MOCK);
+
+      expect(res).toEqual(expect.objectContaining({ success: true, response: run }));
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/pipelines/ticket%20summary/try'),
+        expect.objectContaining({ method: 'POST' }),
+      );
+      expect(fetch.mock.calls[0][1]?.body).toBeUndefined();
+    });
+
+    test('reports a body without a preview or evaluations as a failure', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ preview: run.preview }), JSON_HEADERS);
+
+      const res = await instance.runWithModel('ticket-summary', TOKEN_MOCK);
+
+      expect(res.success).toBe(false);
+    });
+
+    test('carries the runner refusal through', async () => {
+      fetch.mockResponseOnce(
+        JSON.stringify({ status: 429, error: 'spend_budget_exhausted', message: 'Budget reached' }),
+        { status: 429, ...JSON_HEADERS },
+      );
+
+      const res = await instance.runWithModel('ticket-summary', TOKEN_MOCK);
+
+      expect(res).toEqual(
+        expect.objectContaining({ success: false, errorHeader: 'spend_budget_exhausted', status: 429 }),
+      );
+    });
+  });
+
   // --- the dead-letter queue -------------------------------------------------------------------
 
   const DEAD_LETTER = {

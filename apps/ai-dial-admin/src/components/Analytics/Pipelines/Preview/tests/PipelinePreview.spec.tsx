@@ -3,18 +3,22 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import PipelinePreview from '@/src/components/Analytics/Pipelines/Preview/PipelinePreview';
-import { PreviewSection } from '@/src/components/Analytics/Pipelines/Preview/models';
+import { PreviewRunKind, PreviewSection } from '@/src/components/Analytics/Pipelines/Preview/models';
 import {
   aggregatePipeline,
+  evaluationMock,
   llmGroupPipeline,
   llmPipeline,
+  llmPreviewMock,
   noteMock,
   previewMock,
   sqlPipeline,
 } from '@/src/components/Analytics/Pipelines/Preview/tests/mock';
 import { PipelinePreviewRun } from '@/src/components/Analytics/Pipelines/Preview/use-pipeline-preview';
 import { ButtonsI18nKey, PipelinePreviewI18nKey } from '@/src/constants/i18n';
-import { Pipeline } from '@/src/models/analytics/pipeline';
+import { Pipeline, TransformPreset, TransformType } from '@/src/models/analytics/pipeline';
+import { DlqStage } from '@/src/models/analytics/pipeline-dlq';
+import { ModelRunStatus } from '@/src/models/analytics/pipeline-model-run';
 import {
   PipelinePreview as PipelinePreviewResult,
   PreviewColumnRole,
@@ -45,11 +49,15 @@ vi.mock('@/src/components/Analytics/Pipelines/Preview/PreviewGrid', () => ({
 }));
 
 const run = vi.fn();
+const runWithModel = vi.fn();
 const onOpenSection = vi.fn();
+const onOpenRuntime = vi.fn();
 
 const previewRun = (overrides: Partial<PipelinePreviewRun> = {}): PipelinePreviewRun => ({
   isRunning: false,
+  runningKind: overrides.isRunning ? PreviewRunKind.Preview : undefined,
   run,
+  runWithModel,
   ...overrides,
 });
 
@@ -57,15 +65,23 @@ interface Setup {
   pipeline?: Pipeline;
   preview?: Partial<PipelinePreviewRun>;
   hasUnsavedEdits?: boolean;
+  isModelRunAvailable?: boolean;
 }
 
-const renderTab = ({ pipeline = sqlPipeline(), preview, hasUnsavedEdits = false }: Setup = {}) =>
+const renderTab = ({
+  pipeline = sqlPipeline(),
+  preview,
+  hasUnsavedEdits = false,
+  isModelRunAvailable = false,
+}: Setup = {}) =>
   render(
     <PipelinePreview
       pipeline={pipeline}
       preview={previewRun(preview)}
       hasUnsavedEdits={hasUnsavedEdits}
+      isModelRunAvailable={isModelRunAvailable}
       onOpenSection={onOpenSection}
+      onOpenRuntime={onOpenRuntime}
     />,
   );
 
@@ -583,7 +599,9 @@ describe('PipelinePreview — announcing a finished run', () => {
       pipeline={pipeline}
       preview={previewRun(preview)}
       hasUnsavedEdits={false}
+      isModelRunAvailable={false}
       onOpenSection={onOpenSection}
+      onOpenRuntime={onOpenRuntime}
     />
   );
 
@@ -617,5 +635,296 @@ describe('PipelinePreview — announcing a finished run', () => {
     render(setup(withResult(previewMock())));
 
     expect(screen.queryByText(key('RunFinished'))).toBeNull();
+  });
+});
+
+describe('PipelinePreview — run with model', () => {
+  const chatPipeline = (overrides: Partial<Pipeline> = {}) =>
+    llmPipeline({
+      transform: {
+        type: TransformType.Llm,
+        preset: TransformPreset.ChatCompletion,
+        model: 'gpt-4o-mini',
+        outputs: { sentiment: 'How the user felt' },
+      },
+      ...overrides,
+    });
+
+  const routePipeline = () =>
+    llmPipeline({
+      transform: {
+        type: TransformType.Llm,
+        preset: TransformPreset.DialAppRoute,
+        model: 'insights-app',
+        route: 'insights',
+        outputs: { topic: 'The subject' },
+      },
+    });
+
+  const renderModelTab = (setup: Setup = {}) =>
+    renderTab({ pipeline: chatPipeline(), isModelRunAvailable: true, ...setup });
+
+  const withModelResult = (overrides: Partial<PipelinePreviewRun> = {}) =>
+    withResult(llmPreviewMock(), { evaluations: [evaluationMock()], ...overrides });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('availability', () => {
+    test('offers the model run beside the preview for an LLM enrichment', () => {
+      renderModelTab();
+
+      expect(screen.getByRole('button', { name: key('RunPreview') })).toBeEnabled();
+      expect(screen.getByRole('button', { name: key('RunWithModel') })).toBeEnabled();
+      expect(screen.getByText(key('FirstVisitModelHint'))).toBeTruthy();
+    });
+
+    test.each([
+      ['an aggregate', aggregatePipeline()],
+      ['an SQL enrichment', sqlPipeline()],
+    ])('does not render the model run for %s', (_, pipeline) => {
+      renderTab({ pipeline, isModelRunAvailable: true });
+
+      expect(screen.getByRole('button', { name: key('RunPreview') })).toBeTruthy();
+      expect(screen.queryByRole('button', { name: key('RunWithModel') })).toBeNull();
+    });
+
+    test('does not render the model run when the runner is not available', () => {
+      renderTab({ pipeline: chatPipeline(), isModelRunAvailable: false });
+
+      expect(screen.getByRole('button', { name: key('RunPreview') })).toBeTruthy();
+      expect(screen.queryByRole('button', { name: key('RunWithModel') })).toBeNull();
+    });
+  });
+
+  describe('labels', () => {
+    test('reads Run again with model once a model result is held', () => {
+      renderModelTab({ preview: withModelResult() });
+
+      expect(screen.getByRole('button', { name: key('RunAgainWithModel') })).toBeTruthy();
+    });
+
+    test('names the saved version beside an unsaved edit', () => {
+      renderModelTab({ hasUnsavedEdits: true });
+
+      expect(screen.getByRole('button', { name: key('RunSavedVersionWithModel') })).toBeTruthy();
+      expect(screen.getByText(key('UnsavedTitleWithModel'))).toBeTruthy();
+    });
+
+    test('disables both controls and names the model while a model run is in flight', () => {
+      renderModelTab({
+        preview: withResult(previewMock(), { isRunning: true, runningKind: PreviewRunKind.Model }),
+      });
+
+      expect(screen.getByRole('button', { name: key('RunningWithModel') })).toBeDisabled();
+      expect(screen.getByRole('button', { name: key('RunAgain') })).toBeDisabled();
+      expect(screen.getByText(key('WaitingRowTitle'))).toBeTruthy();
+      expect(screen.getByText(key('WaitingHint'))).toBeTruthy();
+    });
+  });
+
+  describe('confirmation', () => {
+    test('asks before running and runs on confirm', async () => {
+      const user = userEvent.setup();
+      renderModelTab();
+
+      await user.click(screen.getByRole('button', { name: key('RunWithModel') }));
+
+      expect(screen.getByText(key('ConfirmBodyRow'))).toBeTruthy();
+      expect(screen.getByText('gpt-4o-mini')).toBeTruthy();
+      expect(screen.getByText(key('ConfirmCallsChat'))).toBeTruthy();
+      expect(runWithModel).not.toHaveBeenCalled();
+
+      const dialog = screen.getByRole('dialog');
+      await user.click(within(dialog).getByRole('button', { name: key('RunWithModel') }));
+
+      expect(runWithModel).toHaveBeenCalledOnce();
+    });
+
+    test('issues nothing on cancel', async () => {
+      const user = userEvent.setup();
+      renderModelTab();
+
+      await user.click(screen.getByRole('button', { name: key('RunWithModel') }));
+      await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Cancel }));
+
+      expect(screen.queryByText(key('ConfirmBodyRow'))).toBeNull();
+      expect(runWithModel).not.toHaveBeenCalled();
+    });
+
+    test('names the application and route and one call for an application route', async () => {
+      const user = userEvent.setup();
+      renderTab({ pipeline: routePipeline(), isModelRunAvailable: true });
+
+      await user.click(screen.getByRole('button', { name: key('RunWithModel') }));
+
+      expect(screen.getByText('insights-app')).toBeTruthy();
+      expect(screen.getByText('insights')).toBeTruthy();
+      expect(screen.getByText(key('ConfirmCallsRoute'))).toBeTruthy();
+    });
+
+    test('speaks of the newest group for a group pipeline', async () => {
+      const user = userEvent.setup();
+      renderTab({ pipeline: llmGroupPipeline(), isModelRunAvailable: true });
+
+      await user.click(screen.getByRole('button', { name: key('RunWithModel') }));
+
+      expect(screen.getByText(key('ConfirmBodyGroup'))).toBeTruthy();
+    });
+  });
+
+  describe('result', () => {
+    test('states an ok outcome and the panel in place of the outputs section', () => {
+      renderModelTab({ preview: withModelResult() });
+
+      expect(screen.getByText(key('OutcomeOkTitle'))).toBeTruthy();
+      expect(screen.getByRole('region', { name: key('PanelTitle') })).toBeTruthy();
+      expect(screen.queryByText(key('OutputsTitle'))).toBeNull();
+      expect(screen.getByText(key('ChipLabelRowTried'))).toBeTruthy();
+      expect(screen.getByText(key('ValuesTitle'))).toBeTruthy();
+      expect(screen.getByRole('list', { name: key('StagesLabel') })).toBeTruthy();
+    });
+
+    test('states a schema failure as an alert with the violations', () => {
+      renderModelTab({
+        preview: withModelResult({
+          evaluations: [
+            evaluationMock({
+              status: ModelRunStatus.Failed,
+              stage: DlqStage.Validate,
+              attempts: 2,
+              outputs: undefined,
+              errors: ["$: required property 'sentiment' not found"],
+            }),
+          ],
+        }),
+      });
+
+      expect(within(screen.getByRole('alert')).getByText(key('OutcomeValidateTitle'))).toBeTruthy();
+      expect(screen.getByText("$: required property 'sentiment' not found")).toBeTruthy();
+      expect(screen.getByText(key('AttemptsWithRetries'))).toBeTruthy();
+      expect(screen.getByText(key('RetryNote'))).toBeTruthy();
+    });
+
+    test('states a DIAL refusal with its status', () => {
+      renderModelTab({
+        preview: withModelResult({
+          evaluations: [
+            evaluationMock({
+              status: ModelRunStatus.Failed,
+              stage: DlqStage.DialCall,
+              dial_status: 404,
+              message: "Deployment 'gpt-4o-mini-eu' was not found",
+              outputs: undefined,
+            }),
+          ],
+        }),
+      });
+
+      expect(screen.getByText(key('OutcomeDialTitle'))).toBeTruthy();
+      expect(screen.getByText("Deployment 'gpt-4o-mini-eu' was not found")).toBeTruthy();
+    });
+
+    test('marks a cut request', () => {
+      renderModelTab({ preview: withModelResult({ evaluations: [evaluationMock({ request_truncated: true })] }) });
+
+      expect(screen.getByText(key('Truncated'))).toBeTruthy();
+      expect(screen.getByText(key('TruncatedHint'))).toBeTruthy();
+    });
+
+    test('shows a reply that is not JSON verbatim', () => {
+      renderModelTab({ preview: withModelResult({ evaluations: [evaluationMock({ response: 'not json {' })] }) });
+
+      expect(screen.getByText('not json {')).toBeTruthy();
+    });
+
+    test('states the members sent for a partial group', () => {
+      renderTab({
+        pipeline: llmGroupPipeline(),
+        isModelRunAvailable: true,
+        preview: withResult(previewMock({ statement: undefined, group_key: 'conv-1' }), {
+          evaluations: [
+            evaluationMock({
+              grain_key: undefined,
+              group_key: 'conv-1',
+              members_included: 12,
+              members_omitted: 3,
+              members_truncated: true,
+            }),
+          ],
+        }),
+      });
+
+      expect(screen.getByText(key('OutcomeOkGroupTitle'))).toBeTruthy();
+      expect(screen.getByText(key('PanelGroupNote'))).toBeTruthy();
+      expect(screen.getByText(key('FactMembersSent'))).toBeTruthy();
+      expect(screen.getByText(key('PartialGroup'))).toBeTruthy();
+      expect(screen.getByText(key('ChipLabelGroupTried'))).toBeTruthy();
+    });
+
+    test('offers Run again with model in the stale banner', () => {
+      renderModelTab({ pipeline: chatPipeline({ generation: 7 }), preview: withModelResult() });
+
+      expect(screen.getAllByRole('button', { name: key('RunAgainWithModel') })).toHaveLength(2);
+    });
+  });
+
+  describe('refusals', () => {
+    const refused = (code: string, status: number, message = 'refused') =>
+      withModelResult({ evaluations: undefined, failure: { code, status, message, isModelRun: true } });
+
+    test('says a model run is already in flight and offers to run again', async () => {
+      const user = userEvent.setup();
+      renderModelTab({ preview: refused('dry_run_in_progress', 409) });
+
+      const alert = screen.getByRole('alert');
+      expect(within(alert).getByText(key('ErrInProgressTitle'))).toBeTruthy();
+      await user.click(within(alert).getByRole('button', { name: key('RunAgainWithModel') }));
+
+      expect(screen.getByText(key('ConfirmBodyRow'))).toBeTruthy();
+    });
+
+    test('opens Runtime from a used-up budget', async () => {
+      const user = userEvent.setup();
+      renderModelTab({ preview: refused('spend_budget_exhausted', 429, 'Daily budget reached') });
+
+      expect(screen.getByText('Daily budget reached')).toBeTruthy();
+      await user.click(screen.getByRole('button', { name: key('OpenRuntime') }));
+
+      expect(onOpenRuntime).toHaveBeenCalledOnce();
+    });
+
+    test('opens Properties from a declaration the runner cannot run', async () => {
+      const user = userEvent.setup();
+      renderModelTab({ preview: refused('pipeline_not_runnable', 422) });
+
+      expect(screen.getByText(key('ErrNotRunnableTitle'))).toBeTruthy();
+      await user.click(screen.getByRole('button', { name: key('EmptyOpenProperties') }));
+
+      expect(onOpenSection).toHaveBeenCalledWith(PreviewSection.Properties);
+    });
+
+    test.each(['adas_unavailable', 'adas_contract_mismatch'])('reads %s as an unreadable sample', (code) => {
+      renderModelTab({ preview: refused(code, 503) });
+
+      expect(screen.getByText(key('ErrSampleTitle'))).toBeTruthy();
+      expect(screen.getByRole('button', { name: key('RunAgainWithModel') })).toBeTruthy();
+    });
+
+    test('reuses the preview state for a registry refusal', () => {
+      renderModelTab({ preview: refused('pipeline_validation_failed', 422) });
+
+      expect(screen.getByText(key('ErrValidationTitle'))).toBeTruthy();
+    });
+
+    test('disables the control on a runner without model runs', () => {
+      renderModelTab({
+        preview: { ...refused('not_found', 404), isModelRunUnsupported: true },
+      });
+
+      expect(screen.getByText(key('ErrUnsupportedTitle'))).toBeTruthy();
+      expect(screen.getByRole('button', { name: key('RunWithModel') })).toBeDisabled();
+    });
   });
 });
