@@ -15,6 +15,9 @@ import { ModelRunStatus } from '@/src/models/analytics/pipeline-model-run';
 import { PreviewColumnRole } from '@/src/models/analytics/pipeline-preview';
 
 const gridView = vi.hoisted(() => vi.fn((_props: unknown) => null));
+const t = vi.hoisted(() => vi.fn((key: string) => key));
+
+vi.mock('@/src/locales/client', () => ({ useI18n: () => t, useCurrentLocale: () => 'en' }));
 
 // The grid itself is the library's; what is worth proving here is what this component hands it.
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({ default: gridView }));
@@ -254,5 +257,6 @@ describe('PreviewGrid — a model run without a stage', () => {
     const getter = outcome.valueGetter as (params: ValueGetterParams) => unknown;
 
     expect(getter({ data: { index: 0, values: {} } } as ValueGetterParams)).toBe(PipelinePreviewI18nKey.CellFailed);
+    expect(t).toHaveBeenCalledWith(PipelinePreviewI18nKey.CellFailed, { stage: PipelinePreviewI18nKey.UnknownStage });
   });
 });
