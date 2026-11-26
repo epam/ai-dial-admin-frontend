@@ -81,5 +81,8 @@ export const contentTypes: Record<string, string> = {
 
 export const MAX_FILE_SIZE_MB = 4;
 export const MAX_MULTI_FILES_SIZE_MB = 64;
+export const MAX_ASSET_IMPORT_FILE_SIZE_MB = MAX_MULTI_FILES_SIZE_MB;
+export const MAX_ASSET_IMPORT_CONFIG_SIZE_MB = 1;
+export const MAX_ASSET_IMPORT_REQUEST_SIZE_MB = 66;
 export const MAX_FILES_ROUTE_FILE_SIZE_MB = 100;
 export const MAX_FILES_ROUTE_MULTI_FILES_SIZE_MB = 100;

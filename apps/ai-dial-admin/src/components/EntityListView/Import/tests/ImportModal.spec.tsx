@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { CLIENT_SECRET_PLACEHOLDER } from '@/src/components/EntityListView/Import/constants';
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { FileImportMap } from '@/src/models/file';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -98,6 +98,33 @@ describe('ImportModal client secrets', () => {
     await waitFor(() => expect(finish).toBeEnabled());
     return finish;
   };
+
+  test('shows a prepared JSON size error and retains edits for another attempt', async () => {
+    const user = userEvent.setup();
+    onApply.mockReturnValueOnce(ImportI18nKey.PreparedJsonSizeError);
+    const onClose = vi.fn();
+    renderModal(jsonFile({ toolSets: [oauthToolset()] }), { onClose });
+    const finish = await goToFinish(user);
+    await user.click(screen.getByRole('button', { name: 'record typed secret' }));
+
+    await user.click(finish);
+    expect(screen.getByRole('alert')).toHaveTextContent(ImportI18nKey.PreparedJsonSizeError);
+    expect(onClose).not.toHaveBeenCalled();
+
+    await user.click(finish);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(onApply).toHaveBeenLastCalledWith(
+      ImportFileType.JSON,
+      expect.objectContaining({
+        toolSets: [
+          expect.objectContaining({ auth_settings: expect.objectContaining({ client_secret: 'typed-secret-123' }) }),
+        ],
+      }),
+      ConflictResolutionPolicy.OVERRIDE,
+      undefined,
+      false,
+    );
+  });
 
   test('sends each OAUTH toolset with the placeholder when the grid recorded no edits', async () => {
     const user = userEvent.setup();

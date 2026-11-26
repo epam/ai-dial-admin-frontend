@@ -8,7 +8,13 @@ import SubjectKindIcon from '@/src/components/FoldersStorage/SubjectKindIcon';
 import { ButtonsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { OrgUnitSubject, SubjectKind } from '@/src/models/dial/org-unit';
-import { buildSubject, isValidClaimKey, isValidEmail, isValidHolderValue } from '@/src/utils/org-units/subjects';
+import {
+  buildSubject,
+  isValidClaimKey,
+  isValidEmail,
+  isValidHolderValue,
+  RESERVED_CLAIM_KEYS,
+} from '@/src/utils/org-units/subjects';
 
 interface Props {
   roleName: string;
@@ -36,6 +42,7 @@ const AddHolderForm: FC<Props> = ({ roleName, onAdd }) => {
   const isClaim = kind === SubjectKind.CLAIM;
   const isValueValid = isEmail ? isValidEmail(value) : isValidHolderValue(value);
   const isKeyValid = isValidClaimKey(claimKey);
+  const isKeyReserved = RESERVED_CLAIM_KEYS.includes(claimKey.trim());
   const isValid = isEveryone || (isValueValid && (!isClaim || isKeyValid));
   const errorKey = isEmail ? FoldersI18nKey.HolderEmailInvalid : FoldersI18nKey.HolderInvalid;
 
@@ -84,6 +91,8 @@ const AddHolderForm: FC<Props> = ({ roleName, onAdd }) => {
             autoComplete="one-time-code"
             placeholder={t(FoldersI18nKey.HolderClaimKey)}
             value={claimKey}
+            invalid={isKeyReserved}
+            error={isKeyReserved ? t(FoldersI18nKey.HolderClaimKeyReserved) : undefined}
             onChange={(next) => setClaimKey(next ?? '')}
           />
         )}

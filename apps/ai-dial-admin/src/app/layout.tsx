@@ -47,8 +47,7 @@ export default async function RootLayout({
     return redirect(SIGN_IN_LINK);
   }
   const { mode } = await getUserAccess();
-  const themesConfig = await themesApi.getThemesConfiguration();
-  const themeImages = await themesApi.getImages();
+  const [themesConfig, themeImages] = await Promise.all([themesApi.getThemesConfiguration(), themesApi.getImages()]);
 
   const faviconUrl = themesConfig
     ? getIconPath(themesConfig?.images['admin-favicon'] || themesConfig?.images.favicon)

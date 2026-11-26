@@ -65,7 +65,8 @@ const nextConfig = {
   transpilePackages: ['@epam/ai-dial-ui-kit', '@epam/ai-dial-react-file-manager'],
   experimental: {
     serverActions: {
-      bodySizeLimit: '64mb',
+      // Shared across all actions: 64 MiB payload + 1 MiB import config + 1 MiB multipart headroom.
+      bodySizeLimit: '66mb',
     },
   },
   env: {

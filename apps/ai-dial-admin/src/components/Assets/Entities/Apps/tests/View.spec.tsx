@@ -250,4 +250,29 @@ describe('AppView', () => {
     expect(await screen.findByRole('textbox', { name: 'JSON editor' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: GrafanaLinksI18nKey.Traces })).toBeNull();
   });
+
+  test('shows the Try out button after the Grafana traces control', () => {
+    renderView(grafanaLinks);
+
+    const traces = screen.getByRole('button', { name: GrafanaLinksI18nKey.Traces });
+    const tryOut = screen.getByRole('button', { name: ButtonsI18nKey.TryOut });
+
+    expect(traces.compareDocumentPosition(tryOut) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  test('shows the Try out button when Grafana is not configured', () => {
+    renderView(null);
+
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.TryOut })).toBeInTheDocument();
+  });
+
+  test('hides the Try out button while the JSON editor is open', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await user.click(screen.getByRole('switch', { name: EntitiesI18nKey.JSONEditor }));
+
+    expect(await screen.findByRole('textbox', { name: 'JSON editor' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.TryOut })).toBeNull();
+  });
 });

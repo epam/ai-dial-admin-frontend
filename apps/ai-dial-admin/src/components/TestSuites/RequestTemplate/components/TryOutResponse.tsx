@@ -15,7 +15,7 @@ import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { BasicI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { toTryOutJsonEditorProps } from '@/src/components/TestSuites/utils/tryout-json-editor';
+import { toTryOutJsonEditorProps } from '@/src/components/TryOut/utils/tryout-json-editor';
 import { TestCaseSchema, TestSuite, TryOutCoreResponse, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
 import {
   getRequestTurnCounts,
@@ -23,8 +23,8 @@ import {
   groupTryOutSections,
   shouldShowTurnLabels,
 } from '@/src/utils/evaluation/tryout-sections';
-import CollapsibleSection from './CollapsibleSection';
-import TryOutEventsSection from './TryOutEventsSection';
+import CollapsibleSection from '@/src/components/TryOut/components/CollapsibleSection';
+import TryOutEventsSection from '@/src/components/TryOut/components/TryOutEventsSection';
 
 interface Props {
   response: TryOutCoreResponse;

@@ -82,6 +82,26 @@ describe('buildRowDetailSections', () => {
     expect(precisionRow?.secondaryInfo).toEqual({ reason: null, logs: 'secondary logs', error: null, details: null });
   });
 
+  test('adds a highlight pivot column next to a numeric leaf that has metricInfos.highlight', () => {
+    const highlight = { corpus: [{ text: 'good', score: 1 }] };
+    const sections = buildRowDetailSections(
+      {
+        ...primaryResult,
+        metricInfos: { Accuracy: { precision: { highlight, reason: 'why' } } },
+      },
+      null,
+    );
+    const metricRows = sections.find((section) => section.key === 'metric:Accuracy')?.rows ?? [];
+    const precisionIndex = metricRows.findIndex((row) => row.fieldKey === 'precision');
+    const highlightRow = metricRows[precisionIndex + 1];
+
+    expect(highlightRow?.fieldKey).toBe('precision:highlight');
+    expect(highlightRow?.label).toBe('highlight');
+    expect(highlightRow?.isMetric).toBe(false);
+    expect(highlightRow?.isNumeric).toBe(false);
+    expect(highlightRow?.primaryRaw).toContain('"corpus"');
+  });
+
   test('leaves secondary info empty without a compared result', () => {
     const sections = buildRowDetailSections(
       { ...primaryResult, metricInfos: { Accuracy: { precision: { reason: 'primary reason' } } } },

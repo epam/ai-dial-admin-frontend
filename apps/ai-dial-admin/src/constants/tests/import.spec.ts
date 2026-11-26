@@ -1,4 +1,5 @@
 import {
+  MAX_ASSET_IMPORT_FILE_SIZE_MB,
   MAX_FILE_SIZE_MB,
   MAX_FILES_ROUTE_FILE_SIZE_MB,
   MAX_FILES_ROUTE_MULTI_FILES_SIZE_MB,
@@ -70,7 +71,18 @@ describe('IMPORT_FILE_TYPES', () => {
 });
 
 describe('import file type helper text size limits', () => {
-  test('ARCHIVE_IMPORT_TYPE shows no size limit outside Files', () => {
+  test.each([ApplicationRoute.Prompts, ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'ARCHIVE_IMPORT_TYPE shows the asset archive limit for %s',
+    (route) => {
+      const spyT = vi.fn(t);
+      ARCHIVE_IMPORT_TYPE(spyT, route);
+      expect(spyT).toHaveBeenCalledWith(ImportI18nKey.DialArchiveWithLimitDescription, {
+        size: MAX_ASSET_IMPORT_FILE_SIZE_MB,
+      });
+    },
+  );
+
+  test('ARCHIVE_IMPORT_TYPE shows no size limit for other routes', () => {
     const spyT = vi.fn(t);
     ARCHIVE_IMPORT_TYPE(spyT, ApplicationRoute.Applications);
     expect(spyT).toHaveBeenCalledWith(ImportI18nKey.DialArchiveDescription);
@@ -92,6 +104,18 @@ describe('import file type helper text size limits', () => {
       totalSize: MAX_FILES_ROUTE_MULTI_FILES_SIZE_MB,
     });
   });
+
+  test.each([ApplicationRoute.Prompts, ApplicationRoute.AssetsApplications, ApplicationRoute.AssetsToolsets])(
+    'DIAL_JSON_IMPORT_TYPE passes the asset limits for %s',
+    (route) => {
+      const spyT = vi.fn(t);
+      DIAL_JSON_IMPORT_TYPE(spyT, route);
+      expect(spyT).toHaveBeenCalledWith(ImportI18nKey.JsonFilesDescription, {
+        size: MAX_ASSET_IMPORT_FILE_SIZE_MB,
+        totalSize: MAX_MULTI_FILES_SIZE_MB,
+      });
+    },
+  );
 
   test('DIAL_JSON_IMPORT_TYPE passes the per-file and total default limits', () => {
     const spyT = vi.fn(t);
