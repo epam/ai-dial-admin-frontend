@@ -96,7 +96,7 @@ const SessionDetailBody: FC<Props> = ({
   return (
     <div className="flex min-h-0 flex-1 rounded border border-secondary">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="border-b border-secondary bg-layer-1 px-4 py-3">
+        <div className="border-b border-secondary bg-layer-base px-4 py-3">
           <Search
             id="session-trace-search"
             value={search}
@@ -105,7 +105,7 @@ const SessionDetailBody: FC<Props> = ({
           />
         </div>
         {isNoMatch ? (
-          <div role="status" aria-live="polite" className="flex flex-1 flex-col justify-center bg-layer-1">
+          <div role="status" aria-live="polite" className="flex flex-1 flex-col justify-center bg-layer-base">
             <NoDataContent
               icon={<IconSearch size={EMPTY_ICON_SIZE} aria-hidden />}
               title={t(SessionsTraceI18nKey.TraceSearchNoMatch)}
