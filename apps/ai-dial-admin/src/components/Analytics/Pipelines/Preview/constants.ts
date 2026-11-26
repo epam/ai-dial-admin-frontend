@@ -1,4 +1,5 @@
 import { PipelinePreviewI18nKey } from '@/src/constants/i18n';
+import { DlqStage } from '@/src/models/analytics/pipeline-dlq';
 import { PreviewColumnRole, PreviewNoteCode } from '@/src/models/analytics/pipeline-preview';
 
 import { PreviewSection } from './models';
@@ -35,6 +36,31 @@ export const FAILURE_CODES = {
 } as const;
 
 export const HTTP_FORBIDDEN = 403;
+
+export const MODEL_RUN_FAILURE_CODES = {
+  inProgress: 'dry_run_in_progress',
+  spendBudget: 'spend_budget_exhausted',
+  rateLimited: 'dial_rate_limited',
+  notRunnable: 'pipeline_not_runnable',
+  sampleUnavailable: ['adas_unavailable', 'adas_contract_mismatch'],
+  unsupported: 'not_found',
+} as const;
+
+export const MODEL_RUN_ROW_STAGES: string[] = [
+  DlqStage.InputMap,
+  DlqStage.DialCall,
+  DlqStage.Validate,
+  DlqStage.OutputMap,
+];
+
+export const MODEL_RUN_GROUP_STAGES: string[] = [
+  DlqStage.GroupMap,
+  DlqStage.DialCall,
+  DlqStage.Validate,
+  DlqStage.OutputMap,
+];
+
+export const MODEL_RUN_PANEL_ID = 'pipeline-model-run-result';
 
 /** The member of a declaration a validation message names when the problem is in the request template. */
 export const REQUEST_TEMPLATE_MEMBER = 'request_template';

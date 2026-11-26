@@ -151,3 +151,31 @@ describe('getRemedySection', () => {
     );
   });
 });
+
+describe('getFailureKind for a model run', () => {
+  test.each([
+    ['dry_run_in_progress', PreviewFailureKind.ModelRunInProgress],
+    ['spend_budget_exhausted', PreviewFailureKind.SpendBudget],
+    ['dial_rate_limited', PreviewFailureKind.RateLimited],
+    ['pipeline_not_runnable', PreviewFailureKind.NotRunnable],
+    ['adas_unavailable', PreviewFailureKind.SampleUnavailable],
+    ['adas_contract_mismatch', PreviewFailureKind.SampleUnavailable],
+    ['not_found', PreviewFailureKind.ModelRunUnsupported],
+    ['something_new', PreviewFailureKind.Generic],
+  ])('maps %s', (code, kind) => {
+    expect(getFailureKind({ code, isModelRun: true })).toBe(kind);
+  });
+
+  test('keeps registry codes on their preview states', () => {
+    expect(getFailureKind({ code: 'pipeline_validation_failed', isModelRun: true })).toBe(
+      PreviewFailureKind.Validation,
+    );
+    expect(getFailureKind({ code: 'sensitive_column_not_entitled', status: 403, isModelRun: true })).toBe(
+      PreviewFailureKind.NoAccess,
+    );
+  });
+
+  test('does not read runner codes on a preview failure', () => {
+    expect(getFailureKind({ code: 'not_found' })).toBe(PreviewFailureKind.Generic);
+  });
+});

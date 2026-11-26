@@ -19,6 +19,11 @@ All notable infrastructure-relevant changes to this project will be documented i
 - An application's OAuth external service can be created with `Register automatically`: the admin enters a `Discovery URL` (an MCP server's URL or the identity provider's issuer URL) and DIAL Core registers the client with the provider itself. A service Core registered shows `Registered by DIAL Core` with its fields read-only, and `Use an existing client instead` turns it into a hand-registered one. Requires a DIAL Core that includes epam/ai-dial-core#2311; an older Core rejects `discovery_url`. Services with an existing client are unaffected
   - `toolsets.security.allowedRedirectUris` (DIAL Core setting) must list `<admin origin>/external-service-signin`, plus Chat's callback if users sign in from Chat. Core registers only URIs from this list and accepts the panel's sign-in callback for a registered client only through it. With the default empty list every `Register automatically` save fails with `400`. With a list that lacks the admin callback the save succeeds but signing in from the panel fails, and the service has to be deleted and added again after the list is fixed
 
+#### Analytics
+
+- The Preview tab of an LLM enrichment pipeline has a `Run with model` control. It sends the newest sampled row, or the newest group, to the model through the enrichment runner's `POST /v1/pipelines/{name}/try` and shows the reply without writing anything. Requires an enrichment runner that includes epam/ai-dial-analytics-enrichment-runner#16, deployed together with an Analytics service that includes epam/ai-dial-analytics#97: the two moved to contract `7`, and a mismatched pair stalls all enrichment work. With an older runner the control disables itself. Each run calls the model and counts toward the pipeline's daily spend budget
+  - A model run can take several minutes (up to 60 s twice for a chat completion, or 180 s for an application route, plus the sample read). Any ingress or proxy in front of the admin panel or the runner (`DIAL_ANALYTICS_RUNNER_API_URL`) must allow a request that long, or the run fails with a gateway timeout while the call is still made and billed
+
 ### Changed
 
 #### Analytics
