@@ -299,9 +299,19 @@ they are correct at any speed.
    `showNotification`; a shared mock that builds a new `vi.fn()` per render makes every effect that lists it
    as a dependency refetch in a loop. `vi.clearAllMocks()` keeps implementations, so re-arm any mock whose
    default matters in `beforeEach`.
+7. **A test gives the same result on every machine.**
+   If the code reads something from the machine — an env variable, today's date, the network — the
+   test sets it itself. Never rely on a value being there, or on it being missing.
+
+   Example: a test expects no Keycloak login. CI has no `AUTH_KEYCLOAK_*` variables, so it passes.
+   A developer has them in a local env file, so it fails. Fix: the test removes them itself.
+
+   - env variable: `vi.stubEnv(name, value)`; to make it missing, `vi.stubEnv(name, undefined)` (not `''`)
+   - date: `vi.useFakeTimers()` + `vi.setSystemTime(...)`
+   - network: a mocked `fetch`, never a real request
 
 `npm run lint:specs` (it also runs on staged specs at commit time) rejects the shapes in rules 1–3: a `waitFor` on a
-mock call, an action or a `{ timeout }` inside a wait, and `setTimeout`. Rules 4–6 are judgement calls and are not
+mock call, an action or a `{ timeout }` inside a wait, and `setTimeout`. Rules 4–7 are judgement calls and are not
 linted.
 
 ## §10 Shared test environment
@@ -319,10 +329,7 @@ What that cleanup cannot undo is yours to avoid:
 1. **Change a global only through Vitest.** `vi.stubGlobal('fetch', vi.fn())` in `beforeEach`, or `vi.spyOn` on
    the object; never `global.x = …`, `window.x = …` or `Object.assign(navigator, …)`. A property Vitest cannot
    stub (a getter such as `navigator.clipboard`) is installed with `Object.defineProperty(…, { configurable: true })`.
-2. **Change the environment only through `vi.stubEnv`**, never by writing or deleting `process.env`. A spec that
-   reads `process.env` stubs every variable it depends on, including the ones it needs absent
-   (`vi.stubEnv(name, undefined)`): the suite must pass the same way whatever env a developer's shell or env files
-   carry.
+2. **Change the environment only through `vi.stubEnv`**, never by writing or deleting `process.env`.
 3. **Configure a controlled module through its controller.** Navigation: `navigationMock.router.push` is the spy,
    `navigationMock.setPathname(...)` / `setSearchParams(...)` set the location. Save validation:
    `saveValidationMock.dispatch` is the spy, `saveValidationMock.set({ isValid: false })` sets the state, and
