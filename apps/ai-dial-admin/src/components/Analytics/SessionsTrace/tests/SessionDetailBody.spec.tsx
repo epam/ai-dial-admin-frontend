@@ -52,6 +52,11 @@ const renderBody = () =>
 
 const searchField = () => screen.getByRole('textbox');
 
+const expectListingVisible = () => {
+  expect(screen.getByRole('region', { name: 'trace list' })).toBeTruthy();
+  expect(screen.queryByText(SessionsTraceI18nKey.TraceSearchNoMatch)).toBeNull();
+};
+
 beforeEach(() => {
   vi.useFakeTimers();
   vi.mocked(useSessionTraces).mockReturnValue(traces());
@@ -79,8 +84,7 @@ describe('SessionDetailBody', () => {
     fireEvent.change(searchField(), { target: { value: 'tr-1' } });
 
     expect(vi.mocked(useSessionTraces)).toHaveBeenLastCalledWith(expect.objectContaining({ traceId: undefined }));
-    expect(screen.getByRole('region', { name: 'trace list' })).toBeTruthy();
-    expect(screen.queryByText(SessionsTraceI18nKey.TraceSearchNoMatch)).toBeNull();
+    expectListingVisible();
   });
 
   test('applies no search for a whitespace-only value', async () => {
@@ -107,14 +111,12 @@ describe('SessionDetailBody', () => {
 
     renderBody();
 
-    expect(screen.getByRole('region', { name: 'trace list' })).toBeTruthy();
-    expect(screen.queryByText(SessionsTraceI18nKey.TraceSearchNoMatch)).toBeNull();
+    expectListingVisible();
   });
 
   test('keeps the listing for a session with no traces when nothing is searched', () => {
     renderBody();
 
-    expect(screen.getByRole('region', { name: 'trace list' })).toBeTruthy();
-    expect(screen.queryByText(SessionsTraceI18nKey.TraceSearchNoMatch)).toBeNull();
+    expectListingVisible();
   });
 });
