@@ -42,7 +42,7 @@ const ModelRunText: FC<Props> = ({ title, valueLabel, text, isTruncated, truncat
       }
     >
       <div className="flex flex-col gap-2">
-        <pre className="whitespace-pre-wrap break-words rounded border border-secondary bg-layer-3 px-3 py-2.5 font-mono dial-tiny-text text-primary">
+        <pre className="whitespace-pre-wrap break-words rounded border border-secondary bg-layer-sunken px-3 py-2.5 font-mono dial-tiny-text text-primary">
           {formatted}
         </pre>
         {isTruncated && truncatedHint && <span className="text-secondary dial-tiny-text">{truncatedHint}</span>}

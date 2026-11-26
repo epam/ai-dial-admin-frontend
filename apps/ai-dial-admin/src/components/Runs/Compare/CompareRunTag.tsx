@@ -38,7 +38,7 @@ const CompareRunTag: FC<Props> = ({ run, onEdit, isEditDisabled }) => {
       }
       onClick={isEditDisabled ? undefined : onEdit}
       className={classNames(
-        'bg-layer-3 border-0 gap-1',
+        'bg-layer-sunken border-0 gap-1',
         isEditDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
       )}
     />

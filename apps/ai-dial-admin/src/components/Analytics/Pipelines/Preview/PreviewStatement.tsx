@@ -39,7 +39,7 @@ const PreviewStatement: FC<Props> = ({ statement }) => {
         </div>
       }
     >
-      <pre className="overflow-x-auto rounded border border-secondary bg-layer-3 px-3 py-2.5 font-mono dial-tiny-text text-primary">
+      <pre className="overflow-x-auto rounded border border-secondary bg-layer-sunken px-3 py-2.5 font-mono dial-tiny-text text-primary">
         {formatted}
       </pre>
     </Accordion>

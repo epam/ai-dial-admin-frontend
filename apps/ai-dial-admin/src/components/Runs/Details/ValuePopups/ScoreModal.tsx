@@ -55,7 +55,7 @@ const ScoreModal: FC<Props> = ({ field, runs, hasComparedMatch, getRunLabel, onC
       portalId="ScoreModal"
       open
       size={PopupSize.Lg}
-      className="md:h-[80vh] bg-layer-3"
+      className="md:h-[80vh] bg-layer-sunken"
     >
       <div
         className="grid h-full min-h-0 divide-x divide-tertiary overflow-auto"

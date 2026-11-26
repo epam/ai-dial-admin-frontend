@@ -6,7 +6,7 @@ import { useI18n } from '@/src/locales/client';
 import { TransformType } from '@/src/models/analytics/pipeline';
 
 const TYPE_COLOR: Record<TransformType, string> = {
-  [TransformType.Llm]: 'text-accent-primary',
+  [TransformType.Llm]: 'text-accent',
   [TransformType.Sql]: 'text-success',
 };
 

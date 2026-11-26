@@ -43,7 +43,7 @@ describe('SectionHeaderRow', () => {
   test('keeps the Compare look when no overrides are given', () => {
     renderRow();
 
-    expect(screen.getByRole('button', { name: 'Execution' })).toHaveClass('p-3', 'bg-layer-3');
+    expect(screen.getByRole('button', { name: 'Execution' })).toHaveClass('p-3', 'bg-layer-sunken');
     expect(screen.getByText('Execution')).toHaveClass('gap-1', 'text-secondary');
   });
 });

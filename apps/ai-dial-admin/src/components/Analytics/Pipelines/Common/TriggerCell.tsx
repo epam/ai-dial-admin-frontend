@@ -14,7 +14,7 @@ const TRIGGER_LABEL: Record<TriggerKind, AnalyticsPipelinesI18nKey> = {
 };
 
 const TRIGGER_COLOR: Record<TriggerKind, string> = {
-  [TriggerKind.Schedule]: 'text-accent-primary',
+  [TriggerKind.Schedule]: 'text-accent',
   [TriggerKind.Group]: 'text-warning',
 };
 

@@ -75,7 +75,7 @@ const RunStatusValueFilter: FC<Props> = ({ model, onModelChange, api }) => {
   const onReset = () => onModelChange(null);
 
   return (
-    <div className="flex w-[205px] flex-col gap-2 bg-layer-4 p-3">
+    <div className="flex w-[205px] flex-col gap-2 bg-control-neutral-hover-muted p-3">
       <Checkbox
         id="run-status-filter-all"
         isSelected={areAllSelected}

@@ -26,10 +26,10 @@ const STATE_LABEL: Record<PlaceholderState, AnalyticsPipelinesI18nKey> = {
 
 // The trace's chip palette, for the same reason it exists there: one hue per state, stated in words too.
 const STATE_CLASS: Record<PlaceholderState, string> = {
-  [PlaceholderState.Covered]: 'bg-accent-primary-alpha text-accent-primary',
+  [PlaceholderState.Covered]: 'bg-control-accent-alpha text-accent',
   [PlaceholderState.Uncovered]: 'bg-error text-error',
   [PlaceholderState.Unused]: 'bg-error text-error',
-  [PlaceholderState.Available]: 'bg-layer-4 text-secondary',
+  [PlaceholderState.Available]: 'bg-control-neutral-hover-muted text-secondary',
 };
 
 // Colour alone cannot carry "missing but required" — the marker repeats it in a form a screen reader and

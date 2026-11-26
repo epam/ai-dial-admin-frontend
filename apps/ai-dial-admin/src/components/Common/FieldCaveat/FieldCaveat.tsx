@@ -18,7 +18,7 @@ const FieldCaveat: FC<Props> = ({ hint }) => (
     <button
       type="button"
       aria-label={hint}
-      className="flex shrink-0 items-center text-secondary hover:text-accent-primary focus-visible:text-accent-primary"
+      className="flex shrink-0 items-center text-secondary hover:text-accent focus-visible:text-accent"
     >
       <IconInfoCircle size={ICON_SIZE} aria-hidden />
     </button>

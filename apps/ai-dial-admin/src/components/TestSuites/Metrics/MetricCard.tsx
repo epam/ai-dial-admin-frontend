@@ -69,7 +69,7 @@ const MetricCard: FC<Props> = ({ metric, onEdit, onDelete }) => {
         <RemoveButton label={t(ButtonsI18nKey.Delete)} onClick={onDelete} />
         <GhostButton
           label={t(ButtonsI18nKey.Edit)}
-          className="text-accent-primary"
+          className="text-accent"
           onClick={onEdit}
           iconBefore={<IconEdit stroke={2} size={20} />}
         />

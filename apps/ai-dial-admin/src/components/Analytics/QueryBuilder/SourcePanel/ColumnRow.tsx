@@ -31,7 +31,7 @@ const ColumnRow: FC<Props> = ({ field, isNested = false }) => {
   return (
     <li
       className={classNames(
-        'flex h-8 items-center gap-3 rounded-lg pr-3 hover:bg-accent-primary-alpha focus-within:bg-accent-primary-alpha',
+        'flex h-8 items-center gap-3 rounded-lg pr-3 hover:bg-control-accent-alpha focus-within:bg-control-accent-alpha',
         isNested ? 'pl-17' : 'pl-13',
       )}
     >
@@ -53,7 +53,7 @@ const ColumnRow: FC<Props> = ({ field, isNested = false }) => {
         <span
           // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={hasDetails || isTruncated ? 0 : undefined}
-          className="flex min-w-0 flex-1 items-center gap-2 rounded focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-accent-primary"
+          className="flex min-w-0 flex-1 items-center gap-2 rounded focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-accent"
         >
           <span ref={labelRef} className="truncate text-primary dial-tiny-text">
             {label}

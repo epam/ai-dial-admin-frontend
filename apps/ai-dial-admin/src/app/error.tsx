@@ -31,7 +31,7 @@ const GlobalError: FC<Props> = ({ error, reset }) => {
               <div>
                 <PrimaryButton label="Try again" appearance={ButtonAppearance.Ghost} onClick={reset} />
               </div>
-              <Link className="text-accent-primary ml-2" aria-label="homepage" href={ApplicationRoute.Home}>
+              <Link className="text-accent ml-2" aria-label="homepage" href={ApplicationRoute.Home}>
                 Homepage
               </Link>
             </div>

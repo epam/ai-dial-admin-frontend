@@ -225,7 +225,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
         </div>
 
         {isMetricsLoading ? (
-          <div className="flex w-[420px] shrink-0 items-center justify-center rounded bg-layer-3 p-4">
+          <div className="flex w-[420px] shrink-0 items-center justify-center rounded bg-layer-sunken p-4">
             <Spinner size={44} fullWidth />
           </div>
         ) : (

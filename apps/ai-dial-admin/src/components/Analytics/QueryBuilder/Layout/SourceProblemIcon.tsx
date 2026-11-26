@@ -29,7 +29,7 @@ const SourceProblemIcon: FC<Props> = ({ problem }) => {
         aria-label={text}
         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
         tabIndex={0}
-        className="inline-flex shrink-0 rounded text-warning focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary"
+        className="inline-flex shrink-0 rounded text-warning focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent"
       >
         <IconAlertTriangle size={16} aria-hidden />
       </span>

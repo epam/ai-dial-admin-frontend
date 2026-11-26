@@ -191,8 +191,8 @@ const SystemRollback: FC = () => {
           <div
             className={
               isReadOnlyAdmin
-                ? 'flex flex-row items-center dial-small-text bg-layer-3 rounded h-6 p-2'
-                : 'flex flex-row items-center dial-small-text bg-layer-3 rounded h-6 p-2 cursor-pointer'
+                ? 'flex flex-row items-center dial-small-text bg-layer-sunken rounded h-6 p-2'
+                : 'flex flex-row items-center dial-small-text bg-layer-sunken rounded h-6 p-2 cursor-pointer'
             }
             onClick={isReadOnlyAdmin ? undefined : () => setRevisionModalOpen(true)}
             role={isReadOnlyAdmin ? undefined : 'button'}
@@ -213,7 +213,7 @@ const SystemRollback: FC = () => {
               disabled={isLoading}
             />
           )}
-          <div className="w-px h-6 bg-layer-4"></div>
+          <div className="w-px h-6 bg-control-neutral-hover-muted"></div>
           <Switch
             id="jsonView"
             isOn={isJsonView}

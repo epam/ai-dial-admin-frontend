@@ -73,7 +73,7 @@ const RunBar: FC<Props> = ({
           aria-label={ariaLabel}
         >
           {total === 0 ? (
-            <div className="h-full w-full bg-layer-4" />
+            <div className="h-full w-full bg-control-neutral-hover-muted" />
           ) : (
             <>
               {errorOrNa > 0 && (

@@ -74,7 +74,7 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
       <Accordion
         title={title}
         contentClassName="gap-y-8"
-        containerClassName="bg-layer-3"
+        containerClassName="bg-layer-sunken"
         actionButtons={
           <div className="flex items-center">
             <DiffLegend added={added} changed={changed} removed={removed} />

@@ -19,7 +19,7 @@ const TabSelector: FC<Props> = ({ tabs, activeTab, onChange, clearView }) => {
   return (
     <div
       className={classNames(
-        'flex flex-row items-center bg-layer-4 rounded-[4px] w-fit',
+        'flex flex-row items-center bg-control-neutral-hover-muted rounded-[4px] w-fit',
         clearView ? 'border border-primary' : 'gap-2 p-1',
       )}
     >
@@ -27,8 +27,8 @@ const TabSelector: FC<Props> = ({ tabs, activeTab, onChange, clearView }) => {
         <div
           key={tab.id}
           className={classNames(
-            'flex flex-row gap-1 h-[24px] items-center  cursor-pointer py-1 hover:bg-accent-primary-alpha',
-            activeTab === tab.id ? 'bg-accent-primary-alpha !text-primary' : 'text-secondary',
+            'flex flex-row gap-1 h-[24px] items-center  cursor-pointer py-1 hover:bg-control-accent-alpha',
+            activeTab === tab.id ? 'bg-control-accent-alpha !text-primary' : 'text-secondary',
             clearView ? 'px-3' : 'px-2 rounded',
             {
               'rounded-l-[4px]': clearView && index === 0,

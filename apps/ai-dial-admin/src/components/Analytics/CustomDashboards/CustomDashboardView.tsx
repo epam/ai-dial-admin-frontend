@@ -356,7 +356,7 @@ const CustomDashboardView: FC<Props> = ({ resolved, dashboards, createPermission
             <ActionsDropdown
               items={headerActions}
               icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-              actionTriggerClassName="flex size-8 items-center justify-center rounded text-secondary hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha"
+              actionTriggerClassName="flex size-8 items-center justify-center rounded text-secondary hover:bg-control-accent-alpha focus-visible:bg-control-accent-alpha"
             />
           )
         )}

@@ -36,7 +36,7 @@ const ReadinessSummaryLine: FC<Props> = ({ item }) => {
     case GroupCondition.Signal:
       return (
         <span>
-          {label} <code className="font-mono text-accent-secondary">{item.value}</code>
+          {label} <code className="font-mono text-green-2">{item.value}</code>
         </span>
       );
     case GroupCondition.CostCeiling:

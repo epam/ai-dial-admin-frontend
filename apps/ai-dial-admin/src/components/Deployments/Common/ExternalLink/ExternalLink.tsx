@@ -28,7 +28,7 @@ const ExternalLink: FC<Props> = ({ value, className }) => {
       href={value}
       target="_blank"
       rel="noopener noreferrer"
-      className={classNames('text-accent-primary hover:underline inline-flex items-center gap-1', className)}
+      className={classNames('text-accent hover:underline inline-flex items-center gap-1', className)}
       onClick={stopPropagation}
     >
       {value}

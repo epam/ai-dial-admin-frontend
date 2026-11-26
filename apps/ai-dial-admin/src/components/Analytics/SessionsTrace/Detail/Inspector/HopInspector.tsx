@@ -50,7 +50,8 @@ const MODEL_PARAM = 'model';
 
 // No border colour here: Tailwind settles two colour utilities by stylesheet order, not by class-attribute
 // order, so appending one to another painted the wrong border. Each call site chooses.
-const FACTS_BAR_CLASS = 'flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 rounded border bg-layer-3 px-3 py-1.5';
+const FACTS_BAR_CLASS =
+  'flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 rounded border bg-layer-sunken px-3 py-1.5';
 
 const TAB_LABEL_KEY: Record<SpanBodyTab, string> = {
   [SpanBodyTab.Request]: SessionsTraceI18nKey.InspectorRequest,
@@ -130,7 +131,7 @@ const HopInspector: FC<Props> = ({ readKey, traceId, span, kind, bodyGrants, mcp
   // Rendering nothing for a caller entitled to neither column reports an entitlement as an absence of events.
   if (!tabs.length) {
     return (
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 bg-layer-1">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 bg-layer-base">
         <HopTransportLine transport={transport} side={null} />
         <HopStateNote state={HopReadState.ColumnWithheld} />
       </div>
@@ -140,11 +141,11 @@ const HopInspector: FC<Props> = ({ readKey, traceId, span, kind, bodyGrants, mcp
   return (
     // One ground from strip to body: a transparent band at a pinned element's seam is where a stale repaint
     // survives.
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-layer-1">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-layer-base">
       {/* Below the strip — and still outside the scroll container, so the longest result cannot carry them off
           the screen — sit only facts read from the hop row rather than from a body. The request's parameters
           are not among them: stated here they would head the Response tab too, describing something else. */}
-      <div className="flex min-w-0 shrink-0 flex-col gap-2 bg-layer-1 pb-3">
+      <div className="flex min-w-0 shrink-0 flex-col gap-2 bg-layer-base pb-3">
         <Tabs
           ariaLabel={t(SessionsTraceI18nKey.InspectorTabsLabel)}
           tabs={tabItems}
@@ -155,7 +156,7 @@ const HopInspector: FC<Props> = ({ readKey, traceId, span, kind, bodyGrants, mcp
       </div>
       {/* Focusable because it scrolls: a message list runs well past this height, and a scroll container
           with no tab stop puts everything below the fold out of reach for a reader with no pointer. */}
-      <div tabIndex={0} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto bg-layer-1">
+      <div tabIndex={0} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto bg-layer-base">
         {activeTab === SpanBodyTab.Request && (
           <div className={classNames(FACTS_BAR_CLASS, 'border-secondary')}>
             <HopTransportLine transport={transport} side={HopInspectorSide.Request} />

@@ -32,7 +32,7 @@ const PrivilegeMarkCell: FC<Props> = ({ privilege, mark }) => {
         <IconCheck
           aria-hidden
           size={16}
-          className={classNames(mark === PrivilegeMark.Stored ? 'text-accent-primary' : 'text-secondary opacity-60')}
+          className={classNames(mark === PrivilegeMark.Stored ? 'text-accent' : 'text-secondary opacity-60')}
         />
       )}
     </span>

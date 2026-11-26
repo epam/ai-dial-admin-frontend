@@ -55,9 +55,9 @@ const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStati
             inline
             nonCollapsible
             defaultExpanded
-            className="min-w-0 overflow-hidden bg-layer-2"
+            className="min-w-0 overflow-hidden bg-layer-raised"
             barDescriptions={group.barDescriptions}
-            barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-xs px-1"
+            barClassName="hover:bg-control-accent-alpha hover:cursor-pointer rounded-xs px-1"
             barTitleClassName="block min-w-0 truncate text-secondary"
           />
         ))}

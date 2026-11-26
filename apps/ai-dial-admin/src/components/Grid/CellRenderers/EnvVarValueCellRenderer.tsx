@@ -31,7 +31,7 @@ const EnvVarValueCellRenderer: FC<ICellRendererParams> = (props) => {
   if (valueType === VALUE_TYPE.FILE && value) {
     const isDownloadable = !!data.fileContent;
     return (
-      <div className="h-full w-full flex items-center gap-x-2 min-w-0 text-accent-primary">
+      <div className="h-full w-full flex items-center gap-x-2 min-w-0 text-accent">
         <FileIcon type={DialItemType.File} name={value} decorative />
         <span
           className={`truncate ${isDownloadable ? 'underline cursor-pointer' : ''}`}

@@ -57,10 +57,10 @@ const GridView = <T extends object>({
   selectRowLabel,
   selectAllLabel,
 }: GridViewProps<T>) => {
-  const staticPanelContainerClassName = classNames('bg-blackout z-[15]', showColumnsPanel ? 'flex' : 'hidden');
+  const staticPanelContainerClassName = classNames('bg-backdrop z-[15]', showColumnsPanel ? 'flex' : 'hidden');
 
   const staticPanelClassName = classNames(
-    'flex flex-col absolute right-0 top-0 bottom-0 bg-layer-3 z-10 divide-tertiary divide-y',
+    'flex flex-col absolute right-0 top-0 bottom-0 bg-layer-sunken z-10 divide-tertiary divide-y',
   );
   const isMobile = useIsMobileScreen();
   const isTablet = useIsOnlyTabletScreen();

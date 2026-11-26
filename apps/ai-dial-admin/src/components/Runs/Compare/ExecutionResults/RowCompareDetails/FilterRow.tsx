@@ -64,7 +64,7 @@ const FilterRow: FC<Props> = ({
           onChange={onDeltaFilterChange}
         />
       </div>
-      <div className={classNames(ROW_DETAIL_FILTER_CELL_BASE, 'top-10 border-r-0 bg-layer-1')} aria-hidden />
+      <div className={classNames(ROW_DETAIL_FILTER_CELL_BASE, 'top-10 border-r-0 bg-layer-base')} aria-hidden />
     </>
   );
 };

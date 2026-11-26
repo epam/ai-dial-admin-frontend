@@ -6,7 +6,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildNxArgs, describeExit, run, sumTreeRss, toExitStatus, withHeapLimit } from './run-tests.mjs';
+import {
+  buildChildEnv,
+  buildNxArgs,
+  describeExit,
+  run,
+  sumTreeRss,
+  toExitStatus,
+  withHeapLimit,
+} from './run-tests.mjs';
 
 const runNode = (source, options = {}) => {
   const lines = [];
@@ -81,6 +89,14 @@ test('withHeapLimit adds the flag, and keeps an existing one', () => {
   assert.equal(withHeapLimit(undefined), '--max-old-space-size=4096');
   assert.equal(withHeapLimit('--trace-warnings'), '--trace-warnings --max-old-space-size=4096');
   assert.equal(withHeapLimit('--max-old-space-size=8192'), '--max-old-space-size=8192');
+});
+
+test('buildChildEnv keeps the caller env, adds the heap limit and turns off Nx env file loading', () => {
+  const env = buildChildEnv({ PATH: '/bin', NX_LOAD_DOT_ENV_FILES: 'true' });
+
+  assert.equal(env.PATH, '/bin');
+  assert.equal(env.NODE_OPTIONS, '--max-old-space-size=4096');
+  assert.equal(env.NX_LOAD_DOT_ENV_FILES, 'false');
 });
 
 test('sumTreeRss adds up the root and every descendant but nothing else', () => {

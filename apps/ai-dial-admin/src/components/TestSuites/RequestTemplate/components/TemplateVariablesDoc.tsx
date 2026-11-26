@@ -15,7 +15,7 @@ const TemplateVariablesDoc: FC = () => {
         {t(TestSuitesI18nKey.TemplateVariablesDescription)}
       </span>
       <div className="flex flex-col text-sm">
-        <div className="flex flex-row gap-2 border-b border-tertiary font-semibold bg-layer-1 text-secondary py-3">
+        <div className="flex flex-row gap-2 border-b border-tertiary font-semibold bg-layer-base text-secondary py-3">
           <span className="w-1/4 shrink-0 px-3">{t(TestSuitesI18nKey.TemplateVariablesFormat)}</span>
           <span className="w-1/4 shrink-0 px-3">{t(TestSuitesI18nKey.TemplateVariablesExample)}</span>
           <span className="px-3">{t(TestSuitesI18nKey.TemplateVariablesDescCol)}</span>
@@ -35,7 +35,7 @@ const TemplateVariablesDoc: FC = () => {
         <span className="text-base font-semibold">{t(TestSuitesI18nKey.TemplateVariablesSupportedTypes)}</span>
         <div className="flex flex-row flex-wrap gap-2">
           {TEMPLATE_VARIABLE_TYPES.map((type) => (
-            <span key={type} className="font-mono dial-tiny-text p-1 bg-layer-3 rounded border border-primary">
+            <span key={type} className="font-mono dial-tiny-text p-1 bg-layer-sunken rounded border border-primary">
               {type}
             </span>
           ))}

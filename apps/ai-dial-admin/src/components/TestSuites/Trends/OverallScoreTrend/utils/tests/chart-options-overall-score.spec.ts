@@ -105,7 +105,7 @@ describe('buildOverallScoreChartOptions', () => {
         color: palette['text-primary'],
       },
       lineStyle: {
-        color: palette['stroke-accent-secondary'],
+        color: palette['stroke-success'],
         width: 1,
         type: 'dashed',
       },
@@ -170,7 +170,7 @@ describe('buildOverallScoreChartOptions', () => {
         emphasis: { disabled: true },
         symbol: 'none',
         lineStyle: {
-          color: palette['stroke-accent-secondary'],
+          color: palette['stroke-success'],
           width: 1,
           type: 'dashed',
         },
@@ -197,7 +197,7 @@ describe('buildOverallScoreChartOptions', () => {
           label: { show: false },
           tooltip: { show: false },
           lineStyle: {
-            color: palette['stroke-accent-secondary'],
+            color: palette['stroke-success'],
             width: 1,
             type: [2, 8],
           },

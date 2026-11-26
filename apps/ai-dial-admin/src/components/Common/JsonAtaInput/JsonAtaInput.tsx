@@ -101,7 +101,7 @@ const JsonAtaInput: FC<Props> = ({
           onClose={onCancelModal}
           header={header}
           portalId="jsonAtaInputModal"
-          className="bg-layer-3"
+          className="bg-layer-sunken"
           footerDivider
           open={isModalOpen}
           size={PopupSize.Lg}
@@ -117,7 +117,7 @@ const JsonAtaInput: FC<Props> = ({
             <ReferenceFieldsPanel responseSchema={responseSchema} onSelect={onPickFromSchema} />
             <div className="flex flex-col flex-1 basis-0 min-w-0 min-h-0 gap-y-1">
               <Label label={header} />
-              <div className="flex-1 min-h-0 py-2 bg-layer-2 rounded overflow-hidden border border-secondary">
+              <div className="flex-1 min-h-0 py-2 bg-layer-raised rounded overflow-hidden border border-secondary">
                 <JsonataEditor
                   value={expression}
                   onChange={onChangeExpression}

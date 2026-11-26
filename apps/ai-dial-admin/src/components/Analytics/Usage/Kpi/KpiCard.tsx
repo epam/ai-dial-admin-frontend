@@ -37,7 +37,7 @@ const KpiCard: FC<Props> = ({ card, className, style, isLoading, hasFailed, head
     if (hasFailed || card.value == null) {
       return (
         <>
-          <span aria-label={t(BasicI18nKey.NoData)} className="my-2 h-0.5 w-7 rounded bg-controls-disable" />
+          <span aria-label={t(BasicI18nKey.NoData)} className="my-2 h-0.5 w-7 rounded bg-control-disable-primary" />
           <div className="h-[34px]" />
         </>
       );
@@ -60,7 +60,7 @@ const KpiCard: FC<Props> = ({ card, className, style, isLoading, hasFailed, head
   return (
     <div
       className={classNames(
-        'flex flex-col gap-2.5 rounded border border-secondary bg-layer-2 px-4 pb-3 pt-4 shadow-xs',
+        'flex flex-col gap-2.5 rounded border border-secondary bg-layer-raised px-4 pb-3 pt-4 shadow-xs',
         className,
       )}
       style={style}

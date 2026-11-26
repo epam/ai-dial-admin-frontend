@@ -41,14 +41,14 @@ const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, selectedP
     <div className="flex flex-col">
       <div
         className={classNames(
-          'flex flex-row items-center gap-x-2 py-1 pr-2 rounded hover:bg-accent-primary-alpha',
-          isSelected && 'bg-accent-primary-alpha',
+          'flex flex-row items-center gap-x-2 py-1 pr-2 rounded hover:bg-control-accent-alpha',
+          isSelected && 'bg-control-accent-alpha',
         )}
         style={{ paddingLeft: 4 + depth * 24 }}
       >
         {hasChildren ? (
           <IconButton
-            className="flex items-center justify-center rounded text-secondary hover:bg-accent-primary-alpha hover:text-accent-primary cursor-pointer"
+            className="flex items-center justify-center rounded text-secondary hover:bg-control-accent-alpha hover:text-accent cursor-pointer"
             onClick={onToggleNode}
             size={ElementSize.Small}
             aria-label={t(isExpanded ? JsonAtaI18nKey.CollapseField : JsonAtaI18nKey.ExpandField, { name: node.name })}

@@ -43,7 +43,7 @@ const RulesValueList: FC<Props> = ({
     'flex-1 flex flex-col gap-4',
     (!isReadonly ? !!setLastValueHeight : rules.length) && 'mt-4',
   );
-  const lineHorizontalChildClassName = 'h-[1px] w-[16px] bg-accent-primary';
+  const lineHorizontalChildClassName = 'h-[1px] w-[16px] bg-control-accent';
 
   const onAddValue = useCallback(() => {
     const newRules = [...rules];

@@ -19,7 +19,7 @@ describe('getCompareDiffCellClassName', () => {
     expect(className).toContain('border-b');
     expect(className).toContain('border-l');
     expect(className).toContain('border-r-0');
-    expect(className).toContain('border-accent-primary');
+    expect(className).toContain('border-accent');
   });
 
   test('uses only top and bottom edges on value columns', () => {
@@ -34,7 +34,7 @@ describe('getCompareDiffCellClassName', () => {
   test('uses only top and bottom edges on the delta column', () => {
     const className = getCompareDiffCellClassName(MetricDeltaKind.Added, 'delta');
 
-    expect(className).toContain('border-accent-secondary');
+    expect(className).toContain('border-success');
     expect(className).toContain('border-l-0');
     expect(className).toContain('border-r-0');
   });
@@ -42,7 +42,7 @@ describe('getCompareDiffCellClassName', () => {
   test('closes the box right edge on the action column', () => {
     const className = getCompareDiffCellClassName(MetricDeltaKind.Added, 'action');
 
-    expect(className).toContain('border-accent-secondary');
+    expect(className).toContain('border-success');
     expect(className).toContain('border-r');
     expect(className).toContain('border-l-0');
   });

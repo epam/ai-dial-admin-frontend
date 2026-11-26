@@ -1,6 +1,8 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+const KEYCLOAK_PREFIXES = ['AUTH_KEYCLOAK', 'AUTH_KEYCLOAK1'];
 const KEYCLOAK_ENV = ['CLIENT_ID', 'SECRET', 'HOST'];
+const KEYCLOAK_OPTIONAL_ENV = ['NAME', 'SCOPE'];
 
 const stubKeycloak = (prefix: string, host: string) => {
   KEYCLOAK_ENV.forEach((suffix) => {
@@ -14,6 +16,14 @@ const loadProviders = async () => {
 };
 
 describe('authProviders — Keycloak', () => {
+  beforeEach(() => {
+    KEYCLOAK_PREFIXES.forEach((prefix) => {
+      [...KEYCLOAK_ENV, ...KEYCLOAK_OPTIONAL_ENV].forEach((suffix) => {
+        vi.stubEnv(`${prefix}_${suffix}`, undefined);
+      });
+    });
+  });
+
   afterEach(() => {
     vi.resetModules();
   });

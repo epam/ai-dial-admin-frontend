@@ -226,7 +226,7 @@ const EditRequestWizard: FC<EditRequestWizardProps> = ({
         </div>
 
         {showVarReferences && (
-          <div className="absolute size-full left-0 top-0 bg-layer-3">
+          <div className="absolute size-full left-0 top-0 bg-layer-sunken">
             <TemplateVariablesDoc />
           </div>
         )}

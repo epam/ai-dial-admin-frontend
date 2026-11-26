@@ -18,8 +18,8 @@ const FilterToggle: FC<Props> = ({ label, isPressed, onToggle }) => (
     className={classNames(
       'rounded-full px-4 py-1.5 dial-small-text transition-colors',
       isPressed
-        ? 'bg-controls-accent-primary-alpha-active text-primary dial-small-semi-text'
-        : 'bg-accent-primary-alpha text-secondary hover:bg-controls-accent-primary-alpha-active',
+        ? 'bg-control-accent-alpha-hover text-primary dial-small-semi-text'
+        : 'bg-control-accent-alpha text-secondary hover:bg-control-accent-alpha-hover',
     )}
     onClick={onToggle}
   >

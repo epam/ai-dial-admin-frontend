@@ -21,7 +21,7 @@ const EvaluatedKeyCell: FC<Props> = ({ data, valueFormatted, evaluatedIndex, isP
   return (
     <button
       type="button"
-      className="min-w-0 truncate text-accent-primary underline"
+      className="min-w-0 truncate text-accent underline"
       aria-expanded={isPanelExpanded}
       aria-controls={MODEL_RUN_PANEL_ID}
       onClick={onTogglePanel}

@@ -94,7 +94,7 @@ const McpRegistryModal: FC<Props> = ({ isModalOpen, onClose, onApply, fetchServe
         },
       })}
     >
-      <div className="flex h-full bg-layer-2 py-4 px-6 gap-4">
+      <div className="flex h-full bg-layer-raised py-4 px-6 gap-4">
         <McpRegistryGrid
           selectedServer={selectedServer ?? preselectedServer}
           onSelect={handleSelect}

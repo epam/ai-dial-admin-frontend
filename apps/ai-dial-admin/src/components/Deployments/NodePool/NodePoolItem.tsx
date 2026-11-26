@@ -21,7 +21,7 @@ const NodePoolItem: FC<Props> = ({ radioName, inputId, value, name, description,
   <li
     className={classNames(
       'border-b border-tertiary last:border-b-0',
-      checked ? 'bg-accent-primary-alpha' : 'hover:bg-layer-3',
+      checked ? 'bg-control-accent-alpha' : 'hover:bg-layer-sunken',
     )}
   >
     <Label

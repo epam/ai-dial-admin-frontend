@@ -17,7 +17,7 @@ const ConversationsSidebar: FC<Props> = ({ conversations, selectedConversation, 
   const t = useI18n();
 
   return (
-    <CollapsibleSidebar width={296} title={t(TabsI18nKey.Conversations)} className="bg-layer-2 shadow-sm">
+    <CollapsibleSidebar width={296} title={t(TabsI18nKey.Conversations)} className="bg-layer-raised shadow-sm">
       <div className="h-full flex flex-col">
         <h1 className="mb-6">{t(TabsI18nKey.Conversations)}</h1>
         <div className="flex-1 min-h-0 flex flex-col gap-y-2 overflow-auto">
@@ -28,8 +28,8 @@ const ConversationsSidebar: FC<Props> = ({ conversations, selectedConversation, 
                 key={conversation.name ?? index}
                 role="tab"
                 className={classNames(
-                  'rounded pl-3 py-2 flex flex-row h-[32px] w-full dial-small-text cursor-pointer hover:text-accent-primary',
-                  isSelected ? 'bg-accent-primary-alpha border-l-2 border-l-accent-primary' : 'text-primary',
+                  'rounded pl-3 py-2 flex flex-row h-[32px] w-full dial-small-text cursor-pointer hover:text-accent',
+                  isSelected ? 'bg-control-accent-alpha border-l-2 border-l-accent' : 'text-primary',
                 )}
                 onClick={() => onSelect(conversation)}
               >

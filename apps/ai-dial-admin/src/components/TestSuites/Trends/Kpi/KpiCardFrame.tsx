@@ -14,7 +14,7 @@ interface Props {
 
 const KpiCardFrame: FC<Props> = ({ children, footer, className, ariaLabel, title }) => (
   <div
-    className={classNames('flex flex-col gap-3 rounded-lg border border-secondary bg-layer-3 p-4', className)}
+    className={classNames('flex flex-col gap-3 rounded-lg border border-secondary bg-layer-sunken p-4', className)}
     role={ariaLabel ? 'region' : undefined}
     aria-label={ariaLabel}
   >

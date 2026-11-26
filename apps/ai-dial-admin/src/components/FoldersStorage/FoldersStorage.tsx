@@ -41,7 +41,7 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
         <CollapsibleSidebar
           width={480}
           title={t(MenuI18nKey.FoldersStorage)}
-          className="bg-layer-2 border-transparent mr-0 shadow-sm"
+          className="bg-layer-raised border-transparent mr-0 shadow-sm"
           additionalButtons={
             <Tooltip
               triggerClassName="flex items-center"
@@ -49,7 +49,7 @@ const FoldersStorage: FC<Props> = ({ initialPath }) => {
               placement={TooltipPlacement.Top}
             >
               <IconButton
-                className={isCollapseDisable ? 'text-controls-disable' : 'hover:text-accent-primary'}
+                className={isCollapseDisable ? 'text-controls-disable' : 'hover:text-accent'}
                 onClick={collapseFolders}
                 icon={<FolderCollapse size={24} />}
                 disabled={isCollapseDisable}

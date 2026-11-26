@@ -37,8 +37,8 @@ const ColumnsForm: FC<Props> = ({ selected, fields, onChange }) => {
     <li
       key={field.name}
       className={classNames(
-        'flex h-8 items-center gap-2 rounded pl-10 pr-3 hover:bg-accent-primary-alpha',
-        selected.includes(field.name) && 'bg-accent-primary-alpha',
+        'flex h-8 items-center gap-2 rounded pl-10 pr-3 hover:bg-control-accent-alpha',
+        selected.includes(field.name) && 'bg-control-accent-alpha',
       )}
     >
       <div className="min-w-0 flex-1">
@@ -62,7 +62,7 @@ const ColumnsForm: FC<Props> = ({ selected, fields, onChange }) => {
 
   return (
     <div className="relative flex max-h-[360px] flex-col gap-0.5 overflow-y-auto">
-      <div className="flex h-8 items-center rounded px-3 hover:bg-accent-primary-alpha">
+      <div className="flex h-8 items-center rounded px-3 hover:bg-control-accent-alpha">
         <Checkbox
           id={`${id}-all`}
           labelProps={{ label: t(QueryChipsI18nKey.AllColumns), className: 'dial-small-text' }}
@@ -79,7 +79,7 @@ const ColumnsForm: FC<Props> = ({ selected, fields, onChange }) => {
 
         return (
           <div key={group.tag} className="flex flex-col gap-0.5">
-            <div className="flex h-8 items-center gap-1 rounded pl-1 pr-3 hover:bg-accent-primary-alpha">
+            <div className="flex h-8 items-center gap-1 rounded pl-1 pr-3 hover:bg-control-accent-alpha">
               <GhostIconButton
                 size={ElementSize.Small}
                 aria-label={t(QueryChipsI18nKey.GroupColumns, { tag: group.tag })}

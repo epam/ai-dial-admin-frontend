@@ -179,7 +179,7 @@ const DiffMiniMap: FC<Props> = ({ scrollContainerRef, isHorizontal = false }) =>
     <div
       ref={miniMapRef}
       className={classNames(
-        'absolute bg-layer-3 cursor-pointer z-10 select-none',
+        'absolute bg-layer-sunken cursor-pointer z-10 select-none',
         isHorizontal
           ? 'left-0 right-0 bottom-0 h-4 border-t border-secondary'
           : 'right-0 top-0 bottom-0 w-4 border-l border-secondary',

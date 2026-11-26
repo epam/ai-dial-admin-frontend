@@ -9,7 +9,7 @@ describe('CompareRunIndexBadge', () => {
     const { container } = render(<CompareRunIndexBadge runIndex={RUN_COMPARE_PRIMARY_INDEX} />);
 
     expect(screen.getByText('1')).toBeInTheDocument();
-    expect(container.firstChild).toHaveClass('bg-accent-primary-alpha');
+    expect(container.firstChild).toHaveClass('bg-control-accent-alpha');
   });
 
   test('renders secondary run index with success background', () => {

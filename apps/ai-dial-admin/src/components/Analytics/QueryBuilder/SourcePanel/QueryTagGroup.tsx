@@ -33,7 +33,7 @@ const QueryTagGroup: FC<Props> = ({ group, currentQueryId }) => {
         aria-label={t(QuerySourcePanelI18nKey.QueryTag, { tag: group.tag })}
         aria-expanded={isExpanded}
         aria-controls={isExpanded ? listId : undefined}
-        className="flex h-8 w-full shrink-0 items-center gap-1 rounded-lg px-3 text-secondary hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha"
+        className="flex h-8 w-full shrink-0 items-center gap-1 rounded-lg px-3 text-secondary hover:bg-control-accent-alpha focus-visible:bg-control-accent-alpha"
         onClick={() => onToggleGroup(key)}
       >
         <span className="flex size-4 shrink-0 items-center justify-center">
