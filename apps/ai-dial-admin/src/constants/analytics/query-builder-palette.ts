@@ -10,14 +10,14 @@ export const QUERY_BUILDER_PALETTE: Record<QueryBuilderColor, QueryBuilderColorC
     text: 'text-green-2',
     chipBg: 'bg-success',
     chipText: 'text-green-2',
-    borderAccent: 'border-l-accent-secondary',
+    borderAccent: 'border-l-success',
   },
   [QueryBuilderColor.Measure]: {
     marker: 'bg-control-accent',
     text: 'text-accent',
     chipBg: 'bg-control-accent-alpha',
     chipText: 'text-accent',
-    borderAccent: 'border-l-accent-primary',
+    borderAccent: 'border-l-accent',
   },
   [QueryBuilderColor.Grouping]: {
     marker: 'bg-accent-tertiary',

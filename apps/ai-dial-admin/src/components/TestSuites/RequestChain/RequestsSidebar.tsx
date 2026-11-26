@@ -104,7 +104,7 @@ const RequestsSidebar: FC<Props> = ({
                   key={index}
                   className={classNames(
                     'group flex items-center gap-2 rounded border-l-2 border-transparent hover:bg-control-accent-alpha',
-                    isActive && 'bg-control-accent-alpha border-l-accent-primary',
+                    isActive && 'bg-control-accent-alpha border-l-accent',
                   )}
                 >
                   <button

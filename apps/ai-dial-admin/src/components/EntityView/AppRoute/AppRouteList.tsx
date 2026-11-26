@@ -48,9 +48,7 @@ const AppRouteList: FC<Props> = ({ disabled, routes, activeRouteIndex, onRemove,
                 }}
                 className={classNames(
                   'rounded group pl-3 py-1 flex flex-row gap-2 h-[32px] w-full dial-small-text cursor-pointer hover:text-accent',
-                  activeRouteIndex === index
-                    ? 'bg-control-accent-alpha border-l-2 border-l-accent-primary'
-                    : 'text-primary',
+                  activeRouteIndex === index ? 'bg-control-accent-alpha border-l-2 border-l-accent' : 'text-primary',
                 )}
               >
                 <span className="flex-1 min-w-0 mr-0 text-left truncate" onClick={() => onClick(index)}>

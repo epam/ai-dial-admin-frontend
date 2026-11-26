@@ -29,7 +29,7 @@ const ConversationsSidebar: FC<Props> = ({ conversations, selectedConversation, 
                 role="tab"
                 className={classNames(
                   'rounded pl-3 py-2 flex flex-row h-[32px] w-full dial-small-text cursor-pointer hover:text-accent',
-                  isSelected ? 'bg-control-accent-alpha border-l-2 border-l-accent-primary' : 'text-primary',
+                  isSelected ? 'bg-control-accent-alpha border-l-2 border-l-accent' : 'text-primary',
                 )}
                 onClick={() => onSelect(conversation)}
               >

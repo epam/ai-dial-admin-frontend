@@ -26,7 +26,7 @@ const MethodItem: FC<Props> = ({ index, item, isActive, onClick, label }) => {
       aria-current={isActive}
       className={classNames(
         'flex flex-row gap-x-3 items-center h-8 px-3 rounded border-l-2 border-transparent text-left w-full hover:bg-control-accent-alpha focus-visible:bg-control-accent-alpha cursor-pointer',
-        isActive && 'bg-control-accent-alpha border-l-accent-primary',
+        isActive && 'bg-control-accent-alpha border-l-accent',
       )}
       onClick={onMethodClick}
     >

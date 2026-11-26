@@ -28,7 +28,7 @@ const ToolSwitcher: FC<Props> = ({ index, isCustomTool, toolName, isActive, isOn
     <div
       className={classNames(
         'rounded flex flex-row flex-1 justify-between h-[38px] items-center px-3 border-l-2 border-transparent hover:bg-control-accent-alpha mt-1',
-        isActive ? 'bg-control-accent-alpha border-l-accent-primary' : '',
+        isActive ? 'bg-control-accent-alpha border-l-accent' : '',
       )}
       onClick={onToolClick}
     >
