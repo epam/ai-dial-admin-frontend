@@ -7,6 +7,7 @@ import { Notification, NotificationType, NotificationVariant, Spinner } from '@e
 import { CoverageStatus, EvalCostCardModel } from '@/src/components/EvalSystemHealth/models';
 import { MonthCostWindows, formatGroupedMonthCost } from '@/src/components/EvalTrendsTab/deployment-month-cost';
 import EvalMonthCostDeltaBadge from '@/src/components/EvalTrendsTab/EvalMonthCostDeltaBadge';
+import { NO_DATA_VALUE } from '@/src/components/Runs/Summary/Cards/constants';
 import KpiCardFrame from '@/src/components/TestSuites/Trends/Kpi/KpiCardFrame';
 import { EvalSystemHealthI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -17,9 +18,7 @@ interface Props {
   className?: string;
 }
 
-const EMPTY_VALUE = '—';
-
-const formatCost = (value: number | null): string => (value == null ? EMPTY_VALUE : formatGroupedMonthCost(value));
+const formatCost = (value: number | null): string => (value == null ? NO_DATA_VALUE : formatGroupedMonthCost(value));
 
 const EvalCostCard: FC<Props> = ({ card, windows, className }) => {
   const t = useI18n();

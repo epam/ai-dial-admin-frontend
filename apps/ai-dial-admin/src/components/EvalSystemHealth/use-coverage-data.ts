@@ -75,8 +75,9 @@ const loadCoveredIds = async (windowStartMs: number): Promise<CoverageSource<Cov
 
 /**
  * Loads the coverage inputs — one deployment listing split by `$type` on this side, the platform route
- * listing, and one coverage query — and returns the five cards. Each source is applied as it settles. The inputs are loaded again when the day
- * rolls over while the page is open, so the 30-day window follows the calendar.
+ * listing, and one coverage query — and returns the five cards. Each source is applied as it settles. The
+ * inputs are loaded again when the day rolls over while the page is open, so the 30-day window follows the
+ * calendar.
  */
 export const useCoverageData = (): CoverageCardModel[] => {
   const [sources, setSources] = useState<CoverageSources>(LOADING);

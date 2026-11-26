@@ -10,6 +10,7 @@ import { ActivityCardModel, ActivityKind, CoverageStatus } from '@/src/component
 import { formatActivityDelta, formatCount } from '@/src/components/EvalSystemHealth/utils/format-activity';
 import EvalMonthCostDeltaBadge from '@/src/components/EvalTrendsTab/EvalMonthCostDeltaBadge';
 import { MonthCostWindows } from '@/src/components/EvalTrendsTab/deployment-month-cost';
+import { NO_DATA_VALUE } from '@/src/components/Runs/Summary/Cards/constants';
 import KpiCardFrame from '@/src/components/TestSuites/Trends/Kpi/KpiCardFrame';
 import { EvalSystemHealthI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -19,8 +20,6 @@ interface Props {
   windows: MonthCostWindows;
   className?: string;
 }
-
-const EMPTY_VALUE = '—';
 
 const ActivityCard: FC<Props> = ({ card, windows, className }) => {
   const t = useI18n();
@@ -32,7 +31,7 @@ const ActivityCard: FC<Props> = ({ card, windows, className }) => {
   if (kind === ActivityKind.SuitesRun) {
     caption = t(EvalSystemHealthI18nKey.SuitesRunCaption, {
       total: formatCount(total ?? 0),
-      percent: rate == null ? EMPTY_VALUE : formatPassRatePercent(rate),
+      percent: rate == null ? NO_DATA_VALUE : formatPassRatePercent(rate),
     });
   } else {
     caption = t(EvalSystemHealthI18nKey.SuitesAddedCaption, { count: evaluateeCount ?? 0 });

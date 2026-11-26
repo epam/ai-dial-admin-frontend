@@ -1,4 +1,4 @@
-const GROUPING_LOCALE = 'en-US';
+import { GROUPING_LOCALE } from '@/src/components/Analytics/Usage/utils/format';
 
 /** A count with thousands grouping (`1284` → `1,284`). */
 export const formatCount = (value: number): string => value.toLocaleString(GROUPING_LOCALE);
