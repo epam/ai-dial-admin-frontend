@@ -89,7 +89,9 @@ const PreviewGrid: FC<Props> = ({ columns, rows, modelRun }) => {
       if (!isEvaluated(data)) return t(PipelinePreviewI18nKey.CellPreviewOnly);
       if (evaluation.status === ModelRunStatus.Ok) return t(PipelinePreviewI18nKey.CellOk);
 
-      return t(PipelinePreviewI18nKey.CellFailed, { stage: evaluation.stage ?? '' });
+      return t(PipelinePreviewI18nKey.CellFailed, {
+        stage: evaluation.stage ?? t(PipelinePreviewI18nKey.UnknownStage),
+      });
     };
 
     const outcome: ColDef = {

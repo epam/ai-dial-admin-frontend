@@ -4713,7 +4713,8 @@ export default {
       'Run with model also sends the newest row to the model exactly as the enabled pipeline would, and shows the request, the reply and the values it would write. Nothing is written.',
     ChipLabelRowTried: 'Row tried with model',
     ChipLabelGroupTried: 'Group tried with model',
-    GroupTriedValue: '1',
+    UnknownStage: 'an unknown stage',
+    CaptionJoined: '{caption} · {detail}',
     CaptionModelRow: 'A model run sends only the newest row to the model, so the other rows show the preview alone',
     CaptionModelGroup: 'The model receives the whole group as one request',
     ConfirmBodyRow:

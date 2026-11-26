@@ -135,7 +135,9 @@ const PreviewRunBar: FC<Props> = ({
       </div>
       {captionKey && (
         <span className="text-secondary dial-tiny-text">
-          {modelCaptionKey ? `${t(captionKey)} · ${t(modelCaptionKey)}` : t(captionKey)}
+          {modelCaptionKey
+            ? t(PipelinePreviewI18nKey.CaptionJoined, { caption: t(captionKey), detail: t(modelCaptionKey) })
+            : t(captionKey)}
         </span>
       )}
     </div>

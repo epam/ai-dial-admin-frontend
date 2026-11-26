@@ -40,7 +40,9 @@ const ModelRunOutcome: FC<Props> = ({ evaluation, isGroup }) => {
   const isValidate = stage === DlqStage.Validate;
   const isDialRefusal = stage === DlqStage.DialCall && dial_status != null;
 
-  let title = t(PipelinePreviewI18nKey.OutcomeStageTitle, { stage: stage ?? '' });
+  let title = t(PipelinePreviewI18nKey.OutcomeStageTitle, {
+    stage: stage ?? t(PipelinePreviewI18nKey.UnknownStage),
+  });
   let hint: string | undefined;
   if (isValidate) {
     title = t(PipelinePreviewI18nKey.OutcomeValidateTitle);

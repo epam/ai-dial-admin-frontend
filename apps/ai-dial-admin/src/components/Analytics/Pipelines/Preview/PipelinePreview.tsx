@@ -99,7 +99,9 @@ const PipelinePreview: FC<Props> = ({
         setAnnouncement(
           evaluation.status === ModelRunStatus.Ok
             ? t(PipelinePreviewI18nKey.ModelRunFinishedOk)
-            : t(PipelinePreviewI18nKey.ModelRunFinishedFailed, { stage: evaluation.stage ?? '' }),
+            : t(PipelinePreviewI18nKey.ModelRunFinishedFailed, {
+                stage: evaluation.stage ?? t(PipelinePreviewI18nKey.UnknownStage),
+              }),
         );
       } else {
         setAnnouncement(

@@ -231,3 +231,28 @@ describe('EvaluatedKeyCell', () => {
     expect(onToggle).toHaveBeenCalledOnce();
   });
 });
+
+describe('PreviewGrid — a model run without a stage', () => {
+  beforeEach(() => {
+    gridView.mockClear();
+  });
+
+  test('names an unknown stage rather than leaving it blank', () => {
+    render(
+      <PreviewGrid
+        columns={[columnMock()]}
+        rows={[{ event_id: 'a1' }]}
+        modelRun={{
+          evaluation: evaluationMock({ status: ModelRunStatus.Failed, stage: undefined }),
+          evaluatedIndex: 0,
+          isPanelExpanded: true,
+          onTogglePanel: vi.fn(),
+        }}
+      />,
+    );
+    const [outcome] = (gridView.mock.calls.at(-1)![0] as GridProps).columnDefs;
+    const getter = outcome.valueGetter as (params: ValueGetterParams) => unknown;
+
+    expect(getter({ data: { index: 0, values: {} } } as ValueGetterParams)).toBe(PipelinePreviewI18nKey.CellFailed);
+  });
+});
