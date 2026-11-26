@@ -231,3 +231,6 @@ export const hasFailRow = (preview: CatalogImportPreview | undefined): boolean =
   Object.values(getEntries(preview))
     .flat()
     .some((e) => e.import_action === CatalogImportAction.FAIL);
+
+export const hasNoTablesOrPipelines = (preview: CatalogImportPreview): boolean =>
+  !preview.tables?.length && !preview.pipelines?.length;

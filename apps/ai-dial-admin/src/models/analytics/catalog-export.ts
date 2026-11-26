@@ -4,6 +4,9 @@ import { CatalogComponentType } from '@/src/types/analytics/export';
 export interface CatalogExportComponent {
   type: CatalogComponentType;
   name: string;
+  dependencies?: false;
+  access_only?: true;
+  roles?: string[];
 }
 
 export interface CatalogExportRequest {

@@ -65,6 +65,28 @@ describe('AnalyticsExportPreview', () => {
     expect(onPreviewResult).toHaveBeenCalledWith(true);
   });
 
+  test('accepts an access-only selection whose preview carries no objects', async () => {
+    const onPreviewResult = vi.fn();
+    vi.mocked(previewAnalyticsExportConfig).mockResolvedValue({
+      success: true,
+      response: {
+        objects: [],
+        required_system_tables: [],
+        skipped: [],
+        access: [{ table: 'usage_base', roles: ['analysts'], left_behind: [] }],
+      },
+    });
+    const request = {
+      components: [{ type: CatalogComponentType.TABLE, name: 'usage_base', access_only: true as const }],
+      include_access: true as const,
+    };
+
+    render(<AnalyticsExportPreview request={request} onPreviewResult={onPreviewResult} />);
+
+    expect(await screen.findByText(`${ExportI18nKey.AnalyticsAccess} (1)`)).toBeInTheDocument();
+    expect(onPreviewResult).toHaveBeenCalledWith(true);
+  });
+
   test('hides the Access tab when the preview carries no access', async () => {
     vi.mocked(previewAnalyticsExportConfig).mockResolvedValue({
       success: true,

@@ -2,12 +2,13 @@ import { TabItem, TabStatus } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions, RowClassParams } from 'ag-grid-community';
 
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { getEditOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN_WITH_SORT } from '@/src/constants/grid-columns/base-columns';
 import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { AnalyticsExportAccessRow, AnalyticsExportPreviewRows } from '@/src/components/ExportConfig/Preview/models';
 import {
   CatalogExportAccessItem,
+  CatalogExportComponent,
   CatalogExportPreview,
   CatalogExportRequest,
   CatalogLeftBehindItem,
@@ -36,10 +37,63 @@ const ANALYTICS_TAB_IDS = new Set<string>(Object.values(AnalyticsExportEntityTyp
 export const getAnalyticsTabs = (t: (v: string) => string): TabItem[] =>
   ANALYTICS_ENTITY_TABS.map(({ id, labelKey }) => ({ id, label: t(labelKey) }));
 
-export const getAnalyticsColDefs = (remove?: (entity?: EntitiesGridData) => void): ColDef[] => {
+const getPipelineOptionColumns = (t: (v: string) => string): ColDef<EntitiesGridData>[] => [
+  {
+    colId: 'dependencies',
+    headerName: t(ExportI18nKey.AnalyticsDependencies),
+    valueGetter: ({ data }) =>
+      t(data?.isExportedAlone ? ExportI18nKey.AnalyticsPipelineOnly : ExportI18nKey.AnalyticsDependenciesIncluded),
+  },
+];
+
+const getTableOptionColumns = (t: (v: string) => string): ColDef<EntitiesGridData>[] => [
+  {
+    colId: 'export',
+    headerName: t(ExportI18nKey.AnalyticsExportColumn),
+    valueGetter: ({ data }) =>
+      t(data?.isAccessOnly ? ExportI18nKey.AnalyticsAccessOnly : ExportI18nKey.AnalyticsTableAndAccess),
+  },
+  {
+    colId: 'roles',
+    headerName: t(ExportI18nKey.AnalyticsRoles),
+    valueGetter: ({ data }) =>
+      data?.accessRoles?.length ? data.accessRoles.join(', ') : t(ExportI18nKey.AnalyticsAllRolesValue),
+  },
+];
+
+export const hasAnalyticsRowOptions = (tab: string, isAccessIncluded: boolean): boolean =>
+  tab === AnalyticsExportEntityType.PIPELINE || (tab === AnalyticsExportEntityType.TABLE && isAccessIncluded);
+
+export const getAnalyticsColDefs = (
+  t: (v: string) => string,
+  tab: string,
+  isAccessIncluded: boolean,
+  remove?: (entity?: EntitiesGridData) => void,
+  edit?: (entity?: EntitiesGridData) => void,
+): ColDef[] => {
   const columns = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
-  return remove ? [...columns, ACTION_COLUMN([getRemoveOperation(remove)])] : columns;
+  if (!remove) {
+    return columns;
+  }
+  if (!edit || !hasAnalyticsRowOptions(tab, isAccessIncluded)) {
+    return [...columns, ACTION_COLUMN([getRemoveOperation(remove)])];
+  }
+  const optionColumns =
+    tab === AnalyticsExportEntityType.PIPELINE ? getPipelineOptionColumns(t) : getTableOptionColumns(t);
+  return [
+    ...columns,
+    ...(optionColumns as ColDef[]),
+    ACTION_COLUMN([getEditOperation(edit), getRemoveOperation(remove)]),
+  ];
 };
+
+const toCatalogComponent = (type: CatalogComponentType, entity: EntitiesGridData): CatalogExportComponent => ({
+  type,
+  name: entity.name || '',
+  ...(type === CatalogComponentType.PIPELINE && entity.isExportedAlone && { dependencies: false as const }),
+  ...(type === CatalogComponentType.TABLE && entity.isAccessOnly && { access_only: true as const }),
+  ...(type === CatalogComponentType.TABLE && !!entity.accessRoles?.length && { roles: entity.accessRoles }),
+});
 
 /** The service reads an empty selection as "everything exportable"; it has no separate full-export flag. */
 export const buildCatalogExportRequest = (
@@ -56,10 +110,7 @@ export const buildCatalogExportRequest = (
     components: Object.entries(customExportData)
       .filter(([tab]) => ANALYTICS_TAB_IDS.has(tab))
       .flatMap(([tab, entities]) =>
-        entities.map((entity) => ({
-          type: TAB_TO_COMPONENT_TYPE[tab as AnalyticsExportEntityType],
-          name: entity.name || '',
-        })),
+        entities.map((entity) => toCatalogComponent(TAB_TO_COMPONENT_TYPE[tab as AnalyticsExportEntityType], entity)),
       ),
   };
 };
