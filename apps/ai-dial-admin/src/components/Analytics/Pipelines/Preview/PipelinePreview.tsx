@@ -182,6 +182,9 @@ const PipelinePreview: FC<Props> = ({
   };
 
   const groupCaptionKey = isGroup ? PipelinePreviewI18nKey.CaptionModelGroup : PipelinePreviewI18nKey.CaptionModelRow;
+  const firstVisitModelHintKey = isGroup
+    ? PipelinePreviewI18nKey.FirstVisitModelHintGroup
+    : PipelinePreviewI18nKey.FirstVisitModelHintRow;
   const modelCaptionKey = hasModelResult ? groupCaptionKey : undefined;
 
   const runBar = (
@@ -237,7 +240,7 @@ const PipelinePreview: FC<Props> = ({
           <p className="max-w-[440px] text-secondary dial-small-text">{t(getFirstVisitKey(pipeline))}</p>
           {isModelRunOffered && (
             <p className="max-w-[440px] text-secondary dial-small-text">
-              {t(PipelinePreviewI18nKey.FirstVisitModelHint)}
+              {t(firstVisitModelHintKey)}
             </p>
           )}
         </div>

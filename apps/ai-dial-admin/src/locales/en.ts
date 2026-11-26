@@ -4731,8 +4731,10 @@ export default {
     RunAgainWithModel: 'Run again with model',
     RunSavedVersionWithModel: 'Run saved version with model',
     RunningWithModel: 'Running with model…',
-    FirstVisitModelHint:
+    FirstVisitModelHintRow:
       'Run with model also sends the newest row to the model exactly as the enabled pipeline would, and shows the request, the reply and the values it would write. Nothing is written.',
+    FirstVisitModelHintGroup:
+      'Run with model also sends the newest group to the model exactly as the enabled pipeline would, and shows the request, the reply and the values it would write. Nothing is written.',
     ChipLabelRowTried: 'Row tried with model',
     ChipLabelGroupTried: 'Group tried with model',
     UnknownStage: 'an unknown stage',

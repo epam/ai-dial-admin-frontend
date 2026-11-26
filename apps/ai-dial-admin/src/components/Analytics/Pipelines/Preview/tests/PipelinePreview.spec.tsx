@@ -677,7 +677,14 @@ describe('PipelinePreview — run with model', () => {
 
       expect(screen.getByRole('button', { name: key('RunPreview') })).toBeEnabled();
       expect(screen.getByRole('button', { name: key('RunWithModel') })).toBeEnabled();
-      expect(screen.getByText(key('FirstVisitModelHint'))).toBeTruthy();
+      expect(screen.getByText(key('FirstVisitModelHintRow'))).toBeTruthy();
+    });
+
+    test('says the newest group goes to the model for a group-trigger enrichment', () => {
+      renderModelTab({ pipeline: llmGroupPipeline() });
+
+      expect(screen.getByText(key('FirstVisitModelHintGroup'))).toBeTruthy();
+      expect(screen.queryByText(key('FirstVisitModelHintRow'))).toBeNull();
     });
 
     test.each([
