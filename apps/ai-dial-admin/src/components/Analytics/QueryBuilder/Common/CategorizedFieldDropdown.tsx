@@ -76,7 +76,7 @@ const GroupHeader: FC<GroupHeaderProps> = ({ expanded, count, textClassName, dot
     type="button"
     aria-expanded={expanded}
     className={classNames(
-      'flex w-full items-center gap-1.5 rounded px-2 pb-1 pt-2 text-left uppercase tracking-wide dial-tiny-semi-text hover:bg-layer-4',
+      'flex w-full items-center gap-1.5 rounded px-2 pb-1 pt-2 text-left uppercase tracking-wide dial-tiny-semi-text hover:bg-control-neutral-hover-muted',
       textClassName,
     )}
     onClick={onToggle}
@@ -162,7 +162,7 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
       disabled={disabled}
       placement="bottom-start"
       renderOverlay={() => (
-        <div className="flex max-h-[70vh] w-[400px] max-w-[90vw] flex-col rounded border border-secondary bg-layer-0 shadow-lg">
+        <div className="flex max-h-[70vh] w-[400px] max-w-[90vw] flex-col rounded border border-secondary bg-control-neutral shadow-lg">
           <div className="border-b border-tertiary p-1.5">
             <CompactInput
               ariaLabel={t(QueryBuilderI18nKey.SearchFields)}
@@ -204,17 +204,13 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
                         // The left gutter is reserved for the check mark exactly as a column option
                         // reserves it, so a picked function reads as picked without a colour-only cue.
                         className={classNames(
-                          'relative flex w-full items-center gap-2 rounded px-2 py-1.5 pl-6 text-left hover:bg-layer-4',
-                          fn.name === value && 'bg-accent-primary-alpha hover:bg-accent-primary-alpha',
+                          'relative flex w-full items-center gap-2 rounded px-2 py-1.5 pl-6 text-left hover:bg-control-neutral-hover-muted',
+                          fn.name === value && 'bg-control-accent-alpha hover:bg-control-accent-alpha',
                         )}
                         onClick={() => onPickFunction(fn.name)}
                       >
                         {fn.name === value && (
-                          <IconCheck
-                            aria-hidden
-                            size={12}
-                            className="absolute left-1.5 top-2 shrink-0 text-accent-primary"
-                          />
+                          <IconCheck aria-hidden size={12} className="absolute left-1.5 top-2 shrink-0 text-accent" />
                         )}
                         <IconMathFunction
                           aria-hidden
@@ -271,7 +267,7 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
           aria-expanded={open}
           aria-controls={`${id}-listbox`}
           disabled={disabled}
-          className="flex h-[26px] w-full items-center justify-between gap-2 rounded border border-primary bg-layer-2 px-2 text-left hover:bg-layer-4"
+          className="flex h-[26px] w-full items-center justify-between gap-2 rounded border border-primary bg-layer-raised px-2 text-left hover:bg-control-neutral-hover-muted"
         >
           <span className={classNames('truncate font-mono dial-tiny-text', value ? 'text-primary' : 'text-secondary')}>
             {valueLabel || props.emptyOptionLabel || props.placeholder}

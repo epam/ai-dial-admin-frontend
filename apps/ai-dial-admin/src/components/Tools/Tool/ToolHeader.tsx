@@ -61,7 +61,7 @@ const ToolHeader: FC<Props> = ({
       <div className="flex flex-row items-center">
         <h3 className="mx-2">{tool.name}</h3>
         {isAddedManual && (
-          <span className="ml-4 dial-tiny-text h-[22px] block px-2 py-1 border border-accent-primary bg-accent-primary-alpha rounded">
+          <span className="ml-4 dial-tiny-text h-[22px] block px-2 py-1 border border-accent bg-control-accent-alpha rounded">
             {t(ToolsetI18nKey.AddedManually)}
           </span>
         )}
@@ -69,7 +69,9 @@ const ToolHeader: FC<Props> = ({
       {!isAddedManual && (
         <div className="flex flex-row items-center gap-4" onClick={(e) => e.stopPropagation()}>
           {!isCollapsed && viewSelector}
-          {!isCollapsed && !!viewSelector && !disabled && <div className="w-px h-6 bg-layer-4"></div>}
+          {!isCollapsed && !!viewSelector && !disabled && (
+            <div className="w-px h-6 bg-control-neutral-hover-muted"></div>
+          )}
 
           {!disabled && (
             <OutlinedButton

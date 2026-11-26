@@ -21,9 +21,9 @@ import { formatCompactNumber, readableWords } from '@/src/utils/analytics/sessio
 // Colour is never the only thing distinguishing a chip: each states its kind in words and its count beside
 // it, so the hue is redundant by construction rather than load-bearing.
 const CHIP_CLASS: Record<string, string> = {
-  [LLM_CALL_EVENT_KIND]: 'border-accent-primary text-accent-primary',
-  [EMBEDDING_EVENT_KIND]: 'border-accent-secondary text-accent-secondary',
-  [MCP_EVENT_KIND]: 'border-accent-tertiary text-accent-tertiary',
+  [LLM_CALL_EVENT_KIND]: 'border-accent text-accent',
+  [EMBEDDING_EVENT_KIND]: 'border-success text-green-2',
+  [MCP_EVENT_KIND]: 'border-accent-tertiary text-violet-1',
   [ROUTE_EVENT_KIND]: 'border-warning text-warning',
 };
 

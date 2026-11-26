@@ -221,7 +221,7 @@ const Endpoint: FC<Props> = ({
   }, []);
 
   return (
-    <div className="flex gap-4 items-center w-full lg:gap-2 lg:rounded lg:border lg:border-secondary lg:bg-layer-2 lg:p-4">
+    <div className="flex gap-4 items-center w-full lg:gap-2 lg:rounded lg:border lg:border-secondary lg:bg-layer-raised lg:p-4">
       {/* Desktop toggle — left of content, mirrors delete button positioning */}
       {!isTablet && (
         <div className="shrink-0 self-start">

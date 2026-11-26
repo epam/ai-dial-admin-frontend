@@ -76,7 +76,7 @@ describe('ScoreCellRenderer', () => {
   test('a zero delta — no bucket — draws a neutral right border on a layer-2 background', () => {
     const { container } = renderCell({ value: 0, mode: ScoreColorMode.Delta });
 
-    expect(container.firstChild).toHaveClass('bg-layer-2', 'border-r', 'border-tertiary');
+    expect(container.firstChild).toHaveClass('bg-layer-raised', 'border-r', 'border-tertiary');
     expect(container.firstChild).not.toHaveClass('border-b');
   });
 

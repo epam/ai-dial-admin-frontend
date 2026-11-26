@@ -104,7 +104,7 @@ const StringEditorInput: FC<Props> = ({
           header={label}
           portalId={`${id}-string-editor`}
           size={PopupSize.Lg}
-          className="bg-layer-3 md:h-[80vh] md:max-h-[800px]"
+          className="bg-layer-sunken md:h-[80vh] md:max-h-[800px]"
           footerDivider
           mainButtons={getFormPopupButtons({
             cancelLabel: t(ButtonsI18nKey.Cancel),

@@ -48,7 +48,7 @@ interface Props {
   focusRequestId?: number;
 }
 
-const HEADER_CELL_BASE = 'h-10 px-3 flex items-center bg-layer-1 border-b border-tertiary dial-small-semi-text';
+const HEADER_CELL_BASE = 'h-10 px-3 flex items-center bg-layer-base border-b border-tertiary dial-small-semi-text';
 const LEFT_CELL_STICKY = 'sticky left-0';
 const VALUE_CELL_BASE =
   'p-3 border-b border-r border-tertiary min-w-0 overflow-hidden h-full min-h-10 flex items-start self-stretch';
@@ -127,7 +127,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
 
     return (
       <Fragment key={run.slot}>
-        <div className={classNames(VALUE_CELL_BASE, LEFT_CELL_STICKY, 'z-20 bg-layer-3 gap-2')}>
+        <div className={classNames(VALUE_CELL_BASE, LEFT_CELL_STICKY, 'z-20 bg-layer-sunken gap-2')}>
           <CompareRunIndexBadge runIndex={run.index} />
           <EllipsisTooltip text={getRunLabel(run)} className="text-primary" />
         </div>
@@ -135,7 +135,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
           const key = `${run.slot}-${column.sectionKey}-${column.field.fieldKey}`;
           if (isMissing) {
             return (
-              <div key={key} className={mergeClasses(VALUE_CELL_BASE, 'bg-layer-3')}>
+              <div key={key} className={mergeClasses(VALUE_CELL_BASE, 'bg-layer-sunken')}>
                 <span className="text-secondary dial-small-text">{t(RunsI18nKey.RunCompareNoMatch)}</span>
               </div>
             );
@@ -148,7 +148,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
             raw,
             isFailed,
             getRowDetailRunThreshold(column.field, run.slot),
-            'bg-layer-3',
+            'bg-layer-sunken',
             position,
           );
         })}
@@ -201,13 +201,13 @@ const CompareRowDetailPivotTable: FC<Props> = ({
           {/* Delta row */}
           {hasComparedMatch && (
             <>
-              <div className={classNames(VALUE_CELL_BASE, LEFT_CELL_STICKY, 'z-20 bg-layer-3')}>
+              <div className={classNames(VALUE_CELL_BASE, LEFT_CELL_STICKY, 'z-20 bg-layer-sunken')}>
                 <span className="text-primary dial-small-text">{DEFAULT_COMPARE_DELTA_HEADER}</span>
               </div>
               {columns.map((column) => (
                 <div
                   key={`delta-${column.sectionKey}-${column.field.fieldKey}`}
-                  className={mergeClasses(VALUE_CELL_BASE, 'bg-layer-3', column.hasDelta && 'justify-end')}
+                  className={mergeClasses(VALUE_CELL_BASE, 'bg-layer-sunken', column.hasDelta && 'justify-end')}
                 >
                   {column.hasDelta ? (
                     <CompareMetricDeltaValue

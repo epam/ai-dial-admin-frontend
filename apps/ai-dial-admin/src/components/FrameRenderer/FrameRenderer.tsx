@@ -194,7 +194,7 @@ const FrameRenderer = forwardRef<FrameRendererHandle, Props>(
     return (
       <div className="relative size-full">
         {loading && (
-          <div className="absolute inset-0 z-50 bg-layer-2">
+          <div className="absolute inset-0 z-50 bg-layer-raised">
             <Spinner size={40} fullWidth />
           </div>
         )}

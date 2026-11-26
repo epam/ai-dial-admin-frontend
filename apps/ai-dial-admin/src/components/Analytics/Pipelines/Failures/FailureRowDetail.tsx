@@ -88,7 +88,7 @@ const FailureRowDetail: FC<Props> = ({
     );
 
   return (
-    <div className="flex flex-col gap-4 bg-layer-2 px-4 py-4">
+    <div className="flex flex-col gap-4 bg-layer-raised px-4 py-4">
       <div className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2 lg:grid-cols-3">
         {/* The copy sits right after the value rather than at the column's far edge, where the shared field
             places its postfix. */}

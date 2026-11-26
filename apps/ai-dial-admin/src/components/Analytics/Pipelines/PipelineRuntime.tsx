@@ -88,7 +88,7 @@ const RuntimeSection: FC<{ title: string; children: ReactNode }> = ({ title, chi
   if (!rendered.some(Boolean)) return null;
 
   return (
-    <section aria-label={title} className="flex flex-col gap-4 rounded bg-layer-3 p-4">
+    <section aria-label={title} className="flex flex-col gap-4 rounded bg-layer-sunken p-4">
       <h3 className="dial-small-semi-text uppercase tracking-wide text-secondary">{title}</h3>
       <div className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{children}</div>
     </section>

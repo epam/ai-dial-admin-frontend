@@ -61,7 +61,7 @@ describe('Publications :: InfoHeader', () => {
     const entity = createMockPublication({ action: ActionType.ADD });
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    const actionIndicator = document.querySelector('.bg-accent-primary');
+    const actionIndicator = document.querySelector('.bg-control-accent');
     expect(actionIndicator).toBeInTheDocument();
     expect(actionIndicator).toHaveClass('flex', 'w-2', 'h-2', 'mr-1', 'rounded', 'no-user-select');
   });
@@ -70,7 +70,7 @@ describe('Publications :: InfoHeader', () => {
     const entity = createMockPublication({ action: ActionType.ADD });
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    const actionIndicator = document.querySelector('.bg-accent-primary');
+    const actionIndicator = document.querySelector('.bg-control-accent');
     expect(actionIndicator).toBeInTheDocument();
   });
 
@@ -78,7 +78,7 @@ describe('Publications :: InfoHeader', () => {
     const entity = createMockPublication({ action: ActionType.DELETE });
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    const actionIndicator = document.querySelector('.bg-red-400');
+    const actionIndicator = document.querySelector('.bg-control-error-active');
     expect(actionIndicator).toBeInTheDocument();
   });
 
@@ -86,7 +86,7 @@ describe('Publications :: InfoHeader', () => {
     const entity = createMockPublication({ action: ActionType.ADD_IF_ABSENT });
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    const actionIndicator = document.querySelector('.bg-accent-primary');
+    const actionIndicator = document.querySelector('.bg-control-accent');
     expect(actionIndicator).toBeInTheDocument();
   });
 

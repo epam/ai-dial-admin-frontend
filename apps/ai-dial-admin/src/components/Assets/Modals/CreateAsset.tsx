@@ -139,7 +139,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, top
           <CollapsibleSidebar width={360} title={t(FoldersI18nKey.Folders)} className="border border-primary">
             <FolderList context={context} />
           </CollapsibleSidebar>
-          <div className="flex flex-col flex-1 min-h-0 bg-layer-2 px-6 py-4 overflow-auto">
+          <div className="flex flex-col flex-1 min-h-0 bg-layer-raised px-6 py-4 overflow-auto">
             <h3>{t(EntityFieldsI18nKey.properties)}</h3>
             <div className="py-6">
               <LabelledText label={t(EntitiesI18nKey.FolderStorage)} text={filePath} />

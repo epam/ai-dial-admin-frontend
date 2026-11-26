@@ -180,7 +180,7 @@ const AccessRestrictionField = <T extends { allowedIpAddressRanges?: string[] | 
               <button
                 type="button"
                 aria-label={t(KeysI18nKey.IpRangesMaskNotice)}
-                className="flex shrink-0 items-center text-secondary hover:text-accent-primary focus-visible:text-accent-primary"
+                className="flex shrink-0 items-center text-secondary hover:text-accent focus-visible:text-accent"
               >
                 <IconInfoCircle size={INFO_ICON_SIZE} aria-hidden />
               </button>

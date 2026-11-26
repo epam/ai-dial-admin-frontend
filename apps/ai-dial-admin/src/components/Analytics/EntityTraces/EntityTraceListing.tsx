@@ -126,7 +126,7 @@ const EntityTraceListing: FC<Props> = ({ route, entity, defaultTimeFilter, onTim
 
   // The entity dashboard's empty state, so the Audit tab's two usage-log tabs read alike when they have nothing.
   const emptyState = (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-layer-1 p-6">
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-layer-base p-6">
       <UsageEmptyState
         className="max-w-[520px]"
         figure={

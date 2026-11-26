@@ -64,7 +64,7 @@ const MetricTrendCard: FC<Props> = ({ group, runOrder }) => {
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-secondary bg-layer-2 p-4">
+    <div className="flex flex-col gap-3 rounded-lg border border-secondary bg-layer-raised p-4">
       <p className="dial-small-text text-primary">{group.name}</p>
       <MetricTrendTags
         series={themedSeries}
@@ -76,7 +76,7 @@ const MetricTrendCard: FC<Props> = ({ group, runOrder }) => {
         <TrendScoreAxis height={METRIC_TREND_PLOT_HEIGHT_PX} />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <div
-            className="w-full overflow-hidden rounded border border-secondary bg-layer-2"
+            className="w-full overflow-hidden rounded border border-secondary bg-layer-raised"
             style={{ height: METRIC_TREND_PLOT_HEIGHT_PX }}
           >
             <ReactECharts

@@ -18,7 +18,7 @@ import { StabilityCellMeta } from '@/src/components/TestSuites/Trends/Stability/
 import { NO_FILTER_COL_DEF } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { formatScore } from '@/src/components/TestSuites/Trends/utils/format';
 
-const NEUTRAL_SWATCH_CLASSNAME = 'bg-layer-3 border-tertiary';
+const NEUTRAL_SWATCH_CLASSNAME = 'bg-layer-sunken border-tertiary';
 
 interface BuildStabilityColumnsOptions {
   testCaseColIds: string[];

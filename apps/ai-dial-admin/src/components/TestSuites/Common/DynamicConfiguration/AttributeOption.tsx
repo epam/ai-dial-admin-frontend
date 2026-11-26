@@ -33,7 +33,7 @@ const AttributeOption: FC<Props> = ({ field, isSelected, samples, onPick }) => {
           />
         )
       }
-      contentClassName="[&&]:border-0 [&&]:bg-layer-1 [&>svg]:hidden"
+      contentClassName="[&&]:border-0 [&&]:bg-layer-base [&>svg]:hidden"
       placement={TooltipPlacement.Right}
       triggerClassName="w-full"
     >
@@ -43,8 +43,8 @@ const AttributeOption: FC<Props> = ({ field, isSelected, samples, onPick }) => {
         aria-selected={isSelected}
         className={classNames(
           'flex w-full items-center gap-2 px-3 py-2 text-left',
-          'hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha focus-visible:outline-hidden',
-          isSelected && 'bg-accent-primary-alpha',
+          'hover:bg-control-accent-alpha focus-visible:bg-control-accent-alpha focus-visible:outline-hidden',
+          isSelected && 'bg-control-accent-alpha',
         )}
         onClick={onPick}
       >

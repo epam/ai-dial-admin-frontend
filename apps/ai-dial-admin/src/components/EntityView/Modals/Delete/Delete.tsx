@@ -232,7 +232,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
     >
       <div className="flex flex-col gap-y-4 px-6 py-2 size-full">
         <span className="text-secondary dial-small">{getConfirmation(view, t)}</span>
-        <div className="flex flex-col gap-y-2 bg-layer-4 rounded px-4 py-3">
+        <div className="flex flex-col gap-y-2 bg-control-neutral-hover-muted rounded px-4 py-3">
           {name && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.name)}:</span>

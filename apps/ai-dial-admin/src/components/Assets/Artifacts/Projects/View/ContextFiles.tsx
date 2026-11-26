@@ -167,9 +167,9 @@ const ContextFiles: FC<Props> = ({
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={usedPercent}
-              className="h-1.5 w-24 overflow-hidden rounded bg-layer-4"
+              className="h-1.5 w-24 overflow-hidden rounded bg-control-neutral-hover-muted"
             >
-              <div className="h-full bg-accent-primary" style={{ width: `${usedPercent}%` }} />
+              <div className="h-full bg-control-accent" style={{ width: `${usedPercent}%` }} />
             </div>
             <span className="dial-tiny-text text-secondary">
               {t(ProjectI18nKey.CapacityLabel, {

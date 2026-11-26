@@ -14,7 +14,7 @@ interface Props {
 const FailureDetailMessage: FC<Props> = ({ label, lines, copyValue, noMessageLabel }) => (
   <div className="flex flex-col gap-1">
     <span className="dial-tiny-text text-secondary">{label}</span>
-    <div className="relative rounded bg-layer-4 p-3 pr-10">
+    <div className="relative rounded bg-control-neutral-hover-muted p-3 pr-10">
       {/* Fixed to the corner rather than following the last line, so it stays in one place however the
           message wraps. The right padding keeps the text out from under it. */}
       {lines.length > 0 && (

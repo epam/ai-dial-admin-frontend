@@ -7,7 +7,7 @@ import { BACKFILL_DRAWER_CLASS } from '@/src/constants/analytics/backfill';
 
 // The shared drawer paints its scrim with this class and leaves nothing semantic on it to find it by. The ui-kit
 // popup paints its own overlay with the same class, so the scrim is told apart by holding the panel directly.
-const SCRIM_CLASS = 'bg-blackout';
+const SCRIM_CLASS = 'bg-backdrop';
 
 const isDrawerScrim = (target: EventTarget): boolean =>
   target instanceof Element && target.classList.contains(SCRIM_CLASS) && target.querySelector(':scope > aside') != null;

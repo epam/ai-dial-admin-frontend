@@ -126,7 +126,7 @@ const AddToDashboardModal: FC<Props> = ({ savedQuery, onClose }) => {
       getNotification(
         NotificationType.success,
         t(CustomDashboardsI18nKey.AddedToDashboard, { name: dashboard.name }),
-        <Link href={`/${currentLocale}${getDashboardHref(dashboard.id)}`} className="text-accent-primary underline">
+        <Link href={`/${currentLocale}${getDashboardHref(dashboard.id)}`} className="text-accent underline">
           {t(CustomDashboardsI18nKey.OpenDashboard)}
         </Link>,
       ),
@@ -176,7 +176,7 @@ const AddToDashboardModal: FC<Props> = ({ savedQuery, onClose }) => {
               canCreate && (
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 px-3 py-2 text-accent-primary hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-accent hover:bg-control-accent-alpha focus-visible:bg-control-accent-alpha"
                 >
                   <IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />
                   <span className="dial-small-text">{t(CustomDashboardsI18nKey.CreateDashboard)}</span>

@@ -160,7 +160,7 @@ const RowLimitEditor: FC<Props> = ({ tableName, columns, initialFilter, highligh
 
   return (
     <FilterTreeContext.Provider value={context}>
-      <div className="flex flex-col gap-2 rounded-xl bg-layer-4 p-3">
+      <div className="flex flex-col gap-2 rounded-xl bg-control-neutral-hover-muted p-3">
         <SegmentedControl
           aria-label={t(AnalyticsTableAccessI18nKey.StepRows)}
           value={view}

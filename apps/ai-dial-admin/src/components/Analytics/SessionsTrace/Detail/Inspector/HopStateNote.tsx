@@ -22,7 +22,7 @@ const STATE_KEY: Partial<Record<HopReadState, string>> = {
   [HopReadState.LoadFailed]: SessionsTraceI18nKey.InspectorLoadFailed,
 };
 
-const NOTE_CLASS = 'rounded border bg-layer-3 p-3 dial-tiny-text';
+const NOTE_CLASS = 'rounded border bg-layer-sunken p-3 dial-tiny-text';
 
 interface Props {
   state?: HopReadState;

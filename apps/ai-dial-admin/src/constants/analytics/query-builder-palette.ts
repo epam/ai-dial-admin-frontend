@@ -6,24 +6,24 @@ import { QueryBuilderColor, QueryBuilderColorClasses } from '@/src/models/analyt
 // reference in the rail going through this map — no ad-hoc color classes in section components.
 export const QUERY_BUILDER_PALETTE: Record<QueryBuilderColor, QueryBuilderColorClasses> = {
   [QueryBuilderColor.Dimension]: {
-    marker: 'bg-accent-secondary',
-    text: 'text-accent-secondary',
-    chipBg: 'bg-accent-secondary-alpha',
-    chipText: 'text-accent-secondary',
-    borderAccent: 'border-l-accent-secondary',
+    marker: 'bg-green-1',
+    text: 'text-green-2',
+    chipBg: 'bg-success',
+    chipText: 'text-green-2',
+    borderAccent: 'border-l-success',
   },
   [QueryBuilderColor.Measure]: {
-    marker: 'bg-accent-primary',
-    text: 'text-accent-primary',
-    chipBg: 'bg-accent-primary-alpha',
-    chipText: 'text-accent-primary',
-    borderAccent: 'border-l-accent-primary',
+    marker: 'bg-control-accent',
+    text: 'text-accent',
+    chipBg: 'bg-control-accent-alpha',
+    chipText: 'text-accent',
+    borderAccent: 'border-l-accent',
   },
   [QueryBuilderColor.Grouping]: {
     marker: 'bg-accent-tertiary',
-    text: 'text-accent-tertiary',
-    chipBg: 'bg-accent-tertiary-alpha',
-    chipText: 'text-accent-tertiary',
+    text: 'text-violet-1',
+    chipBg: 'bg-violet-2',
+    chipText: 'text-violet-1',
     borderAccent: 'border-l-accent-tertiary',
   },
   [QueryBuilderColor.Constraint]: {

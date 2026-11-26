@@ -9,7 +9,7 @@ interface Props {
 
 const ContentWithLinks: FC<Props> = ({
   text,
-  linkClassName = 'text-accent-primary hover:underline break-words [overflow-wrap:anywhere]',
+  linkClassName = 'text-accent hover:underline break-words [overflow-wrap:anywhere]',
 }) => {
   if (!text) return null;
 
