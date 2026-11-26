@@ -239,9 +239,7 @@ const PipelinePreview: FC<Props> = ({
           <h3 className="dial-h3">{t(PipelinePreviewI18nKey.FirstVisitTitle)}</h3>
           <p className="max-w-[440px] text-secondary dial-small-text">{t(getFirstVisitKey(pipeline))}</p>
           {isModelRunOffered && (
-            <p className="max-w-[440px] text-secondary dial-small-text">
-              {t(firstVisitModelHintKey)}
-            </p>
+            <p className="max-w-[440px] text-secondary dial-small-text">{t(firstVisitModelHintKey)}</p>
           )}
         </div>
       )}
