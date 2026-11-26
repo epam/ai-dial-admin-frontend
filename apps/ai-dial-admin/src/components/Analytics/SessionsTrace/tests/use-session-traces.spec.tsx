@@ -28,19 +28,24 @@ const group = (traceId: string): SessionTraceGroup => ({
   isRootRecorded: true,
 });
 
+const CURSOR = { firstRequestTime: 1500, traceId: 't2' };
+
 const page = (ids: string[], hasMore = false) => ({
   success: true,
-  response: { groups: ids.map(group), hasMore },
+  response: { groups: ids.map(group), hasMore, cursor: hasMore ? CURSOR : null },
 });
 
-const renderTraces = () =>
-  renderHook(() =>
-    useSessionTraces({
-      scope,
-      projectId: 'demo-project',
-      firstRequestTime: 1000,
-      lastRequestTime: 2000,
-    }),
+const renderTraces = (traceId?: string) =>
+  renderHook(
+    ({ searched }: { searched?: string }) =>
+      useSessionTraces({
+        scope,
+        projectId: 'demo-project',
+        firstRequestTime: 1000,
+        lastRequestTime: 2000,
+        traceId: searched,
+      }),
+    { initialProps: { searched: traceId } },
   );
 
 beforeEach(() => {
@@ -55,10 +60,10 @@ describe('useSessionTraces', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t1', 't2']);
-    expect(getSessionTracePage).toHaveBeenCalledWith(scope, 'demo-project', 1000, 2000, 0);
+    expect(getSessionTracePage).toHaveBeenCalledWith(scope, 'demo-project', 1000, 2000, null, undefined);
   });
 
-  test('appends the next page and advances the offset by what the page returned', async () => {
+  test('appends the next page, requested after the cursor the previous page returned', async () => {
     const { result } = renderTraces();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -67,12 +72,11 @@ describe('useSessionTraces', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t1', 't2', 't3']);
-    expect(getSessionTracePage).toHaveBeenLastCalledWith(scope, 'demo-project', 1000, 2000, 2);
+    expect(getSessionTracePage).toHaveBeenLastCalledWith(scope, 'demo-project', 1000, 2000, CURSOR, undefined);
   });
 
-  // A late-arriving row can lower a trace's earliest recorded time and move it across a page boundary, which
-  // offset paging exposes as a repeat. Holding the loaded ids makes the duplicate impossible rather than
-  // unlikely — and the offset still advances by the page's full length, so nothing is skipped either.
+  // A late-arriving row can lower a trace's earliest recorded time and move it past the cursor, so two pages
+  // can return the same trace. Holding the loaded ids makes the duplicate impossible rather than unlikely.
   test('renders a trace once even when a later page returns it again', async () => {
     const { result } = renderTraces();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -82,7 +86,6 @@ describe('useSessionTraces', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t1', 't2', 't3']);
-    expect(getSessionTracePage).toHaveBeenLastCalledWith(scope, 'demo-project', 1000, 2000, 2);
   });
 
   test('carries the page’s own hasMore rather than inferring one', async () => {
@@ -125,5 +128,53 @@ describe('useSessionTraces', () => {
     });
 
     expect(getSessionTracePage).toHaveBeenCalledOnce();
+  });
+
+  test('passes the searched trace id and reports a search', async () => {
+    getSessionTracePage.mockResolvedValue(page(['t7']));
+    const { result } = renderTraces('t7');
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.isSearch).toBe(true);
+    expect(getSessionTracePage).toHaveBeenCalledWith(scope, 'demo-project', 1000, 2000, null, 't7');
+  });
+
+  test('restarts from the first page when the search changes', async () => {
+    const { result, rerender } = renderTraces();
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    getSessionTracePage.mockResolvedValue(page(['t7']));
+    rerender({ searched: 't7' });
+    await waitFor(() => expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t7']));
+
+    expect(getSessionTracePage).toHaveBeenLastCalledWith(scope, 'demo-project', 1000, 2000, null, 't7');
+  });
+
+  test('restores the listing from the first page when the search is cleared', async () => {
+    getSessionTracePage.mockResolvedValue(page(['t7']));
+    const { result, rerender } = renderTraces('t7');
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    getSessionTracePage.mockResolvedValue(page(['t1', 't2'], true));
+    rerender({ searched: undefined });
+    await waitFor(() => expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t1', 't2']));
+
+    expect(result.current.isSearch).toBe(false);
+    expect(getSessionTracePage).toHaveBeenLastCalledWith(scope, 'demo-project', 1000, 2000, null, undefined);
+  });
+
+  test('drops a page that resolves after the search changed', async () => {
+    let resolveStale: (value: unknown) => void = () => undefined;
+    getSessionTracePage.mockReturnValueOnce(new Promise((resolve) => (resolveStale = resolve)));
+    const { result, rerender } = renderTraces();
+
+    getSessionTracePage.mockResolvedValue(page(['t7']));
+    rerender({ searched: 't7' });
+    await waitFor(() => expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t7']));
+
+    await act(async () => resolveStale(page(['t1', 't2'], true)));
+
+    expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t7']);
   });
 });

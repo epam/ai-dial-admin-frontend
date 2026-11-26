@@ -512,6 +512,11 @@ export interface SessionTraceWindow {
   toMs: number;
 }
 
+export interface SessionTraceCursor {
+  firstRequestTime: number;
+  traceId: string;
+}
+
 export interface SessionTraceChip {
   eventKind: string;
   spans: number;
@@ -561,6 +566,7 @@ export interface SessionTraceGroup {
 export interface SessionTracePage {
   groups: SessionTraceGroup[];
   hasMore: boolean;
+  cursor: SessionTraceCursor | null;
 }
 
 export interface SessionSpanRow {

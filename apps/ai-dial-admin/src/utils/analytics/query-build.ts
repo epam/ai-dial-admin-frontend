@@ -60,6 +60,9 @@ export const eq = (fieldName: string, val: QueryValueExpr): QueryPredicate =>
 export const le = (fieldName: string, val: QueryValueExpr): QueryPredicate =>
   predicate(QueryOperator.Le, fieldName, val);
 
+export const lt = (fieldName: string, val: QueryValueExpr): QueryPredicate =>
+  predicate(QueryOperator.Lt, fieldName, val);
+
 export const ne = (fieldName: string, val: QueryValueExpr): QueryPredicate =>
   predicate(QueryOperator.Ne, fieldName, val);
 
@@ -127,11 +130,13 @@ interface QueryParams {
 
 interface AggregateQueryParams extends QueryParams {
   groupBy?: string[];
+  having?: QueryFilterNode;
 }
 
 export const aggregateQuery = ({
   entity,
   groupBy,
+  having,
   select,
   filter,
   sort,
@@ -142,6 +147,7 @@ export const aggregateQuery = ({
   ...(filter ? { filter } : {}),
   select,
   ...(groupBy?.length ? { group_by: groupBy } : {}),
+  ...(having ? { having } : {}),
   ...(sort?.length ? { sort } : {}),
   ...(page ? { page } : {}),
 });

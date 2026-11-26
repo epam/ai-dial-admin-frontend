@@ -3,6 +3,7 @@ import {
   SessionFeedbackRow,
   SessionTraceCard,
   SessionTraceChip,
+  SessionTraceCursor,
   SessionTraceFigureRow,
   SessionTraceFigures,
   SessionTraceGroup,
@@ -118,6 +119,13 @@ export const traceFiguresOf = (
   chips: chipsOf(figures),
   responseIds: [...new Set(figures.flatMap((row) => row.response_ids ?? []))].filter(Boolean),
 });
+
+export const sessionTraceCursorOf = (pageRows: SessionTracePageRow[]): SessionTraceCursor | null => {
+  const last = pageRows.at(-1);
+  const firstRequestTime = toMillis(last?.first_request_time ?? null);
+
+  return last && firstRequestTime !== null ? { firstRequestTime, traceId: last.trace_id } : null;
+};
 
 // Assembles the page's three reads into what the listing renders.
 //

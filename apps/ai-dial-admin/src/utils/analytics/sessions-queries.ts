@@ -17,6 +17,7 @@ import {
   SessionColumnFilter,
   SessionTraceFigureField,
   SessionTracePageField,
+  SessionTraceCursor,
   SessionTraceWindow,
   SessionFilterOperator,
   SessionRatingTotalsField,
@@ -58,6 +59,7 @@ import {
   inValues,
   isNull,
   le,
+  lt,
   offsetPage,
   or,
   predicate,
@@ -467,12 +469,10 @@ const traceWindowPredicates = (window: SessionTraceWindow): QueryFilterNode[] =>
 // — and no figures: a figure resolved under a `chat_id` filter is computed without the rows that filter
 // excludes, which is the defect being fixed.
 //
-// Ascending order is load-bearing, not cosmetic. This reads a live table, so rows arrive between page
-// fetches; ordered ascending, a newly recorded trace sorts past the last page fetched and the offsets already
-// consumed do not shift. `trace_id` breaks ties so a boundary is never arbitrary. A newest-first order is
-// unsound under offset paging and must not be introduced without keyset paging first — which needs the
-// cursor bound over `min(request_time)` in a HAVING, since filtering rows by the cursor changes a straddling
-// trace's computed minimum and it reappears on the next page.
+// Newest-first, paged by keyset. This reads a live table, so a newly recorded trace sorts to the front and
+// would shift any offset; the cursor instead bounds each page by the previous page's last trace. The bound
+// sits in `having`, over the aggregated minimum: filtering rows by the cursor changes a straddling trace's
+// computed minimum and it reappears on the next page. `trace_id` breaks ties so a boundary is never arbitrary.
 // The hop log is bloom-filtered on `chat_id`, `trace_id` and `core_span_id` and on nothing else, so a
 // chat-origin session keeps that index and only a harness session — whose hops carry no `chat_id` at all —
 // pays for the enrichment column. An unknown source takes the enrichment column too: it is correct for both
@@ -492,13 +492,26 @@ const sessionScopeField = (source?: string | null, hasClientSessionId = true): U
 const sessionScopePredicate = ({ id, source }: SessionScope, hasClientSessionId?: boolean): QueryFilterNode =>
   eq(sessionScopeField(source, hasClientSessionId), value(QueryValueType.String, id));
 
+const traceCursorBound = ({ firstRequestTime, traceId }: SessionTraceCursor): QueryFilterNode => {
+  const cursorTime = value(QueryValueType.Timestamp, String(firstRequestTime));
+
+  return or([
+    lt(SessionTracePageField.FirstRequestTime, cursorTime),
+    and([
+      eq(SessionTracePageField.FirstRequestTime, cursorTime),
+      lt(SessionTracePageField.TraceId, value(QueryValueType.String, traceId)),
+    ]),
+  ]);
+};
+
 export const buildSessionTracePageQuery = (
   scope: SessionScope,
   projectId: string | null,
   window: SessionTraceWindow,
-  offset: number,
+  cursor: SessionTraceCursor | null,
   limit: number,
   hasClientSessionId?: boolean,
+  traceId?: string,
 ): StructuredQuery =>
   aggregateQuery({
     entity: USAGE_LOG_ENTITY,
@@ -512,12 +525,14 @@ export const buildSessionTracePageQuery = (
       sessionScopePredicate(scope, hasClientSessionId),
       ...(projectId ? [eq(UsageLogField.ProjectId, value(QueryValueType.String, projectId))] : []),
       ...traceWindowPredicates(window),
+      ...(traceId ? [eq(UsageLogField.TraceId, value(QueryValueType.String, traceId))] : []),
     ]),
+    ...(cursor ? { having: traceCursorBound(cursor) } : {}),
     sort: [
-      sortItem(SessionTracePageField.FirstRequestTime, QuerySortDirection.Asc),
-      sortItem(UsageLogField.TraceId, QuerySortDirection.Asc),
+      sortItem(SessionTracePageField.FirstRequestTime, QuerySortDirection.Desc),
+      sortItem(UsageLogField.TraceId, QuerySortDirection.Desc),
     ],
-    page: offsetPage(offset, limit),
+    page: offsetPage(0, limit),
   });
 
 // Pass two. Every root span of the page's traces, each read for the card it becomes. Located by `trace_id`

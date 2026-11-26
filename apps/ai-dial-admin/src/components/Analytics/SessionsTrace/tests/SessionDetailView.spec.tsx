@@ -226,7 +226,8 @@ describe('SessionDetailView', () => {
       'project',
       SESSION.first_request_time,
       SESSION.last_request_time,
-      0,
+      null,
+      undefined,
     );
   });
 
@@ -239,7 +240,8 @@ describe('SessionDetailView', () => {
       null,
       SESSION.first_request_time,
       SESSION.last_request_time,
-      0,
+      null,
+      undefined,
     );
   });
 

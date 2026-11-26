@@ -38,6 +38,7 @@ import {
   HopRequestEnvelope,
   HopResponseEnvelope,
   HopBodyFields,
+  SessionTraceCursor,
   SessionTracePage,
   SessionTracePageRow,
   HopBodyGrants,
@@ -88,7 +89,11 @@ import { EntityCallRow, EntityTraceCursor, EntityTracePage } from '@/src/models/
 import { withEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { toNumber } from '@/src/utils/analytics/scalar';
 import { paddedUtcDayRange } from '@/src/utils/analytics/session-formatting';
-import { traceGroupsOf, traceInvariantViolations } from '@/src/utils/analytics/session-trace-groups';
+import {
+  sessionTraceCursorOf,
+  traceGroupsOf,
+  traceInvariantViolations,
+} from '@/src/utils/analytics/session-trace-groups';
 import { entityTraceCursorOf, entityTraceGroupsOf } from '@/src/utils/analytics/entity-trace-groups';
 import { buildEntityCallPageQuery, entityCallClauses } from '@/src/utils/analytics/entity-trace-queries';
 import { hopBodyFields, spanFields } from '@/src/utils/analytics/session-column-catalog';
@@ -585,18 +590,27 @@ export async function getSessionTracePage(
   projectId: string | null,
   firstRequestTime: number | string | null,
   lastRequestTime: number | string | null,
-  offset: number,
+  cursor: SessionTraceCursor | null,
+  traceId?: string,
 ): Promise<ServerActionResponse<SessionTracePage>> {
   const authToken = await token();
   const sessionWindow = paddedUtcDayRange([firstRequestTime, lastRequestTime]);
 
   if (!sessionWindow) {
-    return { success: true, response: { groups: [], hasMore: false } };
+    return { success: true, response: { groups: [], hasMore: false, cursor: null } };
   }
 
   const hasClientSessionId = await isUsageLogFieldServed(UsageLogField.ClientSessionId, authToken);
   const pageResult = await analyticsDataApi.executeAction(
-    buildSessionTracePageQuery(scope, projectId, sessionWindow, offset, SESSION_TRACE_PAGE_SIZE, hasClientSessionId),
+    buildSessionTracePageQuery(
+      scope,
+      projectId,
+      sessionWindow,
+      cursor,
+      SESSION_TRACE_PAGE_SIZE,
+      hasClientSessionId,
+      traceId,
+    ),
     authToken,
   );
 
@@ -607,18 +621,19 @@ export async function getSessionTracePage(
 
   const pageRows = (pageResult.response?.rows ?? []) as unknown as SessionTracePageRow[];
   if (!pageRows.length) {
-    return { success: true, response: { groups: [], hasMore: false } };
+    return { success: true, response: { groups: [], hasMore: false, cursor: null } };
   }
 
   // Aggregate mode never populates a total, so a full page is the only evidence that another may exist.
   const hasMore = pageRows.length === SESSION_TRACE_PAGE_SIZE;
+  const nextCursor = hasMore ? sessionTraceCursorOf(pageRows) : null;
   const traceIds = pageRows.map(({ trace_id }) => trace_id);
   const pageWindow = paddedUtcDayRange(
     pageRows.flatMap(({ first_request_time, last_request_time }) => [first_request_time, last_request_time]),
   );
 
   if (!pageWindow) {
-    return { success: true, response: { groups: [], hasMore } };
+    return { success: true, response: { groups: [], hasMore, cursor: nextCursor } };
   }
 
   const [rootsResult, figuresResult] = await Promise.all([
@@ -672,6 +687,7 @@ export async function getSessionTracePage(
     response: {
       groups: traceGroupsOf(pageRows, rootRows, figureRows, projectId ?? ''),
       hasMore,
+      cursor: nextCursor,
     },
   };
 }
