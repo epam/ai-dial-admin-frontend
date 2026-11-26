@@ -10,6 +10,7 @@ import {
   TraceInvariant,
   attributeRatingsToTraces,
   isCoreInternalRoot,
+  sessionTraceCursorOf,
   traceGroupsOf,
   traceInvariantViolations,
 } from '@/src/utils/analytics/session-trace-groups';
@@ -398,5 +399,34 @@ describe('traceInvariantViolations', () => {
 
     expect(violation.traceId).toBe(TRACE);
     expect(violation.detail).toContain('session ids');
+  });
+});
+
+describe('sessionTraceCursorOf', () => {
+  const pageRow = (traceId: string, firstRequestTime: number | string | null) => ({
+    trace_id: traceId,
+    first_request_time: firstRequestTime,
+    last_request_time: firstRequestTime,
+  });
+
+  test('returns the last row of the page as the cursor', () => {
+    expect(sessionTraceCursorOf([pageRow('t2', 2000), pageRow('t1', 1000)])).toEqual({
+      firstRequestTime: 1000,
+      traceId: 't1',
+    });
+  });
+
+  test('reads a timestamp served as a string', () => {
+    expect(sessionTraceCursorOf([pageRow('t1', '2026-08-26T12:00:00.000Z')])?.firstRequestTime).toBe(
+      Date.UTC(2026, 7, 26, 12),
+    );
+  });
+
+  test('returns no cursor for an empty page', () => {
+    expect(sessionTraceCursorOf([])).toBeNull();
+  });
+
+  test('returns no cursor when the last row has no start time', () => {
+    expect(sessionTraceCursorOf([pageRow('t1', null)])).toBeNull();
   });
 });

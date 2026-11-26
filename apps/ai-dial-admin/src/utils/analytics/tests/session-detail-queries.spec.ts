@@ -501,7 +501,7 @@ describe('paddedUtcDayRange', () => {
 });
 
 describe('buildSessionTracePageQuery', () => {
-  const query = () => buildSessionTracePageQuery(CHAT_SCOPE, PROJECT_ID, window(), 0, SESSION_TRACE_PAGE_SIZE);
+  const query = () => buildSessionTracePageQuery(CHAT_SCOPE, PROJECT_ID, window(), null, SESSION_TRACE_PAGE_SIZE);
 
   test('groups the hop log by trace', () => {
     const built = query();
@@ -540,20 +540,25 @@ describe('buildSessionTracePageQuery', () => {
     expect(serialized).not.toContain(UsageLogField.Success);
   });
 
-  // Ascending is what makes offset paging sound against a live table: a newly recorded trace sorts past the
-  // last page fetched, so consumed offsets do not shift. The trace id keeps a boundary from being arbitrary.
-  test('orders ascending by the trace start, tie-broken by trace id', () => {
+  // Newest-first is sound only because paging is by keyset: a newly recorded trace sorts to the front, where no
+  // cursor reaches it, instead of shifting an offset. The trace id keeps a boundary from being arbitrary.
+  test('orders descending by the trace start, tie-broken by trace id', () => {
     expect(query().sort).toEqual([
-      { field: SessionTracePageField.FirstRequestTime, dir: QuerySortDirection.Asc },
-      { field: UsageLogField.TraceId, dir: QuerySortDirection.Asc },
+      { field: SessionTracePageField.FirstRequestTime, dir: QuerySortDirection.Desc },
+      { field: UsageLogField.TraceId, dir: QuerySortDirection.Desc },
     ]);
   });
 
-  test('pages by offset at the listing page size', () => {
-    const page = buildSessionTracePageQuery(CHAT_SCOPE, PROJECT_ID, window(), 100, SESSION_TRACE_PAGE_SIZE)
-      .page as QueryOffsetPage;
+  test('pages by keyset at the listing page size, never by offset', () => {
+    const page = buildSessionTracePageQuery(
+      CHAT_SCOPE,
+      PROJECT_ID,
+      window(),
+      { firstRequestTime: 1000, traceId: 't1' },
+      SESSION_TRACE_PAGE_SIZE,
+    ).page as QueryOffsetPage;
 
-    expect(page.offset).toBe(100);
+    expect(page.offset).toBe(0);
     expect(page.limit).toBe(SESSION_TRACE_PAGE_SIZE);
   });
 });

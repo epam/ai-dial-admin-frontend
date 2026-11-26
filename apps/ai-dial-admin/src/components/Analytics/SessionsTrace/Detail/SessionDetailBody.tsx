@@ -1,10 +1,16 @@
 'use client';
 
-import { FC, useCallback, useMemo } from 'react';
+import { NoDataContent, Search } from '@epam/ai-dial-ui-kit';
+import { IconSearch } from '@tabler/icons-react';
+import { debounce } from 'lodash';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import SessionDetailRail from '@/src/components/Analytics/SessionsTrace/Detail/SessionDetailRail';
 import SessionTraceList from '@/src/components/Analytics/SessionsTrace/Detail/SessionTraceList';
 import { useSessionTraces } from '@/src/components/Analytics/SessionsTrace/Detail/use-session-traces';
+import { EMPTY_ICON_SIZE, SESSIONS_SEARCH_DEBOUNCE_MS } from '@/src/constants/analytics/sessions-trace';
+import { SessionsTraceI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import {
   ColumnProvenance,
@@ -48,15 +54,34 @@ const SessionDetailBody: FC<Props> = ({
   onOpenTrace,
   scope,
 }) => {
+  const t = useI18n();
   const projectId = source.project === null ? null : (session.project_id ?? '');
   const feedbackRows = useMemo(() => feedback?.rows ?? [], [feedback]);
+  const [search, setSearch] = useState('');
+  const [traceId, setTraceId] = useState('');
 
-  const { groups, hasMore, isLoading, hasLoadError, onLoadMore } = useSessionTraces({
+  const applyTraceId = useMemo(() => debounce(setTraceId, SESSIONS_SEARCH_DEBOUNCE_MS), []);
+
+  useEffect(() => () => applyTraceId.cancel(), [applyTraceId]);
+
+  const onSearchChange = useCallback(
+    (value?: string) => {
+      const next = value ?? '';
+      setSearch(next);
+      applyTraceId(next.trim());
+    },
+    [applyTraceId],
+  );
+
+  const { groups, hasMore, isLoading, hasLoadError, isSearch, onLoadMore } = useSessionTraces({
     scope,
     projectId,
     firstRequestTime: session.first_request_time,
     lastRequestTime: session.last_request_time,
+    traceId: traceId || undefined,
   });
+
+  const isNoMatch = isSearch && !groups.length && !isLoading && !hasLoadError;
 
   const listingRatings = useMemo(() => attributeRatingsToTraces(groups, feedbackRows), [groups, feedbackRows]);
 
@@ -70,15 +95,38 @@ const SessionDetailBody: FC<Props> = ({
 
   return (
     <div className="flex min-h-0 flex-1 rounded border border-secondary">
-      <SessionTraceList
-        groups={groups}
-        traceRatings={listingRatings}
-        hasMore={hasMore}
-        isLoading={isLoading}
-        hasLoadError={hasLoadError}
-        onLoadMore={onLoadMore}
-        onOpenTrace={onOpenCard}
-      />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="border-b border-secondary bg-layer-1 px-4 py-3">
+          <Search
+            id="session-trace-search"
+            value={search}
+            onChange={onSearchChange}
+            placeholder={t(SessionsTraceI18nKey.TraceSearchPlaceholder)}
+          />
+        </div>
+        {isNoMatch ? (
+          <div role="status" aria-live="polite" className="flex flex-1 flex-col justify-center bg-layer-1">
+            <NoDataContent
+              icon={<IconSearch size={EMPTY_ICON_SIZE} aria-hidden />}
+              title={t(SessionsTraceI18nKey.TraceSearchNoMatch)}
+              description={t(SessionsTraceI18nKey.TraceSearchNoMatchHint)}
+              className="max-w-[520px] self-center p-6"
+              titleClassName="dial-tiny-semi-text"
+              descriptionClassName="dial-small-text"
+            />
+          </div>
+        ) : (
+          <SessionTraceList
+            groups={groups}
+            traceRatings={listingRatings}
+            hasMore={hasMore}
+            isLoading={isLoading}
+            hasLoadError={hasLoadError}
+            onLoadMore={onLoadMore}
+            onOpenTrace={onOpenCard}
+          />
+        )}
+      </div>
       <SessionDetailRail
         session={session}
         source={source}

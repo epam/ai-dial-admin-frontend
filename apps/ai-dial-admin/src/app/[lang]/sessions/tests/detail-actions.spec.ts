@@ -8,7 +8,12 @@ import {
   getSessionTracePage,
   getHopBodyGrants,
 } from '@/src/app/[lang]/sessions/actions';
-import { SESSION_FEEDBACK_LIMIT, SESSION_SPAN_LIMIT, USAGE_LOG_ENTITY } from '@/src/constants/analytics/sessions-trace';
+import {
+  SESSION_FEEDBACK_LIMIT,
+  SESSION_SPAN_LIMIT,
+  SESSION_TRACE_PAGE_SIZE,
+  USAGE_LOG_ENTITY,
+} from '@/src/constants/analytics/sessions-trace';
 import { QueryMode, QueryOffsetPage, QueryOperator, QueryPredicate } from '@/src/models/analytics/query';
 import { UsageLogField, SessionScope } from '@/src/models/analytics/sessions-trace';
 import { clearEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
@@ -505,7 +510,7 @@ describe('getSessionTracePage', () => {
   test('scopes a session of unknown source by chat_id where the log serves no session id', async () => {
     resolvePage([pageRow('t1', NOON)]);
 
-    await getSessionTracePage({ id: CHAT_ID }, 'demo-project', NOON, NOON, 0);
+    await getSessionTracePage({ id: CHAT_ID }, 'demo-project', NOON, NOON, null);
 
     expect(pageFilterNames()).toContain(UsageLogField.ChatId);
     expect(pageFilterNames()).not.toContain(UsageLogField.ClientSessionId);
@@ -516,7 +521,7 @@ describe('getSessionTracePage', () => {
   test('reads a blank source as unknown', async () => {
     resolvePage([pageRow('t1', NOON)]);
 
-    await getSessionTracePage({ id: CHAT_ID, source: '' }, 'demo-project', NOON, NOON, 0);
+    await getSessionTracePage({ id: CHAT_ID, source: '' }, 'demo-project', NOON, NOON, null);
 
     expect(pageFilterNames()).toContain(UsageLogField.ChatId);
   });
@@ -528,7 +533,7 @@ describe('getSessionTracePage', () => {
     });
     resolvePage([pageRow('t1', NOON)]);
 
-    await getSessionTracePage({ id: CHAT_ID }, 'demo-project', NOON, NOON, 0);
+    await getSessionTracePage({ id: CHAT_ID }, 'demo-project', NOON, NOON, null);
 
     expect(pageFilterNames()).toContain(UsageLogField.ClientSessionId);
     expect(rootsSelectNames()).toContain(UsageLogField.ClientSessionId);
@@ -537,7 +542,7 @@ describe('getSessionTracePage', () => {
   test('keeps the session id for a harness session even where the log does not serve it', async () => {
     resolvePage([pageRow('t1', NOON)]);
 
-    await getSessionTracePage({ id: CHAT_ID, source: 'claude-code' }, 'demo-project', NOON, NOON, 0);
+    await getSessionTracePage({ id: CHAT_ID, source: 'claude-code' }, 'demo-project', NOON, NOON, null);
 
     expect(pageFilterNames()).toContain(UsageLogField.ClientSessionId);
   });
@@ -545,7 +550,7 @@ describe('getSessionTracePage', () => {
   test('reads the page, then its roots and figures, with the user token', async () => {
     resolvePage([pageRow('t1', NOON)]);
 
-    await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, 0);
+    await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, null);
 
     expect(execute()).toHaveBeenCalledTimes(3);
     expect(execute()).toHaveBeenNthCalledWith(1, expect.anything(), TOKEN_MOCK);
@@ -556,7 +561,7 @@ describe('getSessionTracePage', () => {
   test('scopes the roots and figures to the page own padded window', async () => {
     resolvePage([pageRow('t1', NOON, NOON + 60_000)]);
 
-    await getSessionTracePage(SCOPE, 'demo-project', Date.UTC(2025, 0, 1), NOON, 0);
+    await getSessionTracePage(SCOPE, 'demo-project', Date.UTC(2025, 0, 1), NOON, null);
 
     const [rootsFrom, rootsTo] = boundsOf(1);
     expect(rootsFrom).toBe(Date.UTC(2026, 7, 26) - DAY);
@@ -567,9 +572,9 @@ describe('getSessionTracePage', () => {
   test('resolves nothing further when the page returns no trace', async () => {
     execute().mockResolvedValue({ success: true, response: { rows: [] } });
 
-    const result = await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, 0);
+    const result = await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, null);
 
-    expect(result.response).toEqual({ groups: [], hasMore: false });
+    expect(result.response).toEqual({ groups: [], hasMore: false, cursor: null });
     expect(execute()).toHaveBeenCalledOnce();
   });
 
@@ -577,13 +582,48 @@ describe('getSessionTracePage', () => {
   test('reports more only when the page came back full', async () => {
     resolvePage([pageRow('t1', NOON)]);
 
-    expect((await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, 0)).response?.hasMore).toBe(false);
+    expect((await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, null)).response?.hasMore).toBe(false);
+  });
+
+  test('returns no cursor after a short page', async () => {
+    resolvePage([pageRow('t1', NOON)]);
+
+    expect((await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, null)).response?.cursor).toBeNull();
+  });
+
+  test('returns the last trace of a full page as the next cursor', async () => {
+    const rows = Array.from({ length: SESSION_TRACE_PAGE_SIZE }, (_, index) => pageRow(`t${index}`, NOON - index));
+    resolvePage(rows);
+
+    const result = await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, null);
+
+    expect(result.response?.hasMore).toBe(true);
+    expect(result.response?.cursor).toEqual({
+      firstRequestTime: NOON - (SESSION_TRACE_PAGE_SIZE - 1),
+      traceId: `t${SESSION_TRACE_PAGE_SIZE - 1}`,
+    });
+  });
+
+  test('passes the cursor to the paging query as a having bound', async () => {
+    resolvePage([pageRow('t1', NOON)]);
+
+    await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, { firstRequestTime: NOON, traceId: 't9' });
+
+    expect(execute().mock.calls[0][0].having).toBeTruthy();
+  });
+
+  test('passes the searched trace id to the paging query', async () => {
+    resolvePage([pageRow('t1', NOON)]);
+
+    await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, null, 't1');
+
+    expect(pageFilterNames()).toContain(UsageLogField.TraceId);
   });
 
   test('a failed page read reports failure with no response', async () => {
     execute().mockResolvedValue({ success: false, errorMessage: 'boom' });
 
-    const result = await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, 0);
+    const result = await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, null);
 
     expect(result.success).toBe(false);
     expect(result.response).toBeUndefined();
@@ -597,7 +637,7 @@ describe('getSessionTracePage', () => {
       .mockResolvedValueOnce({ success: true, response: { rows: [] } })
       .mockResolvedValueOnce({ success: false, errorMessage: 'figures unavailable' });
 
-    const result = await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, 0);
+    const result = await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, null);
 
     expect(result.success).toBe(false);
     expect(result.response).toBeUndefined();
@@ -616,7 +656,7 @@ describe('getSessionTracePage', () => {
         },
       });
 
-    const result = await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, 0);
+    const result = await getSessionTracePage(SCOPE, 'demo-project', NOON, NOON, null);
 
     expect(result.success).toBe(true);
     expect(result.response?.groups[0].isRootRecorded).toBe(false);
