@@ -83,7 +83,9 @@ const BuilderArea: FC<Props> = ({ ariaLabel, children }) => {
         onResizeStop={onResizeStop}
         className="flex min-h-0 flex-col"
       >
-        <div className="min-h-0 flex-1 overflow-auto rounded border border-secondary bg-layer-raised p-3">{children}</div>
+        <div className="min-h-0 flex-1 overflow-auto rounded border border-secondary bg-layer-raised p-3">
+          {children}
+        </div>
       </Resizable>
     </div>
   );

@@ -60,11 +60,7 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
               key={tag}
               label={tag}
               className={
-                ruleDiff?.items?.includes(tag)
-                  ? isTargetError
-                    ? 'border-error'
-                    : 'border-success'
-                  : 'border-primary'
+                ruleDiff?.items?.includes(tag) ? (isTargetError ? 'border-error' : 'border-success') : 'border-primary'
               }
             />
           );

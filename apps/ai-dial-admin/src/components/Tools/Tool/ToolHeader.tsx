@@ -69,7 +69,9 @@ const ToolHeader: FC<Props> = ({
       {!isAddedManual && (
         <div className="flex flex-row items-center gap-4" onClick={(e) => e.stopPropagation()}>
           {!isCollapsed && viewSelector}
-          {!isCollapsed && !!viewSelector && !disabled && <div className="w-px h-6 bg-control-neutral-hover-muted"></div>}
+          {!isCollapsed && !!viewSelector && !disabled && (
+            <div className="w-px h-6 bg-control-neutral-hover-muted"></div>
+          )}
 
           {!disabled && (
             <OutlinedButton

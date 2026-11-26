@@ -50,7 +50,8 @@ const MODEL_PARAM = 'model';
 
 // No border colour here: Tailwind settles two colour utilities by stylesheet order, not by class-attribute
 // order, so appending one to another painted the wrong border. Each call site chooses.
-const FACTS_BAR_CLASS = 'flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 rounded border bg-layer-sunken px-3 py-1.5';
+const FACTS_BAR_CLASS =
+  'flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 rounded border bg-layer-sunken px-3 py-1.5';
 
 const TAB_LABEL_KEY: Record<SpanBodyTab, string> = {
   [SpanBodyTab.Request]: SessionsTraceI18nKey.InspectorRequest,

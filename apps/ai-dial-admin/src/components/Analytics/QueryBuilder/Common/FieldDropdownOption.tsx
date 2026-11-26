@@ -41,9 +41,7 @@ const FieldDropdownOption: FC<Props> = ({ option, selected, onPick }) => {
         )}
         onClick={onPick}
       >
-        {selected && (
-          <IconCheck aria-hidden size={12} className="absolute left-1.5 top-2 shrink-0 text-accent" />
-        )}
+        {selected && <IconCheck aria-hidden size={12} className="absolute left-1.5 top-2 shrink-0 text-accent" />}
         <span className="flex w-full items-center justify-between gap-2">
           <span className="flex min-w-0 items-center gap-1.5">
             <span className="truncate font-mono dial-tiny-text text-primary">{option.display_name || option.name}</span>

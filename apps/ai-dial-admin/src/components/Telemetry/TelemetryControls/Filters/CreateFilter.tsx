@@ -77,7 +77,9 @@ const CreateFilter: FC<Props> = ({
   );
 
   return (
-    <div className={classNames('flex', isMobile ? 'flex-col w-full' : 'items-center bg-control-neutral rounded p-2 z-50')}>
+    <div
+      className={classNames('flex', isMobile ? 'flex-col w-full' : 'items-center bg-control-neutral rounded p-2 z-50')}
+    >
       <>
         {route === ApplicationRoute.Dashboard ? (
           <div className="md:mr-4 md:mb-0 mb-4 min-w-[120px]">

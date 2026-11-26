@@ -31,9 +31,7 @@ const RulesList: FC<Props> = ({ rulesMap, isReadonly, onChange }) => {
     <div className="flex flex-col size-full min-w-0 overflow-auto">
       {!isSingle && !isEmpty && (
         <div>
-          <span className="border border-success rounded bg-success inline-block px-2">
-            {t(BasicI18nKey.And)}
-          </span>
+          <span className="border border-success rounded bg-success inline-block px-2">{t(BasicI18nKey.And)}</span>
         </div>
       )}
       {!isEmpty && rulesMap && (

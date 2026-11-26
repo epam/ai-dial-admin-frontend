@@ -27,7 +27,10 @@ const MetricInfoCard: FC<Props> = ({ title, info, isOpen, onToggle, highlights =
 
   return (
     <div
-      className={classNames('flex flex-col min-h-0 rounded bg-layer-raised overflow-hidden', isOpen ? 'flex-1' : 'shrink-0')}
+      className={classNames(
+        'flex flex-col min-h-0 rounded bg-layer-raised overflow-hidden',
+        isOpen ? 'flex-1' : 'shrink-0',
+      )}
     >
       <div className="flex items-center justify-between gap-2 px-4 py-3 select-none shrink-0">
         <button

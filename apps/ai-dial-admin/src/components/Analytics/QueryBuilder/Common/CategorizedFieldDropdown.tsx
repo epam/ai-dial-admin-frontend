@@ -210,11 +210,7 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
                         onClick={() => onPickFunction(fn.name)}
                       >
                         {fn.name === value && (
-                          <IconCheck
-                            aria-hidden
-                            size={12}
-                            className="absolute left-1.5 top-2 shrink-0 text-accent"
-                          />
+                          <IconCheck aria-hidden size={12} className="absolute left-1.5 top-2 shrink-0 text-accent" />
                         )}
                         <IconMathFunction
                           aria-hidden

@@ -196,7 +196,12 @@ const CompareRowDetailPanel: FC<Props> = ({
   );
 
   return (
-    <div className={classNames('relative flex flex-col w-full h-full min-h-0 overflow-hidden bg-control-neutral', className)}>
+    <div
+      className={classNames(
+        'relative flex flex-col w-full h-full min-h-0 overflow-hidden bg-control-neutral',
+        className,
+      )}
+    >
       <RowDetailHeader
         title={title}
         onClose={onClose}

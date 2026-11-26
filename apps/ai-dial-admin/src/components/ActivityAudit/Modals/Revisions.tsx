@@ -158,8 +158,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
                           key={i}
                           className={classNames(
                             'flex items-center text-primary dial-small-text h-[34px] rounded px-3 cursor-pointer',
-                            value.id === selectedRevision?.id &&
-                              'border-l-2 border-accent bg-control-accent-alpha',
+                            value.id === selectedRevision?.id && 'border-l-2 border-accent bg-control-accent-alpha',
                           )}
                           onClick={() => setSelectedRevision(value)}
                         >
