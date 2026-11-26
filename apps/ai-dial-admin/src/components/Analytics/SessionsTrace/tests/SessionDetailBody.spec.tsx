@@ -73,6 +73,16 @@ describe('SessionDetailBody', () => {
     expect(vi.mocked(useSessionTraces)).toHaveBeenLastCalledWith(expect.objectContaining({ traceId: 'tr-1' }));
   });
 
+  test('keeps the listing while the typed value waits for the debounce', () => {
+    renderBody();
+
+    fireEvent.change(searchField(), { target: { value: 'tr-1' } });
+
+    expect(vi.mocked(useSessionTraces)).toHaveBeenLastCalledWith(expect.objectContaining({ traceId: undefined }));
+    expect(screen.getByRole('region', { name: 'trace list' })).toBeTruthy();
+    expect(screen.queryByText(SessionsTraceI18nKey.TraceSearchNoMatch)).toBeNull();
+  });
+
   test('applies no search for a whitespace-only value', async () => {
     renderBody();
 
