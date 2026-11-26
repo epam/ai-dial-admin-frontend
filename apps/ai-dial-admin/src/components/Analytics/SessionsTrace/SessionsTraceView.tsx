@@ -100,7 +100,7 @@ const SessionsTraceView: FC<Props> = ({ source, schemaFields, schemaFailure }) =
             that emptied the grid — the sort, filter and column controls all live in the rows above. */}
         {isEmptyStateVisible && (
           <div
-            className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-layer-2"
+            className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-layer-raised"
             style={{ top: SESSIONS_HEADER_STACK_HEIGHT }}
           >
             <NoDataContent title={t(emptyStateTitle)} />

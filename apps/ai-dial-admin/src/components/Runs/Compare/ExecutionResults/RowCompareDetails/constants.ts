@@ -25,4 +25,4 @@ export const ROW_DETAIL_FIELD_COL_NARROW_MIN = 140;
 
 export const ROW_DETAIL_GRID_TEMPLATE_COLUMNS = `minmax(${ROW_DETAIL_FIELD_COL_NARROW_MIN}px, ${ROW_DETAIL_FIELD_COL_MIN}px) minmax(${ROW_DETAIL_VALUE_COL_MIN}px, 1fr) minmax(${ROW_DETAIL_VALUE_COL_MIN}px, 1fr) ${ROW_DETAIL_DELTA_COL_WIDTH}px ${ROW_DETAIL_ACTION_COL_WIDTH}px`;
 
-export const ROW_DETAIL_CELL_BASE = 'p-3 border-b border-tertiary bg-layer-3 max-h-[104px] overflow-hidden';
+export const ROW_DETAIL_CELL_BASE = 'p-3 border-b border-tertiary bg-layer-sunken max-h-[104px] overflow-hidden';

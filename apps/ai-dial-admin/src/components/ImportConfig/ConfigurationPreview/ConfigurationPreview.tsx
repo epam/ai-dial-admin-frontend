@@ -162,7 +162,7 @@ const ConfigurationPreview: FC<Props> = ({
     : t(ImportI18nKey.ImportBlockedTooltip);
 
   const importingOverlay = isImporting && (
-    <div className="size-full absolute bg-blackout z-10">
+    <div className="size-full absolute bg-backdrop z-10">
       <Spinner size={45} fullWidth />
     </div>
   );

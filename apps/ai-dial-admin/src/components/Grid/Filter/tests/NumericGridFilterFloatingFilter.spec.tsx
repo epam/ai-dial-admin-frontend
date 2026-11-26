@@ -37,7 +37,7 @@ describe('NumericGridFilterFloatingFilter', () => {
       />,
     );
 
-    expect(screen.getByTitle('Grid.Filter').className).toContain('text-accent-primary');
+    expect(screen.getByTitle('Grid.Filter').className).toContain('text-accent');
   });
 
   test('calls onFloatingFilterChanged when a value is applied', async () => {

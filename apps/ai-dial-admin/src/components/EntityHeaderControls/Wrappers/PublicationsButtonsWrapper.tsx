@@ -92,7 +92,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
 
   const [keys, setKeys] = useState<Record<string, string>>({});
 
-  const approveButtonClassName = `${isAddAction(action) ? '' : 'bg-red-400'}`;
+  const approveButtonClassName = `${isAddAction(action) ? '' : 'bg-control-error-active'}`;
 
   const [isApproveModalOpen, setIsOpenApproveModal] = useState(false);
   const [isDeclineModalOpen, setIsOpenDeclineModal] = useState(false);

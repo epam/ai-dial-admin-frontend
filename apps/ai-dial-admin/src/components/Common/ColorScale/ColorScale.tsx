@@ -46,7 +46,7 @@ const ColorScale: FC<Props> = ({ variant = ColorScaleVariant.Default }) => {
           })}
           <div
             key="neutral"
-            className="h-2 bg-layer-2 border-r border-b border-tertiary"
+            className="h-2 bg-layer-raised border-r border-b border-tertiary"
             style={{ width: COMPACT_SEGMENT_WIDTH }}
           />
           {DELTA_SCORE_BUCKET_KEYS.slice(DELTA_SCORE_BUCKET_KEYS.length / 2).map((bucketKey) => {

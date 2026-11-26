@@ -190,7 +190,7 @@ const TransformSection: FC<Props> = ({ form, isDisabled }) => {
                       href={`/${currentLocale}${ApplicationRoute.SystemProperties}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-accent-primary underline"
+                      className="text-accent underline"
                     >
                       {t(AnalyticsPipelinesI18nKey.RouteNotAllowedLink)}
                     </Link>

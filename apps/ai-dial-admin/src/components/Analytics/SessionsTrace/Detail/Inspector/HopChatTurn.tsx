@@ -46,7 +46,7 @@ const HopChatTurn: FC<Props> = ({ message, opened, isLoading, onOpen, onClose })
             onClick={() => (isOpen ? onClose(message.index) : onOpen(message.index))}
             // A link button rather than an outlined one: no border to nest inside the bubble, and no fill,
             // so the `--bg-control-*` gap that forces a hover override elsewhere does not apply here.
-            textClassName="dial-caption-text text-accent-primary"
+            textClassName="dial-caption-text text-accent"
             // Always at the start of the bubble: stretched by the column it sits in, its label centred itself
             // and the control read as a caption for the message rather than as something to press.
             className="self-start"

@@ -91,12 +91,12 @@ const ResourceAuthTypeSection: FC<Props> = ({
   );
 
   return (
-    <div className="flex flex-col w-full rounded bg-layer-3 border border-tertiary">
+    <div className="flex flex-col w-full rounded bg-layer-sunken border border-tertiary">
       <div
         className={classNames(
           'flex border-l-2 p-4 gap-x-3',
           isSelectable ? 'cursor-pointer' : 'cursor-default',
-          isSelected ? 'border-accent-primary text-accent-primary' : 'border-transparent text-primary',
+          isSelected ? 'border-accent text-accent' : 'border-transparent text-primary',
         )}
         onClick={handleOnClick}
       >

@@ -163,9 +163,9 @@ describe('ConfigurationPreview.utils', () => {
   });
 
   test('getActionClassName returns correct class', () => {
-    expect(getActionClassName(ImportConfigurationAction.CREATE)).toBe('bg-accent-primary');
+    expect(getActionClassName(ImportConfigurationAction.CREATE)).toBe('bg-control-accent');
     expect(getActionClassName(ImportConfigurationAction.UPDATE)).toBe('bg-orange-400');
-    expect(getActionClassName(ImportConfigurationAction.SKIP)).toBe('bg-controls-disable');
+    expect(getActionClassName(ImportConfigurationAction.SKIP)).toBe('bg-control-disable-primary');
   });
 
   test('getComponentColDefs returns correct columns for MODEL', () => {

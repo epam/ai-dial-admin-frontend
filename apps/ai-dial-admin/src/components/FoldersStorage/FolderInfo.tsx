@@ -121,7 +121,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
         <FolderInfoHeader isChanged={false} title={currentFolder.name as string} />
         <div className="flex min-w-0 flex-col gap-1">
           <span className="dial-small-text text-secondary">{t(FoldersI18nKey.InsideUnitNote)}</span>
-          <div className="flex flex-row items-center justify-between gap-3 p-4 rounded bg-layer-2">
+          <div className="flex flex-row items-center justify-between gap-3 p-4 rounded bg-layer-raised">
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <EllipsisTooltip className="min-w-0" contentClassName="truncate" text={owningUnit.name} />
               {owningUnit.displayName && (

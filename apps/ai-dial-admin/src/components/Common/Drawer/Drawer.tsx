@@ -52,13 +52,13 @@ const Drawer: FC<Props> = ({ isOpen, onClose, ariaLabel, header, children, foote
 
   return (
     <FloatingPortal>
-      <FloatingOverlay lockScroll className="z-[var(--z-overlay,52)] bg-blackout">
+      <FloatingOverlay lockScroll className="z-[var(--z-overlay,52)] bg-backdrop">
         <FloatingFocusManager context={context} outsideElementsInert>
           <aside
             ref={refs.setFloating}
             {...getFloatingProps({ 'aria-label': ariaLabel })}
             className={classNames(
-              'fixed inset-y-0 right-0 flex w-[460px] max-w-full flex-col bg-layer-3 shadow-lg',
+              'fixed inset-y-0 right-0 flex w-[460px] max-w-full flex-col bg-layer-sunken shadow-lg',
               className,
             )}
           >

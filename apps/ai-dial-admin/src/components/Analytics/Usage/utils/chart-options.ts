@@ -330,7 +330,7 @@ export interface DonutSlice {
  * Mid-tone chromatic hues rather than either the stock chart colours or a wash of pastels: a dozen
  * saturated segments on a dark page read as noise, and desaturating them far enough to settle down
  * leaves the ring looking dusty. These sit between — Serenity, Living Coral, Neo Mint, Ultra Violet
- * and their neighbours, lifted where the published value is too dark to hold against `bg-layer-2`.
+ * and their neighbours, lifted where the published value is too dark to hold against `bg-layer-raised`.
  * Adjacent entries change hue family, which is what keeps thin segments apart.
  */
 export const SLICE_COLORS = [

@@ -9,9 +9,9 @@ import { MessageRole } from '@/src/models/analytics/sessions-trace';
 import { formatBytes } from '@/src/utils/analytics/session-formatting';
 
 const ROLE_CLASS: Record<MessageRole, string> = {
-  [MessageRole.System]: 'text-accent-tertiary',
-  [MessageRole.User]: 'text-accent-primary',
-  [MessageRole.Assistant]: 'text-accent-secondary',
+  [MessageRole.System]: 'text-violet-1',
+  [MessageRole.User]: 'text-accent',
+  [MessageRole.Assistant]: 'text-green-2',
   [MessageRole.Tool]: 'text-warning',
   [MessageRole.Other]: 'text-secondary',
 };
@@ -49,7 +49,7 @@ const HopMessageCard: FC<Props> = ({ role, position, bytes, bodyId, aside, child
     <Wrapper
       role="group"
       aria-label={label}
-      className="flex min-w-0 flex-col gap-2 rounded border border-secondary bg-layer-3 p-3"
+      className="flex min-w-0 flex-col gap-2 rounded border border-secondary bg-layer-sunken p-3"
     >
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <span className={classNames('font-mono uppercase dial-tiny-semi-text', ROLE_CLASS[role])}>

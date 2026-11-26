@@ -41,7 +41,7 @@ const OverallScoreCard: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchem
   return (
     <>
       <div
-        className="flex flex-col gap-4 rounded bg-layer-3 p-4"
+        className="flex flex-col gap-4 rounded bg-layer-sunken p-4"
         role="region"
         aria-label={t(TestSuitesI18nKey.OverallScore)}
       >
@@ -50,7 +50,7 @@ const OverallScoreCard: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchem
           <GhostButton
             label={t(ButtonsI18nKey.Edit)}
             iconBefore={<IconEdit stroke={2} size={20} />}
-            className="text-accent-primary"
+            className="text-accent"
             onClick={() => setIsEditOpen(true)}
           />
         </div>
@@ -68,12 +68,12 @@ const OverallScoreCard: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchem
                 <span className="dial-small-text text-primary truncate">{methodLabel}</span>
               )}
               {isSpecificFunction ? (
-                <span className="shrink-0 rounded-full bg-layer-4 px-2 py-0.5 dial-tiny-semi-text text-secondary">
+                <span className="shrink-0 rounded-full bg-control-neutral-hover-muted px-2 py-0.5 dial-tiny-semi-text text-secondary">
                   {t(TestSuitesI18nKey.OverallScoreSuiteLevelOnly)}
                 </span>
               ) : (
                 formulaLabel && (
-                  <span className="shrink-0 rounded-full bg-layer-4 px-2 py-0.5 dial-tiny-semi-text text-secondary">
+                  <span className="shrink-0 rounded-full bg-control-neutral-hover-muted px-2 py-0.5 dial-tiny-semi-text text-secondary">
                     {formulaLabel}
                   </span>
                 )
@@ -89,7 +89,7 @@ const OverallScoreCard: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchem
               <div className="flex flex-row items-center justify-between gap-2">
                 <span className="dial-small-text text-primary truncate">{testCaseMethodLabel}</span>
                 {testCaseFormulaLabel && (
-                  <span className="shrink-0 rounded-full bg-layer-4 px-2 py-0.5 dial-tiny-semi-text text-secondary">
+                  <span className="shrink-0 rounded-full bg-control-neutral-hover-muted px-2 py-0.5 dial-tiny-semi-text text-secondary">
                     {testCaseFormulaLabel}
                   </span>
                 )}
@@ -109,7 +109,7 @@ const OverallScoreCard: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchem
                     {` ${t(TestSuitesI18nKey.ScoreThresholdConditionGe)}`}
                   </span>
                   {hasNumericThreshold ? (
-                    <span className="rounded-xs border border-accent-primary bg-accent-primary-alpha px-1.5 py-1 dial-tiny-text text-primary">
+                    <span className="rounded-xs border border-accent bg-control-accent-alpha px-1.5 py-1 dial-tiny-text text-primary">
                       {threshold}
                     </span>
                   ) : (

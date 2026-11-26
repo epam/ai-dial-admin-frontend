@@ -131,12 +131,12 @@ export const getConfigurationPreview = (configuration: FileConfiguration, t: (v:
 
 export const getActionClassName = (action: string): string => {
   if (action === ImportConfigurationAction.CREATE) {
-    return 'bg-accent-primary';
+    return 'bg-control-accent';
   }
   if (action === ImportConfigurationAction.UPDATE) {
     return 'bg-orange-400';
   }
-  return 'bg-controls-disable';
+  return 'bg-control-disable-primary';
 };
 
 export const getComponentActionColumn = (): ColDef => {

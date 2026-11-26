@@ -20,7 +20,7 @@ interface Props {
 }
 
 const ARROW_BUTTON_CLASS =
-  'absolute top-0 z-10 flex size-6 shrink-0 items-center justify-center rounded border border-primary bg-controls-neutral-hover text-primary disabled:opacity-40';
+  'absolute top-0 z-10 flex size-6 shrink-0 items-center justify-center rounded border border-primary bg-control-neutral-hover-muted text-primary disabled:opacity-40';
 
 const MetricTrendTags: FC<Props> = ({ series, tagPalette, hiddenSeries, onToggleSeries }) => {
   const t = useI18n();

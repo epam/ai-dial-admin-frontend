@@ -43,11 +43,11 @@ const AiSidePanel: FC<Props> = ({ isOpen, isOverlay, onToggle, children }) => {
         type="button"
         aria-label={t(QueryBuilderI18nKey.AiPanelExpand)}
         aria-expanded="false"
-        className="flex w-12 shrink-0 flex-col items-center gap-4 border-l border-tertiary py-3 text-secondary hover:bg-layer-2 hover:text-primary focus-visible:bg-layer-2 focus-visible:text-primary focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary"
+        className="flex w-12 shrink-0 flex-col items-center gap-4 border-l border-tertiary py-3 text-secondary hover:bg-layer-raised hover:text-primary focus-visible:bg-layer-raised focus-visible:text-primary focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent"
         onClick={() => onToggleWithFocus(true)}
       >
         <IconLayoutSidebarRight size={18} className="shrink-0" aria-hidden />
-        <IconSparkles size={18} className="shrink-0 text-accent-primary" aria-hidden />
+        <IconSparkles size={18} className="shrink-0 text-accent" aria-hidden />
         <span className="text-primary dial-small-semi-text [writing-mode:vertical-rl]">
           {t(QueryBuilderI18nKey.AskAi)}
         </span>
@@ -61,11 +61,11 @@ const AiSidePanel: FC<Props> = ({ isOpen, isOverlay, onToggle, children }) => {
       aria-labelledby={headingId}
       className={classNames(
         'flex w-[400px] max-w-full shrink-0 flex-col border-l border-tertiary',
-        isOverlay && 'absolute inset-y-0 right-0 z-10 bg-layer-1 shadow-lg',
+        isOverlay && 'absolute inset-y-0 right-0 z-10 bg-layer-base shadow-lg',
       )}
     >
       <div ref={controlsRef} className="flex shrink-0 items-center gap-2 border-b border-tertiary px-4 py-3">
-        <IconSparkles size={18} className="shrink-0 text-accent-primary" aria-hidden />
+        <IconSparkles size={18} className="shrink-0 text-accent" aria-hidden />
         <h2 id={headingId} className="dial-small-semi-text text-primary">
           {t(QueryBuilderI18nKey.AskAi)}
         </h2>

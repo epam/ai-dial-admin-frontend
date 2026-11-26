@@ -67,7 +67,7 @@ const HopParamsLine: FC<Props> = ({ params, messageCount }) => {
                the tooltip rather than by hand, so what the call was actually made with stays readable. */
             <EllipsisTooltip
               text={value}
-              className={classNames('max-w-[14rem]', BOOLEANS.has(value) ? 'text-accent-secondary' : 'text-primary')}
+              className={classNames('max-w-[14rem]', BOOLEANS.has(value) ? 'text-green-2' : 'text-primary')}
             />
           )}
         </span>

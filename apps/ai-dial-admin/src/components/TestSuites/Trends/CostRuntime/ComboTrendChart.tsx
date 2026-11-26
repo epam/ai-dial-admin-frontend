@@ -100,7 +100,7 @@ const ComboTrendChart: FC<Props> = ({
 
   return (
     <section
-      className="flex min-w-0 w-full flex-1 flex-col gap-3 rounded-lg border border-secondary bg-layer-3 p-4"
+      className="flex min-w-0 w-full flex-1 flex-col gap-3 rounded-lg border border-secondary bg-layer-sunken p-4"
       aria-label={title}
     >
       <h3 className="dial-body-semi-text text-primary">{title}</h3>

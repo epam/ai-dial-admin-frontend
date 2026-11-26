@@ -38,7 +38,9 @@ describe('Analytics chips', () => {
     );
 
     expect(classesOf('Active')).toEqual(expect.arrayContaining(['rounded-full', 'text-success', 'bg-success']));
-    expect(classesOf('Source')).toEqual(expect.arrayContaining(['rounded', 'bg-layer-4', 'text-info']));
+    expect(classesOf('Source')).toEqual(
+      expect.arrayContaining(['rounded', 'bg-control-neutral-hover-muted', 'text-info']),
+    );
   });
 
   test('draw an identity tag in the secondary colour when it is given none', () => {

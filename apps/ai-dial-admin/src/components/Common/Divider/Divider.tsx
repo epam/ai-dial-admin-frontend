@@ -7,7 +7,7 @@ interface Props {
   thickness?: number;
 }
 
-const Divider: FC<Props> = ({ colorClassName = 'bg-layer-4', thickness = 1 }) => {
+const Divider: FC<Props> = ({ colorClassName = 'bg-control-neutral-hover-muted', thickness = 1 }) => {
   return <div className={classNames('w-full', colorClassName)} style={{ height: `${thickness}px` }}></div>;
 };
 

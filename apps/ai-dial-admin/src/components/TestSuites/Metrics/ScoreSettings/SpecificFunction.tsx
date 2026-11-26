@@ -50,7 +50,7 @@ const SpecificFunction: FC<Props> = ({
           labelNode: (
             <span className="inline-flex min-w-0 items-center gap-2">
               <span className="truncate">{label}</span>
-              <span className="shrink-0 rounded-full bg-layer-4 px-2 py-0.5 dial-tiny-semi-text text-secondary">
+              <span className="shrink-0 rounded-full bg-control-neutral-hover-muted px-2 py-0.5 dial-tiny-semi-text text-secondary">
                 {suiteLevelOnlyLabel}
               </span>
             </span>

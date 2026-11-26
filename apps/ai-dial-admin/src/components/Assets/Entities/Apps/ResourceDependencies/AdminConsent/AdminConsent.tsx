@@ -65,7 +65,7 @@ const AdminConsent: FC<Props> = ({
   const areButtonsVisible = !isReadOnlyAdmin && !isLoading && state;
 
   return (
-    <section aria-labelledby={headingId} className="mb-4 flex flex-col gap-3 rounded bg-layer-3 p-4">
+    <section aria-labelledby={headingId} className="mb-4 flex flex-col gap-3 rounded bg-layer-sunken p-4">
       <div className="flex flex-row items-center justify-between gap-3 min-h-[34px]">
         <h2 id={headingId}>{t(ResourceDependenciesI18nKey.AdminConsent)}</h2>
         {areButtonsVisible && (

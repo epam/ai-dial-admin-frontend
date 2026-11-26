@@ -8,7 +8,7 @@ export const ACTION_I18N_KEYS: Record<ActionType, string> = {
 };
 
 export const ACTION_CLASS_NAME: Record<ActionType, string> = {
-  [ActionType.ADD]: 'bg-accent-primary',
-  [ActionType.ADD_IF_ABSENT]: 'bg-accent-primary',
-  [ActionType.DELETE]: 'bg-red-400',
+  [ActionType.ADD]: 'bg-control-accent',
+  [ActionType.ADD_IF_ABSENT]: 'bg-control-accent',
+  [ActionType.DELETE]: 'bg-control-error-active',
 };

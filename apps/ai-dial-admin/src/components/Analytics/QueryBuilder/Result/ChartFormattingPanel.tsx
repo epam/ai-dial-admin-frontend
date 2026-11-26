@@ -87,7 +87,7 @@ const ChartFormattingPanel: FC<Props> = ({
         type="button"
         aria-label={t(QueryBuilderI18nKey.ChartFormattingExpand)}
         aria-expanded="false"
-        className="flex w-12 shrink-0 flex-col items-center gap-4 border-l border-tertiary py-3 text-secondary hover:bg-layer-2 hover:text-primary focus-visible:bg-layer-2 focus-visible:text-primary focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary"
+        className="flex w-12 shrink-0 flex-col items-center gap-4 border-l border-tertiary py-3 text-secondary hover:bg-layer-raised hover:text-primary focus-visible:bg-layer-raised focus-visible:text-primary focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent"
         onClick={() => onToggleWithFocus(true)}
       >
         <IconLayoutSidebarRight size={18} className="shrink-0" aria-hidden />

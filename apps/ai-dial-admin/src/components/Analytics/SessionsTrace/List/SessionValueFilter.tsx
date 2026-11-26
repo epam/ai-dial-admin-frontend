@@ -39,7 +39,7 @@ type Props = CustomFilterProps<SessionRow, SessionGridContext, SessionValueFilte
  * Written rather than configured because `agSetColumnFilter` is an AG Grid Enterprise module and this repo
  * has the community package. AG Grid supplies the popup and the filter lifecycle; this supplies the list.
  *
- * The chrome deliberately copies `Grid/Filter/GridFilterDropdown` — the same `bg-layer-4` surface, the same
+ * The chrome deliberately copies `Grid/Filter/GridFilterDropdown` — the same `bg-control-neutral-hover-muted` surface, the same
  * `w-[205px]`/`p-3`/`gap-2` box, the same outlined Reset — because that is the overlay every other filter in
  * this app opens. Rows are the 1.0 `Checkbox` with a plain string label and an 8px gap, exactly as
  * `Common/Lists/CheckboxList` renders them, so a list of values looks the same here as everywhere else.
@@ -155,7 +155,7 @@ const SessionValueFilter: FC<Props> = ({ model, onModelChange, colDef, context }
   const isLoading = state === SessionValuesState.Loading;
 
   return (
-    <div className="flex w-[205px] flex-col gap-2 bg-layer-4 p-3">
+    <div className="flex w-[205px] flex-col gap-2 bg-control-neutral-hover-muted p-3">
       {/* Always mounted so a transition between states is announced rather than only redrawn. Kept separate
           from every control's own label: the labels stay stable while this carries the transient message.
           While loading, the spinner beside it carries the wait visually and the message stays announced —

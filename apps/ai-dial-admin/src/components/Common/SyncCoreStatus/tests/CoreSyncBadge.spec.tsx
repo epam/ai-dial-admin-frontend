@@ -16,7 +16,7 @@ describe('Common components :: SyncCoreStatus :: CoreSyncBadge', () => {
   test.each([
     [EntitySyncStatus.IN_PROGRESS, CoreSyncI18nKey.InProgress, ['bg-info', 'text-info']],
     [EntitySyncStatus.FULLY_SYNCED, CoreSyncI18nKey.Synced, ['bg-success', 'text-success']],
-    [EntitySyncStatus.UNKNOWN, CoreSyncI18nKey.Unknown, ['bg-layer-4', 'text-secondary']],
+    [EntitySyncStatus.UNKNOWN, CoreSyncI18nKey.Unknown, ['bg-control-neutral-hover-muted', 'text-secondary']],
     [EntitySyncStatus.IN_PROGRESS_TOO_LONG, CoreSyncI18nKey.Partially, ['bg-error', 'text-error']],
   ])('Should render %s with its label and tone, not upper-cased', (status, label, classes) => {
     render(<CoreSyncBadge status={status} />);

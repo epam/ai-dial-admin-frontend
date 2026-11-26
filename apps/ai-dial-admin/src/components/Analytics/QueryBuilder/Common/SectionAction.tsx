@@ -37,7 +37,7 @@ const SectionAction: FC<Props> = ({
     aria-controls={controls}
     disabled={disabled}
     className={classNames(
-      'rounded border border-primary px-2 py-1 dial-tiny-text hover:bg-layer-4 disabled:opacity-50',
+      'rounded border border-primary px-2 py-1 dial-tiny-text hover:bg-control-neutral-hover-muted disabled:opacity-50',
       colorClassName,
     )}
     onClick={onClick}

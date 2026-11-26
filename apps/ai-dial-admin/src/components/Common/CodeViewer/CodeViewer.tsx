@@ -54,7 +54,7 @@ const CodeViewer: FC<Props> = ({ title, content, hideFullscreen, defaultOpen = f
         )}
       >
         {/* Only the title toggles: copy and fullscreen are buttons of their own and cannot nest inside it. */}
-        <div className="flex shrink-0 items-center justify-between px-3 py-1.5 bg-layer-3 dial-tiny-text select-none">
+        <div className="flex shrink-0 items-center justify-between px-3 py-1.5 bg-layer-sunken dial-tiny-text select-none">
           <button
             type="button"
             className="flex min-w-0 flex-1 items-center gap-1.5 text-secondary cursor-pointer hover:text-primary transition-colors"
@@ -74,7 +74,7 @@ const CodeViewer: FC<Props> = ({ title, content, hideFullscreen, defaultOpen = f
           </span>
         </div>
         {isOpen && (
-          <div id={contentId} className="min-h-0 flex-1 bg-layer-0">
+          <div id={contentId} className="min-h-0 flex-1 bg-control-neutral">
             <Editor
               height="100%"
               language="json"

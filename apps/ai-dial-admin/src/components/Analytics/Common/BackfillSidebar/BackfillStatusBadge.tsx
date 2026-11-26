@@ -26,7 +26,7 @@ const TONE: Record<BackfillStatus, string> = {
   [BackfillStatus.Paused]: 'text-warning bg-warning',
   [BackfillStatus.Done]: 'text-success bg-success',
   [BackfillStatus.Queued]: 'text-info bg-info',
-  [BackfillStatus.Cancelled]: 'text-secondary bg-layer-3',
+  [BackfillStatus.Cancelled]: 'text-secondary bg-layer-sunken',
   [BackfillStatus.Failed]: 'text-error bg-error',
 };
 

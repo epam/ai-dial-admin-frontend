@@ -14,7 +14,7 @@ interface Props {
 const UserMessage: FC<{ message: string }> = ({ message }) => (
   <div className="flex justify-end">
     <div
-      className="bg-layer-4 px-6 py-4 max-w-[80%] whitespace-pre-wrap break-words"
+      className="bg-control-neutral-hover-muted px-6 py-4 max-w-[80%] whitespace-pre-wrap break-words"
       style={{
         borderRadius: '16px 16px 0 16px',
       }}
@@ -63,7 +63,7 @@ const Conversations: FC<Props> = ({ publication, conversation }) => {
             {selectedConversation && <Properties selectedConversation={selectedConversation} />}
           </div>
         )}
-        <div className="flex-1 bg-layer-1">
+        <div className="flex-1 bg-layer-base">
           <div className="mx-auto w-[800px] max-w-full flex flex-col gap-6 py-6 px-4">
             {selectedConversation?.messages.map((message, index) =>
               message.role === 'user' ? (

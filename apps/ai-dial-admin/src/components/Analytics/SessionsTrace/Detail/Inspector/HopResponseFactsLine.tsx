@@ -88,7 +88,7 @@ const HopResponseFactsLine: FC<Props> = ({ facts, finishReason, requestedModel }
       {stated.map(({ label, value, isAccented }) => (
         <div key={label} className="flex min-w-0 items-center gap-1">
           <dt>{label}</dt>
-          <dd className={classNames('truncate', isAccented ? 'text-accent-secondary' : 'text-primary')}>{value}</dd>
+          <dd className={classNames('truncate', isAccented ? 'text-green-2' : 'text-primary')}>{value}</dd>
         </div>
       ))}
     </dl>

@@ -18,7 +18,7 @@ describe('ProvenanceHeaderGroup', () => {
   });
 
   test.each([
-    [ColumnProvenance.Sessions, 'text-accent-primary'],
+    [ColumnProvenance.Sessions, 'text-accent'],
     [ColumnProvenance.Feedback, 'text-warning'],
   ])('colours %s with a theme token rather than a literal colour', (provenance, expectedClass) => {
     renderHeader({ label: 'source', provenance });

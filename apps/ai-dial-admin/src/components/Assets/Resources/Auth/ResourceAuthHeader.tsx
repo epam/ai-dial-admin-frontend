@@ -46,7 +46,7 @@ const ResourceAuthHeader: FC<Props> = ({ toolset }) => {
         <div
           className={classNames(
             'w-[10px] h-[10px] rounded-full',
-            isUserLoggedIn || isAdminLoggedIn ? 'bg-accent-secondary' : 'bg-red-400',
+            isUserLoggedIn || isAdminLoggedIn ? 'bg-green-1' : 'bg-control-error-active',
           )}
         ></div>
         <div>{getAuthStatusLabel()}</div>

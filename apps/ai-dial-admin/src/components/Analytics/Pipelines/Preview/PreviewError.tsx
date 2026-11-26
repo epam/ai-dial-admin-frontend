@@ -44,7 +44,7 @@ const ServerMessage: FC<{ message?: string }> = ({ message }) =>
   message ? (
     <p
       className={classNames(
-        'rounded bg-layer-1 px-2.5 py-2 font-mono dial-tiny-text text-primary',
+        'rounded bg-layer-base px-2.5 py-2 font-mono dial-tiny-text text-primary',
         NOTIFICATION_MESSAGE_WRAP_CLASS,
       )}
     >

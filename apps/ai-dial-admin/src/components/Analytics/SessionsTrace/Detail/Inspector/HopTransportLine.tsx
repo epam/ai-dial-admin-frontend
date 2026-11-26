@@ -53,7 +53,7 @@ const HopTransportLine: FC<Props> = ({ transport, side }) => {
       className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-0.5 font-mono text-secondary dial-caption-text"
     >
       {isRequest && !isResponse && (
-        <IconArrowUpRight size={DIRECTION_ICON_SIZE} className="shrink-0 text-accent-primary" aria-hidden />
+        <IconArrowUpRight size={DIRECTION_ICON_SIZE} className="shrink-0 text-accent" aria-hidden />
       )}
       {isResponse && !isRequest && (
         <IconArrowDownLeft

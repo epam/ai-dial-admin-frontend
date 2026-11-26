@@ -50,50 +50,23 @@
   --background-color-red: var(--bg-visual-red, #fce7f3);
   --background-color-violet-1: var(--bg-visual-violet-1, #dde3f9);
   --background-color-violet-2: var(--bg-visual-violet-2, #f1e9ff);
-  --background-color-layer-0: var(--bg-layer-0, #fcfcfc);
-  --background-color-layer-1: var(--bg-layer-1, #e0e6f0);
-  --background-color-layer-2: var(--bg-layer-2, #fcfcfc);
-  --background-color-layer-3: var(--bg-layer-3, #eef1f7);
-  --background-color-layer-4: var(--bg-layer-4, #d1dbea);
-  --background-color-blackout: var(--bg-blackout, #161b2d4d);
-  --background-color-neutral: var(--bg-neutral, #eef1f7);
+
   --background-color-inverted: var(--bg-inverted, #161b2d);
-  --background-color-accent-primary-alpha: var(--bg-accent-primary-alpha, #7da4ff2e);
-  --background-color-accent-secondary-alpha: var(--bg-accent-secondary-alpha, #37babc2e);
-  --background-color-accent-tertiary-alpha: var(--bg-accent-tertiary-alpha, #a972ff2e);
-  --background-color-accent-primary: var(--bg-accent-primary, #1d4ed8);
-  --background-color-accent-secondary: var(--bg-accent-secondary, #37babc);
+
   --background-color-accent-tertiary: var(--bg-accent-tertiary, #a972ff);
   --background-color-model-icon: var(--bg-model-icon, #ffffff);
   --background-color-secondary: var(--bg-secondary, #848e9c);
-  --background-color-red-400: var(--bg-red-400, #f76464);
+
   --background-color-red-800: var(--bg-red-800, #ae2f2f);
   --background-color-orange-400: var(--bg-orange-400, #d97c27);
   --background-color-yellow-400: var(--bg-yellow-400, #eec840);
-  --background-color-controls-accent-primary: var(--controls-bg-accent-primary, #3664e2);
-  --background-color-controls-accent-primary-hover: var(--controls-bg-accent-primary-hover, #2656d9);
-  --background-color-controls-accent-primary-active: var(--controls-bg-accent-primary-active, #124ace);
-  --background-color-controls-accent-primary-alpha-active: var(--controls-bg-accent-primary-alpha-active, #7da4ff5c);
-  --background-color-controls-accent-secondary-alpha-active: var(
-    --controls-bg-accent-secondary-alpha-active,
-    #37babc5c
-  );
-  --background-color-controls-accent-tertiary-alpha-active: var(--controls-bg-accent-tertiary-alpha-active, #a972ff5c);
-  --background-color-controls-error: var(--controls-bg-error, #cc4545);
-  --background-color-controls-error-hover: var(--controls-bg-error-hover, #bf3939);
-  --background-color-controls-error-active: var(--controls-bg-error-active, #ae2f2f);
+
   --background-color-controls-error-alpha-hover: var(--controls-bg-error-alpha-hover, #f764642e);
-  --background-color-controls-error-alpha-active: var(--controls-bg-error-alpha-active, #f764645c);
-  --background-color-controls-disable-accent: var(--controls-bg-disable-accent, #acb3c3);
-  --background-color-controls-disable: var(--controls-bg-disable, #dce0e8);
-  --background-color-controls-neutral-hover: var(--controls-bg-neutral-hover, #e0e6f0);
-  --background-color-controls-neutral-active: var(--controls-bg-neutral-active, #d1dbea);
-  --background-color-controls-accent-success-alpha-hover: var(--controls-bg-accent-success-alpha-hover, #37babc2e);
-  --background-color-controls-accent-success-alpha-active: var(--controls-bg-accent-success-alpha-active, #37babc5c);
+
   --background-color-controls-accent: var(--controls-bg-accent, #1d4ed8);
   --background-color-controls-accent-hover: var(--controls-bg-accent-hover, #5976e9);
   --background-color-controls-accent-alpha: var(--controls-bg-accent-alpha, #2764d924);
-  --background-color-controls-enable-primary: var(--controls-enable-primary, #fcfcfc);
+
   --background-color-score-abs-00: var(--bg-score-abs-00, #75010180);
   --background-color-score-abs-01: var(--bg-score-abs-01, #69100b80);
   --background-color-score-abs-02: var(--bg-score-abs-02, #6c210d80);
@@ -133,12 +106,9 @@
   --border-color-accent-focus: var(--stroke-accent-focus, #6785fb);
   --border-color-error-alpha: var(--stroke-error-alpha, #ae2f2f73);
   --border-color-control-disable-primary: var(--stroke-control-disable-primary, #848e9c);
-  --border-color-controls-accent: var(--controls-bg-accent, #1d4ed8);
-  --border-color-red-900: var(--red-900, #f3d6d8);
-  --border-color-accent-primary: var(--stroke-accent-primary, #1d4ed8);
-  --border-color-accent-secondary: var(--stroke-accent-secondary, #37babc);
+
   --border-color-accent-tertiary: var(--stroke-accent-tertiary, #a972ff);
-  --border-color-hover: var(--stroke-hover, #57647a);
+
   --border-color-blue800: var(--stroke-blue-800, #2764d9);
   --border-color-score-abs-00: var(--stroke-score-abs-00, #ff4e50);
   --border-color-score-abs-01: var(--stroke-score-abs-01, #f26b5b);
@@ -179,12 +149,9 @@
   --divide-color-accent-focus: var(--stroke-accent-focus, #6785fb);
   --divide-color-error-alpha: var(--stroke-error-alpha, #ae2f2f73);
   --divide-color-control-disable-primary: var(--stroke-control-disable-primary, #848e9c);
-  --divide-color-controls-accent: var(--controls-bg-accent, #1d4ed8);
-  --divide-color-red-900: var(--red-900, #f3d6d8);
-  --divide-color-accent-primary: var(--stroke-accent-primary, #1d4ed8);
-  --divide-color-accent-secondary: var(--stroke-accent-secondary, #37babc);
+
   --divide-color-accent-tertiary: var(--stroke-accent-tertiary, #a972ff);
-  --divide-color-hover: var(--stroke-hover, #57647a);
+
   --divide-color-blue800: var(--stroke-blue-800, #2764d9);
 
   /* outline-* */
@@ -205,12 +172,9 @@
   --outline-color-accent-focus: var(--stroke-accent-focus, #6785fb);
   --outline-color-error-alpha: var(--stroke-error-alpha, #ae2f2f73);
   --outline-color-control-disable-primary: var(--stroke-control-disable-primary, #848e9c);
-  --outline-color-controls-accent: var(--controls-bg-accent, #1d4ed8);
-  --outline-color-red-900: var(--red-900, #f3d6d8);
-  --outline-color-accent-primary: var(--stroke-accent-primary, #1d4ed8);
-  --outline-color-accent-secondary: var(--stroke-accent-secondary, #37babc);
+
   --outline-color-accent-tertiary: var(--stroke-accent-tertiary, #a972ff);
-  --outline-color-hover: var(--stroke-hover, #57647a);
+
   --outline-color-blue800: var(--stroke-blue-800, #2764d9);
   --outline-color-score-abs-00: var(--stroke-score-abs-00, #ff4e50);
   --outline-color-score-abs-01: var(--stroke-score-abs-01, #f26b5b);
@@ -260,16 +224,7 @@
   --text-color-control-accent-hover: var(--text-control-accent-hover, #5976e9);
   --text-color-control-accent-active: var(--text-control-accent-active, #6785fb);
   --text-color-inverted: var(--text-inverted, #fcfcfc);
-  --text-color-accent-primary: var(--text-accent-primary, #1d4ed8);
-  --text-color-accent-secondary: var(--text-accent-secondary, #37babc);
-  --text-color-accent-tertiary: var(--text-accent-tertiary, #7c3aed);
-  --text-color-controls-permanent: var(--controls-text-permanent, #fcfcfc);
-  --text-color-controls-accent-disable: var(--controls-text-accent-disable, #dce0e8);
-  --text-color-controls-primary-disable: var(--controls-text-primary-disable, #848e9c);
-  --text-color-controls-secondary-disable: var(--controls-text-secondary-disable, #acb3c3);
-  --text-color-controls-neutral: var(--controls-text-neutral, #161b2d);
-  --text-color-controls-accent-primary-hover: var(--controls-text-accent-primary-hover, #3664e2);
-  --text-color-controls-accent-primary-active: var(--controls-text-accent-primary-active, #124ace);
+
   --text-color-controls-primary: var(--controls-primary, #161b2d);
   --text-color-controls-disable: var(--controls-text-disable, #acb3c3);
   --text-color-score-abs-00: var(--text-score-abs-00, #ff4e50);

@@ -14,7 +14,11 @@ interface Props {
 // `relative z-10` so that segment's border overlaps its neighbour's — which left the selected segment, and
 // only that one, floating over this overlay while everything around it was covered.
 const LoadingOverlay: FC<Props> = ({ label }) => (
-  <div role="status" aria-live="polite" className="absolute inset-0 z-20 flex items-center justify-center bg-layer-2">
+  <div
+    role="status"
+    aria-live="polite"
+    className="absolute inset-0 z-20 flex items-center justify-center bg-layer-raised"
+  >
     <Spinner size={LOADER_SIZE} fullWidth />
     <span className="sr-only">{label}</span>
   </div>

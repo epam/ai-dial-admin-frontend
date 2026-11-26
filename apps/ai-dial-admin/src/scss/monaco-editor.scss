@@ -37,10 +37,10 @@
 
 .diff-section {
   .monaco-editor-background {
-    @apply bg-layer-2;
+    @apply bg-layer-raised;
   }
 
   .margin-view-overlays {
-    @apply bg-layer-2;
+    @apply bg-layer-raised;
   }
 }

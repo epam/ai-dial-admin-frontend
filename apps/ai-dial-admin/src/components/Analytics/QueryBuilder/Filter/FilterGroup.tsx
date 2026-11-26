@@ -79,7 +79,7 @@ const FilterGroup: FC<Props> = ({
         'flex flex-col gap-1.5',
         !isRoot &&
           classNames(
-            'rounded border border-primary border-l-2 bg-layer-2 p-2',
+            'rounded border border-primary border-l-2 bg-layer-raised p-2',
             QUERY_BUILDER_PALETTE[color].borderAccent,
           ),
       )}
