@@ -89,6 +89,7 @@ export const useSessionTraces = ({ scope, projectId, firstRequestTime, lastReque
     setGroups([]);
     setHasMore(true);
     setHasLoadError(false);
+    setIsLoading(true);
     void loadPage();
   }, [loadPage]);
 

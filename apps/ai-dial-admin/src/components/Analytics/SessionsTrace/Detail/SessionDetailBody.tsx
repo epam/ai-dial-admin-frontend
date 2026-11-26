@@ -58,7 +58,7 @@ const SessionDetailBody: FC<Props> = ({
   const projectId = source.project === null ? null : (session.project_id ?? '');
   const feedbackRows = useMemo(() => feedback?.rows ?? [], [feedback]);
   const [search, setSearch] = useState('');
-  const [traceId, setTraceId] = useState('');
+  const [traceId, setTraceId] = useState<string | undefined>(undefined);
 
   const applyTraceId = useMemo(() => debounce(setTraceId, SESSIONS_SEARCH_DEBOUNCE_MS), []);
 
@@ -68,7 +68,7 @@ const SessionDetailBody: FC<Props> = ({
     (value?: string) => {
       const next = value ?? '';
       setSearch(next);
-      applyTraceId(next.trim());
+      applyTraceId(next.trim() || undefined);
     },
     [applyTraceId],
   );
@@ -78,7 +78,7 @@ const SessionDetailBody: FC<Props> = ({
     projectId,
     firstRequestTime: session.first_request_time,
     lastRequestTime: session.last_request_time,
-    traceId: traceId || undefined,
+    traceId,
   });
 
   const isNoMatch = isSearch && !groups.length && !isLoading && !hasLoadError;
