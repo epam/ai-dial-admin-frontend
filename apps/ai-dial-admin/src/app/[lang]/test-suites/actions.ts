@@ -221,6 +221,12 @@ export async function getRoutes() {
   return assetApi.list(token, ResourceType.ROUTE, 'platform/');
 }
 
+/** The platform routes as `getRoutes` lists them, or `null` when a page failed to load, so a count can tell. */
+export async function listPlatformRoutes() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.listStrict(token, ResourceType.ROUTE, 'platform/');
+}
+
 export async function getRoute(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetApi.getMerged<DialRouteResource>(token, ResourceType.ROUTE, name);

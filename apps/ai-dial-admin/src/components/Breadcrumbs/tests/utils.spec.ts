@@ -58,6 +58,12 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(config[0].key).toEqual(MenuI18nKey.PlatformAliases);
   });
 
+  test('The System Health page is a single breadcrumb linking to itself', () => {
+    expect(getBreadcrumbs('/en/system-health', 'en')).toEqual([
+      { key: MenuI18nKey.SystemHealth, name: 'system-health', href: '/en/system-health' },
+    ]);
+  });
+
   test('Should return empty array for home page', () => {
     const config = getBreadcrumbs('/home', 'en');
     expect(config.length).toEqual(0);

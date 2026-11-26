@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { analyticsApi, runsApi } from '@/src/app/api/api';
+import { analyticsApi, runsApi, structuredQueryApi } from '@/src/app/api/api';
+import { QueryMode, StructuredQuery } from '@/src/models/evaluation/structured-query';
 import { FilterDto } from '@/src/models/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -8,10 +9,14 @@ import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { FilterOperatorDto } from '@/src/types/request';
 import {
   cancelRun,
+  executeStructuredQueries,
   exportRunPreview,
   getRun,
+  getEvalPeriodCosts,
   getRunResults,
   getRuns,
+  getHealthDistribution,
+  getRunTrends,
   getMetricSnapshots,
   getTestCaseRunResultDetails,
   getTestCaseRunResults,
@@ -127,6 +132,65 @@ describe('Runs :: server actions', () => {
     expect(result).toEqual(resultDetail);
   });
 
+  test('Should call getRunTrends action with the page, size and token', async () => {
+    const page = { content: [{ suiteId: 'suite-1' }], page: 1, size: 10, totalElements: 11, totalPages: 2 };
+    (analyticsApi.getRunTrends as any).mockResolvedValue(page);
+
+    const result = await getRunTrends(1, 10);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(analyticsApi.getRunTrends).toHaveBeenCalledWith(1, 10, TOKEN_MOCK);
+    expect(result).toEqual(page);
+  });
+
+  test('Should return null from getRunTrends action when the request failed', async () => {
+    (analyticsApi.getRunTrends as any).mockResolvedValue(null);
+
+    expect(await getRunTrends(0, 10)).toBeNull();
+  });
+
+  test('Should call getHealthDistribution action with the weeks, threshold and token', async () => {
+    const distribution = { threshold: 0.75, weeks: [] };
+    (analyticsApi.getHealthDistribution as any).mockResolvedValue(distribution);
+
+    const result = await getHealthDistribution(5, 0.75);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(analyticsApi.getHealthDistribution).toHaveBeenCalledWith(5, 0.75, TOKEN_MOCK);
+    expect(result).toEqual(distribution);
+  });
+
+  test('Should return null from getHealthDistribution action when the request failed', async () => {
+    (analyticsApi.getHealthDistribution as any).mockResolvedValue(null);
+
+    expect(await getHealthDistribution(5, 0.75)).toBeNull();
+  });
+
+  test('Should request both windows of getEvalPeriodCosts with the token', async () => {
+    const current = { totalCost: 5, testCaseCost: 3, metricEvalCost: 2 };
+    const previous = { totalCost: 4 };
+    (runsApi.getTotalCosts as any).mockResolvedValueOnce(current).mockResolvedValueOnce(previous);
+
+    const result = await getEvalPeriodCosts(10, 20, 1, 2);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(runsApi.getTotalCosts).toHaveBeenCalledWith(10, 20, TOKEN_MOCK);
+    expect(runsApi.getTotalCosts).toHaveBeenCalledWith(1, 2, TOKEN_MOCK);
+    expect(result).toEqual({ current, previous });
+  });
+
+  test('Should return null only for the getEvalPeriodCosts window that failed', async () => {
+    (runsApi.getTotalCosts as any).mockResolvedValueOnce({ totalCost: 5 }).mockResolvedValueOnce(null);
+
+    expect(await getEvalPeriodCosts(10, 20, 1, 2)).toEqual({ current: { totalCost: 5 }, previous: null });
+  });
+
+  test('Should turn the undefined of a forbidden getEvalPeriodCosts window into null', async () => {
+    (runsApi.getTotalCosts as any).mockResolvedValueOnce(undefined).mockResolvedValueOnce({ totalCost: 4 });
+
+    expect(await getEvalPeriodCosts(10, 20, 1, 2)).toEqual({ current: null, previous: { totalCost: 4 } });
+  });
+
   test('Should call getMetricSnapshots action and return snapshots', async () => {
     const filters: FilterDto[] = [{ column: 'runId', value: 'run-1', operator: FilterOperatorDto.EQUALS }];
     const snapshots = [{ id: 'snap-1', tsmdName: 'RAGAS Faithfulness' }];
@@ -151,5 +215,61 @@ describe('Runs :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(analyticsApi.exportPreview).toHaveBeenCalledWith('run-1', TOKEN_MOCK);
     expect(result).toEqual(preview);
+  });
+});
+
+describe('Runs :: executeStructuredQueries', () => {
+  const queryOf = (entity: string): StructuredQuery => ({ entity, mode: QueryMode.Row });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
+  });
+
+  test('Should run every query with the user token', async () => {
+    (structuredQueryApi.execute as any).mockResolvedValue({ rows: [] });
+
+    await executeStructuredQueries([queryOf('a'), queryOf('b')]);
+
+    expect(structuredQueryApi.execute).toHaveBeenCalledWith(queryOf('a'), TOKEN_MOCK);
+    expect(structuredQueryApi.execute).toHaveBeenCalledWith(queryOf('b'), TOKEN_MOCK);
+  });
+
+  test('Should return one result per query, in the order of the queries', async () => {
+    (structuredQueryApi.execute as any).mockImplementation(async (query: StructuredQuery) => ({
+      rows: [{ entity: query.entity }],
+    }));
+
+    const results = await executeStructuredQueries([queryOf('first'), queryOf('second')]);
+
+    expect(results).toEqual([{ rows: [{ entity: 'first' }] }, { rows: [{ entity: 'second' }] }]);
+  });
+
+  test('Should return null for a query the API reports as failed, and keep the others', async () => {
+    (structuredQueryApi.execute as any).mockImplementation(async (query: StructuredQuery) =>
+      query.entity === 'bad' ? null : { rows: [] },
+    );
+
+    const results = await executeStructuredQueries([queryOf('ok'), queryOf('bad')]);
+
+    expect(results).toEqual([{ rows: [] }, null]);
+  });
+
+  test('Should return null for a query that throws instead of rejecting the batch', async () => {
+    (structuredQueryApi.execute as any).mockImplementation(async (query: StructuredQuery) => {
+      if (query.entity === 'boom') {
+        throw new Error('boom');
+      }
+      return { rows: [] };
+    });
+
+    const results = await executeStructuredQueries([queryOf('boom'), queryOf('ok')]);
+
+    expect(results).toEqual([null, { rows: [] }]);
+  });
+
+  test('Should return an empty list for an empty batch', async () => {
+    expect(await executeStructuredQueries([])).toEqual([]);
   });
 });

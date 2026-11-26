@@ -4,7 +4,7 @@ This documentation describes the structure and contents of the menu items array 
 
 Sections are listed in menu order. `DISABLE_MENU_ITEMS` matches the last segment of an item's key (`Menu.Models` → `models`), so a token hides every item with that key, in whichever section it sits.
 
-A `[Preview]` or `[Deprecated]` marker after a section title is that group's `badge` (`MenuBadge`): a badge shown on the group header while the sidebar is expanded. Sub-items carry no badge, except the two Governance items marked `[Preview]` below.
+A `[Preview]` or `[Deprecated]` marker after a section title is that group's `badge` (`MenuBadge`): a badge shown on the group header while the sidebar is expanded. Sub-items carry no badge, except the Evaluation and Governance items marked `[Preview]` below.
 
 ---
 
@@ -123,7 +123,7 @@ A `[Preview]` or `[Deprecated]` marker after a section title is that group's `ba
 
 ### 7. **Evaluation**
 
-- **Description**: A section for managing test suites, evaluation runs, and datasets.
+- **Description**: A section for managing test suites, evaluation runs, and datasets, and for seeing how much of the platform has been evaluated.
 - **Items**:
   - **Test Suites**
     - **Key**: `TestSuites`
@@ -134,6 +134,9 @@ A `[Preview]` or `[Deprecated]` marker after a section title is that group's `ba
   - **Datasets**
     - **Key**: `Datasets`
     - **Description**: Navigate to the datasets page to create and manage datasets used by test suites.
+  - **System Health** [Preview]
+    - **Key**: `SystemHealth`
+    - **Description**: Navigate to the system health page (`/system-health`) to see how much of what is deployed has been evaluated. A first row of four key figures shows the evaluatee coverage and the test suites run this month, the test suites added this month and the eval cost this month. Below it, a two-by-two block of coverage cards (models, applications, toolsets and routes) sits beside the Test suite health distribution chart; on narrower screens the chart takes the full width and the cards go three, two, then one to a line. Coverage: an evaluatee is covered when a test suite has run on it in the last 30 days; routes count in the overall card; if the route listing fails only the routes and overall cards show an error. Activity: the test suites run and added this month (the added card's `across N evaluatees` caption counts the distinct models, applications, toolsets and routes the new suites target) and the eval cost this month (the platform-wide cost of running test cases and of the judge calls that score them, with the split between the two), each against the same span of the previous month; a rise in cost is shown in red, since spending less is the better outcome. Below that row, a full-width Evaluation Run Trends table lists the test suites with a recorded completed run, lowest latest pass rate first (the backend fixes the order, so it cannot be re-sorted), 10 per page: the test suite's name and id, the evaluatee's name and type, a bar chart of the pass rate over the suite's last 10 runs, the latest pass rate and its change against the run before. The Test suite health distribution chart shows the last 5 UTC weeks as 100%-stacked bars, each split into the test suites whose pooled pass rate that week was at or above 0.75 (healthy) and below it (fail); the week's counts and shares are in a tooltip on hover, and an info icon beside the title explains the chart.
 
 ### 8. **Analytics** [Preview]
 

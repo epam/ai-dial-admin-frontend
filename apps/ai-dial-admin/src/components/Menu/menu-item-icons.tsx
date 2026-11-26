@@ -92,6 +92,7 @@ export const MENU_ITEM_ICONS: Partial<Record<MenuI18nKey, Icon>> = {
   [MenuI18nKey.TestSuites]: IconListCheck,
   [MenuI18nKey.Runs]: IconPlayerPlay,
   [MenuI18nKey.Datasets]: IconDatabase,
+  [MenuI18nKey.SystemHealth]: IconActivity,
   [MenuI18nKey.Dashboard]: IconLayoutDashboard,
   [MenuI18nKey.Queries]: IconZoomCode,
   [MenuI18nKey.AnalyticsSessions]: IconActivity,

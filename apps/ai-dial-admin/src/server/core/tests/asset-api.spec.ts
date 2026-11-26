@@ -381,3 +381,55 @@ describe('Server :: Core :: AssetApi :: flat app-runner listing', () => {
     expect(row.path).toBe('https%3A%2F%2Fhost%2Fcustom_application_schemas%2Fchart');
   });
 });
+
+describe('Server :: Core :: AssetApi :: listStrict', () => {
+  const instance = new AssetApi({ host: TEST_URL });
+  const JSON_HEADERS = { headers: { 'content-type': 'application/json' } };
+  const routeNode = (name: string) => ({ name, nodeType: 'ITEM', url: `routes/platform/${name}`, bucket: 'platform' });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('returns the rows of every page in order', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({ name: '', nodeType: 'FOLDER', nextToken: 'page-2', items: [routeNode('a')] }),
+      JSON_HEADERS,
+    );
+    fetch.mockResponseOnce(JSON.stringify({ name: '', nodeType: 'FOLDER', items: [routeNode('b')] }), JSON_HEADERS);
+
+    const result = await instance.listStrict(TOKEN_MOCK, ResourceType.ROUTE, 'platform/');
+
+    expect(fetch.mock.calls).toHaveLength(2);
+    expect(fetch.mock.calls[1][0]).toContain('token=page-2');
+    expect(result?.map((row) => row.name)).toEqual(['a', 'b']);
+  });
+
+  test('returns an empty array for a listing with no rows', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ name: '', nodeType: 'FOLDER', items: [] }), JSON_HEADERS);
+
+    expect(await instance.listStrict(TOKEN_MOCK, ResourceType.ROUTE, 'platform/')).toEqual([]);
+  });
+
+  test('returns null when the first page fails', async () => {
+    fetch.mockResponseOnce('', { status: 500 });
+
+    expect(await instance.listStrict(TOKEN_MOCK, ResourceType.ROUTE, 'platform/')).toBeNull();
+  });
+
+  test('returns null, not the rows so far, when a later page fails', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({ name: '', nodeType: 'FOLDER', nextToken: 'page-2', items: [routeNode('a')] }),
+      JSON_HEADERS,
+    );
+    fetch.mockResponseOnce('', { status: 500 });
+
+    expect(await instance.listStrict(TOKEN_MOCK, ResourceType.ROUTE, 'platform/')).toBeNull();
+  });
+
+  test('list still reads a failed page as no rows', async () => {
+    fetch.mockResponseOnce('', { status: 500 });
+
+    expect(await instance.list(TOKEN_MOCK, ResourceType.ROUTE, 'platform/')).toEqual([]);
+  });
+});

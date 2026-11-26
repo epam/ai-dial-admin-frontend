@@ -7,6 +7,7 @@ import { buildRunsQuery, mapRunsQueryResult } from '@/src/components/ListView/Ev
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { FilterDto, SortDto } from '@/src/models/request';
+import { EvalPeriodCosts } from '@/src/models/evaluation/run';
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
 
 export async function getRuns(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
@@ -45,6 +46,26 @@ export async function getRunsTotalCosts(runIds: string[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return runsApi.getRunsTotalCosts({ runIds }, token);
 }
+
+/**
+ * Platform-wide evaluation cost for the current and the previous window, requested together. A window whose
+ * request failed is `null`, so a caller can tell a failure from a window with no recorded cost. `== null` also
+ * catches the `undefined` the API client returns for a 403.
+ */
+export async function getEvalPeriodCosts(
+  currentFromMs: number,
+  currentToMs: number,
+  previousFromMs: number,
+  previousToMs: number,
+): Promise<EvalPeriodCosts> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const [current, previous] = await Promise.all([
+    runsApi.getTotalCosts(currentFromMs, currentToMs, token),
+    runsApi.getTotalCosts(previousFromMs, previousToMs, token),
+  ]);
+  return { current: current ?? null, previous: previous ?? null };
+}
+
 export async function removeRun(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return runsApi.removeRun(id, token);
@@ -63,6 +84,16 @@ export async function getRunResults(filters: FilterDto[]) {
 export async function getTestCaseRunResults(filters: FilterDto[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return analyticsApi.getTestCaseRunResults(filters, token);
+}
+
+export async function getRunTrends(page: number, size: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return analyticsApi.getRunTrends(page, size, token);
+}
+
+export async function getHealthDistribution(weeks: number, threshold: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return analyticsApi.getHealthDistribution(weeks, threshold, token);
 }
 
 export async function getTestCaseRunResultDetails(id: string) {
@@ -88,4 +119,23 @@ export async function exportRunPreview(runId: string) {
 export async function executeStructuredQuery(query: StructuredQuery) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return structuredQueryApi.execute(query, token);
+}
+
+/**
+ * Runs the queries concurrently on the server and returns one result per query, in order. Next.js runs the
+ * server actions a page dispatches one after another, so a page that needs several queries sends them as one
+ * batch. A query that fails or throws yields `null` instead of rejecting the batch, so a caller can fail only
+ * what depends on it.
+ */
+export async function executeStructuredQueries(queries: StructuredQuery[]) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return Promise.all(
+    queries.map(async (query) => {
+      try {
+        return await structuredQueryApi.execute(query, token);
+      } catch {
+        return null;
+      }
+    }),
+  );
 }
