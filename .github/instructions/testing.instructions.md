@@ -319,7 +319,10 @@ What that cleanup cannot undo is yours to avoid:
 1. **Change a global only through Vitest.** `vi.stubGlobal('fetch', vi.fn())` in `beforeEach`, or `vi.spyOn` on
    the object; never `global.x = …`, `window.x = …` or `Object.assign(navigator, …)`. A property Vitest cannot
    stub (a getter such as `navigator.clipboard`) is installed with `Object.defineProperty(…, { configurable: true })`.
-2. **Change the environment only through `vi.stubEnv`**, never by writing or deleting `process.env`.
+2. **Change the environment only through `vi.stubEnv`**, never by writing or deleting `process.env`. A spec that
+   reads `process.env` stubs every variable it depends on, including the ones it needs absent
+   (`vi.stubEnv(name, undefined)`): the suite must pass the same way whatever env a developer's shell or env files
+   carry.
 3. **Configure a controlled module through its controller.** Navigation: `navigationMock.router.push` is the spy,
    `navigationMock.setPathname(...)` / `setSearchParams(...)` set the location. Save validation:
    `saveValidationMock.dispatch` is the spy, `saveValidationMock.set({ isValid: false })` sets the state, and
