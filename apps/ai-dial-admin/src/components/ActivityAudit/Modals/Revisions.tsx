@@ -104,7 +104,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
       })}
     >
       <div className="flex h-full flex-col">
-        <div className="flex flex-row gap-4 bg-layer-2 h-[84px] py-3 px-6">
+        <div className="flex flex-row gap-4 bg-layer-raised h-[84px] py-3 px-6">
           <DatePicker
             onCalendarClose={fetchNewData}
             id="start-date"
@@ -159,7 +159,7 @@ const RollbackRevisions: FC<Props> = ({ initialRevisions, rollBackRevision, isMo
                           className={classNames(
                             'flex items-center text-primary dial-small-text h-[34px] rounded px-3 cursor-pointer',
                             value.id === selectedRevision?.id &&
-                              'border-l-2 border-accent-primary bg-accent-primary-alpha',
+                              'border-l-2 border-accent bg-control-accent-alpha',
                           )}
                           onClick={() => setSelectedRevision(value)}
                         >

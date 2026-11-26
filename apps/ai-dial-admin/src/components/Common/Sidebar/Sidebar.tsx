@@ -9,8 +9,8 @@ interface Props {
   slot?: SidebarPosition;
 }
 
-const RIGHT_SLOT_CLASSES = 'flex shrink-0 min-w-[400px] h-full overflow-hidden bg-layer-0 p-4 z-10';
-const BOTTOM_SLOT_CLASSES = 'flex flex-col shrink-0 w-full flex-1 min-h-0 overflow-hidden bg-layer-0 z-10';
+const RIGHT_SLOT_CLASSES = 'flex shrink-0 min-w-[400px] h-full overflow-hidden bg-control-neutral p-4 z-10';
+const BOTTOM_SLOT_CLASSES = 'flex flex-col shrink-0 w-full flex-1 min-h-0 overflow-hidden bg-control-neutral z-10';
 
 const Sidebar: FC<Props> = ({ slot = SidebarPosition.Right }) => {
   const { sidebar } = useAppContext();

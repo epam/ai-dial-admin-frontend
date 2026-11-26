@@ -31,7 +31,7 @@ const RulesList: FC<Props> = ({ rulesMap, isReadonly, onChange }) => {
     <div className="flex flex-col size-full min-w-0 overflow-auto">
       {!isSingle && !isEmpty && (
         <div>
-          <span className="border border-accent-secondary rounded bg-accent-secondary-alpha inline-block px-2">
+          <span className="border border-success rounded bg-success inline-block px-2">
             {t(BasicI18nKey.And)}
           </span>
         </div>
@@ -40,7 +40,7 @@ const RulesList: FC<Props> = ({ rulesMap, isReadonly, onChange }) => {
         <div className="relative flex flex-row">
           <div
             style={{ bottom: `${lastRuleHeight / 2}px` }}
-            className={classNames('absolute top-0 left-1 w-[1px] bg-accent-secondary', isSingle && 'hidden')}
+            className={classNames('absolute top-0 left-1 w-[1px] bg-green-1', isSingle && 'hidden')}
           ></div>
           <div className={classNames('flex-1 flex flex-col gap-4 ml-[5px]', !isSingle && 'mt-4')}>
             {isSingle ? (

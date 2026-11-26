@@ -112,13 +112,13 @@ describe('TablesView — type and system tags', () => {
   test('names a table’s kind with a tag, as its own header does', () => {
     renderCell('type', { ...TABLES[0], type: AnalyticsTableType.Enrichment });
 
-    expect(screen.getByText(AnalyticsTablesI18nKey.TypeEnrichment).className).toContain('bg-layer-4');
+    expect(screen.getByText(AnalyticsTablesI18nKey.TypeEnrichment).className).toContain('bg-control-neutral-hover-muted');
   });
 
   test('marks a system table with a tag', () => {
     renderCell('system', { ...TABLES[0], system: true });
 
-    expect(screen.getByText(AnalyticsTablesI18nKey.System).className).toContain('bg-layer-4');
+    expect(screen.getByText(AnalyticsTablesI18nKey.System).className).toContain('bg-control-neutral-hover-muted');
   });
 
   test('leaves the system cell empty for a table that is not one', () => {

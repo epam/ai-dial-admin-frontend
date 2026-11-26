@@ -43,7 +43,7 @@ const CompactInput: FC<Props> = ({ value, onChange, ariaLabel, placeholder, clas
       className={classNames(
         'h-[26px] bg-transparent font-mono dial-tiny-text text-primary outline-hidden placeholder:text-secondary',
         (numeric || decimal) && 'text-center',
-        prefix ? 'min-w-0 flex-1 px-0' : 'rounded border border-primary bg-layer-2 px-2 focus:border-accent-primary',
+        prefix ? 'min-w-0 flex-1 px-0' : 'rounded border border-primary bg-layer-raised px-2 focus:border-accent',
         !prefix && className,
       )}
       value={value}
@@ -57,7 +57,7 @@ const CompactInput: FC<Props> = ({ value, onChange, ariaLabel, placeholder, clas
   return (
     <label
       className={classNames(
-        'flex h-[26px] items-center gap-2 rounded border border-primary bg-layer-2 px-2 focus-within:border-accent-primary',
+        'flex h-[26px] items-center gap-2 rounded border border-primary bg-layer-raised px-2 focus-within:border-accent',
         className,
       )}
     >

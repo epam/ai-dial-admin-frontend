@@ -11,7 +11,7 @@ const RowExpanderCellRenderer = ({ data }: ICellRendererParams) => {
     <div
       className={classNames(
         'flex items-center justify-center size-[18px] shrink-0 rounded',
-        data?.canToggleExpand && 'cursor-pointer hover:bg-layer-3',
+        data?.canToggleExpand && 'cursor-pointer hover:bg-layer-sunken',
       )}
     >
       {data?.expanded ? (

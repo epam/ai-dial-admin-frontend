@@ -39,7 +39,7 @@ const IngestFailureGroupHeader: FC<Props> = ({ group, selectedCount, isBusy, onS
     <div
       role="group"
       aria-label={`${reason}, ${kind}`}
-      className="flex flex-row items-start gap-3 bg-layer-3 px-3 py-3"
+      className="flex flex-row items-start gap-3 bg-layer-sunken px-3 py-3"
     >
       <Checkbox
         aria-label={t(IngestFailuresI18nKey.SelectGroup, { reason, kind })}

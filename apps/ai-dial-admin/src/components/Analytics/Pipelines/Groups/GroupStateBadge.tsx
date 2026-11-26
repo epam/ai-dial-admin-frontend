@@ -24,7 +24,7 @@ const TONE: Record<GroupState, string> = {
   [GroupState.Waiting]: 'text-info bg-info',
   [GroupState.Ready]: 'text-success bg-success',
   [GroupState.AtCap]: 'text-warning bg-warning',
-  [GroupState.UpToDate]: 'text-secondary bg-layer-4',
+  [GroupState.UpToDate]: 'text-secondary bg-control-neutral-hover-muted',
 };
 
 /**
@@ -44,7 +44,7 @@ const GroupStateBadge: FC<Props> = ({ group, state, readyWhen, isPaused, now }) 
         tabIndex={0}
         label={t(GROUP_STATE_LABEL_KEY[state])}
         toneClassName={TONE[state]}
-        className="focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary"
+        className="focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent"
       />
     </Tooltip>
   );

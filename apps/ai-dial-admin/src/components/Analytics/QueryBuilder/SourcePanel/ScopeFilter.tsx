@@ -42,7 +42,7 @@ const ScopeFilter: FC = () => {
         icon={
           <span className="relative flex">
             <IconFilter2 size={16} aria-hidden />
-            {isActive && <span className="absolute -right-1 -top-1 size-1.5 rounded-full bg-accent-primary" />}
+            {isActive && <span className="absolute -right-1 -top-1 size-1.5 rounded-full bg-control-accent" />}
           </span>
         }
       />

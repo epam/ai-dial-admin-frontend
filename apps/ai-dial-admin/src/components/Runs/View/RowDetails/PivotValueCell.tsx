@@ -81,7 +81,7 @@ const PivotValueCell: FC<Props> = ({
             {...(dataCompareDiff ? { 'data-compare-diff': dataCompareDiff } : {})}
             className={mergeClasses(
               VALUE_CELL_BASE,
-              'relative group bg-layer-3 hover:bg-layer-4 focus-visible:bg-layer-4 outline-hidden focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-focus',
+              'relative group bg-layer-sunken hover:bg-control-neutral-hover-muted focus-visible:bg-control-neutral-hover-muted outline-hidden focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-focus',
               isRightAligned ? 'justify-end text-right' : 'text-left',
               hasScore && 'p-0 border-r-0 border-b-0',
               className,

@@ -117,14 +117,14 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
 
   return (
     <>
-      <div className="absolute left-0 top-0 size-full bg-blackout z-[15]" onClick={onClose} />
+      <div className="absolute left-0 top-0 size-full bg-backdrop z-[15]" onClick={onClose} />
       <aside
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className="flex flex-col absolute right-0 top-0 bottom-0 w-full md:w-[560px] bg-layer-3 z-20 divide-tertiary divide-y outline-hidden"
+        className="flex flex-col absolute right-0 top-0 bottom-0 w-full md:w-[560px] bg-layer-sunken z-20 divide-tertiary divide-y outline-hidden"
       >
         <div className="flex items-center justify-between gap-4 px-4 py-3">
           <h3 className="dial-h5 text-primary truncate">{title}</h3>

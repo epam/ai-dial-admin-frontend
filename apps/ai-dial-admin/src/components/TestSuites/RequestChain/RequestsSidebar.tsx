@@ -73,7 +73,7 @@ const RequestsSidebar: FC<Props> = ({
 
   return (
     <>
-      <CollapsibleSidebar width={296} title={t(TestSuitesI18nKey.Requests)} className="h-full bg-layer-2 shadow-sm">
+      <CollapsibleSidebar width={296} title={t(TestSuitesI18nKey.Requests)} className="h-full bg-layer-raised shadow-sm">
         <div className="flex flex-col gap-6 h-full">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
@@ -99,8 +99,8 @@ const RequestsSidebar: FC<Props> = ({
                 <div
                   key={index}
                   className={classNames(
-                    'group flex items-center gap-2 rounded border-l-2 border-transparent hover:bg-accent-primary-alpha',
-                    isActive && 'bg-accent-primary-alpha border-l-accent-primary',
+                    'group flex items-center gap-2 rounded border-l-2 border-transparent hover:bg-control-accent-alpha',
+                    isActive && 'bg-control-accent-alpha border-l-accent-primary',
                   )}
                 >
                   <button
@@ -117,7 +117,7 @@ const RequestsSidebar: FC<Props> = ({
                     <ActionsDropdown
                       items={getRowActions(index)}
                       icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-                      actionTriggerClassName="mr-2 shrink-0 flex size-6 items-center justify-center rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 hover:bg-accent-primary-alpha"
+                      actionTriggerClassName="mr-2 shrink-0 flex size-6 items-center justify-center rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 hover:bg-control-accent-alpha"
                     />
                   )}
                 </div>

@@ -242,7 +242,7 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
         <CollapsibleSidebar
           width={280}
           title={t(ToolsetI18nKey.Tools)}
-          className="bg-layer-3 mr-2 h-full border border-primary"
+          className="bg-layer-sunken mr-2 h-full border border-primary"
         >
           <Search onChange={setPattern} value={pattern} />
           <div className="border-b border-tertiary pb-1">

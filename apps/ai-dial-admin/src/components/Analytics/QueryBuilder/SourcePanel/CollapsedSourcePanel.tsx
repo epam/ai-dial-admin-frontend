@@ -20,7 +20,7 @@ const CollapsedSourcePanel: FC<Props> = ({ onExpand }) => {
       type="button"
       aria-label={t(QuerySourcePanelI18nKey.Expand)}
       aria-expanded="false"
-      className="-ml-4 flex h-full w-16 shrink-0 flex-col items-center gap-4 border-r border-tertiary py-3 text-secondary hover:bg-layer-2 hover:text-primary focus-visible:bg-layer-2 focus-visible:text-primary focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary md:-ml-6"
+      className="-ml-4 flex h-full w-16 shrink-0 flex-col items-center gap-4 border-r border-tertiary py-3 text-secondary hover:bg-layer-raised hover:text-primary focus-visible:bg-layer-raised focus-visible:text-primary focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent md:-ml-6"
       onClick={onExpand}
     >
       <IconLayoutSidebar size={DIAL_ICON_SIZE.MD} className="shrink-0" aria-hidden />

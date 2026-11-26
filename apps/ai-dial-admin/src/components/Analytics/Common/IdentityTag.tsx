@@ -13,7 +13,7 @@ interface Props {
 
 /** A fixed fact about what something is — a type, a kind, a trigger — drawn square on a neutral layer. */
 const IdentityTag: FC<Props> = ({ label, colorClassName = 'text-secondary', className }) => (
-  <span className={classNames(CHIP_CLASS, 'rounded bg-layer-4', colorClassName, className)}>{label}</span>
+  <span className={classNames(CHIP_CLASS, 'rounded bg-control-neutral-hover-muted', colorClassName, className)}>{label}</span>
 );
 
 export default IdentityTag;

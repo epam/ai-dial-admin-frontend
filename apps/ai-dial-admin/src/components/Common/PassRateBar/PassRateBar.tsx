@@ -25,7 +25,7 @@ const PassRateBar: FC<Props> = ({ rate, label, className }) => {
       aria-valuemax={100}
       aria-valuenow={percent}
       aria-valuetext={formatPassRatePercent(rate)}
-      className={classNames('h-1 w-full overflow-hidden rounded-sm bg-layer-1', className)}
+      className={classNames('h-1 w-full overflow-hidden rounded-sm bg-layer-base', className)}
     >
       <div
         className={classNames('h-full rounded-sm', PASS_RATE_BAND_CLASS[getPassRateBand(rate)])}

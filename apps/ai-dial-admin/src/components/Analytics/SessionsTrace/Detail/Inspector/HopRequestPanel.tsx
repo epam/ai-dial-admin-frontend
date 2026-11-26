@@ -59,9 +59,9 @@ const HopRequestPanel: FC<Props> = ({ envelope, isRaw, traceId, coreSpanId, requ
     <div className={classNames('flex min-w-0 flex-col', isRaw && 'min-h-0 flex-1')}>
       {/* Sticky rather than scrolling with the list: it is the control *for* the list, and 52 messages put it
           off screen after the first flick — leaving no way to change the filter without scrolling back up.
-          `bg-layer-1` is the bodies section's own ground — `bg-layer-2` was the rail's, and this panel left
+          `bg-layer-base` is the bodies section's own ground — `bg-layer-raised` was the rail's, and this panel left
           the rail — so rows pass behind it rather than through it. */}
-      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-1 bg-layer-1 pb-3">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-x-3 gap-y-1 bg-layer-base pb-3">
         {/* The role filter narrows a list, so it goes with the list: showing the recorded bytes leaves
             nothing for it to narrow. */}
         {!isRaw && (

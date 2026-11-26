@@ -25,12 +25,12 @@ const MethodItem: FC<Props> = ({ index, item, isActive, onClick, label }) => {
       type="button"
       aria-current={isActive}
       className={classNames(
-        'flex flex-row gap-x-3 items-center h-8 px-3 rounded border-l-2 border-transparent text-left w-full hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha cursor-pointer',
-        isActive && 'bg-accent-primary-alpha border-l-accent-primary',
+        'flex flex-row gap-x-3 items-center h-8 px-3 rounded border-l-2 border-transparent text-left w-full hover:bg-control-accent-alpha focus-visible:bg-control-accent-alpha cursor-pointer',
+        isActive && 'bg-control-accent-alpha border-l-accent-primary',
       )}
       onClick={onMethodClick}
     >
-      <span className="dial-tiny-text bg-layer-3 rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
+      <span className="dial-tiny-text bg-layer-sunken rounded p-1 border border-primary whitespace-nowrap max-w-[200px] overflow-hidden">
         {item.method}
       </span>{' '}
       <EllipsisTooltip text={label ?? item.relativeUrlPattern} />

@@ -31,7 +31,7 @@ const SelectedFile: FC<Props> = ({ file, onChangeFile }) => {
     [onChangeFile],
   );
   return (
-    <div className="flex flex-row justify-between items-center bg-layer-2 px-3 py-0.5">
+    <div className="flex flex-row justify-between items-center bg-layer-raised px-3 py-0.5">
       <div className="flex items-center gap-x-2">
         <FileIcon
           type={DialItemType.File}

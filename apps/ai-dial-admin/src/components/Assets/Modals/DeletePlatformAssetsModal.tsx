@@ -46,7 +46,7 @@ const DeletePlatformAssetsModal: FC<Props> = ({ view, isOpen, itemsToDelete, onR
       onClose={onClose}
       onConfirm={onRemove}
       size={PopupSize.Md}
-      className="bg-layer-2"
+      className="bg-layer-raised"
     >
       <div className="px-6 dial-small mb-6">
         <p className="text-secondary mt-2 mb-6">{getDeleteModalDescription(view, t, itemsToDelete.length, false)}</p>

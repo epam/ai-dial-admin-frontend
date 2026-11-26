@@ -9,25 +9,25 @@ import { MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 const iconColors: Record<string, string> = {
-  [MenuI18nKey.Entities]: 'text-accent-primary',
-  [MenuI18nKey.Builders]: 'text-accent-secondary',
-  [MenuI18nKey.AiGateway]: 'text-accent-secondary',
-  [MenuI18nKey.Artifacts]: 'text-accent-tertiary',
-  [MenuI18nKey.Deployments]: 'text-accent-primary',
-  [MenuI18nKey.AccessManagement]: 'text-accent-secondary',
-  [MenuI18nKey.Governance]: 'text-accent-tertiary',
-  [MenuI18nKey.Audit]: 'text-accent-primary',
+  [MenuI18nKey.Entities]: 'text-accent',
+  [MenuI18nKey.Builders]: 'text-green-2',
+  [MenuI18nKey.AiGateway]: 'text-green-2',
+  [MenuI18nKey.Artifacts]: 'text-violet-1',
+  [MenuI18nKey.Deployments]: 'text-accent',
+  [MenuI18nKey.AccessManagement]: 'text-green-2',
+  [MenuI18nKey.Governance]: 'text-violet-1',
+  [MenuI18nKey.Audit]: 'text-accent',
 };
 
 const MenuGroup: FC<{ menuGroup: MenuGroupConfiguration }> = ({ menuGroup }) => {
   const t = useI18n();
 
   return (
-    <div className="p-4 flex flex-col bg-layer-3 flex-1 rounded h-[324px] md:min-w-[400px] lg:min-w-[520px] w-full">
+    <div className="p-4 flex flex-col bg-layer-sunken flex-1 rounded h-[324px] md:min-w-[400px] lg:min-w-[520px] w-full">
       <div className="mb-3 flex flex-row gap-x-3 items-center">
         <div
           className={classNames(
-            'h-[64px] w-[64px] bg-layer-2 rounded-full flex items-center justify-center',
+            'h-[64px] w-[64px] bg-layer-raised rounded-full flex items-center justify-center',
             iconColors[menuGroup.key],
           )}
         >
@@ -40,7 +40,7 @@ const MenuGroup: FC<{ menuGroup: MenuGroupConfiguration }> = ({ menuGroup }) => 
         {menuGroup.items.map((item) => (
           <li
             key={item.key}
-            className="dial-small-text font-semibold hover:bg-accent-primary-alpha py-2 px-3 cursor-pointer rounded"
+            className="dial-small-text font-semibold hover:bg-control-accent-alpha py-2 px-3 cursor-pointer rounded"
           >
             <Link href={item.href} aria-label={t(item.key)}>
               {t(item.key)}

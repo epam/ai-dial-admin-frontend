@@ -29,7 +29,7 @@ const TagGroup: FC<Props> = ({ tableName, group }) => {
         type="button"
         aria-expanded={isExpanded}
         aria-controls={listId}
-        className="flex h-8 w-full items-center gap-1 rounded-lg pl-8 pr-3 text-secondary hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha"
+        className="flex h-8 w-full items-center gap-1 rounded-lg pl-8 pr-3 text-secondary hover:bg-control-accent-alpha focus-visible:bg-control-accent-alpha"
         onClick={() => onToggleGroup(key)}
       >
         <span className="flex size-4 shrink-0 items-center justify-center">

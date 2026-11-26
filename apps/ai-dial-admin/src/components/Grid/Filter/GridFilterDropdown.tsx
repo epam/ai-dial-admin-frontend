@@ -75,7 +75,7 @@ const GridFilterDropdown: FC<Props> = ({
       onOpenChange={setIsOpen}
       placement="bottom-end"
       renderOverlay={() => (
-        <div className="flex flex-col gap-2 p-3 w-[205px] bg-layer-4">
+        <div className="flex flex-col gap-2 p-3 w-[205px] bg-control-neutral-hover-muted">
           <Select
             ariaLabel={t(QueryBuilderI18nKey.Operator)}
             size={ElementSize.Small}

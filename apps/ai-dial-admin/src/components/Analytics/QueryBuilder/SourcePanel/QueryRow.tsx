@@ -57,9 +57,9 @@ const QueryRow: FC<Props> = ({ query, isCurrent, indent = QueryRowIndent.Root })
           href={href}
           aria-current={isCurrent ? 'page' : undefined}
           className={classNames(
-            'flex min-h-8 min-w-0 items-center rounded-lg py-1 pr-3 text-primary dial-tiny-text hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha',
+            'flex min-h-8 min-w-0 items-center rounded-lg py-1 pr-3 text-primary dial-tiny-text hover:bg-control-accent-alpha focus-visible:bg-control-accent-alpha',
             INDENT_CLASS_NAME[indent],
-            isCurrent && 'bg-accent-primary-alpha',
+            isCurrent && 'bg-control-accent-alpha',
           )}
           onClick={(event) => onNavigate(event, href)}
         >

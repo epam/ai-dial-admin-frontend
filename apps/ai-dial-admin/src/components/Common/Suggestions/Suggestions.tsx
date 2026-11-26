@@ -38,13 +38,13 @@ const Suggestions: FC<Props> = ({
   );
 
   return (
-    <ul className="relative mt-1 w-full bg-layer-0 z-20">
+    <ul className="relative mt-1 w-full bg-control-neutral z-20">
       {suggestions?.map((opt, idx) => (
         <li
           key={opt.value}
           className={classNames(
             'cursor-pointer px-3 py-2 flex justify-between gap-4',
-            idx === highlightIndex && 'bg-accent-primary-alpha',
+            idx === highlightIndex && 'bg-control-accent-alpha',
           )}
           onMouseEnter={handleHightLightSuggestion(idx)}
           onMouseDown={handleSelectSuggestion(opt)}

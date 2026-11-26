@@ -43,9 +43,9 @@ const DatasetBanner: FC<Props> = ({ datasetName, onOpenDataset, onDetachDataset,
   };
 
   return (
-    <div className="flex items-center justify-between gap-4 min-w-0 px-3 py-2 rounded-lg bg-layer-3">
+    <div className="flex items-center justify-between gap-4 min-w-0 px-3 py-2 rounded-lg bg-layer-sunken">
       <div className="flex items-center gap-1 min-w-0">
-        <span className="flex items-center p-2 shrink-0 text-accent-primary">
+        <span className="flex items-center p-2 shrink-0 text-accent">
           <IconDatabaseExport size={16} aria-hidden />
         </span>
         <EllipsisTooltip className="dial-small-semi text-primary max-w-[600px]" text={datasetName} />

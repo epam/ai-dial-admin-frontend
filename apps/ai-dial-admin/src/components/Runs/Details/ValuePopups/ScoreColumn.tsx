@@ -37,7 +37,7 @@ const ScoreColumn: FC<Props> = ({ data, hasRunHeader, openCardId, reasonHighligh
         <span className="text-secondary dial-small-text">{t(RunsI18nKey.RunCompareNoMatch)}</span>
       ) : (
         <>
-          <div className="flex flex-col gap-2 rounded bg-layer-2 px-4 py-3 shrink-0">
+          <div className="flex flex-col gap-2 rounded bg-layer-raised px-4 py-3 shrink-0">
             <span className="dial-tiny-text text-secondary">{t(RunsI18nKey.MetricScoreLabel)}</span>
             <ScoreChip raw={raw} isFailed={isFailed} />
           </div>

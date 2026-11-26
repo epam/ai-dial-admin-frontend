@@ -61,7 +61,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
 
   return (
     <div className="flex items-start">
-      <div className={classNames('h-[1px] w-[16px] bg-accent-primary', isFirstLine ? 'mt-11' : 'mt-5')}></div>
+      <div className={classNames('h-[1px] w-[16px] bg-control-accent', isFirstLine ? 'mt-11' : 'mt-5')}></div>
       <div ref={ref} className="flex-1 flex flex-row gap-x-2 items-start">
         <div className="shrink-0 w-[250px]">
           <Select

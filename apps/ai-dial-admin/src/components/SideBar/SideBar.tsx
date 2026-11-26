@@ -39,8 +39,8 @@ const Sidebar: FC<Props> = ({ isSidebarOpen, side, itemComponent }) => {
   const [windowWidth, setWindowWidth] = useState<number | undefined>(undefined);
 
   const resizeTriggerClassName = classNames(
-    'invisible h-full w-0.5 group-hover:visible md:visible xl:bg-accent-primary xl:text-accent-primary',
-    isResizing ? 'bg-accent-primary text-accent-primary xl:visible' : 'bg-layer-3 text-primary xl:invisible',
+    'invisible h-full w-0.5 group-hover:visible md:visible xl:bg-control-accent xl:text-accent',
+    isResizing ? 'bg-control-accent text-accent xl:visible' : 'bg-layer-sunken text-primary xl:invisible',
   );
 
   const centralWindowMinWidth =

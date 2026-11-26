@@ -49,16 +49,16 @@ const BuilderAreaHandle: FC<Props> = ({
       aria-valuemin={minHeight}
       aria-valuemax={Math.round(maxHeight)}
       onKeyDown={onKeyDown}
-      className="group relative flex size-full cursor-ns-resize items-center justify-center outline-hidden focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-primary"
+      className="group relative flex size-full cursor-ns-resize items-center justify-center outline-hidden focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent"
     >
       {isResizing && (
-        <span aria-hidden className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 bg-accent-primary" />
+        <span aria-hidden className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 bg-control-accent" />
       )}
       <span
         aria-hidden
         className={classNames(
-          'h-0 w-8 rounded-full border-t-4 transition-colors group-hover:border-accent-primary group-focus-visible:border-accent-primary',
-          isResizing ? 'border-accent-primary' : 'border-secondary',
+          'h-0 w-8 rounded-full border-t-4 transition-colors group-hover:border-accent group-focus-visible:border-accent',
+          isResizing ? 'border-accent' : 'border-secondary',
         )}
       />
     </div>

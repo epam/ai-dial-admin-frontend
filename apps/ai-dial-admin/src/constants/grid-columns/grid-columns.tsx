@@ -1529,7 +1529,7 @@ export const RUNS_COLUMN: ColDef[] = [
     cellRenderer: TagsCellRenderer,
     cellRendererParams: (params: { value: string[] }) => ({
       items: params.value,
-      tagClassName: 'border-accent-tertiary bg-accent-tertiary-alpha',
+      tagClassName: 'border-accent-tertiary bg-violet-2',
     }),
     tooltipValueGetter: () => null,
     ...evalStringFilter([GridFilterType.CONTAINS]),
@@ -1688,7 +1688,7 @@ export const METRIC_SELECTION_COLUMNS = (t: (key: string) => string): ColDef[] =
     },
     cellRendererParams: (params: { value: string[] }) => ({
       items: params.value,
-      tagClassName: 'border-accent-tertiary bg-accent-tertiary-alpha',
+      tagClassName: 'border-accent-tertiary bg-violet-2',
     }),
     maxWidth: METRIC_OUTPUTS_COLUMN_WIDTH,
     ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),

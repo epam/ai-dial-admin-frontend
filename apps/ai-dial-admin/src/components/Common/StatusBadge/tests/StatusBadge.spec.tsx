@@ -11,7 +11,7 @@ describe('Common components :: StatusBadge', () => {
     [StatusBadgeTone.Success, ['bg-success', 'text-success']],
     [StatusBadgeTone.Error, ['bg-error', 'text-error']],
     [StatusBadgeTone.Info, ['bg-info', 'text-info']],
-    [StatusBadgeTone.Neutral, ['bg-layer-4', 'text-secondary']],
+    [StatusBadgeTone.Neutral, ['bg-control-neutral-hover-muted', 'text-secondary']],
   ])('Should style the %s tone with theme tokens', (tone, classes) => {
     render(<StatusBadge tone={tone} label="Label" />);
 

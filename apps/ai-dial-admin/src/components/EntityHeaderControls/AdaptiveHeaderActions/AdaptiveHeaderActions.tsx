@@ -64,7 +64,7 @@ const renderExpandedAction = (action: AdaptiveHeaderAction, buttonsClassName?: s
   return (
     <div key={key} className="flex items-center gap-x-4 shrink-0">
       {button}
-      <div className="w-px h-6 bg-layer-4" aria-hidden />
+      <div className="w-px h-6 bg-control-neutral-hover-muted" aria-hidden />
     </div>
   );
 };

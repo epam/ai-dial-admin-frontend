@@ -61,7 +61,7 @@ const EnumValuesFilter: FC<Props> = ({ model, onModelChange, api, colDef, values
   const onReset = () => onModelChange(null);
 
   return (
-    <div className="flex w-[205px] flex-col gap-2 bg-layer-4 p-3">
+    <div className="flex w-[205px] flex-col gap-2 bg-control-neutral-hover-muted p-3">
       <Checkbox
         id={`${colDef.field}-filter-all`}
         isSelected={areAllSelected}

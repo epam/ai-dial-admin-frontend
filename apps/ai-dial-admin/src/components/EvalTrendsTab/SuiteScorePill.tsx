@@ -47,7 +47,7 @@ const SuiteScorePill: FC<Props> = ({ suiteName, average }) => {
         />
       }
     >
-      <span className="dial-tiny-semi-text text-secondary bg-layer-4 relative rounded-full px-2 py-0.5 whitespace-nowrap">
+      <span className="dial-tiny-semi-text text-secondary bg-control-neutral-hover-muted relative rounded-full px-2 py-0.5 whitespace-nowrap">
         {scoreDisplay}
         <span className="sr-only">
           {suiteName}. {runsLabel}. {avgScoreLabel}: {scoreDisplay}. {avgCostLabel}: {costDisplay}.

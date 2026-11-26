@@ -32,7 +32,7 @@ describe('ListEntities', () => {
     renderList();
 
     const root = screen.getByRole('heading', { level: 1, name: 'Models' }).closest('.size-full');
-    expect(root).not.toHaveClass('bg-layer-2');
+    expect(root).not.toHaveClass('bg-layer-raised');
     expect(root).not.toHaveClass('rounded');
   });
 });

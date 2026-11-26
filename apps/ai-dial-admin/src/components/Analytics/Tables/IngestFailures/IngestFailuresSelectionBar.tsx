@@ -20,7 +20,7 @@ const IngestFailuresSelectionBar: FC<Props> = ({ count, isBusy, onClear, onRetry
   const t = useI18n();
 
   return (
-    <div className="flex flex-row flex-wrap items-center gap-3 rounded bg-layer-3 px-3 py-2">
+    <div className="flex flex-row flex-wrap items-center gap-3 rounded bg-layer-sunken px-3 py-2">
       <span className="dial-small-semi-text text-primary" role="status" aria-live="polite">
         {t(IngestFailuresI18nKey.Selected, { count })}
       </span>

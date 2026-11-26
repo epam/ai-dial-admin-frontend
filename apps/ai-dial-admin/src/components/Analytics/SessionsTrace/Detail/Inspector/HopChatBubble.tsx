@@ -12,17 +12,17 @@ import { MessageRole } from '@/src/models/analytics/sessions-trace';
 // result, a role this frontend does not recognise — is machinery the hop received rather than speech, and
 // takes the full width under its own label so it can never be read as something either party said.
 const BUBBLE_CLASS: Record<MessageRole, string> = {
-  [MessageRole.User]: 'max-w-[85%] rounded-2xl rounded-br-none bg-layer-4',
-  [MessageRole.Assistant]: 'max-w-[85%] rounded-2xl rounded-bl-none bg-layer-3',
-  [MessageRole.System]: 'w-full rounded border border-secondary bg-layer-1',
-  [MessageRole.Tool]: 'w-full rounded border border-secondary bg-layer-1',
-  [MessageRole.Other]: 'w-full rounded border border-secondary bg-layer-1',
+  [MessageRole.User]: 'max-w-[85%] rounded-2xl rounded-br-none bg-control-neutral-hover-muted',
+  [MessageRole.Assistant]: 'max-w-[85%] rounded-2xl rounded-bl-none bg-layer-sunken',
+  [MessageRole.System]: 'w-full rounded border border-secondary bg-layer-base',
+  [MessageRole.Tool]: 'w-full rounded border border-secondary bg-layer-base',
+  [MessageRole.Other]: 'w-full rounded border border-secondary bg-layer-base',
 };
 
 const ROLE_TEXT_CLASS: Record<MessageRole, string> = {
   [MessageRole.User]: 'text-secondary',
-  [MessageRole.Assistant]: 'text-accent-secondary',
-  [MessageRole.System]: 'text-accent-tertiary',
+  [MessageRole.Assistant]: 'text-green-2',
+  [MessageRole.System]: 'text-violet-1',
   [MessageRole.Tool]: 'text-warning',
   [MessageRole.Other]: 'text-secondary',
 };

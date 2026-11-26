@@ -45,7 +45,7 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
       className={classNames(
         'flex-1 flex flex-row items-center dial-kit-input py-2 px-3',
         isRuleError && 'border-error',
-        isRuleNew && 'border-accent-secondary',
+        isRuleNew && 'border-success',
       )}
     >
       <div>{ruleLabel}</div>
@@ -63,7 +63,7 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
                 ruleDiff?.items?.includes(tag)
                   ? isTargetError
                     ? 'border-error'
-                    : 'border-accent-secondary'
+                    : 'border-success'
                   : 'border-primary'
               }
             />

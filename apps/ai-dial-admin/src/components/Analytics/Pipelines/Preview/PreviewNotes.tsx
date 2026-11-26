@@ -66,7 +66,7 @@ const PreviewNotes: FC<Props> = ({ notes, isCurrent, isEnabled, kind }) => {
                 <span className="flex flex-wrap items-center gap-2">
                   {t(getNoteTitleKey(note.code))}
                   {note.subject && (
-                    <span className="rounded bg-accent-primary-alpha px-1.5 font-mono dial-tiny-text text-accent-primary">
+                    <span className="rounded bg-control-accent-alpha px-1.5 font-mono dial-tiny-text text-accent">
                       {note.subject}
                     </span>
                   )}

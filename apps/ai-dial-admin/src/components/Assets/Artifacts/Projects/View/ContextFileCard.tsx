@@ -27,7 +27,7 @@ interface Props {
 }
 
 const ACTION_CLASS_NAME =
-  'bg-layer-3 opacity-0 group-hover/context-tile:opacity-100 group-focus-within/context-tile:opacity-100';
+  'bg-layer-sunken opacity-0 group-hover/context-tile:opacity-100 group-focus-within/context-tile:opacity-100';
 
 const getNameWithoutExtension = (name: string): string => {
   const dotIndex = name.lastIndexOf('.');
@@ -47,7 +47,7 @@ const ContextFileCard: FC<Props> = ({ name, size, disabled, onDownload, onRemove
   const displayName = getNameWithoutExtension(name);
 
   return (
-    <div className="group/context-tile relative box-border flex h-[100px] w-[150px] flex-col items-start justify-between gap-2 overflow-hidden rounded-xl border border-primary bg-layer-3 p-3">
+    <div className="group/context-tile relative box-border flex h-[100px] w-[150px] flex-col items-start justify-between gap-2 overflow-hidden rounded-xl border border-primary bg-layer-sunken p-3">
       <div title={displayName} className="dial-tiny-text line-clamp-2 w-full min-w-0 break-words">
         {displayName}
       </div>

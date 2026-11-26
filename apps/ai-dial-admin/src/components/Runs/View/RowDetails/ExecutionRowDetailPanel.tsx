@@ -165,7 +165,7 @@ const ExecutionRowDetailPanel: FC<Props> = ({
   };
 
   return (
-    <div className={classNames('relative flex flex-col w-full h-full min-h-0 overflow-hidden bg-layer-0', className)}>
+    <div className={classNames('relative flex flex-col w-full h-full min-h-0 overflow-hidden bg-control-neutral', className)}>
       <RowDetailHeader
         title={title ?? ''}
         onClose={onClose}
@@ -179,7 +179,7 @@ const ExecutionRowDetailPanel: FC<Props> = ({
       <div className="flex flex-col flex-1 min-h-0 gap-4 px-6 pb-6 overflow-hidden">{renderContent()}</div>
 
       {showDisplayPanel && (
-        <div className="absolute inset-0 flex bg-blackout z-[15]">
+        <div className="absolute inset-0 flex bg-backdrop z-[15]">
           <ExecutionRowDetailDisplayPanel
             columns={displayTree}
             onColumnsChange={setDisplayTree}

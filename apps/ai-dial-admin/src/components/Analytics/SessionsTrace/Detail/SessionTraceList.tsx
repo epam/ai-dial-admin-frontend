@@ -37,7 +37,7 @@ const ICON_SIZE = 14;
 const NOTIFICATION_ICON_SIZE = 16;
 const LOADER_SIZE = 18;
 
-const PANEL_CLASS = 'flex flex-col gap-2 rounded border border-secondary bg-layer-3 px-3 py-2.5';
+const PANEL_CLASS = 'flex flex-col gap-2 rounded border border-secondary bg-layer-sunken px-3 py-2.5';
 
 // One label/value pair of the middle tier. That tier is card-level throughout, so every value in it is read
 // from the card's own root row — never from the trace. The label is what keeps the two registers legible.
@@ -51,7 +51,7 @@ const Fact: FC<{ label: string; children: ReactNode }> = ({ label, children }) =
 const StatusDot: FC<{ isFailed: boolean }> = ({ isFailed }) => (
   <span
     aria-hidden
-    className={classNames('size-1.5 shrink-0 rounded-full', isFailed ? 'bg-error' : 'bg-accent-secondary')}
+    className={classNames('size-1.5 shrink-0 rounded-full', isFailed ? 'bg-error' : 'bg-green-1')}
   />
 );
 
@@ -80,7 +80,7 @@ const TraceTier: FC<{ group: SessionTraceGroup; hasChevron?: boolean; hasTotals?
           {t(SessionsTraceI18nKey.TraceFailuresInside, { count: formatCompactNumber(group.failedSpans) })}
         </span>
       )}
-      <span className="ml-auto flex shrink-0 items-center gap-1 font-mono text-accent-primary dial-tiny-text">
+      <span className="ml-auto flex shrink-0 items-center gap-1 font-mono text-accent dial-tiny-text">
         {t(SessionsTraceI18nKey.TraceCardSpans, { count: formatCompactNumber(group.spans) })}
         {hasChevron && <IconChevronRight size={ICON_SIZE} aria-hidden className="shrink-0" />}
       </span>
@@ -111,18 +111,18 @@ const TraceCard: FC<CardProps> = ({ group, card, ratings, traceTier, hasTraceTot
     <button
       type="button"
       onClick={() => onOpenTrace(group, card)}
-      className={classNames(PANEL_CLASS, 'text-left hover:border-hover focus-visible:border-hover')}
+      className={classNames(PANEL_CLASS, 'text-left hover:border-primary focus-visible:border-primary')}
     >
       {/* Top tier: what this call is, then the trace's headline figures right-aligned. */}
       <span className="flex min-w-0 items-center gap-2">
-        <IconSubtask size={ICON_SIZE} aria-hidden className="shrink-0 text-accent-primary" />
+        <IconSubtask size={ICON_SIZE} aria-hidden className="shrink-0 text-accent" />
         <span className="min-w-0 text-primary dial-small-semi-text">
           <EllipsisTooltip text={title} />
         </span>
         {card.isCoreInternal && (
           <IdentityTag label={t(SessionsTraceI18nKey.TraceCardCoreInternal)} colorClassName="text-warning" />
         )}
-        <span className="max-w-[16ch] shrink-0 rounded bg-layer-4 px-1.5 font-mono text-secondary dial-tiny-text">
+        <span className="max-w-[16ch] shrink-0 rounded bg-control-neutral-hover-muted px-1.5 font-mono text-secondary dial-tiny-text">
           <EllipsisTooltip text={card.traceId} />
         </span>
         <span className={classNames('flex shrink-0 items-center gap-1', isFailed && 'text-error')}>
@@ -194,14 +194,14 @@ const UnrecordedRoot: FC<UnrecordedProps> = ({ group, onOpenTrace }) => {
     <button
       type="button"
       onClick={() => onOpenTrace(group)}
-      className={classNames(PANEL_CLASS, 'text-left hover:border-hover focus-visible:border-hover')}
+      className={classNames(PANEL_CLASS, 'text-left hover:border-primary focus-visible:border-primary')}
     >
       <span className="flex min-w-0 items-center gap-2">
         <IconAlertTriangle size={ICON_SIZE} aria-hidden className="shrink-0 text-secondary" />
         <span className="min-w-0 text-primary dial-small-semi-text">
           {t(SessionsTraceI18nKey.TraceRootNotRecorded)}
         </span>
-        <span className="max-w-[16ch] shrink-0 rounded bg-layer-4 px-1.5 font-mono text-secondary dial-tiny-text">
+        <span className="max-w-[16ch] shrink-0 rounded bg-control-neutral-hover-muted px-1.5 font-mono text-secondary dial-tiny-text">
           <EllipsisTooltip text={group.traceId} />
         </span>
         {/* The trace's figures are real even though its root is not, so the panel still states them — that is
@@ -258,7 +258,7 @@ const TraceGroup: FC<GroupProps> = ({ group, ratings, isCardTheRoot, onOpenTrace
     <div
       role="group"
       aria-label={t(SessionsTraceI18nKey.TraceGroupLabel, { traceId: group.traceId })}
-      className="flex flex-col gap-1.5 rounded border border-secondary bg-layer-2 p-2"
+      className="flex flex-col gap-1.5 rounded border border-secondary bg-layer-raised p-2"
     >
       {group.cards.map((card) => (
         <TraceCard
@@ -341,7 +341,7 @@ const SessionTraceList: FC<Props> = ({
 
   if (!groups.length && !isLoading) {
     return (
-      <div className="flex flex-1 flex-col justify-center bg-layer-1">
+      <div className="flex flex-1 flex-col justify-center bg-layer-base">
         <NoDataContent
           icon={
             hasLoadError ? (
@@ -363,7 +363,7 @@ const SessionTraceList: FC<Props> = ({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-layer-1">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-layer-base">
       <div className="flex flex-col gap-1.5 p-4">
         {/* States the rule the listing follows, so a reader knows what one panel stands for without having to
             infer it. Deliberately not "turn": the data records no turn index. */}

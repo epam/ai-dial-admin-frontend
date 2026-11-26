@@ -123,7 +123,7 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, isLoading }) => {
             <TrendScoreAxis />
             <div
               ref={plotRef}
-              className="min-h-0 min-w-0 flex-1 overflow-hidden rounded border border-secondary bg-layer-2"
+              className="min-h-0 min-w-0 flex-1 overflow-hidden rounded border border-secondary bg-layer-raised"
               style={{ minHeight: OVERALL_SCORE_PLOT_MIN_HEIGHT_PX }}
             >
               {/* Mounted only once the width is measured: a first `setOption` without it would be re-applied

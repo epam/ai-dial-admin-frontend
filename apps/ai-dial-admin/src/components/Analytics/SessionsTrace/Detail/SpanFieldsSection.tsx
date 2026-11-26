@@ -31,7 +31,7 @@ const SpanFieldsSection: FC<Props> = ({ groups, row, isRecord, summaryFields, le
       {groups.length === 0 ? (
         <p className="text-secondary dial-tiny-text">{t(SessionsTraceI18nKey.SpanFieldsUnavailable)}</p>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded border border-secondary bg-layer-3 p-1">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded border border-secondary bg-layer-sunken p-1">
           {lead && <div className="px-2 pb-2 pt-1.5">{lead}</div>}
           {groups.map((group) => (
             <SpanGroupPanel

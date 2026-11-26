@@ -242,7 +242,7 @@ const ParametersTab: FC<Props> = ({
                 {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
                   <NoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
                 ) : (
-                  <div key={discardKey} className="flex-1 min-h-0 p-4 bg-layer-0">
+                  <div key={discardKey} className="flex-1 min-h-0 p-4 bg-control-neutral">
                     <SchemaUiRenderer
                       schema={jsonSchema}
                       data={applicationProperties}

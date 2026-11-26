@@ -27,7 +27,7 @@ const MetricInfoCard: FC<Props> = ({ title, info, isOpen, onToggle, highlights =
 
   return (
     <div
-      className={classNames('flex flex-col min-h-0 rounded bg-layer-2 overflow-hidden', isOpen ? 'flex-1' : 'shrink-0')}
+      className={classNames('flex flex-col min-h-0 rounded bg-layer-raised overflow-hidden', isOpen ? 'flex-1' : 'shrink-0')}
     >
       <div className="flex items-center justify-between gap-2 px-4 py-3 select-none shrink-0">
         <button
@@ -50,7 +50,7 @@ const MetricInfoCard: FC<Props> = ({ title, info, isOpen, onToggle, highlights =
         </span>
       </div>
       {isOpen && (
-        <div id={contentId} className="flex-1 min-h-0 bg-layer-0">
+        <div id={contentId} className="flex-1 min-h-0 bg-control-neutral">
           <HighlightedEditor text={info.text} language={info.language} highlights={highlights} />
         </div>
       )}
