@@ -49,6 +49,69 @@ describe('Server :: Assets :: import-export-action :: runAssetImportAction', () 
     expect(result).toEqual({ success: true, response: { importResults: [{ status: 'success' }] } });
   });
 
+  test.each([ImportFileType.JSON, ImportFileType.ARCHIVE])(
+    'accepts a %s exactly at the size limit',
+    async (fileType) => {
+      const body = new FormData();
+      body.append('config', new Blob([JSON.stringify({ path: 'public/', conflictResolutionStrategy: 'skip' })]));
+      body.append('file', new Blob(['{}']), 'import');
+      const file = body.get('file') as File;
+      Object.defineProperty(file, 'size', { value: 64 * 1024 * 1024 });
+      const extractFromZip = vi.fn().mockResolvedValue({});
+      const importExport = vi.fn().mockResolvedValue({ importResults: [] });
+
+      const result = await runAssetImportAction('token' as any, body, fileType, {
+        assetApi: {} as any,
+        extractFromZip,
+        importExport,
+      });
+
+      expect(result.success).toBe(true);
+      expect(importExport).toHaveBeenCalledOnce();
+    },
+  );
+
+  test.each([ImportFileType.JSON, ImportFileType.ARCHIVE])(
+    'rejects an oversized %s before reading it',
+    async (fileType) => {
+      const body = new FormData();
+      const file = new File(['{}'], 'import');
+      Object.defineProperty(file, 'size', { value: 64 * 1024 * 1024 + 1 });
+      body.append('config', new Blob([JSON.stringify({ path: 'public/', conflictResolutionStrategy: 'skip' })]));
+      const config = body.get('config');
+      vi.spyOn(body, 'get').mockImplementation((key) => (key === 'file' ? file : config));
+      const extractFromZip = vi.fn();
+      const importExport = vi.fn();
+
+      const result = await runAssetImportAction('token' as any, body, fileType, {
+        assetApi: {} as any,
+        extractFromZip,
+        importExport,
+      });
+
+      expect(result).toEqual({ success: false, errorHeader: 'Bad Request', errorMessage: 'Import file exceeds 64 MB' });
+      expect(extractFromZip).not.toHaveBeenCalled();
+      expect(importExport).not.toHaveBeenCalled();
+    },
+  );
+
+  test('rejects oversized configuration before reading it', async () => {
+    const body = new FormData();
+    const config = new File(['{}'], 'config.json');
+    Object.defineProperty(config, 'size', { value: 1024 * 1024 + 1 });
+    vi.spyOn(body, 'get').mockReturnValue(config);
+    const importExport = vi.fn();
+
+    const result = await runAssetImportAction('token' as any, body, ImportFileType.JSON, {
+      assetApi: {} as any,
+      extractFromZip: vi.fn(),
+      importExport,
+    });
+
+    expect(result).toEqual({ success: false, errorHeader: 'Bad Request', errorMessage: 'Import config exceeds 1 MB' });
+    expect(importExport).not.toHaveBeenCalled();
+  });
+
   test('extracts a zip archive before delegating, and surfaces extraction errors', async () => {
     const extractFromZip = vi.fn().mockRejectedValue(new Error('bad zip'));
     const body = new FormData();

@@ -80,7 +80,7 @@ describe('SingleValueAutocomplete', () => {
     const jsonPath = '$.usage.details.very.long.nested.path.used.only.to.verify.the.field.tag.clear.control';
     renderAutocomplete({ value: jsonPath, onChange });
 
-    await userEvent.click(screen.getByRole('button', { name: 'Buttons.Remove' }));
+    await userEvent.click(screen.getByRole('button', { name: `Buttons.Remove ${jsonPath}` }));
 
     expect(onChange).toHaveBeenCalledWith('');
   });
@@ -95,15 +95,10 @@ describe('SingleValueAutocomplete', () => {
     expect(screen.queryByText('Ttl')).toBeNull();
   });
 
-  test('does not allow a disabled selected value to be removed', async () => {
-    const onChange = vi.fn();
-    renderAutocomplete({ value: 'ttl', disabled: true, onChange });
+  test('does not render a remove control for a disabled selected value', () => {
+    renderAutocomplete({ value: 'ttl', disabled: true });
 
-    const removeButton = screen.getByRole('button', { name: 'Buttons.Remove' });
-    expect(removeButton).toBeDisabled();
-
-    await userEvent.click(removeButton);
-    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: /Buttons\.Remove/ })).toBeNull();
   });
 
   test('disables the input when disabled', () => {

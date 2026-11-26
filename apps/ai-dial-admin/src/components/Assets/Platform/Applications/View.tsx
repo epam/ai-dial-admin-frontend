@@ -10,6 +10,8 @@ import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils'
 import TabsContent from '@/src/components/Applications/View/TabsContent';
 import { resolveAppRunnerScheme } from '@/src/components/SourceField/Application/resolve-app-runner';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
+import { getAssetApplicationDeploymentId } from '@/src/components/TryOut/Deployment/utils/get-asset-deployment-id';
+import DeploymentTryOutButton from '@/src/components/TryOut/Deployment/DeploymentTryOutButton';
 import ApplicationGrafanaLinks from '@/src/components/Assets/ApplicationGrafanaLinks/ApplicationGrafanaLinks';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -307,6 +309,7 @@ const PlatformApplicationView: FC<Props> = ({
         getAssetContext={useAppsFolder}
       >
         <ApplicationGrafanaLinks links={grafanaLinks} />
+        <DeploymentTryOutButton deployment={getAssetApplicationDeploymentId(originalApp)} />
       </SimpleEntityHeader>
 
       <div className={ENTITY_VIEW_SCROLL_CLASS_NAME}>

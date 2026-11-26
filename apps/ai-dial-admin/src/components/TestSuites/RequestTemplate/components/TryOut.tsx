@@ -1,28 +1,24 @@
 'use client';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { CloseButton, GhostButton, Spinner, OutlinedButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
+import { GhostButton, OutlinedButton, PrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconEdit, IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { tryOutTestCase, tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
-import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import {
   getTryoutResponseFromStorage,
   saveTryoutResponseToStorage,
 } from '@/src/components/TestSuites/utils/tryout-storage';
-import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import {
   SuiteType,
   TestCase,
   TestCaseSchema,
   TestSuite,
-  TryOutCoreResponse,
   TryOutResponse,
   TryOutVariablesByRequest,
 } from '@/src/models/evaluation/test-suite';
@@ -32,11 +28,11 @@ import {
   unwrapJsonRequestBody,
 } from '@/src/components/TestSuites/utils/column-eval-context';
 import { TryOutInvocation } from '@/src/components/TestSuites/utils/models';
-import { toTryOutJsonEditorProps } from '@/src/components/TestSuites/utils/tryout-json-editor';
+import TryOutHeader from '@/src/components/TryOut/components/TryOutHeader';
+import TryOutResponseBody from '@/src/components/TryOut/components/TryOutResponseBody';
+import { useCloseTryOutSidebar } from '@/src/components/TryOut/hooks/use-try-out-sidebar';
 import { getRequestTurnCounts, getTryOutSectionShape } from '@/src/utils/evaluation/tryout-sections';
-import CollapsibleSection from './CollapsibleSection';
 import TryOutColumns from './TryOutColumns';
-import TryOutEventsSection from './TryOutEventsSection';
 import TryOutRequestPreview from './TryOutRequestPreview';
 import TryOutRequestTabs from './TryOutRequestTabs';
 import TryOutResponsePreview from './TryOutResponse';
@@ -48,44 +44,9 @@ interface Props {
   initialTestCase?: TestCase;
 }
 
-const TryOutResponseBody: FC<{
-  response: TryOutCoreResponse | null;
-  isRequestSend: boolean;
-  growOnOpen: boolean;
-}> = ({ response, isRequestSend, growOnOpen }) => {
-  const t = useI18n();
-  const copyText = useMemo(() => (response?.body != null ? JSON.stringify(response.body, null, 2) : ''), [response]);
-  const editorProps = useMemo(() => toTryOutJsonEditorProps(response?.body, { wordWrap: 'off' }), [response?.body]);
-
-  return (
-    <div className="flex flex-col gap-y-4 shrink-0">
-      <CollapsibleSection
-        title={t(BasicI18nKey.Response)}
-        fullViewContent={copyText}
-        headerIcon={<CopyButton value={copyText} valueLabel={t(BasicI18nKey.Response)} />}
-        growOnOpen={growOnOpen}
-      >
-        {isRequestSend ? (
-          <Spinner size={18} fullWidth />
-        ) : (
-          <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64 min-h-64'}>
-            <JsonEditor
-              entity={editorProps.entity}
-              text={editorProps.text}
-              options={editorProps.options}
-              readonly={true}
-            />
-          </div>
-        )}
-      </CollapsibleSection>
-      <TryOutEventsSection streaming={response?.streaming} events={response?.events} isLoading={isRequestSend} />
-    </div>
-  );
-};
-
 const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) => {
   const t = useI18n();
-  const { sidebar, toggleSidebar } = useAppContext();
+  const onClose = useCloseTryOutSidebar();
   const isMcp = testSuite.suiteType === SuiteType.McpTool;
   const tabs = [responseTab(t), columnsTab(t)];
   const [activeTab, setActiveTab] = useState(tabs[0].id as EntityViewTab);
@@ -121,14 +82,6 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
   const onChangeRequestBody = useCallback((body: TryOutVariablesByRequest) => {
     setRequestBody(body);
   }, []);
-
-  const onClose = useCallback(() => {
-    if (sidebar.isMenuClosed) {
-      toggleSidebar();
-      sidebar.toggleIsMenuClosed?.();
-    }
-    sidebar.closeSidebar();
-  }, [sidebar, toggleSidebar]);
 
   const onSendRequest = useCallback(async () => {
     setIsRequestSend(true);
@@ -180,10 +133,9 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
     <div className={classNames('flex flex-col gap-y-6 size-full min-h-0', !response && 'pb-4')}>
       <>
         <div className="flex flex-col gap-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-row items-center gap-3">
-              <h1>{t(ButtonsI18nKey.TryOut)}</h1>
-              {response ? (
+          <TryOutHeader
+            leadingActions={
+              response ? (
                 <div className="flex flex-row items-center gap-4">
                   <GhostButton
                     disabled={isRequestSend}
@@ -202,11 +154,9 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
                     />
                   )}
                 </div>
-              ) : null}
-            </div>
-
-            <CloseButton onClose={onClose} />
-          </div>
+              ) : null
+            }
+          />
           <p className="text-secondary dial-small-text">{t(TestSuitesI18nKey.TryoutWarning)}</p>
         </div>
         {response ? (

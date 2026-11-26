@@ -4,6 +4,7 @@ import { EXECUTION_STATUS_FIELD_KEY } from '@/src/components/Runs/Details/Bottom
 import { OVERALL_SCORE_HEADER } from '@/src/components/Runs/constants';
 import { getRoundedTestCaseScore } from '@/src/components/Runs/utils/test-case-scores';
 import {
+  isMetricHighlightFieldKey,
   ROW_DETAIL_DURATION_FIELD_KEY,
   ROW_DETAIL_EXECUTION_SECTION_KEY,
   ROW_DETAIL_HTTP_FIELD_KEY,
@@ -193,6 +194,8 @@ export const buildRowDetailSections = (
     const rows = section.rows.map((row): RowDetailField => {
       const primaryRaw = row.values[0]?.raw ?? null;
       const secondaryRaw = hasCompared ? (row.values[1]?.raw ?? null) : null;
+      // Highlight columns sit in a metric section but are not score leaves — they open the text popup.
+      const fieldIsMetric = isMetric && !isMetricHighlightFieldKey(row.fieldKey);
 
       return {
         fieldKey: row.fieldKey,
@@ -207,7 +210,7 @@ export const buildRowDetailSections = (
         isNumeric: row.isNumeric,
         isScoreIndicator:
           isScoreIndicatorRaw(primaryRaw, row.isNumeric) || isScoreIndicatorRaw(secondaryRaw, row.isNumeric),
-        isMetric,
+        isMetric: fieldIsMetric,
       };
     });
 

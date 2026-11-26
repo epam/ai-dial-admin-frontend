@@ -19,9 +19,9 @@ import {
 import { BasicI18nKey, TestSuitesI18nKey, ValidityStatusI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ResponseColumn, TestCaseSchema, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
-import { toTryOutJsonEditorProps } from '@/src/components/TestSuites/utils/tryout-json-editor';
-import CollapsibleSection from './CollapsibleSection';
-import TryOutEventsSection from './TryOutEventsSection';
+import { toTryOutJsonEditorProps } from '@/src/components/TryOut/utils/tryout-json-editor';
+import CollapsibleSection from '@/src/components/TryOut/components/CollapsibleSection';
+import TryOutEventsSection from '@/src/components/TryOut/components/TryOutEventsSection';
 
 interface Props {
   isLoading?: boolean;

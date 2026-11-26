@@ -1,5 +1,5 @@
 import { appContextMock } from '@/test-mocks/app-context';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FC, useCallback, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -513,19 +513,30 @@ describe('ExtractionResultTab — grouping by test case', () => {
   test('clears the sort and filter when grouping is switched on or off', async () => {
     const user = userEvent.setup();
     renderGrouped();
-    await screen.findByRole('grid', { name: 'Analytics grid' });
+    // Grouping only turns on once the results arrive, and that flip clears the grid too: wait for it
+    // and flush its effects so none lands after the mocks are cleared.
+    expect(await screen.findByRole('grid', { name: 'Analytics grid' })).toHaveAttribute(
+      'data-row-types',
+      JSON.stringify(['group', 'result', 'group', 'result']),
+    );
+    await act(async () => {});
     gridApiMock.setFilterModel.mockClear();
     gridApiMock.applyColumnState.mockClear();
 
     await user.click(screen.getByRole('button', { name: 'Toggle grouping' }));
 
+    expect(gridApiMock.setFilterModel).toHaveBeenCalledOnce();
     expect(gridApiMock.setFilterModel).toHaveBeenCalledWith(null);
+    expect(gridApiMock.applyColumnState).toHaveBeenCalledOnce();
     expect(gridApiMock.applyColumnState).toHaveBeenCalledWith({ defaultState: { sort: null } });
+
+    gridApiMock.setFilterModel.mockClear();
+    gridApiMock.applyColumnState.mockClear();
 
     await user.click(screen.getByRole('button', { name: 'Toggle grouping' }));
 
-    expect(gridApiMock.setFilterModel).toHaveBeenCalledTimes(2);
-    expect(gridApiMock.applyColumnState).toHaveBeenCalledTimes(2);
+    expect(gridApiMock.setFilterModel).toHaveBeenCalledOnce();
+    expect(gridApiMock.applyColumnState).toHaveBeenCalledOnce();
   });
 
   test('redraws the rows once the grid has taken new columns, so group rows drop the flat list dashes', async () => {

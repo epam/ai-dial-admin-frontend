@@ -1,5 +1,10 @@
+import {
+  getMetricHighlightFieldKey,
+  getMetricHighlightLabel,
+} from '@/src/components/Runs/Details/RowDetails/constants';
 import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { getMetricFieldInfo } from '@/src/components/Runs/Details/RowDetails/utils/metric-field-info';
+import { getMetricInfoHighlightRaw } from '@/src/components/Runs/Details/RowDetails/utils/metric-highlight';
 import { MetricBinding, MetricBindings } from '@/src/models/evaluation/metric';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { serializeValue } from '@/src/utils/serialize';
@@ -151,7 +156,8 @@ export function buildComparisonSections(
     addRecordKeys(fieldKeys, activeGroup);
     addRecordKeys(fieldKeys, pinnedGroup);
 
-    const rows: ComparisonRow[] = [...fieldKeys].map((fieldKey) => {
+    const rows: ComparisonRow[] = [];
+    for (const fieldKey of fieldKeys) {
       const activeRaw = serializeValue(activeGroup?.[fieldKey]);
       const pinnedRaw = serializeValue(pinnedGroup?.[fieldKey]);
       const activeCell = {
@@ -166,7 +172,7 @@ export function buildComparisonSections(
       };
       const values: ComparisonRow['values'] = hasTwoResults ? [activeCell, pinnedCell] : [activeCell];
 
-      return {
+      rows.push({
         fieldKey,
         label: fieldKey,
         isNumeric:
@@ -174,8 +180,22 @@ export function buildComparisonSections(
           typeof pinnedGroup?.[fieldKey] === 'number' ||
           typeof schemaGroup?.[fieldKey] === 'number',
         values,
-      };
-    });
+      });
+
+      // A leaf's `metricInfos` highlight becomes its own pivot column, next to the numeric output.
+      const activeHighlightRaw = getMetricInfoHighlightRaw(active.metricInfos?.[groupKey], fieldKey);
+      const pinnedHighlightRaw = getMetricInfoHighlightRaw(effectivePinned?.metricInfos?.[groupKey], fieldKey);
+      if (activeHighlightRaw != null || pinnedHighlightRaw != null) {
+        rows.push({
+          fieldKey: getMetricHighlightFieldKey(fieldKey),
+          label: getMetricHighlightLabel(fieldKey),
+          isNumeric: false,
+          values: hasTwoResults
+            ? [{ raw: activeHighlightRaw }, { raw: pinnedHighlightRaw }]
+            : [{ raw: activeHighlightRaw }],
+        });
+      }
+    }
 
     const sectionKey = `metric:${groupKey}`;
     sectionsMap.set(sectionKey, { key: sectionKey, label: groupKey, rows });

@@ -1,12 +1,12 @@
-import { FC, MouseEvent, ReactNode, useCallback } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 
 import { OutlinedButton } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import TryOut from '@/src/components/Tools/Tool/TryOut';
+import { useOpenTryOutSidebar } from '@/src/components/TryOut/hooks/use-try-out-sidebar';
 import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import { useAppContext } from '@/src/context/AppContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Tool as ToolType } from '@/src/models/dial/toolset';
@@ -38,31 +38,23 @@ const ToolHeader: FC<Props> = ({
   view,
 }) => {
   const t = useI18n();
-  const { sidebar, sidebarOpen, toggleSidebar } = useAppContext();
 
-  const openTryOutSidebar = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-      sidebar.showSidebar(
-        <SaveValidationContextProvider>
-          <TryOut
-            tool={tool}
-            toolSetName={toolSetName}
-            isAssetToolset={isAssetToolset}
-            isMcpToolset={isMcpToolset}
-            containerId={containerId}
-            view={view}
-          />
-        </SaveValidationContextProvider>,
-        'w-1/2 max-w-[800px]',
-      );
-      if (sidebarOpen) {
-        sidebar.toggleIsMenuClosed?.();
-        toggleSidebar(e);
-      }
-    },
-    [containerId, isAssetToolset, isMcpToolset, sidebar, sidebarOpen, toggleSidebar, tool, toolSetName, view],
+  const content = useMemo(
+    () => (
+      <SaveValidationContextProvider>
+        <TryOut
+          tool={tool}
+          toolSetName={toolSetName}
+          isAssetToolset={isAssetToolset}
+          isMcpToolset={isMcpToolset}
+          containerId={containerId}
+          view={view}
+        />
+      </SaveValidationContextProvider>
+    ),
+    [containerId, isAssetToolset, isMcpToolset, tool, toolSetName, view],
   );
+  const openTryOutSidebar = useOpenTryOutSidebar(content);
 
   return (
     <div className="w-full flex flex-row items-center justify-between">

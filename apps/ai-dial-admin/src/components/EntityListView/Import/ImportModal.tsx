@@ -1,7 +1,7 @@
 'use client';
 
-import { Popup, Steps, StepStatus } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { ErrorText, Popup, Steps, StepStatus } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getStepStatusLabels } from '@/src/components/Common/Steps/utils';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
@@ -14,6 +14,7 @@ import {
   isInvalidJson,
 } from '@/src/components/EntityListView/Import/utils';
 import { IMPORT_FILE_TYPES, IMPORT_RESOLUTIONS, IMPORT_STEPS } from '@/src/constants/import';
+import { ImportI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_ZIP_TYPES } from '@/src/constants/request-headers';
 import type { AssetsFolderContextReader } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
@@ -36,7 +37,13 @@ interface Props {
   route?: ApplicationRoute;
   getAssetContext?: () => AssetsFolderContextReader<AssetListItem>;
   onClose: () => void;
-  onApply?: (fileType: FileType, file: ImportData, resolution: string, path: string, ignorePaths?: boolean) => void;
+  onApply?: (
+    fileType: FileType,
+    file: ImportData,
+    resolution: string,
+    path: string,
+    ignorePaths?: boolean,
+  ) => ImportI18nKey | void;
   preselectedItems?: File[];
   /** `ENABLE_UNSAFE_TOOLSET_IMPORT`: lets a toolset JSON import supply a client secret for its OAUTH toolsets. */
   isUnsafeImportEnabled?: boolean;
@@ -65,12 +72,14 @@ const ImportModal: FC<Props> = ({
   const [ignorePaths, setIgnorePaths] = useState(false);
   const [fileType, setFileType] = useState(fileTypes[0].id);
   const [resolution, setResolution] = useState(resolutions[0].id);
+  const [submissionError, setSubmissionError] = useState<ImportI18nKey>();
 
   const [zipFile, setZipFile] = useState<File | null>();
   const [jsonFiles, setJsonFiles] = useState<File[]>([]);
   const [separateFiles, setSeparateFiles] = useState<File[]>([]);
 
   const [jsonFileMap, setJsonFileMap] = useState(new Map<string, FileImportMap>());
+  const fileSelectionVersion = useRef(0);
   const [editedFileMap, setEditedFileMap] = useState(new Map<string, FileImportMap>());
 
   const [separateFileMap, setSeparateFileMap] = useState(new Map<string, FileImportMap>());
@@ -85,21 +94,29 @@ const ImportModal: FC<Props> = ({
   const shouldHandleClientSecrets =
     !!isUnsafeImportEnabled && route === ApplicationRoute.AssetsToolsets && fileType === FileType.JSON;
 
+  const { maxFileSizeMb, maxMultiFilesSizeMb } = getImportSizeLimits(route);
+  const isFileSizeExceeded =
+    fileType !== FileType.FILES && files.some((file) => file.size > maxFileSizeMb * 1024 * 1024);
+  const isFileCountExceeded = fileType !== FileType.ARCHIVE && files.length > MAX_FILES_COUNT;
+
   const totalFileSizeExceeded = useMemo(() => {
     if (fileType === FileType.ARCHIVE) {
       return false;
     }
 
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    return totalSize > getImportSizeLimits(route).maxMultiFilesSizeMb * 1024 * 1024;
-  }, [fileType, files, route]);
+    return totalSize > maxMultiFilesSizeMb * 1024 * 1024;
+  }, [fileType, files, maxMultiFilesSizeMb]);
 
   const onReadJsonFile = useCallback(
-    (file: File | null, urlToRemove?: string) => {
+    (file: File | null, selectionVersion: number, urlToRemove?: string) => {
       if (file) {
         const reader = new FileReader();
 
         reader.onload = () => {
+          if (selectionVersion !== fileSelectionVersion.current) {
+            return;
+          }
           try {
             const parsedData: ParsedAssets = JSON.parse(reader.result as string);
             const isInvalid = isInvalidJson(parsedData, route);
@@ -141,6 +158,7 @@ const ImportModal: FC<Props> = ({
 
   const onChangeFileType = useCallback(
     (type: string) => {
+      fileSelectionVersion.current += 1;
       setSteps((prev) => {
         const index = prev.findIndex((step) => step.id === ImportSteps.PROPERTIES);
         return prev.map((item, i) => (i === index ? { ...item, status: void 0 } : item));
@@ -162,6 +180,7 @@ const ImportModal: FC<Props> = ({
 
   const changeFiles = useCallback(
     (files: File[], type: string) => {
+      const selectionVersion = ++fileSelectionVersion.current;
       setEditedFileMap(new Map());
 
       if (type === FileType.ARCHIVE) {
@@ -169,24 +188,27 @@ const ImportModal: FC<Props> = ({
           setZipFile(files[0]);
         }
       } else if (type === FileType.JSON) {
-        const sliced = files.slice(0, MAX_FILES_COUNT);
-
         setJsonFileMap(new Map());
-        sliced.forEach((file) => onReadJsonFile(file));
-        setJsonFiles(sliced);
+        if (
+          files.length <= MAX_FILES_COUNT &&
+          files.every((file) => file.size <= maxFileSizeMb * 1024 * 1024) &&
+          files.reduce((sum, file) => sum + file.size, 0) <= maxMultiFilesSizeMb * 1024 * 1024
+        ) {
+          files.forEach((file) => onReadJsonFile(file, selectionVersion));
+        }
+        setJsonFiles(files);
       } else {
-        const sliced = files.slice(0, MAX_FILES_COUNT);
         const newSeparateFileMap = new Map<string, FileImportMap>();
 
-        sliced.forEach((file) => {
+        files.forEach((file) => {
           newSeparateFileMap.set(file.name, { files: [file] as unknown as DialFile[], isInvalid: false });
         });
 
         setSeparateFileMap(newSeparateFileMap);
-        setSeparateFiles(sliced);
+        setSeparateFiles(files);
       }
     },
-    [onReadJsonFile],
+    [maxFileSizeMb, maxMultiFilesSizeMb, onReadJsonFile],
   );
 
   const onChangeFile = useCallback(
@@ -218,15 +240,21 @@ const ImportModal: FC<Props> = ({
   );
 
   const onFinishClick = () => {
+    if (isFileSizeExceeded || isFileCountExceeded || totalFileSizeExceeded) {
+      return;
+    }
+    setSubmissionError(undefined);
     if (fileType === FileType.ARCHIVE) {
-      onApply?.(fileType, zipFile as File, resolution, folderContext?.filePath as string, ignorePaths);
+      const error = onApply?.(fileType, zipFile as File, resolution, folderContext?.filePath as string, ignorePaths);
+      if (error) setSubmissionError(error);
     } else if (fileType === FileType.JSON) {
       const map = editedFileMap.size ? editedFileMap : jsonFileMap;
       const files = Array.from(map.values()).flatMap((value) => value.files as DialPrompt[]);
       const jsonFile = {
         [getJsonFileName(route)]: shouldHandleClientSecrets ? applyToolsetClientSecrets(files, resolution) : files,
       };
-      onApply?.(fileType, jsonFile, resolution, folderContext?.filePath as string, ignorePaths);
+      const error = onApply?.(fileType, jsonFile, resolution, folderContext?.filePath as string, ignorePaths);
+      if (error) setSubmissionError(error);
     } else if (fileType === FileType.FILES) {
       const map = editedFileMap.size ? editedFileMap : separateFileMap;
       onApply?.(
@@ -265,11 +293,27 @@ const ImportModal: FC<Props> = ({
   useEffect(() => {
     if (currentStepId === ImportSteps.FILES) {
       const zipStatus = zipFile ? StepStatus.VALID : void 0;
-      const filesStatus = getMultipleImportStatus(fileType === FileType.JSON ? jsonFileMap : separateFileMap);
-      const status = fileType === FileType.ARCHIVE ? zipStatus : totalFileSizeExceeded ? StepStatus.ERROR : filesStatus;
+      const hasPendingJson = fileType === FileType.JSON && files.some((file) => !jsonFileMap.has(file.name));
+      const filesStatus = hasPendingJson
+        ? undefined
+        : getMultipleImportStatus(fileType === FileType.JSON ? jsonFileMap : separateFileMap);
+      const hasLimitError = isFileSizeExceeded || isFileCountExceeded || totalFileSizeExceeded;
+      const fileStatus = fileType === FileType.ARCHIVE ? zipStatus : filesStatus;
+      const status = hasLimitError ? StepStatus.ERROR : fileStatus;
       onChangeSteps(status);
     }
-  }, [zipFile, fileType, onChangeSteps, jsonFileMap, currentStepId, separateFileMap, totalFileSizeExceeded]);
+  }, [
+    zipFile,
+    fileType,
+    files,
+    onChangeSteps,
+    jsonFileMap,
+    currentStepId,
+    separateFileMap,
+    totalFileSizeExceeded,
+    isFileSizeExceeded,
+    isFileCountExceeded,
+  ]);
 
   return (
     <Popup
@@ -307,11 +351,18 @@ const ImportModal: FC<Props> = ({
             isInvalid={isInvalidFile}
             maxFilesCount={MAX_FILES_COUNT}
             totalFileSizeExceeded={totalFileSizeExceeded}
+            isFileSizeExceeded={isFileSizeExceeded}
+            isFileCountExceeded={isFileCountExceeded}
             ignorePaths={ignorePaths}
             setIgnorePaths={setIgnorePaths}
             route={route}
           />
         </div>
+        {submissionError && (
+          <div role="alert">
+            <ErrorText text={t(submissionError, { size: maxFileSizeMb })} />
+          </div>
+        )}
         {currentStepId === ImportSteps.PROPERTIES && (
           <ImportConflicts
             route={route}

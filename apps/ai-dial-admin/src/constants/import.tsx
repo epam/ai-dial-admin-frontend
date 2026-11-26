@@ -34,7 +34,7 @@ export const ARCHIVE_IMPORT_TYPE = (t: TranslateFn, route?: ApplicationRoute) =>
   name: t(ImportI18nKey.DialArchive),
   content: (
     <div className="dial-tiny-text ml-[33px]">
-      {route === ApplicationRoute.Files
+      {route === ApplicationRoute.Files || isAssetWithVersion(route) || route === ApplicationRoute.Prompts
         ? t(ImportI18nKey.DialArchiveWithLimitDescription, { size: getImportSizeLimits(route).maxFileSizeMb })
         : t(ImportI18nKey.DialArchiveDescription)}
     </div>
