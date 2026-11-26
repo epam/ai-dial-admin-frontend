@@ -96,7 +96,7 @@ describe('buildRowDetailSections', () => {
     const highlightRow = metricRows[precisionIndex + 1];
 
     expect(highlightRow?.fieldKey).toBe('precision:highlight');
-    expect(highlightRow?.label).toBe('highlight');
+    expect(highlightRow?.label).toBe('precision highlight');
     expect(highlightRow?.isMetric).toBe(false);
     expect(highlightRow?.isNumeric).toBe(false);
     expect(highlightRow?.primaryRaw).toContain('"corpus"');

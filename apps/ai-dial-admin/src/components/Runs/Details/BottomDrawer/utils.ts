@@ -1,6 +1,6 @@
 import {
   getMetricHighlightFieldKey,
-  METRIC_INFO_HIGHLIGHT_KEY,
+  getMetricHighlightLabel,
 } from '@/src/components/Runs/Details/RowDetails/constants';
 import { RowDetailFieldSchema } from '@/src/components/Runs/Details/RowDetails/models';
 import { getMetricFieldInfo } from '@/src/components/Runs/Details/RowDetails/utils/metric-field-info';
@@ -188,7 +188,7 @@ export function buildComparisonSections(
       if (activeHighlightRaw != null || pinnedHighlightRaw != null) {
         rows.push({
           fieldKey: getMetricHighlightFieldKey(fieldKey),
-          label: METRIC_INFO_HIGHLIGHT_KEY,
+          label: getMetricHighlightLabel(fieldKey),
           isNumeric: false,
           values: hasTwoResults
             ? [{ raw: activeHighlightRaw }, { raw: pinnedHighlightRaw }]
