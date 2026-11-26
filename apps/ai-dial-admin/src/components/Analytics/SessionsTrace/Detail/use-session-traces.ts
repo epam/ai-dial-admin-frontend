@@ -58,8 +58,8 @@ export const useSessionTraces = ({ scope, projectId, firstRequestTime, lastReque
       }
 
       const page = (result.response?.groups ?? []) as SessionTraceGroup[];
-      const fresh = page.filter(({ traceId }) => !loadedIdsRef.current.has(traceId));
-      fresh.forEach(({ traceId }) => loadedIdsRef.current.add(traceId));
+      const fresh = page.filter(({ traceId: groupTraceId }) => !loadedIdsRef.current.has(groupTraceId));
+      fresh.forEach(({ traceId: groupTraceId }) => loadedIdsRef.current.add(groupTraceId));
 
       cursorRef.current = result.response?.cursor ?? null;
       setGroups((loaded) => [...loaded, ...fresh]);
