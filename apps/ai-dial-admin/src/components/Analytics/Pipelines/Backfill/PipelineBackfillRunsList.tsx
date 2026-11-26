@@ -44,8 +44,8 @@ const PipelineBackfillRunsList: FC<Props> = ({ runs, isGroupTrigger, selectedRun
                 type="button"
                 aria-current={isSelected}
                 className={classNames(
-                  'flex w-full items-center justify-between gap-x-2 rounded px-2 py-2 text-left dial-small hover:bg-layer-3 focus-visible:bg-layer-3',
-                  isSelected && 'bg-layer-3',
+                  'flex w-full items-center justify-between gap-x-2 rounded px-2 py-2 text-left dial-small hover:bg-layer-sunken focus-visible:bg-layer-sunken',
+                  isSelected && 'bg-layer-sunken',
                 )}
                 onClick={() => onSelect(run.id)}
               >

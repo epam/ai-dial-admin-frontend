@@ -18,6 +18,7 @@ import {
   SessionsField,
   FeedbackFilter,
   ResponseRatingsField,
+  SessionTracePageField,
   UsageLogField,
 } from '@/src/models/analytics/sessions-trace';
 import {
@@ -39,6 +40,7 @@ import {
 } from '@/src/models/analytics/query';
 import { SessionsSource } from '@/src/models/analytics/sessions-source';
 import { TimeRange } from '@/src/models/time-range';
+import { and, eq, ge, le, lt, offsetPage, or, value } from '@/src/utils/analytics/query-build';
 import {
   buildArrayValueResolutionQuery,
   buildSessionFieldValuesQuery,
@@ -759,19 +761,72 @@ describe('buildSessionRatedResponsesQuery', () => {
 
 describe('buildSessionTracePageQuery', () => {
   const WINDOW = { fromMs: 1000, toMs: 2000 };
+  const SCOPE = { id: 'chat-1', source: 'chat_id' };
 
   test('filters by the project when one is known', () => {
     const args = groupArgs(
-      buildSessionTracePageQuery({ id: 'chat-1', source: 'chat_id' }, 'acme', WINDOW, 0, 10).filter,
+      buildSessionTracePageQuery({ id: 'chat-1', source: 'chat_id' }, 'acme', WINDOW, null, 10).filter,
     );
 
     expect(args.map(fieldName)).toContain(UsageLogField.ProjectId);
   });
 
   test('drops the project predicate when the session has no project', () => {
-    const args = groupArgs(buildSessionTracePageQuery({ id: 'chat-1', source: 'chat_id' }, null, WINDOW, 0, 10).filter);
+    const args = groupArgs(
+      buildSessionTracePageQuery({ id: 'chat-1', source: 'chat_id' }, null, WINDOW, null, 10).filter,
+    );
 
     expect(args.map(fieldName)).toEqual([UsageLogField.ChatId, UsageLogField.RequestTime, UsageLogField.RequestTime]);
+  });
+
+  test('sorts newest-first with the trace id as a descending tie-break', () => {
+    const query = buildSessionTracePageQuery(SCOPE, 'acme', WINDOW, null, 10);
+
+    expect(query.sort).toEqual([
+      { field: SessionTracePageField.FirstRequestTime, dir: QuerySortDirection.Desc },
+      { field: UsageLogField.TraceId, dir: QuerySortDirection.Desc },
+    ]);
+  });
+
+  test('carries no cursor bound and no offset on the first page', () => {
+    const query = buildSessionTracePageQuery(SCOPE, 'acme', WINDOW, null, 10);
+
+    expect(query.having).toBeUndefined();
+    expect(query.page).toEqual(offsetPage(0, 10));
+  });
+
+  test('bounds a later page by the cursor over the aggregated start time', () => {
+    const query = buildSessionTracePageQuery(SCOPE, 'acme', WINDOW, { firstRequestTime: 1500, traceId: 'tr-9' }, 10);
+
+    expect(query.having).toEqual(
+      or([
+        lt(SessionTracePageField.FirstRequestTime, value(QueryValueType.Timestamp, '1500')),
+        and([
+          eq(SessionTracePageField.FirstRequestTime, value(QueryValueType.Timestamp, '1500')),
+          lt(SessionTracePageField.TraceId, value(QueryValueType.String, 'tr-9')),
+        ]),
+      ]),
+    );
+    expect(query.page).toEqual(offsetPage(0, 10));
+  });
+
+  test('keeps the cursor out of the row filter', () => {
+    const query = buildSessionTracePageQuery(SCOPE, 'acme', WINDOW, { firstRequestTime: 1500, traceId: 'tr-9' }, 10);
+
+    expect(groupArgs(query.filter).map(fieldName)).not.toContain(SessionTracePageField.FirstRequestTime);
+    expect(groupArgs(query.filter).map(fieldName)).not.toContain(UsageLogField.TraceId);
+  });
+
+  test('adds the searched trace id beside the session, project and window', () => {
+    const query = buildSessionTracePageQuery(SCOPE, 'acme', WINDOW, null, 10, true, 'tr-1');
+
+    expect(groupArgs(query.filter)).toEqual([
+      eq(UsageLogField.ChatId, value(QueryValueType.String, 'chat-1')),
+      eq(UsageLogField.ProjectId, value(QueryValueType.String, 'acme')),
+      ge(UsageLogField.RequestTime, value(QueryValueType.Timestamp, '1000')),
+      le(UsageLogField.RequestTime, value(QueryValueType.Timestamp, '2000')),
+      eq(UsageLogField.TraceId, value(QueryValueType.String, 'tr-1')),
+    ]);
   });
 });
 

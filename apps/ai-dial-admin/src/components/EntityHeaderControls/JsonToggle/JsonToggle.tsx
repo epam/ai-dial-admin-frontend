@@ -35,7 +35,7 @@ const JsonToggles: FC<Props> = ({ children, isEditorEnabled, isEditorDisabled, o
 
   return (
     <div className={editorClassName}>
-      {!isEditorEnabled && <div className="w-px h-6 bg-layer-4"></div>}
+      {!isEditorEnabled && <div className="w-px h-6 bg-control-neutral-hover-muted"></div>}
       {children}
 
       <div className="h-auto">

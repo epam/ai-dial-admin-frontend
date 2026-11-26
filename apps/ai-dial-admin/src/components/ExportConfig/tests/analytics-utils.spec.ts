@@ -9,7 +9,7 @@ import {
   getAnalyticsPreviewTabs,
   getAnalyticsTabs,
 } from '@/src/components/ExportConfig/analytics-utils';
-import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { TableGrantKey } from '@/src/models/analytics/table';
 import { DeploymentExportEntityType } from '@/src/types/deployments/export';
 import { ExportType } from '@/src/types/export';
@@ -62,6 +62,45 @@ describe('buildCatalogExportRequest', () => {
     });
     expect(buildCatalogExportRequest(ExportType.Custom, data)).not.toHaveProperty('include_access');
   });
+
+  test('sends dependencies false only for a pipeline exported alone', () => {
+    const request = buildCatalogExportRequest(ExportType.Custom, {
+      [AnalyticsExportEntityType.PIPELINE]: [{ name: 'usage_enrich', isExportedAlone: true }, { name: 'usage_daily' }],
+      [AnalyticsExportEntityType.TABLE]: [{ name: 'usage_base', isExportedAlone: true }],
+    });
+
+    expect(request.components).toEqual([
+      { type: CatalogComponentType.PIPELINE, name: 'usage_enrich', dependencies: false },
+      { type: CatalogComponentType.PIPELINE, name: 'usage_daily' },
+      { type: CatalogComponentType.TABLE, name: 'usage_base' },
+    ]);
+  });
+
+  test('sends access_only and roles only on table rows', () => {
+    const request = buildCatalogExportRequest(
+      ExportType.Custom,
+      {
+        [AnalyticsExportEntityType.TABLE]: [{ name: 'usage_base', isAccessOnly: true, accessRoles: ['analysts'] }],
+        [AnalyticsExportEntityType.PIPELINE]: [{ name: 'usage_enrich', isAccessOnly: true, accessRoles: ['analysts'] }],
+      },
+      true,
+    );
+
+    expect(request.components).toEqual([
+      { type: CatalogComponentType.TABLE, name: 'usage_base', access_only: true, roles: ['analysts'] },
+      { type: CatalogComponentType.PIPELINE, name: 'usage_enrich' },
+    ]);
+  });
+
+  test('sends no roles for a table left on all roles', () => {
+    const request = buildCatalogExportRequest(
+      ExportType.Custom,
+      { [AnalyticsExportEntityType.TABLE]: [{ name: 'usage_base', isAccessOnly: true, accessRoles: [] }] },
+      true,
+    );
+
+    expect(request.components).toEqual([{ type: CatalogComponentType.TABLE, name: 'usage_base', access_only: true }]);
+  });
 });
 
 describe('getAnalyticsTabs', () => {
@@ -74,9 +113,52 @@ describe('getAnalyticsTabs', () => {
 });
 
 describe('getAnalyticsColDefs', () => {
+  const noop = () => undefined;
+  const colIds = (columns: ReturnType<typeof getAnalyticsColDefs>) => columns.map(({ colId }) => colId);
+  const actionIds = (columns: ReturnType<typeof getAnalyticsColDefs>) =>
+    (columns.at(-1)?.cellRendererParams?.items ?? []).map(({ id }: { id: string }) => id);
+
   test('adds the action column only when a remove handler is given', () => {
-    expect(getAnalyticsColDefs()).toHaveLength(2);
-    expect(getAnalyticsColDefs(() => undefined)).toHaveLength(3);
+    expect(getAnalyticsColDefs(t, AnalyticsExportEntityType.TABLE, false)).toHaveLength(2);
+    expect(getAnalyticsColDefs(t, AnalyticsExportEntityType.TABLE, false, noop)).toHaveLength(3);
+  });
+
+  test('adds the Dependencies column and Edit to pipeline rows with or without access', () => {
+    const columns = getAnalyticsColDefs(t, AnalyticsExportEntityType.PIPELINE, false, noop, noop);
+
+    expect(colIds(columns)).toContain('dependencies');
+    expect(actionIds(columns)).toEqual([ActionMenuOperationI18nKey.Edit, ActionMenuOperationI18nKey.Remove]);
+  });
+
+  test('adds the Export and Roles columns and Edit to table rows only with access', () => {
+    const withAccess = getAnalyticsColDefs(t, AnalyticsExportEntityType.TABLE, true, noop, noop);
+    const withoutAccess = getAnalyticsColDefs(t, AnalyticsExportEntityType.TABLE, false, noop, noop);
+
+    expect(colIds(withAccess)).toEqual(expect.arrayContaining(['export', 'roles']));
+    expect(actionIds(withAccess)).toContain(ActionMenuOperationI18nKey.Edit);
+    expect(colIds(withoutAccess)).not.toContain('export');
+    expect(actionIds(withoutAccess)).toEqual([ActionMenuOperationI18nKey.Remove]);
+  });
+
+  test('shows no option columns in the Add modal, which passes no remove handler', () => {
+    expect(colIds(getAnalyticsColDefs(t, AnalyticsExportEntityType.PIPELINE, true))).not.toContain('dependencies');
+  });
+
+  test('reads the row options as cell values', () => {
+    const [dependencies] = getAnalyticsColDefs(t, AnalyticsExportEntityType.PIPELINE, true, noop, noop).filter(
+      ({ colId }) => colId === 'dependencies',
+    );
+    const tableColumns = getAnalyticsColDefs(t, AnalyticsExportEntityType.TABLE, true, noop, noop);
+    const value = (colId: string, data: object) =>
+      (tableColumns.find((column) => column.colId === colId)?.valueGetter as (p: { data: object }) => string)({ data });
+
+    expect((dependencies.valueGetter as (p: { data: object }) => string)({ data: { isExportedAlone: true } })).toBe(
+      ExportI18nKey.AnalyticsPipelineOnly,
+    );
+    expect(value('export', { isAccessOnly: true })).toBe(ExportI18nKey.AnalyticsAccessOnly);
+    expect(value('export', {})).toBe(ExportI18nKey.AnalyticsTableAndAccess);
+    expect(value('roles', { accessRoles: ['a', 'b'] })).toBe('a, b');
+    expect(value('roles', {})).toBe(ExportI18nKey.AnalyticsAllRolesValue);
   });
 });
 

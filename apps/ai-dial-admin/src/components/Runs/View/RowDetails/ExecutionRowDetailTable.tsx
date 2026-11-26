@@ -169,7 +169,7 @@ const SectionRows: FC<SectionRowsProps> = ({ section, sectionLabel, isCollapsed,
               className={mergeClasses(
                 EXECUTION_ROW_DETAIL_CELL_BASE,
                 ROW_DETAIL_FIELD_INDENT,
-                'group-hover:bg-accent-primary-alpha',
+                'group-hover:bg-control-accent-alpha',
               )}
               style={{ scrollMarginTop: ROW_DETAIL_FIELD_SCROLL_MARGIN_TOP }}
             >

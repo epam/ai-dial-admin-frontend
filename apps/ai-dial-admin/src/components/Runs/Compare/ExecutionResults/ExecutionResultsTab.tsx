@@ -70,7 +70,7 @@ interface Props {
 }
 
 const DISPLAY_PANEL_CLASS_NAME =
-  'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-3 border-l border-tertiary shadow-lg z-20';
+  'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-sunken border-l border-tertiary shadow-lg z-20';
 
 const loadRunResults = async (runId: string) => {
   const run = await getRun(runId);
@@ -491,7 +491,7 @@ const ExecutionResultsTab: FC<Props> = ({
           onGridReady={onGridReady}
         />
         {showDisplayPanel && (
-          <div className={classNames('absolute inset-0 flex bg-blackout z-[15]')}>
+          <div className={classNames('absolute inset-0 flex bg-backdrop z-[15]')}>
             <DisplayPanel
               columns={panelColDefs}
               onColumnsChange={onPanelColumnsChange}

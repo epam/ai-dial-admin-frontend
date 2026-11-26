@@ -262,7 +262,7 @@ const WidgetCard: FC<Props> = ({
     <ActionsDropdown
       items={actions}
       icon={<IconDotsVertical {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
-      actionTriggerClassName="flex size-6 items-center justify-center rounded text-secondary hover:bg-accent-primary-alpha focus-visible:bg-accent-primary-alpha"
+      actionTriggerClassName="flex size-6 items-center justify-center rounded text-secondary hover:bg-control-accent-alpha focus-visible:bg-control-accent-alpha"
     />
   );
 

@@ -284,7 +284,7 @@ export const buildOverallScoreChartOptions = (
 ): EChartsOption => {
   const passedColor = palette['text-accent-primary'];
   const axisColor = palette['text-secondary'];
-  const thresholdColor = palette['stroke-accent-secondary'];
+  const thresholdColor = palette['stroke-success'];
   const scoreAxisMin = 0;
   const scoreAxisMax = SCORE_AXIS_MAX;
 

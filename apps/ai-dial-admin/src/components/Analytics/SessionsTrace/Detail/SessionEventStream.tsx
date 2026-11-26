@@ -144,9 +144,9 @@ const HopTreeRowView: FC<RowProps> = ({
   const duration = formatHopDuration(node.durationMs);
 
   const cardClassName = classNames(
-    'flex min-w-0 flex-1 items-center gap-2 rounded border bg-layer-3',
-    (isOpenable || children.length > 0) && 'hover:border-hover focus-within:border-hover',
-    isSelected ? 'border-accent-primary' : 'border-secondary',
+    'flex min-w-0 flex-1 items-center gap-2 rounded border bg-layer-sunken',
+    (isOpenable || children.length > 0) && 'hover:border-primary focus-within:border-primary',
+    isSelected ? 'border-accent' : 'border-secondary',
     node.isFailed && 'border-error',
     isDimmed && 'opacity-50',
   );
@@ -186,7 +186,7 @@ const HopTreeRowView: FC<RowProps> = ({
         </span>
       )}
       {node.isMatch && (
-        <span className="shrink-0 rounded border border-accent-primary px-1.5 py-0.5 text-accent-primary dial-caption-text">
+        <span className="shrink-0 rounded border border-accent px-1.5 py-0.5 text-accent dial-caption-text">
           {t(SessionsTraceI18nKey.StreamMatch)}
         </span>
       )}
@@ -301,7 +301,7 @@ const SessionEventStream: FC<Props> = ({ tree, feedbackBySpanId, selectedSpanId,
 
   if (!tree.length) {
     return (
-      <div className="flex flex-1 flex-col justify-center bg-layer-1">
+      <div className="flex flex-1 flex-col justify-center bg-layer-base">
         <NoDataContent
           icon={<IconSubtask size={EMPTY_ICON_SIZE} aria-hidden />}
           title={t(SessionsTraceI18nKey.TraceNoSpans)}

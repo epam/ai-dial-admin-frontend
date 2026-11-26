@@ -26,7 +26,7 @@ interface BuildHeatMapCellTooltipDataOptions {
 }
 
 /** Neutral swatch for an out-of-range or zero-delta value — no score bucket applies. */
-const NEUTRAL_SWATCH_CLASSNAME = 'bg-layer-3 border-tertiary';
+const NEUTRAL_SWATCH_CLASSNAME = 'bg-layer-sunken border-tertiary';
 
 const formatCompareRunLabel = (runIndex: string, runName: string): string => `[${runIndex}] ${runName}`;
 

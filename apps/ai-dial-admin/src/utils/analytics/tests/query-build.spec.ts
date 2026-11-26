@@ -245,8 +245,17 @@ describe('analytics query-build :: aggregate envelope', () => {
     const query = aggregateQuery({ entity: 'dial_usage_log', groupBy: ['chat_id'], select });
 
     expect(query.filter).toBeUndefined();
+    expect(query.having).toBeUndefined();
     expect(query.sort).toBeUndefined();
     expect(query.page).toBeUndefined();
+  });
+
+  test('carries having when supplied', () => {
+    const having = and([ne('chat_id', value(QueryValueType.String, ''))]);
+
+    const query = aggregateQuery({ entity: 'dial_usage_log', groupBy: ['chat_id'], select, having });
+
+    expect(query.having).toEqual(having);
   });
 
   test('omits an empty sort list rather than sending it', () => {

@@ -102,7 +102,7 @@ const DeleteAssetsModal: FC<Props> = ({ view, isOpen, itemsToDelete, context, on
         ) : (
           <div className="h-[60vh]">
             <DialFileManager
-              className="bg-layer-2 py-2 px-0 size-full grid-rows-[auto]"
+              className="bg-layer-raised py-2 px-0 size-full grid-rows-[auto]"
               defaultPath={treeItems?.[0]?.path}
               rootItem={treeItems?.[0] as DialRootFolder}
               items={treeItems}
@@ -155,7 +155,7 @@ const DeleteAssetsModal: FC<Props> = ({ view, isOpen, itemsToDelete, context, on
       onClose={onClose}
       onConfirm={onRemove}
       size={hasFoldersToDelete ? PopupSize.Lg : PopupSize.Md}
-      className="bg-layer-2"
+      className="bg-layer-raised"
     >
       {getDeleteModalContent()}
     </ConfirmationPopup>

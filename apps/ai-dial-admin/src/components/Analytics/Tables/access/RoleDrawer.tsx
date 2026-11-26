@@ -81,7 +81,7 @@ interface Props {
 const HEADING = 'dial-tiny-lead-semi-text';
 const roleHeading = `${HEADING} text-accent`;
 const accessHeading = `${HEADING} text-brown-1`;
-const sensitiveHeading = `${HEADING} text-accent-tertiary`;
+const sensitiveHeading = `${HEADING} text-violet-1`;
 
 const ENRICHMENT_LOCKED_PRIVILEGES: MarkedPrivilege[] = [TableGrantKey.Get, TableGrantKey.Read];
 
@@ -338,7 +338,7 @@ const RoleDrawer: FC<Props> = ({
             onChange={(next) => onChangeRole(next as string)}
           />
         ) : (
-          <span className="rounded-xl bg-layer-4 px-3 py-2.5 dial-small-text">{displayedRole}</span>
+          <span className="rounded-xl bg-control-neutral-hover-muted px-3 py-2.5 dial-small-text">{displayedRole}</span>
         )}
       </section>
 
@@ -385,7 +385,7 @@ const RoleDrawer: FC<Props> = ({
           {isSensitiveStepOffered(selection, isEnrichment) && (
             <section className="flex flex-col gap-2">
               <h3 className={sensitiveHeading}>{t(AnalyticsTableAccessI18nKey.StepSensitive)}</h3>
-              <div className="rounded-xl bg-layer-4 p-3">
+              <div className="rounded-xl bg-control-neutral-hover-muted p-3">
                 <Switch
                   labelProps={{ label: t(AnalyticsTableAccessI18nKey.SensitiveSwitchLabel) }}
                   caption={

@@ -25,7 +25,7 @@ const SchemaViewer: FC<Props> = ({ schema }) => {
   );
 
   return (
-    <div className="h-[400px] overflow-hidden rounded bg-layer-4">
+    <div className="h-[400px] overflow-hidden rounded bg-control-neutral-hover-muted">
       <Editor
         height="100%"
         language="json"

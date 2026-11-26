@@ -2,7 +2,11 @@
 import { Checkbox, Notification, NotificationType, NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
-import { getReusedNames, hasFailRow } from '@/src/components/ImportConfig/ConfigurationPreview/analytics-import.utils';
+import {
+  getReusedNames,
+  hasFailRow,
+  hasNoTablesOrPipelines,
+} from '@/src/components/ImportConfig/ConfigurationPreview/analytics-import.utils';
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { CatalogImportPreview, CatalogImportResult } from '@/src/models/analytics/catalog-import';
@@ -80,6 +84,13 @@ const AnalyticsImportNotices: FC<Props> = ({
               ))}
             </ul>
           }
+        />
+      )}
+      {!isAccessIncluded && hasNoTablesOrPipelines(preview) && (
+        <Notification
+          type={NotificationType.SectionMessage}
+          variant={NotificationVariant.Info}
+          message={t(ImportI18nKey.AnalyticsNoObjectsWithoutAccess)}
         />
       )}
       {hasFailRow(preview) && (

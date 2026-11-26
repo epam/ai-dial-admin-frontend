@@ -17,14 +17,14 @@ const COMPONENTS: Components = {
   ul: ({ children }) => <ul className="flex list-disc flex-col gap-1 pl-5">{children}</ul>,
   ol: ({ children }) => <ol className="flex list-decimal flex-col gap-1 pl-5">{children}</ol>,
   strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-  code: ({ children }) => <code className="rounded bg-layer-3 px-1 font-mono">{children}</code>,
+  code: ({ children }) => <code className="rounded bg-layer-sunken px-1 font-mono">{children}</code>,
   pre: ({ children }) => (
-    <pre className="overflow-x-auto rounded border border-tertiary bg-layer-3 p-2 font-mono">{children}</pre>
+    <pre className="overflow-x-auto rounded border border-tertiary bg-layer-sunken p-2 font-mono">{children}</pre>
   ),
   blockquote: ({ children }) => <blockquote className="border-l-2 border-primary pl-3">{children}</blockquote>,
   a: ({ children, href }) =>
     href ? (
-      <a className="text-accent-primary underline" href={href} target="_blank" rel="noopener noreferrer">
+      <a className="text-accent underline" href={href} target="_blank" rel="noopener noreferrer">
         {children}
       </a>
     ) : (

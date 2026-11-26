@@ -15,7 +15,7 @@ const IncludeInRunCellRenderer: FC<ICellRendererParams> = ({ value }) => {
   return (
     <div className="flex items-center gap-2">
       {included ? (
-        <IconCheck {...BASE_BUTTON_ICON_PROPS} className="text-accent-secondary" />
+        <IconCheck {...BASE_BUTTON_ICON_PROPS} className="text-green-2" />
       ) : (
         <IconX {...BASE_BUTTON_ICON_PROPS} className="text-error" />
       )}

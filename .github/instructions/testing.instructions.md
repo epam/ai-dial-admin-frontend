@@ -299,9 +299,19 @@ they are correct at any speed.
    `showNotification`; a shared mock that builds a new `vi.fn()` per render makes every effect that lists it
    as a dependency refetch in a loop. `vi.clearAllMocks()` keeps implementations, so re-arm any mock whose
    default matters in `beforeEach`.
+7. **A test gives the same result on every machine.**
+   If the code reads something from the machine — an env variable, today's date, the network — the
+   test sets it itself. Never rely on a value being there, or on it being missing.
+
+   Example: a test expects no Keycloak login. CI has no `AUTH_KEYCLOAK_*` variables, so it passes.
+   A developer has them in a local env file, so it fails. Fix: the test removes them itself.
+
+   - env variable: `vi.stubEnv(name, value)`; to make it missing, `vi.stubEnv(name, undefined)` (not `''`)
+   - date: `vi.useFakeTimers()` + `vi.setSystemTime(...)`
+   - network: a mocked `fetch`, never a real request
 
 `npm run lint:specs` (it also runs on staged specs at commit time) rejects the shapes in rules 1–3: a `waitFor` on a
-mock call, an action or a `{ timeout }` inside a wait, and `setTimeout`. Rules 4–6 are judgement calls and are not
+mock call, an action or a `{ timeout }` inside a wait, and `setTimeout`. Rules 4–7 are judgement calls and are not
 linted.
 
 ## §10 Shared test environment

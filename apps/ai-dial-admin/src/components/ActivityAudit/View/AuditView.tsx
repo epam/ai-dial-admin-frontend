@@ -202,7 +202,7 @@ const AuditView: FC<Props> = ({
       <div
         className={classNames(
           'flex flex-col flex-1 min-h-0 w-full',
-          isModalView ? 'h-full bg-layer-3 rounded p-4 pb-14 lg:pb-4' : 'pb-14 lg:pb-0',
+          isModalView ? 'h-full bg-layer-sunken rounded p-4 pb-14 lg:pb-4' : 'pb-14 lg:pb-0',
         )}
       >
         {!isModalView && (
@@ -223,7 +223,7 @@ const AuditView: FC<Props> = ({
                   tooltipProps={blockReason ? { tooltip: t(blockReason) } : void 0}
                 />
               )}
-              <div className="w-px h-6 bg-layer-4"></div>
+              <div className="w-px h-6 bg-control-neutral-hover-muted"></div>
               <Switch
                 id="jsonView"
                 isOn={isJsonView}
@@ -251,7 +251,7 @@ const AuditView: FC<Props> = ({
                   <div className="flex flex-row gap-3 items-center justify-end">
                     {!hideComparator && <CompareControl compareView={compareView} setCompareView={setCompareView} />}
                     <FilterControl diffView={diffView} setDiffView={setDiffView} />
-                    <div className="w-px h-6 bg-layer-4"></div>
+                    <div className="w-px h-6 bg-control-neutral-hover-muted"></div>
                     <Switch
                       id="jsonView"
                       isOn={isJsonView}

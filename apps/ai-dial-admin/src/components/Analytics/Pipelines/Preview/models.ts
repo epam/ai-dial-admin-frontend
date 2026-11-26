@@ -1,4 +1,5 @@
 import { PipelinePreviewI18nKey } from '@/src/constants/i18n';
+import { ModelRunEvaluation } from '@/src/models/analytics/pipeline-model-run';
 import { PreviewRow } from '@/src/models/analytics/pipeline-preview';
 
 /**
@@ -16,6 +17,7 @@ export interface PreviewFailure {
   code?: string;
   message?: string;
   status?: number;
+  isModelRun?: boolean;
 }
 
 export enum PreviewFailureKind {
@@ -24,6 +26,28 @@ export enum PreviewFailureKind {
   NoAccess = 'noAccess',
   Storage = 'storage',
   Generic = 'generic',
+  ModelRunInProgress = 'modelRunInProgress',
+  SpendBudget = 'spendBudget',
+  RateLimited = 'rateLimited',
+  NotRunnable = 'notRunnable',
+  SampleUnavailable = 'sampleUnavailable',
+  ModelRunUnsupported = 'modelRunUnsupported',
+}
+
+export enum PreviewRunKind {
+  Preview = 'preview',
+  Model = 'model',
+}
+
+export enum ModelRunStageState {
+  Passed = 'passed',
+  Failed = 'failed',
+  NotReached = 'notReached',
+}
+
+export interface ModelRunStageEntry {
+  stage: string;
+  state: ModelRunStageState;
 }
 
 export enum PreviewEmptyKind {
@@ -50,4 +74,11 @@ export enum PreviewSection {
 export interface PreviewGridRow {
   index: number;
   values: PreviewRow;
+}
+
+export interface PreviewGridModelRun {
+  evaluation: ModelRunEvaluation;
+  evaluatedIndex: number;
+  isPanelExpanded: boolean;
+  onTogglePanel: () => void;
 }

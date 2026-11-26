@@ -8,6 +8,7 @@ import {
   getAnalyticsImportTabs,
   getReusedNames,
   hasFailRow,
+  hasNoTablesOrPipelines,
   isAnalyticsImportBlocked,
 } from '@/src/components/ImportConfig/ConfigurationPreview/analytics-import.utils';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
@@ -262,5 +263,13 @@ describe('isAnalyticsImportBlocked — access', () => {
     expect(hasFailRow(preview({ access: [accessEntry({ import_action: CatalogAccessImportAction.FAIL })] }))).toBe(
       false,
     );
+  });
+});
+
+describe('hasNoTablesOrPipelines', () => {
+  test('is true only when the preview holds neither tables nor pipelines', () => {
+    expect(hasNoTablesOrPipelines(preview())).toBe(true);
+    expect(hasNoTablesOrPipelines(preview({ tables: [entry({})] }))).toBe(false);
+    expect(hasNoTablesOrPipelines(preview({ pipelines: [entry({ name: 'usage_enrich' })] }))).toBe(false);
   });
 });

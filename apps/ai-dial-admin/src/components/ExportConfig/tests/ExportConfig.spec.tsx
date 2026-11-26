@@ -51,6 +51,20 @@ vi.mock('@/src/components/ExportConfig/Content/AnalyticsConfigContent', () => ({
         >
           select-with-system
         </button>
+        <button
+          type="button"
+          onClick={() =>
+            setCustomExportData({
+              'analytics-table': [
+                { name: 'usage_base', isAccessOnly: true },
+                { name: 'usage_sentiment', accessRoles: ['analysts'] },
+              ],
+              'analytics-pipeline': [{ name: 'usage_enrich', isExportedAlone: true }],
+            })
+          }
+        >
+          select-with-options
+        </button>
       </>
     ),
 }));
@@ -241,6 +255,30 @@ describe('ExportConfig — Analytics scope', () => {
 
     await vi.waitFor(() =>
       expect(exportAnalyticsConfig).toHaveBeenCalledWith({ components: [{ type: 'table', name: 'usage_sentiment' }] }),
+    );
+  });
+
+  test('drops access-only tables and chosen roles but keeps pipeline options when the box is unchecked', async () => {
+    vi.mocked(exportAnalyticsConfig).mockResolvedValue({
+      success: true,
+      response: { blob: new Blob(['{}']), fileName: 'adas-catalog.json' },
+    });
+    const user = await selectAnalyticsCustom();
+    const checkbox = screen.getByRole('checkbox', { name: ExportI18nKey.AnalyticsIncludeAccess });
+
+    await user.click(checkbox);
+    await user.click(screen.getByRole('button', { name: 'select-with-options' }));
+    await user.click(checkbox);
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Export }));
+    await user.click(screen.getByRole('button', { name: 'confirm-preview' }));
+
+    await vi.waitFor(() =>
+      expect(exportAnalyticsConfig).toHaveBeenCalledWith({
+        components: [
+          { type: 'table', name: 'usage_sentiment' },
+          { type: 'pipeline', name: 'usage_enrich', dependencies: false },
+        ],
+      }),
     );
   });
 

@@ -45,7 +45,7 @@ const CompareRowDetailBottomPanel: FC<Props> = ({
   onHideHighlightsChange,
 }) => {
   return (
-    <div className="flex flex-col size-full bg-layer-0 overflow-hidden">
+    <div className="flex flex-col size-full bg-control-neutral overflow-hidden">
       <CompareRowDetailPanel
         row={row}
         runs={runs}

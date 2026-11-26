@@ -34,7 +34,7 @@ const SummarySection: FC<Props> = ({
 }) => (
   <section
     className={classNames(
-      'flex min-w-0 flex-col gap-3 rounded-lg border border-secondary bg-layer-3 p-4',
+      'flex min-w-0 flex-col gap-3 rounded-lg border border-secondary bg-layer-sunken p-4',
       isFillHeight ? 'h-full min-h-0' : 'shrink-0',
       className,
     )}

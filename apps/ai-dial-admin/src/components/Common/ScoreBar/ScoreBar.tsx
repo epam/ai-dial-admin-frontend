@@ -19,7 +19,7 @@ const ScoreBar: FC<Props> = ({ value, className, width = SCORE_INDICATOR_DEFAULT
 
   return (
     <div
-      className={classNames('h-1 rounded-xs bg-layer-1 overflow-hidden shrink-0', className)}
+      className={classNames('h-1 rounded-xs bg-layer-base overflow-hidden shrink-0', className)}
       style={{ width }}
       aria-hidden
     >

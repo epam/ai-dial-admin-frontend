@@ -60,7 +60,7 @@ const SourcePanel: FC<Props> = ({ defaultTab, currentTable, currentQueryId }) =>
         aria-label={t(QueryBuilderI18nKey.Source)}
         className={classNames(
           'flex h-full w-[336px] shrink-0 flex-col gap-4 border-r border-tertiary pr-6',
-          isNarrow && 'absolute inset-y-0 left-0 z-10 max-w-full bg-layer-1 shadow',
+          isNarrow && 'absolute inset-y-0 left-0 z-10 max-w-full bg-layer-base shadow',
         )}
       >
         <div className="flex items-center justify-between gap-2">

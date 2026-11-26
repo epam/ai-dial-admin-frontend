@@ -157,7 +157,7 @@ const FileUploadField: FC<FileUploadFieldProps> = ({
           <div
             className={classNames(
               'flex flex-col gap-y-1 flex-1 min-h-0 overflow-y-auto rounded border border-solid p-2',
-              isDragOver ? 'border-accent-primary' : 'border-primary',
+              isDragOver ? 'border-accent' : 'border-primary',
               !!alertText && 'border-error',
             )}
             onDragOver={onDragOverFiles}

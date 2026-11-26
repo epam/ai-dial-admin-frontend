@@ -59,7 +59,7 @@ const COLUMN_STATUS_STYLE: Record<ColumnExtractionStatus, ColumnStatusStyle> = {
     labelKey: ValidityStatusI18nKey.Invalid,
   },
   [ColumnExtractionStatus.NotExtracted]: {
-    cardClass: 'border-primary bg-layer-2',
+    cardClass: 'border-primary bg-layer-raised',
     badgeVariant: BadgeVariant.Outlined,
     labelKey: TestSuitesI18nKey.ColumnNotExtracted,
   },

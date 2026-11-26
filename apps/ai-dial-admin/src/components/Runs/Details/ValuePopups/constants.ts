@@ -29,9 +29,9 @@ export const NEUTRAL_SCORE_CHIP_CLASSES = 'py-2 text-primary';
 // The compare grid's diff palette: added and removed take the legend's insert/delete borders, a change the
 // accent-primary border the grid gives a changed cell.
 export const DIFF_HIGHLIGHT_CLASS_BY_KIND: Record<TextDiffKind, string> = {
-  [TextDiffKind.Added]: `${DIFF_INSERT_HIGHLIGHT_CLASS} bg-accent-secondary-alpha`,
+  [TextDiffKind.Added]: `${DIFF_INSERT_HIGHLIGHT_CLASS} bg-success`,
   [TextDiffKind.Removed]: `${DIFF_DELETE_HIGHLIGHT_CLASS} bg-error`,
-  [TextDiffKind.Changed]: 'rounded-sm border border-accent-primary bg-accent-primary-alpha',
+  [TextDiffKind.Changed]: 'rounded-sm border border-accent bg-control-accent-alpha',
 };
 
 /** The one column a single run's metric popup shows: the run is its own baseline, and its name is the popup title. */

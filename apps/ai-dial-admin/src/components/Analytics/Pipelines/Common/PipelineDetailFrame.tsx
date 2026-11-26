@@ -246,6 +246,8 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
     router,
   ]);
 
+  const onOpenRuntime = useCallback(() => setActiveTab(EntityViewTab.Runtime), []);
+
   // The declaration's sections live on `Properties`, which mounts on the next commit, so the section is looked up
   // after it. Scrolling and focus only: what the section holds, and any edit in it, is left as it is.
   const onOpenSection = useCallback((section: PreviewSection) => {
@@ -482,7 +484,9 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
             pipeline={pipeline}
             preview={preview}
             hasUnsavedEdits={isChanged}
+            isRunnerAvailable={isBackfillAvailable}
             onOpenSection={onOpenSection}
+            onOpenRuntime={onOpenRuntime}
           />
         )}
         {isRuntimeShown && (

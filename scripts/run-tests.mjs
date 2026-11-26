@@ -10,6 +10,8 @@
 //     a memory ramp is visible in the log of a run that then dies silently
 //   - under GitHub Actions, `--output-style=static`: Nx otherwise hides the output of a task that
 //     succeeded, so a green CI log had no dots, no `Tests N passed` line and no coverage summary
+//   - `NX_LOAD_DOT_ENV_FILES=false`, so Nx does not inject the workspace env files into the test task and
+//     a local run sees the same environment as CI
 //
 // stdio is forwarded untouched and the child's exit status is propagated, so nothing downstream
 // (husky, CI) sees a different result than before.
@@ -41,6 +43,12 @@ export const buildNxArgs = (extraArgs = [], env = {}) => {
   const outputArgs = env.GITHUB_ACTIONS && !hasOutputChoice ? [STATIC_OUTPUT_FLAG] : [];
   return [...BASE_NX_ARGS, ...outputArgs, ...extraArgs];
 };
+
+export const buildChildEnv = (env = {}) => ({
+  ...env,
+  NODE_OPTIONS: withHeapLimit(env.NODE_OPTIONS),
+  NX_LOAD_DOT_ENV_FILES: 'false',
+});
 
 export const describeExit = ({ code, signal }) => `exit code=${code ?? 'none'} signal=${signal ?? 'none'}`;
 
@@ -124,7 +132,7 @@ const main = async () => {
   const result = await run({
     command: process.execPath,
     args: [nxBin, ...buildNxArgs(process.argv.slice(2), process.env)],
-    env: { ...process.env, NODE_OPTIONS: withHeapLimit(process.env.NODE_OPTIONS) },
+    env: buildChildEnv(process.env),
     sampleIntervalMs: process.env.GITHUB_ACTIONS ? SAMPLE_INTERVAL_MS : 0,
   });
   process.exit(toExitStatus(result));

@@ -94,7 +94,7 @@ describe('BackfillDrawer', () => {
     const onClose = vi.fn();
     render(
       <BackfillDrawer isOpen onClose={onClose} title="Backfill data">
-        <div data-testid="popup-overlay" className="bg-blackout">
+        <div data-testid="popup-overlay" className="bg-backdrop">
           <div role="dialog" aria-label="Confirm" />
         </div>
       </BackfillDrawer>,

@@ -31,7 +31,7 @@ const TurnExpanderCellRenderer = ({ data, onToggleExpand }: Props) => {
       <div
         role="button"
         aria-label={expanded ? 'Collapse turns' : 'Expand turns'}
-        className="flex items-center justify-center size-[18px] shrink-0 rounded cursor-pointer hover:bg-layer-3"
+        className="flex items-center justify-center size-[18px] shrink-0 rounded cursor-pointer hover:bg-layer-sunken"
         onClick={onClick}
       >
         {expanded ? (

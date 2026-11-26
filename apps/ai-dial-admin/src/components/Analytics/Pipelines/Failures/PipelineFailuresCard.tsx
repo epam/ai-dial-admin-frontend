@@ -117,7 +117,7 @@ const PipelineFailuresCard: FC<Props> = ({ pipeline, failures, isPaused }) => {
   return (
     <section
       aria-label={t(AnalyticsPipelinesI18nKey.FailuresTitle)}
-      className="flex flex-col gap-4 rounded bg-layer-3 p-4"
+      className="flex flex-col gap-4 rounded bg-layer-sunken p-4"
     >
       <div className="flex flex-row flex-wrap items-center justify-between gap-3">
         <h3 className="dial-small-semi-text uppercase tracking-wide text-secondary">

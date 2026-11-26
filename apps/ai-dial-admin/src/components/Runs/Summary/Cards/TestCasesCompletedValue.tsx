@@ -62,7 +62,7 @@ const TestCasesCompletedValue: FC<Props> = ({
       <TooltipRow
         label={t(TestSuitesI18nKey.TrendsTestCasesCompleted)}
         count={breakdown.completed}
-        icon={<IconCheck size={ICON_SIZE} className="text-accent-secondary" aria-hidden />}
+        icon={<IconCheck size={ICON_SIZE} className="text-green-2" aria-hidden />}
       />
       {hasThreshold && (
         <>

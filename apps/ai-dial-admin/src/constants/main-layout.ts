@@ -22,5 +22,5 @@ export const ENTITY_VIEW_SCROLL_CLASS_NAME = 'flex-1 overflow-y-auto overflow-x-
 export const CONTROL_WITH_BUTTON_WIDTH = `flex-1 ${CONTROL_WIDTH}`;
 
 export const SELECT_ENTITY_HEADER_CLASS = 'flex flex-row gap-3 divide-x divide-primary lg:h-[35px]';
-export const SELECT_ENTITY_MOBILE_HEADER_CLASS = 'fixed bottom-0 left-0 right-0 h-[62px] bg-layer-3 px-6';
+export const SELECT_ENTITY_MOBILE_HEADER_CLASS = 'fixed bottom-0 left-0 right-0 h-[62px] bg-layer-sunken px-6';
 export const SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS = 'w-1/2 flex justify-center';

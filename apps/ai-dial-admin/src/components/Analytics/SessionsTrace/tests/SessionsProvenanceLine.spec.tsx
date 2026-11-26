@@ -66,17 +66,17 @@ describe('SessionsProvenanceLine', () => {
   test('colours each entity by its provenance, matching the grid band', () => {
     renderLine();
 
-    expect(screen.getByText(BASE_TABLE)).toHaveClass('text-accent-primary');
-    expect(screen.getByText('session_insights')).toHaveClass('text-accent-secondary');
+    expect(screen.getByText(BASE_TABLE)).toHaveClass('text-accent');
+    expect(screen.getByText('session_insights')).toHaveClass('text-green-2');
     expect(screen.getByText(RATINGS)).toHaveClass('text-warning');
-    expect(screen.getByText('conversation_buckets')).toHaveClass('text-accent-tertiary');
+    expect(screen.getByText('conversation_buckets')).toHaveClass('text-violet-1');
   });
 
   test('colours enrichments by position rather than by name', () => {
     renderLine([field('some_future_enrichment.value'), field('session_insights.title')]);
 
-    expect(screen.getByText('some_future_enrichment')).toHaveClass('text-accent-secondary');
-    expect(screen.getByText('session_insights')).toHaveClass('text-accent-tertiary');
+    expect(screen.getByText('some_future_enrichment')).toHaveClass('text-green-2');
+    expect(screen.getByText('session_insights')).toHaveClass('text-violet-1');
   });
 
   test('names an enrichment past the palette under the unattributed colour', () => {

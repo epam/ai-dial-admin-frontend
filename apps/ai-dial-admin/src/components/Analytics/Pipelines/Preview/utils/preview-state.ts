@@ -2,7 +2,7 @@ import { PipelinePreviewI18nKey } from '@/src/constants/i18n';
 import { Pipeline, PipelineKind, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PipelinePreview, PreviewNote, PreviewNoteCode } from '@/src/models/analytics/pipeline-preview';
 
-import { FAILURE_CODES, HTTP_FORBIDDEN, REQUEST_TEMPLATE_MEMBER } from '../constants';
+import { FAILURE_CODES, HTTP_FORBIDDEN, MODEL_RUN_FAILURE_CODES, REQUEST_TEMPLATE_MEMBER } from '../constants';
 import { PreviewEmptyKind, PreviewFailure, PreviewFailureKind, PreviewSection } from '../models';
 
 const isGroupTrigger = (pipeline: Pipeline): boolean => pipeline.trigger?.kind === TriggerKind.Group;
@@ -30,15 +30,27 @@ export const getEmptyKind = ({ rows, notes }: PipelinePreview, pipeline: Pipelin
   return pipeline.filter?.trim() ? PreviewEmptyKind.NoMatch : PreviewEmptyKind.NoData;
 };
 
-export const getFailureKind = ({ code, status }: PreviewFailure): PreviewFailureKind => {
+const MODEL_RUN_FAILURE_KINDS: Record<string, PreviewFailureKind> = {
+  [MODEL_RUN_FAILURE_CODES.inProgress]: PreviewFailureKind.ModelRunInProgress,
+  [MODEL_RUN_FAILURE_CODES.spendBudget]: PreviewFailureKind.SpendBudget,
+  [MODEL_RUN_FAILURE_CODES.rateLimited]: PreviewFailureKind.RateLimited,
+  [MODEL_RUN_FAILURE_CODES.notRunnable]: PreviewFailureKind.NotRunnable,
+  ...Object.fromEntries(
+    MODEL_RUN_FAILURE_CODES.sampleUnavailable.map((code) => [code, PreviewFailureKind.SampleUnavailable]),
+  ),
+};
+
+export const getFailureKind = ({ code, status, isModelRun }: PreviewFailure): PreviewFailureKind => {
   if (code === FAILURE_CODES.validation) return PreviewFailureKind.Validation;
   if (code === FAILURE_CODES.budget) return PreviewFailureKind.Budget;
   if (code === FAILURE_CODES.storage) return PreviewFailureKind.Storage;
   if (status === HTTP_FORBIDDEN || (code != null && (FAILURE_CODES.noAccess as readonly string[]).includes(code))) {
     return PreviewFailureKind.NoAccess;
   }
+  if (!isModelRun || code == null) return PreviewFailureKind.Generic;
+  if (code === MODEL_RUN_FAILURE_CODES.unsupported) return PreviewFailureKind.ModelRunUnsupported;
 
-  return PreviewFailureKind.Generic;
+  return MODEL_RUN_FAILURE_KINDS[code] ?? PreviewFailureKind.Generic;
 };
 
 /**

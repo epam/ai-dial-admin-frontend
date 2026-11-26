@@ -194,7 +194,7 @@ describe('getIconBefore', () => {
 
     renderResult(el);
 
-    expect(document.querySelector('.bg-red-400')).toBeInTheDocument();
+    expect(document.querySelector('.bg-control-error-active')).toBeInTheDocument();
   });
 
   test('renders yellow icon when autoDetectedVersion = -1, defaultVersion exists and definition is AUTO', () => {
@@ -244,7 +244,7 @@ describe('getIconBefore', () => {
 
     renderResult(el);
 
-    expect(document.querySelector('.bg-red-400')).toBeInTheDocument();
+    expect(document.querySelector('.bg-control-error-active')).toBeInTheDocument();
   });
 
   test('returns null when coreVersions is undefined', () => {

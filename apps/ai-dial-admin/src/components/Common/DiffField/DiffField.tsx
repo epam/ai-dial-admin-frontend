@@ -24,7 +24,7 @@ const DiffField: FC<Props> = ({ original, modified, label, className, language }
   }
 
   return (
-    <div className={classNames('flex flex-col w-full flex-1 relative gap-y-1 bg-layer-2 pt-2 pl-3', className)}>
+    <div className={classNames('flex flex-col w-full flex-1 relative gap-y-1 bg-layer-raised pt-2 pl-3', className)}>
       <Label label={label} htmlFor="diffField" />
       <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
         <DiffEditor

@@ -41,7 +41,7 @@ const CompactSelect: FC<Props> = ({ options, value, onChange, ariaLabel, classNa
         <div
           role="listbox"
           aria-label={ariaLabel}
-          className="max-h-[240px] min-w-[224px] overflow-y-auto rounded border border-secondary bg-layer-0 p-1 shadow-lg"
+          className="max-h-[240px] min-w-[224px] overflow-y-auto rounded border border-secondary bg-control-neutral p-1 shadow-lg"
         >
           {options.map((option) => (
             <Tooltip
@@ -57,13 +57,13 @@ const CompactSelect: FC<Props> = ({ options, value, onChange, ariaLabel, classNa
                 aria-selected={option.value === value}
                 // A reserved leading slot keeps the labels aligned whether or not a check shows.
                 className={classNames(
-                  'flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left font-mono dial-tiny-text text-primary hover:bg-layer-4',
-                  option.value === value && 'bg-accent-primary-alpha hover:bg-accent-primary-alpha',
+                  'flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left font-mono dial-tiny-text text-primary hover:bg-control-neutral-hover-muted',
+                  option.value === value && 'bg-control-accent-alpha hover:bg-control-accent-alpha',
                 )}
                 onClick={() => onPick(option.value)}
               >
                 <span className="w-3 shrink-0">
-                  {option.value === value && <IconCheck aria-hidden size={12} className="text-accent-primary" />}
+                  {option.value === value && <IconCheck aria-hidden size={12} className="text-accent" />}
                 </span>
                 <span className="truncate">{option.label}</span>
               </button>
@@ -78,7 +78,7 @@ const CompactSelect: FC<Props> = ({ options, value, onChange, ariaLabel, classNa
         aria-haspopup="listbox"
         aria-expanded={open}
         className={classNames(
-          'flex h-[26px] w-full items-center justify-between gap-1 rounded border border-primary bg-layer-2 px-2 font-mono dial-tiny-text text-primary hover:bg-layer-4',
+          'flex h-[26px] w-full items-center justify-between gap-1 rounded border border-primary bg-layer-raised px-2 font-mono dial-tiny-text text-primary hover:bg-control-neutral-hover-muted',
           className,
         )}
       >

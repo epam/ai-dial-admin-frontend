@@ -73,7 +73,7 @@ describe('PivotValueCell', () => {
     render(
       <PivotValueCell
         field={field('Accuracy_precision', { isScoreIndicator: true, primaryRaw: '0.8' })}
-        className="border-solid border-l border-r border-b border-accent-primary"
+        className="border-solid border-l border-r border-b border-accent"
       />,
     );
 

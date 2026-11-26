@@ -215,7 +215,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
             return (
               <div
                 key={serviceId}
-                className="flex items-center gap-x-2 rounded bg-layer-3 border border-tertiary px-4 py-2"
+                className="flex items-center gap-x-2 rounded bg-layer-sunken border border-tertiary px-4 py-2"
               >
                 <div className="flex-1 min-w-0">
                   <div className="dial-small font-semibold truncate">{service.display_name || serviceId}</div>
@@ -229,7 +229,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
                       aria-label={statusLabel}
                       className={classNames(
                         'w-[8px] h-[8px] rounded-full',
-                        isPositiveState ? 'bg-accent-secondary' : 'bg-red-400',
+                        isPositiveState ? 'bg-green-1' : 'bg-control-error-active',
                       )}
                     />
                   )}

@@ -138,7 +138,7 @@ const CatalogPropertiesEditor: FC<Props> = ({
       )}
       <div className="flex-1 min-h-0 overflow-y-auto">
         {view === CatalogValuesView.Form ? (
-          <div className="p-4 bg-layer-0">
+          <div className="p-4 bg-control-neutral">
             <SchemaUiRenderer
               key={formKey}
               schema={jsonSchema}

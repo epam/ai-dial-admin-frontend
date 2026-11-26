@@ -14,10 +14,10 @@ const TYPE_COLOR: Partial<Record<AnalyticsFieldType, string>> = {
   [AnalyticsFieldType.Boolean]: 'text-warning',
   [AnalyticsFieldType.Date]: 'text-secondary',
   [AnalyticsFieldType.Timestamp]: 'text-secondary',
-  [AnalyticsFieldType.Object]: 'text-accent-tertiary',
+  [AnalyticsFieldType.Object]: 'text-violet-1',
   [AnalyticsFieldType.Array]: 'text-error',
-  [AnalyticsFieldType.Enum]: 'text-accent-secondary',
-  [AnalyticsFieldType.Map]: 'text-accent-primary',
+  [AnalyticsFieldType.Enum]: 'text-green-2',
+  [AnalyticsFieldType.Map]: 'text-accent',
 };
 
 interface Props {

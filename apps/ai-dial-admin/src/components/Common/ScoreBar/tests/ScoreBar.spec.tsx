@@ -41,7 +41,7 @@ describe('ScoreBar', () => {
   test('renders empty track for zero score', () => {
     const { container } = render(<ScoreBar value={0} />);
     expect(container.querySelector('.h-full.rounded-xs')).not.toBeInTheDocument();
-    expect(container.firstChild).toHaveClass('bg-layer-1');
+    expect(container.firstChild).toHaveClass('bg-layer-base');
   });
 
   test('applies custom width', () => {

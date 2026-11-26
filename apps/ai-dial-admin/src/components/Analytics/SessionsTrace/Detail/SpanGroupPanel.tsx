@@ -79,13 +79,13 @@ const SpanGroupPanel: FC<Props> = ({ group, row, isRecord, summaryFields, isOpen
         aria-expanded={isOpen}
         aria-controls={isOpen ? contentId : undefined}
         className={classNames(
-          'flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left hover:bg-layer-4 focus-visible:bg-layer-4 focus-visible:outline-3 focus-visible:outline-focus',
-          isOpen && 'bg-layer-4',
+          'flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left hover:bg-control-neutral-hover-muted focus-visible:bg-control-neutral-hover-muted focus-visible:outline-3 focus-visible:outline-focus',
+          isOpen && 'bg-control-neutral-hover-muted',
         )}
         onClick={() => onToggle(group.tag)}
       >
         {isOpen ? (
-          <IconChevronDown size={CHEVRON_SIZE} aria-hidden className="shrink-0 text-accent-primary" />
+          <IconChevronDown size={CHEVRON_SIZE} aria-hidden className="shrink-0 text-accent" />
         ) : (
           <IconChevronRight size={CHEVRON_SIZE} aria-hidden className="shrink-0 text-secondary" />
         )}

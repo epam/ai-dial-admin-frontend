@@ -12,7 +12,7 @@ interface Props {
 }
 
 const PrivilegeCard: FC<Props> = ({ label, isSelected, isDisabled, caption, onChange }) => (
-  <div className="flex flex-col gap-2 rounded-xl bg-layer-4 p-3">
+  <div className="flex flex-col gap-2 rounded-xl bg-control-neutral-hover-muted p-3">
     <div className="flex items-center gap-2">
       <Checkbox labelProps={{ label }} isSelected={isSelected} disabled={isDisabled} onChange={onChange} />
       {caption && <span className="dial-small-text text-secondary">{caption}</span>}

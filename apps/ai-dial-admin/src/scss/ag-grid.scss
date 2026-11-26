@@ -1,6 +1,6 @@
 // `@apply` only takes utilities in Tailwind v4, so the shared building blocks are declared as such.
 @utility input-disable {
-  @apply bg-layer-3 text-secondary;
+  @apply bg-layer-sunken text-secondary;
 }
 
 @utility base-button {
@@ -12,7 +12,7 @@
 }
 
 @utility base-button-disable {
-  @apply pointer-events-none text-controls-disable bg-controls-disable;
+  @apply pointer-events-none text-controls-disable bg-control-disable-primary;
 }
 
 // Shared by `.input` and by the AG Grid fields that look like it: `@apply` cannot take a class in Tailwind v4.
@@ -26,16 +26,16 @@
   }
 
   &:hover {
-    @apply border-hover;
+    @apply border-primary;
   }
 
   &:focus,
   &:focus-within {
-    @apply border-accent-primary;
+    @apply border-accent;
   }
 
   &:disabled {
-    @apply bg-layer-3 text-secondary;
+    @apply bg-layer-sunken text-secondary;
   }
 }
 
@@ -49,7 +49,7 @@
   }
 
   &:focus {
-    @apply border-hover;
+    @apply border-primary;
   }
 }
 
@@ -59,11 +59,11 @@
 
   &:hover,
   &:focus {
-    @apply bg-layer-4;
+    @apply bg-control-neutral-hover-muted;
   }
 
   &:focus {
-    @apply border-hover;
+    @apply border-primary;
   }
 
   &:disabled {
@@ -214,7 +214,7 @@
   .ag-new-row {
     @apply bg-success;
     &.ag-new-border {
-      @apply border border-accent-secondary;
+      @apply border border-success;
       @apply cursor-pointer;
     }
     &.ag-row-hover:not(.ag-full-width-row):before {
@@ -224,7 +224,7 @@
   .ag-changed-row {
     @apply bg-info;
     &.ag-changed-border {
-      @apply border border-accent-primary;
+      @apply border border-accent;
       @apply cursor-pointer;
     }
     &.ag-row-hover:not(.ag-full-width-row):before {
@@ -239,11 +239,11 @@
   // The `.ag-grid-no-border` variants outrank the border reset score cells carry, so the diff box survives it.
   .ag-cell.compare-metric-improved-start,
   .ag-cell.ag-grid-no-border.compare-metric-improved-start {
-    @apply border-solid border-l border-t border-b border-accent-secondary border-r-0;
+    @apply border-solid border-l border-t border-b border-success border-r-0;
   }
   .ag-cell.compare-metric-improved-end,
   .ag-cell.ag-grid-no-border.compare-metric-improved-end {
-    @apply border-solid border-t border-b border-r border-accent-secondary border-l-0;
+    @apply border-solid border-t border-b border-r border-success border-l-0;
   }
   .ag-cell.compare-metric-regressed-start,
   .ag-cell.ag-grid-no-border.compare-metric-regressed-start {
@@ -255,11 +255,11 @@
   }
   .ag-cell.compare-metric-new-start,
   .ag-cell.ag-grid-no-border.compare-metric-new-start {
-    @apply border-solid border-l border-t border-b border-accent-primary border-r-0;
+    @apply border-solid border-l border-t border-b border-accent border-r-0;
   }
   .ag-cell.compare-metric-new-end,
   .ag-cell.ag-grid-no-border.compare-metric-new-end {
-    @apply border-solid border-t border-b border-r border-accent-primary border-l-0;
+    @apply border-solid border-t border-b border-r border-accent border-l-0;
   }
   .ag-active-detail-row {
     @apply bg-controls-accent-alpha;
@@ -268,7 +268,7 @@
     }
   }
   .ag-test-case-group-row {
-    @apply bg-layer-2;
+    @apply bg-layer-raised;
   }
   .ag-activity-row-clickable {
     cursor: pointer;
@@ -302,19 +302,19 @@
 .ag-checkbox-input-wrapper {
   @apply block;
   @apply w-[18px] h-[18px];
-  @apply border-hover shadow-none;
+  @apply border-primary shadow-none;
   &::after {
     @apply hidden;
   }
 
   &.ag-checked {
-    @apply border-accent-primary;
+    @apply border-accent;
     @apply bg-transparent bg-center bg-no-repeat;
     background-image: url(/images/icons/checkmark.svg);
   }
 
   &.ag-indeterminate {
-    @apply border-accent-primary;
+    @apply border-accent;
     @apply bg-transparent bg-center bg-no-repeat;
     background-image: url(/images/icons/indeterminate.svg);
   }

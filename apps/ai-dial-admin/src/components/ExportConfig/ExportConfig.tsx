@@ -142,9 +142,9 @@ const ExportConfig: FC<Props> = ({
     if (!isIncluded) {
       setCustomExportData((prev) => ({
         ...prev,
-        [AnalyticsExportEntityType.TABLE]: (prev[AnalyticsExportEntityType.TABLE] ?? []).filter(
-          (table) => !table.isSystem,
-        ),
+        [AnalyticsExportEntityType.TABLE]: (prev[AnalyticsExportEntityType.TABLE] ?? [])
+          .filter((table) => !table.isSystem && !table.isAccessOnly)
+          .map((table) => ({ ...table, accessRoles: undefined })),
       }));
     }
   }, []);

@@ -199,7 +199,7 @@ const PreviewModal: FC<Props> = ({
             />
             {isDeploymentExport && (
               <>
-                <div className="h-5 w-px bg-layer-4" />
+                <div className="h-5 w-px bg-control-neutral-hover-muted" />
                 <Checkbox
                   isSelected={isIncludeGlobalFirewall}
                   labelProps={{ label: t(ExportI18nKey.IncludeGlobalFirewall) }}
