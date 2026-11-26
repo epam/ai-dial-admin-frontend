@@ -65,21 +65,21 @@ interface Setup {
   pipeline?: Pipeline;
   preview?: Partial<PipelinePreviewRun>;
   hasUnsavedEdits?: boolean;
-  isModelRunAvailable?: boolean;
+  isRunnerAvailable?: boolean;
 }
 
 const renderTab = ({
   pipeline = sqlPipeline(),
   preview,
   hasUnsavedEdits = false,
-  isModelRunAvailable = false,
+  isRunnerAvailable = false,
 }: Setup = {}) =>
   render(
     <PipelinePreview
       pipeline={pipeline}
       preview={previewRun(preview)}
       hasUnsavedEdits={hasUnsavedEdits}
-      isModelRunAvailable={isModelRunAvailable}
+      isRunnerAvailable={isRunnerAvailable}
       onOpenSection={onOpenSection}
       onOpenRuntime={onOpenRuntime}
     />,
@@ -599,7 +599,7 @@ describe('PipelinePreview — announcing a finished run', () => {
       pipeline={pipeline}
       preview={previewRun(preview)}
       hasUnsavedEdits={false}
-      isModelRunAvailable={false}
+      isRunnerAvailable={false}
       onOpenSection={onOpenSection}
       onOpenRuntime={onOpenRuntime}
     />
@@ -662,7 +662,7 @@ describe('PipelinePreview — run with model', () => {
     });
 
   const renderModelTab = (setup: Setup = {}) =>
-    renderTab({ pipeline: chatPipeline(), isModelRunAvailable: true, ...setup });
+    renderTab({ pipeline: chatPipeline(), isRunnerAvailable: true, ...setup });
 
   const withModelResult = (overrides: Partial<PipelinePreviewRun> = {}) =>
     withResult(llmPreviewMock(), { evaluations: [evaluationMock()], ...overrides });
@@ -684,14 +684,14 @@ describe('PipelinePreview — run with model', () => {
       ['an aggregate', aggregatePipeline()],
       ['an SQL enrichment', sqlPipeline()],
     ])('does not render the model run for %s', (_, pipeline) => {
-      renderTab({ pipeline, isModelRunAvailable: true });
+      renderTab({ pipeline, isRunnerAvailable: true });
 
       expect(screen.getByRole('button', { name: key('RunPreview') })).toBeTruthy();
       expect(screen.queryByRole('button', { name: key('RunWithModel') })).toBeNull();
     });
 
     test('does not render the model run when the runner is not available', () => {
-      renderTab({ pipeline: chatPipeline(), isModelRunAvailable: false });
+      renderTab({ pipeline: chatPipeline(), isRunnerAvailable: false });
 
       expect(screen.getByRole('button', { name: key('RunPreview') })).toBeTruthy();
       expect(screen.queryByRole('button', { name: key('RunWithModel') })).toBeNull();
@@ -755,7 +755,7 @@ describe('PipelinePreview — run with model', () => {
 
     test('names the application and route and one call for an application route', async () => {
       const user = userEvent.setup();
-      renderTab({ pipeline: routePipeline(), isModelRunAvailable: true });
+      renderTab({ pipeline: routePipeline(), isRunnerAvailable: true });
 
       await user.click(screen.getByRole('button', { name: key('RunWithModel') }));
 
@@ -766,7 +766,7 @@ describe('PipelinePreview — run with model', () => {
 
     test('speaks of the newest group for a group pipeline', async () => {
       const user = userEvent.setup();
-      renderTab({ pipeline: llmGroupPipeline(), isModelRunAvailable: true });
+      renderTab({ pipeline: llmGroupPipeline(), isRunnerAvailable: true });
 
       await user.click(screen.getByRole('button', { name: key('RunWithModel') }));
 
@@ -842,7 +842,7 @@ describe('PipelinePreview — run with model', () => {
     test('states the members sent for a partial group', () => {
       renderTab({
         pipeline: llmGroupPipeline(),
-        isModelRunAvailable: true,
+        isRunnerAvailable: true,
         preview: withResult(previewMock({ statement: undefined, group_key: 'conv-1' }), {
           evaluations: [
             evaluationMock({

@@ -6,7 +6,6 @@ import {
   findEvaluatedRowIndex,
   formatModelText,
   getCorrectiveRetries,
-  getMaxModelCalls,
   getModelColumnNames,
   getStageStates,
 } from '@/src/components/Analytics/Pipelines/Preview/utils/model-run';
@@ -96,7 +95,7 @@ describe('formatModelText', () => {
   });
 });
 
-describe('model call counts', () => {
+describe('getCorrectiveRetries', () => {
   test('counts corrective retries for a chat completion', () => {
     expect(getCorrectiveRetries(2, TransformPreset.ChatCompletion)).toBe(1);
     expect(getCorrectiveRetries(1)).toBe(0);
@@ -104,10 +103,5 @@ describe('model call counts', () => {
 
   test('counts no retries for an application route', () => {
     expect(getCorrectiveRetries(1, TransformPreset.DialAppRoute)).toBe(0);
-  });
-
-  test('allows up to two calls for a chat completion and one for a route', () => {
-    expect(getMaxModelCalls(TransformPreset.ChatCompletion)).toBe(2);
-    expect(getMaxModelCalls(TransformPreset.DialAppRoute)).toBe(1);
   });
 });

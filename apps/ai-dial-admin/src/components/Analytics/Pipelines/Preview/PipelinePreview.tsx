@@ -49,7 +49,7 @@ interface Props {
   preview: PipelinePreviewRun;
   /** Whether the detail view holds an edit the saved declaration — the one the preview runs on — does not. */
   hasUnsavedEdits: boolean;
-  isModelRunAvailable: boolean;
+  isRunnerAvailable: boolean;
   onOpenSection: (section: PreviewSection) => void;
   onOpenRuntime: () => void;
 }
@@ -58,7 +58,7 @@ const PipelinePreview: FC<Props> = ({
   pipeline,
   preview,
   hasUnsavedEdits,
-  isModelRunAvailable,
+  isRunnerAvailable,
   onOpenSection,
   onOpenRuntime,
 }) => {
@@ -78,7 +78,7 @@ const PipelinePreview: FC<Props> = ({
   }, [preview]);
   const onTogglePanel = useCallback(() => setIsPanelExpanded((prev) => !prev), []);
 
-  const isModelRunOffered = isModelRunAvailable && pipeline.transform?.type === TransformType.Llm;
+  const isModelRunOffered = isRunnerAvailable && pipeline.transform?.type === TransformType.Llm;
   const isGroup = pipeline.trigger?.kind === TriggerKind.Group;
   const evaluation = evaluations?.[0];
   const hasModelResult = evaluation != null;

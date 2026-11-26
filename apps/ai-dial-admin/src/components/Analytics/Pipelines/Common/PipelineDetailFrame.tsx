@@ -56,7 +56,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { PipelineDraft } from '@/src/models/analytics/pipeline-ui';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { Pipeline, TransformType, TriggerKind } from '@/src/models/analytics/pipeline';
+import { Pipeline, TriggerKind } from '@/src/models/analytics/pipeline';
 import { PipelineRuntimeStatus, RuntimeReadOutcome } from '@/src/models/analytics/pipeline-runtime';
 import { ApplicationRoute } from '@/src/types/routes';
 import { auditTab, EntityViewTab, groupsTab, previewTab, propertiesTab, runtimeTab } from '@/src/utils/tabs/utils';
@@ -133,7 +133,6 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
     runtime.outcome !== RuntimeReadOutcome.Unavailable &&
     runtime.outcome !== RuntimeReadOutcome.Pending;
   const backfill = usePipelineBackfillEntry({ pipelineName: pipeline.name, isAvailable: isBackfillAvailable });
-  const isModelRunAvailable = isBackfillAvailable && pipeline.transform?.type === TransformType.Llm;
 
   // A mark rather than a number. The kit's count badge is drawn in the accent, which reads as a
   // quantity worth noticing rather than as something broken, and it carries no hook to re-colour: its
@@ -247,10 +246,10 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
     router,
   ]);
 
-  // The declaration's sections live on `Properties`, which mounts on the next commit, so the section is looked up
-  // after it. Scrolling and focus only: what the section holds, and any edit in it, is left as it is.
   const onOpenRuntime = useCallback(() => setActiveTab(EntityViewTab.Runtime), []);
 
+  // The declaration's sections live on `Properties`, which mounts on the next commit, so the section is looked up
+  // after it. Scrolling and focus only: what the section holds, and any edit in it, is left as it is.
   const onOpenSection = useCallback((section: PreviewSection) => {
     setActiveTab(EntityViewTab.Properties);
 
@@ -485,7 +484,7 @@ const PipelineDetailFrame: FC<Props> = ({ pipeline, form, children, hasGroups = 
             pipeline={pipeline}
             preview={preview}
             hasUnsavedEdits={isChanged}
-            isModelRunAvailable={isModelRunAvailable}
+            isRunnerAvailable={isBackfillAvailable}
             onOpenSection={onOpenSection}
             onOpenRuntime={onOpenRuntime}
           />

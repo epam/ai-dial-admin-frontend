@@ -57,8 +57,6 @@ export const formatModelText = (text: string): string => {
 export const getCorrectiveRetries = (attempts: number, preset?: TransformPreset): number =>
   preset === TransformPreset.DialAppRoute ? 0 : Math.max(attempts - 1, 0);
 
-export const getMaxModelCalls = (preset?: TransformPreset): number => (preset === TransformPreset.DialAppRoute ? 1 : 2);
-
 export const getPanelSubject = (
   evaluation: Pick<ModelRunEvaluation, 'grain_key' | 'group_key'> | undefined,
   isGroup: boolean,
