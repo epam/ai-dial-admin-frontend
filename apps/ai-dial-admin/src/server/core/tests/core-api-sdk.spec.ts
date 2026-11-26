@@ -18,6 +18,10 @@ class TestCoreApi extends CoreApi {
   value(token: Token | undefined, headers?: Record<string, string>) {
     return this.sdkGet(token, (init) => this.sdk.getUserBucket(init), headers);
   }
+
+  remove(token: Token | undefined, headers?: Record<string, string>) {
+    return this.sdkDelete(token, (init) => this.sdk.deleteModel('platform', 'm', init), headers);
+  }
 }
 
 const sentHeaders = (): Headers => {
@@ -171,6 +175,80 @@ describe('CoreApi.sdkAction', () => {
     fetch.mockRejectOnce(new Error('Network error'));
 
     await expect(api.action(TOKEN_MOCK)).rejects.toThrow('Network error');
+  });
+});
+
+describe('CoreApi.sdkDelete', () => {
+  const api = new TestCoreApi({ host: CORE_TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('sends a DELETE with the caller token and the conditional header', async () => {
+    fetch.mockResponseOnce('', { status: 200 });
+
+    await api.remove(TOKEN_MOCK, { 'If-Match': '"e1"' });
+
+    const [request] = fetch.mock.calls[0] as [Request];
+    expect(request.method).toBe('DELETE');
+    expect(request.url).toBe(`${CORE_TEST_URL}v1/models/platform/m`);
+    expect(sentHeaders().get('If-Match')).toBe('"e1"');
+    expect(sentHeaders().get('authorization')).toBe('Bearer access_token_mock');
+  });
+
+  test('resolves an empty 200 to an empty string', async () => {
+    fetch.mockResponseOnce('', { status: 200 });
+
+    expect(await api.remove(TOKEN_MOCK)).toEqual({ success: true, response: '', etag: undefined });
+  });
+
+  test('resolves a 204 to an empty string', async () => {
+    fetch.mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    expect(await api.remove(TOKEN_MOCK)).toEqual({ success: true, response: '', etag: undefined });
+  });
+
+  test('keeps a JSON success body as text instead of parsing it', async () => {
+    fetch.mockResponseOnce('{"deleted":true}', { headers: JSON_HEADERS });
+
+    const result = await api.remove(TOKEN_MOCK);
+
+    expect(result).toEqual({ success: true, response: '{"deleted":true}', etag: undefined });
+  });
+
+  test('treats a 200 body carrying an error field as a success with that text', async () => {
+    fetch.mockResponseOnce('{"error":"x"}', { headers: JSON_HEADERS });
+
+    const result = await api.remove(TOKEN_MOCK);
+
+    expect(result).toEqual({ success: true, response: '{"error":"x"}', etag: undefined });
+  });
+
+  test('returns the etag header on success', async () => {
+    fetch.mockResponseOnce('', { status: 200, headers: { etag: '"v9"' } });
+
+    expect(await api.remove(TOKEN_MOCK)).toMatchObject({ success: true, etag: '"v9"' });
+  });
+
+  test('fails a stale-etag 412 with the normalized message', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ error: { message: 'Etag mismatch' } }), {
+      status: 412,
+      headers: { ...JSON_HEADERS, traceparent: 'trace-412' },
+    });
+
+    expect(await api.remove(TOKEN_MOCK)).toMatchObject({
+      success: false,
+      status: 412,
+      errorMessage: 'Etag mismatch',
+      requestId: 'trace-412',
+    });
+  });
+
+  test('resolves an aborted call to the cancelled envelope', async () => {
+    fetch.mockRejectOnce(new DOMException('Aborted', 'AbortError'));
+
+    expect(await api.remove(TOKEN_MOCK)).toEqual({ success: false, status: 0, errorMessage: 'Request cancelled' });
   });
 });
 

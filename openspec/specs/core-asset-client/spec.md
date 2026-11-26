@@ -2,9 +2,7 @@
 
 ## Purpose
 Direct-to-DIAL-Core client, version-path helper, and content+metadata mappers for the assets domain (application-resource, toolset-resource, conversation, prompt, file), replacing the admin-BE proxy these operations use today. Consumed by `migrate-publications-enrichment-to-core` and the per-type asset migrations (conversation, prompt, toolset-resource, application-resource, file); introduces no consumer-facing behavior change on its own — created by archiving change `add-core-asset-client`.
-
 ## Requirements
-
 ### Requirement: Direct Core read/write for content-addressed asset resources
 The system SHALL provide a server-side client that reads and writes application-resource, toolset-resource, conversation, and prompt content directly against DIAL Core (`GET/PUT/DELETE /v1/{type}/{path}` for content, `GET /v1/metadata/{type}/{path}` for metadata), authenticating with the logged-in user's JWT via the existing Core client pipeline. Application-resource and toolset-resource are versioned (their paths carry a `__version` suffix); conversation and prompt are versionless (their paths are plain `/`-joined segments, and `__` within a name is never interpreted) — the same content-addressed, unversioned treatment the model resource kind already receives.
 
@@ -253,7 +251,7 @@ The client's Core resource metadata node SHALL expose `createdAt` alongside `upd
 - **THEN** the returned object includes `createdAt` sourced from the metadata response
 
 ### Requirement: Content-addressed unversioned resource support (Model)
-The system SHALL provide content GET/PUT/DELETE and metadata GET for the model resource kind directly against DIAL Core (`GET/PUT/DELETE /v1/models/platform/{name}` for content, `GET /v1/metadata/models/platform/` for metadata), matching the four versioned types' content-addressed shape (a real content endpoint, not just metadata+blob like `FILE`) but without applying the `__`-suffix version-parsing logic, since Core's `ConfigResourceController`-backed model resources carry no version.
+The system SHALL provide content GET/PUT/DELETE and metadata GET for the model resource kind directly against DIAL Core through the SDK (`GET/PUT/DELETE /v1/models/platform/{name}` for content, `GET /v1/metadata/models/platform/{name}` for one model's metadata and `GET /v1/metadata/models/platform/` for the root listing), matching the four versioned types' content-addressed shape (a real content endpoint, not just metadata+blob like `FILE`) but without applying the `__`-suffix version-parsing logic, since Core's `ConfigResourceController`-backed model resources carry no version. The requests SHALL reach the same Core endpoints the hand-written client used.
 
 #### Scenario: Model content and metadata are fetched separately and merged
 - **WHEN** a model resource is requested by name
@@ -262,6 +260,10 @@ The system SHALL provide content GET/PUT/DELETE and metadata GET for the model r
 #### Scenario: Model resource name is never suffixed with a version
 - **WHEN** a model resource is created, updated, or fetched
 - **THEN** its Core-facing path is `models/platform/{name}` with no `__version` suffix applied or expected
+
+#### Scenario: Model requests go through the SDK to the same endpoints
+- **WHEN** a model is read, saved or deleted
+- **THEN** the request is sent by the SDK to `/v1/models/platform/{name}` (or `/v1/metadata/models/platform/{name}` for its metadata, `/v1/metadata/models/platform/` for the root listing), the same path and method the hand-written client used
 
 ### Requirement: Model resource etag sourced from the metadata response, not the content response
 Unlike the four versioned types, DIAL Core's per-entity model content GET does not set an `ETag` response header. The system SHALL resolve a model resource's etag from the metadata GET's `etag` field instead, and SHALL use that value when constructing subsequent conditional `If-Match`/`If-None-Match` requests.
@@ -293,3 +295,4 @@ The shared Core asset client SHALL preserve non-semver application/toolset suffi
 #### Scenario: Platform and versionless resources retain their parsing
 - **WHEN** a platform application/toolset or a prompt/conversation is read
 - **THEN** the client's existing bucket/type-specific unversioned behavior remains unchanged
+

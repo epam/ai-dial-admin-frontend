@@ -141,7 +141,10 @@ const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType):
 };
 
 /** Flattens a (possibly recursive) metadata tree's `ITEM` nodes into list rows. */
-export const toResourceInfoList = (node: CoreResourceMetadataNode | null, type: ResourceType): ResourceInfo[] => {
+export const toResourceInfoList = (
+  node: CoreResourceMetadataNode | null | undefined,
+  type: ResourceType,
+): ResourceInfo[] => {
   if (!node?.items) {
     return [];
   }

@@ -111,7 +111,7 @@ const listApiWrittenNames = async (
   do {
     const node = await assetApi.getMetadata(token, resourceType, '', { recursive: false, nextToken });
     if (!node) {
-      // `getMetadata` collapses 403/404/500 to null, so a status is genuinely unavailable here — name
+      // `getMetadata` resolves a 403 to undefined and any other failure to null, so a status is genuinely unavailable here — name
       // the read that failed rather than emitting a reason with no context.
       return {
         success: false,

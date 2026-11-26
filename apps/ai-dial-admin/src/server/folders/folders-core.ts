@@ -38,7 +38,7 @@ const ALL_TYPES: ResourceType[] = [
  */
 const COMPLEX_FOLDER_READERS: {
   type: ResourceType;
-  read: (token: Token, path: string, nextToken?: string) => Promise<WalkableNode | null>;
+  read: (token: Token, path: string, nextToken?: string) => Promise<WalkableNode | null | undefined>;
 }[] = [
   {
     type: ResourceType.SKILL,
@@ -61,7 +61,7 @@ const DEFAULT_ETAG = '*';
  */
 const readRecursiveMetadata =
   (token: Token, type: ResourceType) =>
-  (path: string, nextToken?: string): Promise<WalkableNode | null> => {
+  (path: string, nextToken?: string): Promise<WalkableNode | null | undefined> => {
     if (type === ResourceType.FILE) {
       return filesCoreApi.getFileMetadata(token, path, true, nextToken);
     }
@@ -84,7 +84,7 @@ const readRecursiveMetadata =
  */
 const readFolderMetadata =
   (token: Token, type: ResourceType) =>
-  (path: string, nextToken?: string): Promise<WalkableNode | null> => {
+  (path: string, nextToken?: string): Promise<WalkableNode | null | undefined> => {
     if (type === ResourceType.FILE) {
       return filesCoreApi.getFileMetadata(token, path, false, nextToken);
     }

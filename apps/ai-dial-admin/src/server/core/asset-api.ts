@@ -24,6 +24,7 @@ import { ResourceType } from '@/src/types/resource-type';
 import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { CoreApi } from './core-api';
 import { createHeadersForCreate, createIfMatchHeaders, createIfNoneMatchHeaders } from './asset-headers';
+import { ASSET_SDK_OPS } from './asset-sdk-ops';
 import {
   ASSET_MERGERS,
   CoreResourceMetadataNode,
@@ -32,7 +33,20 @@ import {
   ResourceInfo,
   toResourceInfoList,
 } from './asset-metadata';
+import { AssetMetadataQuery } from './models';
 import { fetchAllPages } from './pagination';
+
+/**
+ * The hand-written URL for a type with no SDK row yet. A type with neither throws here, naming it, instead of
+ * requesting `undefinedfoo`.
+ */
+const resourceUrl = (urls: Partial<Record<ResourceType, string>>, type: ResourceType): string => {
+  const url = urls[type];
+  if (url === undefined) {
+    throw new Error(`No Core URL or SDK operation for resource type: ${type}`);
+  }
+  return url;
+};
 
 export interface GetMetadataOptions {
   recursive?: boolean;
@@ -60,22 +74,39 @@ export class AssetApi extends CoreApi {
     type: ResourceType,
     path: string,
     options: GetMetadataOptions = {},
-  ): Promise<CoreResourceMetadataNode | null> {
-    const resolvedPath = this.resolveListPath(type, path);
-    const params = new URLSearchParams();
-    params.set('recursive', String(options.recursive ?? false));
-    if (options.nextToken) {
-      // Core reads the continuation marker from the `token` query param but returns it as
-      // `nextToken` in the response body — sending it back as `nextToken` is ignored and Core
-      // re-serves the first page forever.
-      params.set('token', options.nextToken);
-    }
+  ): Promise<CoreResourceMetadataNode | null | undefined> {
+    const resolvedPath = encodeCorePath(this.resolveListPath(type, path));
+    // Core reads the continuation marker from the `token` query param but returns it as
+    // `nextToken` in the response body — sending it back as `nextToken` is ignored and Core
+    // re-serves the first page forever.
+    const query: AssetMetadataQuery = {
+      recursive: options.recursive ?? false,
+      ...(options.nextToken ? { token: options.nextToken } : {}),
+    };
     const limit = options.limit ?? (DEFAULT_LIST_PATH_TYPES.has(type) ? DEFAULT_LIST_LIMIT : undefined);
     if (limit !== undefined) {
-      params.set('limit', String(limit));
+      query.limit = limit;
     }
-    const url = `${CORE_RESOURCE_METADATA_URL[type]}${encodeCorePath(resolvedPath)}?${params.toString()}`;
-    return this.get<CoreResourceMetadataNode>(url, token);
+
+    const ops = ASSET_SDK_OPS[type];
+    if (ops) {
+      return this.sdkGet<CoreResourceMetadataNode>(token, (init) =>
+        ops.getMetadata(this.sdk, resolvedPath, query, init),
+      );
+    }
+
+    const params = new URLSearchParams();
+    params.set('recursive', String(query.recursive));
+    if (query.token) {
+      params.set('token', query.token);
+    }
+    if (query.limit !== undefined) {
+      params.set('limit', String(query.limit));
+    }
+    return this.get<CoreResourceMetadataNode>(
+      `${resourceUrl(CORE_RESOURCE_METADATA_URL, type)}${resolvedPath}?${params.toString()}`,
+      token,
+    );
   }
 
   /** Lists the items directly under a folder as lightweight rows (metadata only, no content fetch). */
@@ -86,10 +117,27 @@ export class AssetApi extends CoreApi {
     );
   }
 
-  /** Reads a resource's content DTO (`GET /v1/{type}/{path}`), conditionally on `etag`. */
-  getContent<T extends object>(token: Token, type: ResourceType, path: string, etag?: string): Promise<T | null> {
-    const url = `${CORE_RESOURCE_URL[type]}${encodeCorePath(path)}`;
-    return this.get<T>(url, token, createIfNoneMatchHeaders(etag));
+  /**
+   * Reads a resource's content DTO (`GET /v1/{type}/{path}`), conditionally on `etag`.
+   * `undefined` is a `403`, `null` any other failure: `get` and `sdkGet` both resolve a `403` to `undefined` and only
+   * type it `T | null`, so the signature of this and `getMetadata` says what they return.
+   */
+  getContent<T extends object>(
+    token: Token,
+    type: ResourceType,
+    path: string,
+    etag?: string,
+  ): Promise<T | null | undefined> {
+    const encodedPath = encodeCorePath(path);
+    const ops = ASSET_SDK_OPS[type];
+    if (ops) {
+      return this.sdkGet<T>(
+        token,
+        (init) => ops.getContent(this.sdk, encodedPath, init),
+        createIfNoneMatchHeaders(etag),
+      );
+    }
+    return this.get<T>(`${resourceUrl(CORE_RESOURCE_URL, type)}${encodedPath}`, token, createIfNoneMatchHeaders(etag));
   }
 
   /**
@@ -130,8 +178,21 @@ export class AssetApi extends CoreApi {
     if (!merge) {
       throw new Error(`No content+metadata mapper registered for resource type: ${type}`);
     }
-    const url = `${CORE_RESOURCE_URL[type]}${encodeCorePath(path)}`;
-    const contentResult = await this.sendActionRequest(url, 'GET', token, undefined, createIfNoneMatchHeaders(etag));
+    const encodedPath = encodeCorePath(path);
+    const ops = ASSET_SDK_OPS[type];
+    const contentResult = ops
+      ? await this.sdkAction(
+          token,
+          (init) => ops.getContent(this.sdk, encodedPath, init),
+          createIfNoneMatchHeaders(etag),
+        )
+      : await this.sendActionRequest(
+          `${resourceUrl(CORE_RESOURCE_URL, type)}${encodedPath}`,
+          'GET',
+          token,
+          undefined,
+          createIfNoneMatchHeaders(etag),
+        );
     if (!contentResult.success) {
       return contentResult as ServerActionResponse<T>;
     }
@@ -165,9 +226,13 @@ export class AssetApi extends CoreApi {
     body: T,
     options: { allowOverride?: boolean; etag?: string } = {},
   ): Promise<ServerActionResponse> {
-    const url = `${CORE_RESOURCE_URL[type]}${encodeCorePath(path)}`;
+    const encodedPath = encodeCorePath(path);
     const headers = createHeadersForCreate(Boolean(options.allowOverride || options.etag), options.etag);
-    const result = await this.putAction(url, this.withContentId(type, path, body), token, headers);
+    const content = this.withContentId(type, path, body);
+    const ops = ASSET_SDK_OPS[type];
+    const result = ops
+      ? await this.sdkAction(token, (init) => ops.save(this.sdk, encodedPath, content, init), headers)
+      : await this.putAction(`${resourceUrl(CORE_RESOURCE_URL, type)}${encodedPath}`, content, token, headers);
     if (!result.success) {
       return result;
     }
@@ -228,8 +293,18 @@ export class AssetApi extends CoreApi {
 
   /** Deletes a resource (`DELETE /v1/{type}/{path}`), conditionally on `etag` when supplied. */
   delete(token: Token, type: ResourceType, path: string, etag?: string): Promise<ServerActionResponse> {
-    const url = `${CORE_RESOURCE_URL[type]}${encodeCorePath(path)}`;
-    return this.sendActionRequest(url, 'DELETE', token, undefined, createIfMatchHeaders(etag));
+    const encodedPath = encodeCorePath(path);
+    const ops = ASSET_SDK_OPS[type];
+    if (ops) {
+      return this.sdkDelete(token, (init) => ops.delete(this.sdk, encodedPath, init), createIfMatchHeaders(etag));
+    }
+    return this.sendActionRequest(
+      `${resourceUrl(CORE_RESOURCE_URL, type)}${encodedPath}`,
+      'DELETE',
+      token,
+      undefined,
+      createIfMatchHeaders(etag),
+    );
   }
 
   /**

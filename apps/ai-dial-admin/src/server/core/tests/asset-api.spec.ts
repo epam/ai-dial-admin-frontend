@@ -38,17 +38,17 @@ describe('Server :: Core :: AssetApi', () => {
     expect(fetch.mock.calls[0][0]).not.toContain('/public/');
   });
 
-  test('getMetadata strips the redundant platform root segment for Model (already baked into the prefix)', async () => {
+  test('getMetadata strips the redundant platform root segment for a flat platform type (already baked into the prefix)', async () => {
     fetch.mockResponseOnce(JSON.stringify({ name: 'platform', nodeType: 'FOLDER', items: [] }));
-    await instance.getMetadata(TOKEN_MOCK, ResourceType.MODEL, 'platform/');
-    expect(fetch.mock.calls[0][0]).toContain('/v1/metadata/models/platform/?');
+    await instance.getMetadata(TOKEN_MOCK, ResourceType.ROLE, 'platform/');
+    expect(fetch.mock.calls[0][0]).toContain('/v1/metadata/roles/platform/?');
     expect(fetch.mock.calls[0][0]).not.toContain('platform/platform');
   });
 
-  test('getMetadata leaves a bare Model item path (no platform segment) unchanged', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ name: 'gpt-4', nodeType: 'ITEM' }));
-    await instance.getMetadata(TOKEN_MOCK, ResourceType.MODEL, 'gpt-4');
-    expect(fetch.mock.calls[0][0]).toContain('/v1/metadata/models/platform/gpt-4');
+  test('getMetadata leaves a bare item path (no platform segment) unchanged for a flat platform type', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ name: 'my-role', nodeType: 'ITEM' }));
+    await instance.getMetadata(TOKEN_MOCK, ResourceType.ROLE, 'my-role');
+    expect(fetch.mock.calls[0][0]).toContain('/v1/metadata/roles/platform/my-role');
   });
 
   test('list maps both ITEM and FOLDER nodes into resource info rows, tagged with nodeType and bucket', async () => {
@@ -138,22 +138,22 @@ describe('Server :: Core :: AssetApi', () => {
     expect((result.response as { _metadata?: { version?: string } })._metadata?.version).toBeUndefined();
   });
 
-  test('getMergedWithEtag reads the etag from metadata for an unversioned type (Model), not the content response', async () => {
+  test('getMergedWithEtag reads the etag from metadata for an unversioned type (Role), not the content response', async () => {
     fetch.mockResponseOnce(JSON.stringify({ type: 'chat' }), {
       headers: { 'content-type': 'application/json' },
     });
     fetch.mockResponseOnce(
-      JSON.stringify({ name: 'gpt-4', nodeType: 'ITEM', url: 'models/platform/gpt-4', etag: 'meta-etag-1' }),
+      JSON.stringify({ name: 'my-role', nodeType: 'ITEM', url: 'roles/platform/my-role', etag: 'meta-etag-1' }),
       { headers: { 'content-type': 'application/json' } },
     );
 
-    const result = await instance.getMergedWithEtag(TOKEN_MOCK, ResourceType.MODEL, 'gpt-4');
+    const result = await instance.getMergedWithEtag(TOKEN_MOCK, ResourceType.ROLE, 'my-role');
 
     expect(result.success).toBe(true);
     expect(result.etag).toBe('meta-etag-1');
     expect(result.response).toMatchObject({
       type: 'chat',
-      _metadata: { name: 'gpt-4', path: 'gpt-4', folderId: '' },
+      _metadata: { name: 'my-role', path: 'my-role', folderId: '' },
     });
   });
 

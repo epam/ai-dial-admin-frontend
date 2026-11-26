@@ -37,10 +37,32 @@ export class CoreApi extends BaseApi {
    * SDK counterpart of `getAction` and friends: resolves to the same envelope `handleResponse` builds.
    * `headers` are sent alongside the caller's `authorization`, which they can never supply or replace.
    */
-  protected async sdkAction<T extends object = object>(
+  protected sdkAction<T extends object = object>(
     token: Token | undefined,
     call: CoreSdkCall,
     headers?: Record<string, string>,
+  ): Promise<ServerActionResponse<T>> {
+    return this.runSdkAction<T>(token, call, headers, false);
+  }
+
+  /**
+   * SDK counterpart of `deleteAction` / `sendActionRequest(..., 'DELETE')`. The hand-written client reads a `DELETE`
+   * body with `res.text()`, so a success body stays text (`''` when empty) and is never parsed as JSON, which also means
+   * a `200` body carrying an `error` field is still a success. Failures are unchanged.
+   */
+  protected sdkDelete(
+    token: Token | undefined,
+    call: CoreSdkCall,
+    headers?: Record<string, string>,
+  ): Promise<ServerActionResponse> {
+    return this.runSdkAction(token, call, headers, true);
+  }
+
+  private async runSdkAction<T extends object>(
+    token: Token | undefined,
+    call: CoreSdkCall,
+    headers: Record<string, string> | undefined,
+    isRawBody: boolean,
   ): Promise<ServerActionResponse<T>> {
     const result = await runSdkCall(token, call, headers);
     if (!result) {
@@ -55,6 +77,10 @@ export class CoreApi extends BaseApi {
       this.setLoggerRequestInfoError(response);
       this.setLoggerRequestError(body, response);
       return this.toFailure(this.parseErrorBody(body, response.status), response, etag);
+    }
+
+    if (isRawBody) {
+      return { success: true, response: (typeof data === 'string' ? data : '') as unknown as T, etag };
     }
 
     const parsed = parseSdkBody(data, response);
