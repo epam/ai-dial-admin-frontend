@@ -621,10 +621,10 @@ the table first. Each SHALL keep its own height: neither stretches to match the 
 
 ### Requirement: Health distribution chart
 
-The System Health page SHALL show a **Test suite health distribution - 5 weeks** chart. It SHALL read the
-five most recent UTC weeks, the current week included, from the evaluation analytics endpoint
-`GET /api/v1/analytics/test-suites/health-distribution` with the backend's default threshold of 0.75, and
-SHALL send no filter. It SHALL draw one bar per week, oldest week first and the current week last, each bar
+The System Health page SHALL show a **Test suite health distribution - N weeks** chart, N being the number of
+weeks selected. By default it SHALL read the five most recent UTC weeks, the current week included, from the
+evaluation analytics endpoint `GET /api/v1/analytics/test-suites/health-distribution` with a threshold of 0.75,
+and SHALL send no filter. It SHALL draw one bar per week, oldest week first and the current week last, each bar
 split into a **Healthy** band for the test suites whose weekly pass rate is at or above the threshold and a
 **Fail** band for those below it. A bar SHALL be scaled to the week's own suites, so every bar with data
 reaches the same height and the bands show shares rather than counts. A week the endpoint reports with no
@@ -635,7 +635,7 @@ colour of the active theme.
 
 - **WHEN** the endpoint returns five weeks
 - **THEN** the chart shows five bars in the order the endpoint returned them, the oldest first
-- **AND** the request asked for 5 weeks and no filter
+- **AND** the request asked for 5 weeks at a threshold of 0.75 and no filter
 
 #### Scenario: Bars are shares
 
@@ -647,6 +647,53 @@ colour of the active theme.
 
 - **WHEN** a week is reported with 0 healthy and 0 failing suites
 - **THEN** its place on the x-axis is kept and no bar is drawn for it
+
+### Requirement: Health distribution controls
+
+The header of the chart section SHALL carry two controls beside the title: a **Weeks** select and a **Healthy ≥**
+percentage field. The Weeks select SHALL offer 5, 8 and 12 weeks and start at 5. The percentage field SHALL
+accept a whole number from 0 to 100 and start at 75, and the chart SHALL send it to the endpoint as a fraction of 1
+(75 as 0.75). Picking a number of weeks SHALL request the chart at once. The percentage SHALL be applied when the
+user presses Enter or leaves the field, not on each keystroke; a typed value outside 0 to 100 SHALL be clamped to
+it, and an empty field SHALL revert to the percentage last applied. A request SHALL NOT be made when the applied
+value did not change. A **Reset** control SHALL appear only while either value differs from its default and SHALL
+restore both. The controls SHALL stay usable while the chart is loading or has failed, and each SHALL have an
+accessible name; the title, the legend, the explanation tooltip and the hidden table SHALL follow the applied values.
+A request that a newer change has superseded SHALL NOT replace the chart.
+
+#### Scenario: Defaults
+
+- **WHEN** the page is first shown
+- **THEN** the Weeks select shows 5 and the percentage field 75
+- **AND** no Reset control is shown
+
+#### Scenario: Changing the weeks
+
+- **WHEN** the user picks 12 weeks
+- **THEN** the chart is requested at once for 12 weeks at the applied threshold
+- **AND** the title reads `Test suite health distribution - 12 weeks`
+- **AND** a Reset control appears
+
+#### Scenario: Changing the threshold
+
+- **WHEN** the user types 90 in the percentage field and presses Enter, or leaves the field
+- **THEN** the chart is requested with a threshold of 0.9
+- **AND** the legend reads `Healthy ≥ 0.9` and `Fail < 0.9`
+
+#### Scenario: Typing does not request
+
+- **WHEN** the user is typing in the percentage field and has not pressed Enter or left it
+- **THEN** no request is made
+
+#### Scenario: Unusable value
+
+- **WHEN** the user empties the percentage field and leaves it
+- **THEN** the field shows the percentage last applied and no request is made
+
+#### Scenario: Reset
+
+- **WHEN** the user activates Reset
+- **THEN** the controls return to 5 weeks and 75%, and the chart is requested with those values
 
 ### Requirement: Health distribution week labels and legend
 

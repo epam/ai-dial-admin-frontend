@@ -4871,4 +4871,7 @@ export enum EvalSystemHealthI18nKey {
   HealthDistributionColumnWeek = 'EvalSystemHealth.HealthDistributionColumnWeek',
   HealthDistributionColumnHealthy = 'EvalSystemHealth.HealthDistributionColumnHealthy',
   HealthDistributionColumnFail = 'EvalSystemHealth.HealthDistributionColumnFail',
+  HealthDistributionControlsLabel = 'EvalSystemHealth.HealthDistributionControlsLabel',
+  HealthDistributionWeeksLabel = 'EvalSystemHealth.HealthDistributionWeeksLabel',
+  HealthDistributionThresholdLabel = 'EvalSystemHealth.HealthDistributionThresholdLabel',
 }

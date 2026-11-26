@@ -70,8 +70,15 @@ export const RUN_TREND_KIND_BY_SUITE_TYPE: Record<SuiteType, EvalSystemHealthI18
   [SuiteType.Route]: EvalSystemHealthI18nKey.RunTrendsKindRoute,
 };
 
-/** Weeks the health distribution chart shows; the title and the request both name it, so it is sent, not defaulted. */
+/** Weeks the health distribution chart shows by default; the title and the request both name it, so it is sent, not defaulted. */
 export const HEALTH_DISTRIBUTION_WEEKS = 5;
+
+/** Week counts the chart's period select offers; includes the default. */
+export const HEALTH_DISTRIBUTION_WEEK_OPTIONS = [HEALTH_DISTRIBUTION_WEEKS, 8, 12];
+
+/** The threshold is edited as a whole percentage and sent as a fraction of 1. */
+export const HEALTH_DISTRIBUTION_THRESHOLD_PERCENT_MIN = 0;
+export const HEALTH_DISTRIBUTION_THRESHOLD_PERCENT_MAX = 100;
 
 /** Pass rate at or above which a test suite counts as healthy in a week; the backend's own default, sent explicitly. */
 export const HEALTH_DISTRIBUTION_THRESHOLD = 0.75;

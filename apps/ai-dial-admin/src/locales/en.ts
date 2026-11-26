@@ -5111,5 +5111,8 @@ export default {
     HealthDistributionColumnWeek: 'Week of',
     HealthDistributionColumnHealthy: 'Healthy suites',
     HealthDistributionColumnFail: 'Failing suites',
+    HealthDistributionControlsLabel: 'Health distribution settings',
+    HealthDistributionWeeksLabel: 'Weeks',
+    HealthDistributionThresholdLabel: 'Healthy ≥',
   },
 } as const;

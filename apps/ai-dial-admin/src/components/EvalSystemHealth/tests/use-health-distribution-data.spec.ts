@@ -34,10 +34,10 @@ describe('useHealthDistributionData', () => {
     vi.clearAllMocks();
   });
 
-  test('starts loading with no bars and asks for five weeks at the default threshold', () => {
+  test('starts loading with no bars and asks for the given weeks and threshold', () => {
     vi.mocked(getHealthDistribution).mockReturnValue(new Promise(() => undefined));
 
-    const { result } = renderHook(() => useHealthDistributionData());
+    const { result } = renderHook(() => useHealthDistributionData(5, 0.75));
 
     expect(result.current.status).toBe(CoverageStatus.Loading);
     expect(result.current.bars).toEqual([]);
@@ -58,7 +58,7 @@ describe('useHealthDistributionData', () => {
       ),
     );
 
-    const { result } = renderHook(() => useHealthDistributionData());
+    const { result } = renderHook(() => useHealthDistributionData(5, 0.75));
 
     await waitFor(() => expect(result.current.status).toBe(CoverageStatus.Ready));
     expect(result.current.bars.map((bar) => bar.suiteCount)).toEqual([4, 0, 4]);
@@ -75,16 +75,47 @@ describe('useHealthDistributionData', () => {
       ]),
     );
 
-    const { result } = renderHook(() => useHealthDistributionData());
+    const { result } = renderHook(() => useHealthDistributionData(5, 0.75));
 
     await waitFor(() => expect(result.current.status).toBe(CoverageStatus.Ready));
     expect(result.current.isEmpty).toBe(true);
   });
 
+  test('requests again when the weeks or the threshold change and drops the response it replaced', async () => {
+    const first = deferred<HealthDistribution | null>();
+    const second = deferred<HealthDistribution | null>();
+    const third = deferred<HealthDistribution | null>();
+    vi.mocked(getHealthDistribution)
+      .mockReturnValueOnce(first.promise)
+      .mockReturnValueOnce(second.promise)
+      .mockReturnValueOnce(third.promise);
+
+    const { result, rerender } = renderHook(({ weeks, threshold }) => useHealthDistributionData(weeks, threshold), {
+      initialProps: { weeks: 5, threshold: 0.75 },
+    });
+    rerender({ weeks: 12, threshold: 0.75 });
+    rerender({ weeks: 12, threshold: 0.9 });
+
+    expect(getHealthDistribution).toHaveBeenNthCalledWith(2, 12, 0.75);
+    expect(getHealthDistribution).toHaveBeenNthCalledWith(3, 12, 0.9);
+    expect(result.current.status).toBe(CoverageStatus.Loading);
+    expect(result.current.threshold).toBe(0.9);
+
+    await act(async () => third.resolve(distributionOf([[4, 0]], 0.9)));
+    await waitFor(() => expect(result.current.status).toBe(CoverageStatus.Ready));
+    await act(async () => {
+      first.resolve(distributionOf([[0, 9]]));
+      second.resolve(distributionOf([[0, 8]]));
+    });
+
+    expect(result.current.bars).toHaveLength(1);
+    expect(result.current.bars[0].healthyCount).toBe(4);
+  });
+
   test('reports a null result as an error with no bars', async () => {
     vi.mocked(getHealthDistribution).mockResolvedValue(null);
 
-    const { result } = renderHook(() => useHealthDistributionData());
+    const { result } = renderHook(() => useHealthDistributionData(5, 0.75));
 
     await waitFor(() => expect(result.current.status).toBe(CoverageStatus.Error));
     expect(result.current.bars).toEqual([]);
@@ -94,14 +125,14 @@ describe('useHealthDistributionData', () => {
   test('reports a throwing request as an error', async () => {
     vi.mocked(getHealthDistribution).mockRejectedValue(new Error('boom'));
 
-    const { result } = renderHook(() => useHealthDistributionData());
+    const { result } = renderHook(() => useHealthDistributionData(5, 0.75));
 
     await waitFor(() => expect(result.current.status).toBe(CoverageStatus.Error));
   });
 
   test('requests again on retry and shows loading until the response returns', async () => {
     vi.mocked(getHealthDistribution).mockResolvedValueOnce(null);
-    const { result } = renderHook(() => useHealthDistributionData());
+    const { result } = renderHook(() => useHealthDistributionData(5, 0.75));
     await waitFor(() => expect(result.current.status).toBe(CoverageStatus.Error));
 
     const second = deferred<HealthDistribution | null>();
@@ -121,7 +152,7 @@ describe('useHealthDistributionData', () => {
     const second = deferred<HealthDistribution | null>();
     vi.mocked(getHealthDistribution).mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
 
-    const { result } = renderHook(() => useHealthDistributionData());
+    const { result } = renderHook(() => useHealthDistributionData(5, 0.75));
     act(() => result.current.retry());
 
     await act(async () => second.resolve(distributionOf([[2, 0]])));

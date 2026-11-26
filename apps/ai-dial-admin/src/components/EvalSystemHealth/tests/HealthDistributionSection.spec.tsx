@@ -6,6 +6,7 @@ import HealthDistributionSection from '@/src/components/EvalSystemHealth/HealthD
 import {
   CoverageStatus,
   HealthDistributionBar,
+  HealthDistributionControlsProps,
   HealthDistributionData,
 } from '@/src/components/EvalSystemHealth/models';
 import { useHealthDistributionData } from '@/src/components/EvalSystemHealth/use-health-distribution-data';
@@ -19,6 +20,23 @@ vi.mock('@/src/locales/client', () => ({
 
 vi.mock('@/src/components/EvalSystemHealth/use-health-distribution-data', () => ({
   useHealthDistributionData: vi.fn(),
+}));
+vi.mock('@/src/components/EvalSystemHealth/HealthDistributionControls', () => ({
+  default: ({
+    weeks,
+    thresholdPercent,
+    isModified,
+    onWeeksChange,
+    onThresholdPercentChange,
+    onReset,
+  }: HealthDistributionControlsProps) => (
+    <div>
+      <span>{`controls ${weeks} weeks at ${thresholdPercent}%${isModified ? ' modified' : ''}`}</span>
+      <button onClick={() => onWeeksChange(12)}>pick 12 weeks</button>
+      <button onClick={() => onThresholdPercentChange(90)}>pick 90 percent</button>
+      <button onClick={onReset}>reset controls</button>
+    </div>
+  ),
 }));
 vi.mock('@/src/components/EvalSystemHealth/HealthDistributionChart', () => ({
   default: ({ bars }: { bars: HealthDistributionBar[] }) => <div>{`chart of ${bars.length} weeks`}</div>,
@@ -109,5 +127,52 @@ describe('HealthDistributionSection', () => {
     render(<HealthDistributionSection />);
 
     expect(screen.getByRole('heading', { name: TITLE })).toBeTruthy();
+  });
+
+  test('requests the defaults and shows the controls unmodified at first', () => {
+    mockData();
+    render(<HealthDistributionSection />);
+
+    expect(useHealthDistributionData).toHaveBeenLastCalledWith(5, 0.75);
+    expect(screen.getByText('controls 5 weeks at 75%')).toBeTruthy();
+  });
+
+  test('requests the chosen weeks and threshold and retitles the section', async () => {
+    const user = userEvent.setup();
+    mockData();
+    render(<HealthDistributionSection />);
+
+    await user.click(screen.getByRole('button', { name: 'pick 12 weeks' }));
+    await user.click(screen.getByRole('button', { name: 'pick 90 percent' }));
+
+    expect(useHealthDistributionData).toHaveBeenLastCalledWith(12, 0.9);
+    expect(
+      screen.getByRole('heading', {
+        name: `${EvalSystemHealthI18nKey.HealthDistribution}:${JSON.stringify({ count: 12 })}`,
+      }),
+    ).toBeTruthy();
+    expect(screen.getByText('controls 12 weeks at 90% modified')).toBeTruthy();
+  });
+
+  test('restores the defaults on reset', async () => {
+    const user = userEvent.setup();
+    mockData();
+    render(<HealthDistributionSection />);
+
+    await user.click(screen.getByRole('button', { name: 'pick 12 weeks' }));
+    await user.click(screen.getByRole('button', { name: 'reset controls' }));
+
+    expect(useHealthDistributionData).toHaveBeenLastCalledWith(5, 0.75);
+    expect(screen.getByText('controls 5 weeks at 75%')).toBeTruthy();
+  });
+
+  test('keeps the controls through loading and failure so the user can change them', () => {
+    mockData({ status: CoverageStatus.Loading, bars: [] });
+    const { rerender } = render(<HealthDistributionSection />);
+    expect(screen.getByText('controls 5 weeks at 75%')).toBeTruthy();
+
+    mockData({ status: CoverageStatus.Error, bars: [] });
+    rerender(<HealthDistributionSection />);
+    expect(screen.getByText('controls 5 weeks at 75%')).toBeTruthy();
   });
 });

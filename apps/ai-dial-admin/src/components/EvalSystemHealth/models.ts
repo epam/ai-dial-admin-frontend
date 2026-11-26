@@ -161,3 +161,14 @@ export interface HealthDistributionData {
   /** Requests the chart again after a failure. */
   retry: () => void;
 }
+
+export interface HealthDistributionControlsProps {
+  weeks: number;
+  /** The applied threshold as a whole percentage, 0 to 100. */
+  thresholdPercent: number;
+  /** Whether either value differs from its default. */
+  isModified: boolean;
+  onWeeksChange: (weeks: number) => void;
+  onThresholdPercentChange: (thresholdPercent: number) => void;
+  onReset: () => void;
+}

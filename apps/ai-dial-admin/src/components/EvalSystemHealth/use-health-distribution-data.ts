@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getHealthDistribution } from '@/src/app/[lang]/runs/actions';
-import { HEALTH_DISTRIBUTION_THRESHOLD, HEALTH_DISTRIBUTION_WEEKS } from '@/src/components/EvalSystemHealth/constants';
 import { CoverageStatus, HealthDistributionData } from '@/src/components/EvalSystemHealth/models';
 import { buildHealthDistributionBars } from '@/src/components/EvalSystemHealth/utils/build-health-distribution-bars';
 import { HealthDistribution } from '@/src/models/evaluation/health-distribution';
@@ -17,16 +16,19 @@ const LOADING: LoadState = { status: CoverageStatus.Loading, data: null };
 const FAILED: LoadState = { status: CoverageStatus.Error, data: null };
 
 /** Never rejects: a request that cannot be read is reported as `null`, the API's own way of reporting a failure. */
-const loadDistribution = async (): Promise<HealthDistribution | null> => {
+const loadDistribution = async (weeks: number, threshold: number): Promise<HealthDistribution | null> => {
   try {
-    return await getHealthDistribution(HEALTH_DISTRIBUTION_WEEKS, HEALTH_DISTRIBUTION_THRESHOLD);
+    return await getHealthDistribution(weeks, threshold);
   } catch {
     return null;
   }
 };
 
-/** Loads the weekly health distribution once, and again on retry. A response a retry has superseded is dropped. */
-export const useHealthDistributionData = (): HealthDistributionData => {
+/**
+ * Loads the weekly health distribution for `weeks` weeks at `threshold` (a fraction of 1), and again whenever
+ * either changes or on retry. A response a newer request has superseded is dropped.
+ */
+export const useHealthDistributionData = (weeks: number, threshold: number): HealthDistributionData => {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<LoadState>(LOADING);
 
@@ -35,7 +37,7 @@ export const useHealthDistributionData = (): HealthDistributionData => {
 
     setState(LOADING);
     const load = async () => {
-      const result = await loadDistribution();
+      const result = await loadDistribution(weeks, threshold);
       if (isCancelled) {
         return;
       }
@@ -46,7 +48,7 @@ export const useHealthDistributionData = (): HealthDistributionData => {
     return () => {
       isCancelled = true;
     };
-  }, [attempt]);
+  }, [attempt, weeks, threshold]);
 
   const retry = useCallback(() => setAttempt((current) => current + 1), []);
 
@@ -55,7 +57,7 @@ export const useHealthDistributionData = (): HealthDistributionData => {
   return {
     status: state.status,
     bars,
-    threshold: state.data?.threshold ?? HEALTH_DISTRIBUTION_THRESHOLD,
+    threshold: state.data?.threshold ?? threshold,
     isEmpty: state.status === CoverageStatus.Ready && bars.every((bar) => bar.suiteCount === 0),
     retry,
   };
