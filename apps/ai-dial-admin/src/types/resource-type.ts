@@ -13,10 +13,7 @@ export enum ResourceType {
   TRANSLATOR = 'TRANSLATOR',
   PLUGIN = 'PLUGIN',
   ROUTER = 'ROUTER',
-  /**
-   * Read-only here: registered so the metadata route can list the API-written half of Core's role
-   * population. No asset surface writes it through `AssetApi`.
-   */
+  /** Read and written through `AssetApi` (create, update, delete, bulk delete), like the other flat platform types. */
   ROLE = 'ROLE',
   ROUTE = 'ROUTE',
   PROJECT_KEY = 'PROJECT_KEY',

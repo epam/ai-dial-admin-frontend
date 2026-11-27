@@ -11,17 +11,18 @@ fetch.enableMocks();
 const JSON_HEADERS = { 'content-type': 'application/json' };
 
 /**
- * `MODEL` goes through the SDK and `ROLE` still goes through the hand-written client, and both are flat platform
- * types, so for the same name their requests differ only by the `models` / `roles` prefix. That makes the
+ * `MODEL` goes through the SDK and `POLICY` still goes through the hand-written client, and both live in the
+ * `platform` bucket, so for the same name their requests differ only by the `models` / `policies` prefix (a
+ * policy also takes one folder level; only the URL is compared, so that does not matter here). That makes the
  * hand-written request the reference an SDK request has to equal: a change in how the SDK treats a path then fails
- * here instead of reaching Core as a different URL. Each later migration moves the reference to a type still on
- * the hand-written client.
+ * here instead of reaching Core as a different URL. Each later migration moves the reference to a type still on the
+ * hand-written client.
  */
 const urlOf = (index: number): string => {
   const sent = fetch.mock.calls[index][0] as unknown;
   return typeof sent === 'string' ? sent : (sent as Request).url;
 };
-const asModelUrl = (roleUrl: string): string => roleUrl.replace('/roles/', '/models/');
+const asModelUrl = (policyUrl: string): string => policyUrl.replace('/policies/', '/models/');
 
 const NAMES: Array<[string, string]> = [
   ['a plain name', 'gpt-4'],
@@ -43,7 +44,7 @@ describe('Server :: Core :: AssetApi :: request paths equal the hand-written cli
     // are the pair's own requests, whatever ran before in the same test.
     fetch.resetMocks();
     fetch.mockResponse('{}', { headers: JSON_HEADERS });
-    await read(ResourceType.ROLE);
+    await read(ResourceType.POLICY);
     await read(ResourceType.MODEL);
     return { handWritten: asModelUrl(urlOf(0)), sdk: urlOf(1) };
   };
@@ -145,7 +146,7 @@ describe('Server :: Core :: AssetApi :: a 304 on a conditional read', () => {
 
   test('getMergedWithEtag fails the same way through the SDK and the hand-written client', async () => {
     fetch.mockResolvedValueOnce(notModified());
-    const handWritten = await instance.getMergedWithEtag(TOKEN_MOCK, ResourceType.ROLE, 'r', '"e1"');
+    const handWritten = await instance.getMergedWithEtag(TOKEN_MOCK, ResourceType.POLICY, 'r', '"e1"');
     fetch.mockResolvedValueOnce(notModified());
     const sdk = await instance.getMergedWithEtag(TOKEN_MOCK, ResourceType.MODEL, 'm', '"e1"');
 
@@ -163,7 +164,7 @@ describe('Server :: Core :: AssetApi :: a 304 on a conditional read', () => {
 
   test('getContent with an etag resolves null through the SDK and the hand-written client', async () => {
     fetch.mockResolvedValueOnce(notModified());
-    const handWritten = await instance.getContent(TOKEN_MOCK, ResourceType.ROLE, 'r', '"e1"');
+    const handWritten = await instance.getContent(TOKEN_MOCK, ResourceType.POLICY, 'r', '"e1"');
     fetch.mockResolvedValueOnce(notModified());
     const sdk = await instance.getContent(TOKEN_MOCK, ResourceType.MODEL, 'm', '"e1"');
 

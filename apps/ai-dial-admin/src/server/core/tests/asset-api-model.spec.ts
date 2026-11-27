@@ -188,9 +188,9 @@ describe('Server :: Core :: AssetApi :: Model through the SDK', () => {
     [ResourceType.MODEL, 403, undefined],
     [ResourceType.MODEL, 404, null],
     [ResourceType.MODEL, 500, null],
-    [ResourceType.ROLE, 403, undefined],
-    [ResourceType.ROLE, 404, null],
-    [ResourceType.ROLE, 500, null],
+    [ResourceType.POLICY, 403, undefined],
+    [ResourceType.POLICY, 404, null],
+    [ResourceType.POLICY, 500, null],
   ])('a %s content or metadata read answered with %i resolves to %s', async (type, status, expected) => {
     fetch.mockResponseOnce('no', { status });
     fetch.mockResponseOnce('no', { status });
@@ -210,9 +210,9 @@ describe('Server :: Core :: AssetApi :: SDK dispatch', () => {
   test('a type with no SDK row yet is still read by the hand-written client at its own URL', async () => {
     fetch.mockResponseOnce('{}', { headers: JSON_HEADERS });
 
-    await instance.getContent(TOKEN_MOCK, ResourceType.ROLE, 'my-role');
+    await instance.getContent(TOKEN_MOCK, ResourceType.POLICY, 'my-policy');
 
-    expect(fetch.mock.calls[0][0]).toBe(`${CORE_TEST_URL}v1/roles/platform/my-role`);
+    expect(fetch.mock.calls[0][0]).toBe(`${CORE_TEST_URL}v1/policies/platform/my-policy`);
   });
 
   test('a type with neither an SDK row nor a URL fails with an error naming it', async () => {

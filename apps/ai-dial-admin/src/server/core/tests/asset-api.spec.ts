@@ -1,4 +1,4 @@
-import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
+import { CORE_TEST_URL, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
@@ -8,6 +8,9 @@ import { AssetApi } from '../asset-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
+
+/** The SDK hands `fetch` a `Request` (which needs an absolute host); the hand-written client hands it a URL string. */
+const sentUrl = (index: number): string => (fetch.mock.calls[index][0] as unknown as Request).url;
 
 describe('Server :: Core :: AssetApi', () => {
   const instance = new AssetApi({ host: TEST_URL });
@@ -38,17 +41,17 @@ describe('Server :: Core :: AssetApi', () => {
     expect(fetch.mock.calls[0][0]).not.toContain('/public/');
   });
 
-  test('getMetadata strips the redundant platform root segment for a flat platform type (already baked into the prefix)', async () => {
+  test('getMetadata strips the redundant platform root segment for a platform-bucket type (already baked into the prefix)', async () => {
     fetch.mockResponseOnce(JSON.stringify({ name: 'platform', nodeType: 'FOLDER', items: [] }));
-    await instance.getMetadata(TOKEN_MOCK, ResourceType.ROLE, 'platform/');
-    expect(fetch.mock.calls[0][0]).toContain('/v1/metadata/roles/platform/?');
+    await instance.getMetadata(TOKEN_MOCK, ResourceType.POLICY, 'platform/');
+    expect(fetch.mock.calls[0][0]).toContain('/v1/metadata/policies/platform/?');
     expect(fetch.mock.calls[0][0]).not.toContain('platform/platform');
   });
 
-  test('getMetadata leaves a bare item path (no platform segment) unchanged for a flat platform type', async () => {
-    fetch.mockResponseOnce(JSON.stringify({ name: 'my-role', nodeType: 'ITEM' }));
-    await instance.getMetadata(TOKEN_MOCK, ResourceType.ROLE, 'my-role');
-    expect(fetch.mock.calls[0][0]).toContain('/v1/metadata/roles/platform/my-role');
+  test('getMetadata leaves a bare item path (no platform segment) unchanged for a platform-bucket type', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ name: 'my-policy', nodeType: 'ITEM' }));
+    await instance.getMetadata(TOKEN_MOCK, ResourceType.POLICY, 'my-policy');
+    expect(fetch.mock.calls[0][0]).toContain('/v1/metadata/policies/platform/my-policy');
   });
 
   test('list maps both ITEM and FOLDER nodes into resource info rows, tagged with nodeType and bucket', async () => {
@@ -138,22 +141,22 @@ describe('Server :: Core :: AssetApi', () => {
     expect((result.response as { _metadata?: { version?: string } })._metadata?.version).toBeUndefined();
   });
 
-  test('getMergedWithEtag reads the etag from metadata for an unversioned type (Role), not the content response', async () => {
+  test('getMergedWithEtag reads the etag from metadata for an unversioned type (Policy), not the content response', async () => {
     fetch.mockResponseOnce(JSON.stringify({ type: 'chat' }), {
       headers: { 'content-type': 'application/json' },
     });
     fetch.mockResponseOnce(
-      JSON.stringify({ name: 'my-role', nodeType: 'ITEM', url: 'roles/platform/my-role', etag: 'meta-etag-1' }),
+      JSON.stringify({ name: 'my-policy', nodeType: 'ITEM', url: 'policies/platform/my-policy', etag: 'meta-etag-1' }),
       { headers: { 'content-type': 'application/json' } },
     );
 
-    const result = await instance.getMergedWithEtag(TOKEN_MOCK, ResourceType.ROLE, 'my-role');
+    const result = await instance.getMergedWithEtag(TOKEN_MOCK, ResourceType.POLICY, 'my-policy');
 
     expect(result.success).toBe(true);
     expect(result.etag).toBe('meta-etag-1');
     expect(result.response).toMatchObject({
       type: 'chat',
-      _metadata: { name: 'my-role', path: 'my-role', folderId: '' },
+      _metadata: { name: 'my-policy', path: 'my-policy', folderId: '' },
     });
   });
 
@@ -170,12 +173,12 @@ describe('Server :: Core :: AssetApi', () => {
   test.each([403, 404, 500])(
     'getMergedWithEtag keeps a metadata status %i indeterminate after content succeeds',
     async (status) => {
-      fetch.mockResponseOnce(JSON.stringify({ name: 'my-role' }), {
+      fetch.mockResponseOnce(JSON.stringify({ name: 'my-policy' }), {
         headers: { 'content-type': 'application/json' },
       });
       fetch.mockResponseOnce('metadata unavailable', { status });
 
-      const result = await instance.getMergedWithEtag(TOKEN_MOCK, ResourceType.ROLE, 'my-role');
+      const result = await instance.getMergedWithEtag(TOKEN_MOCK, ResourceType.POLICY, 'my-policy');
 
       expect(result).toMatchObject({ success: false, errorMessage: 'Resource metadata not found' });
       expect(result.status).toBeUndefined();
@@ -320,7 +323,7 @@ describe('Server :: Core :: AssetApi', () => {
 });
 
 describe('Server :: Core :: AssetApi :: flat app-runner listing', () => {
-  const instance = new AssetApi({ host: TEST_URL });
+  const instance = new AssetApi({ host: CORE_TEST_URL });
 
   const runnerNode = (encodedName: string) => ({
     name: encodedName,
@@ -337,7 +340,7 @@ describe('Server :: Core :: AssetApi :: flat app-runner listing', () => {
 
     await instance.list(TOKEN_MOCK, ResourceType.APP_TYPE_SCHEMA, '');
 
-    const [calledUrl] = fetch.mock.calls[0];
+    const calledUrl = sentUrl(0);
     expect(calledUrl).toContain('/v1/metadata/schemas/platform/?');
     expect(calledUrl).not.toContain('public/');
     expect(calledUrl).not.toContain('platform/platform');
@@ -361,7 +364,7 @@ describe('Server :: Core :: AssetApi :: flat app-runner listing', () => {
     const result = await instance.list(TOKEN_MOCK, ResourceType.APP_TYPE_SCHEMA, '');
 
     expect(fetch.mock.calls).toHaveLength(2);
-    expect(fetch.mock.calls[1][0]).toContain('token=page-2');
+    expect(sentUrl(1)).toContain('token=page-2');
     expect(result.map((r) => r.name)).toEqual(['http://a', 'http://b']);
   });
 
@@ -383,7 +386,7 @@ describe('Server :: Core :: AssetApi :: flat app-runner listing', () => {
 });
 
 describe('Server :: Core :: AssetApi :: listStrict', () => {
-  const instance = new AssetApi({ host: TEST_URL });
+  const instance = new AssetApi({ host: CORE_TEST_URL });
   const JSON_HEADERS = { headers: { 'content-type': 'application/json' } };
   const routeNode = (name: string) => ({ name, nodeType: 'ITEM', url: `routes/platform/${name}`, bucket: 'platform' });
 
@@ -401,7 +404,7 @@ describe('Server :: Core :: AssetApi :: listStrict', () => {
     const result = await instance.listStrict(TOKEN_MOCK, ResourceType.ROUTE, 'platform/');
 
     expect(fetch.mock.calls).toHaveLength(2);
-    expect(fetch.mock.calls[1][0]).toContain('token=page-2');
+    expect(sentUrl(1)).toContain('token=page-2');
     expect(result?.map((row) => row.name)).toEqual(['a', 'b']);
   });
 

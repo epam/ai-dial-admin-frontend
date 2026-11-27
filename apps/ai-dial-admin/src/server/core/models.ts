@@ -1,4 +1,4 @@
-import type { DIAL_SDK, SDKRequestInit } from '@epam/ai-dial-typescript-sdk';
+import type { components, DIAL_SDK, SDKRequestInit } from '@epam/ai-dial-typescript-sdk';
 
 /**
  * Per-call init the `CoreApi` SDK adapters hand to an SDK operation. Bodies are always read as text so
@@ -24,6 +24,10 @@ export interface AssetMetadataQuery {
   token?: string;
   limit?: number;
 }
+
+/** Bodies of the two schema save operations, which require a `$id`; taken from the SDK so a change to either surfaces in typecheck. */
+export type SdkApplicationTypeSchema = components['schemas']['ApplicationTypeSchema'];
+export type SdkCatalogSchema = components['schemas']['CatalogSchema'];
 
 /**
  * One resource type's SDK operations, one typed closure per `AssetApi` verb. Each closure fixes its bucket and
