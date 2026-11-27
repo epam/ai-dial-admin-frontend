@@ -50,6 +50,15 @@ export class CoreUtilityApi extends CoreApi {
     return this.getDeploymentInfo(id, token);
   }
 
+  /**
+   * {@link checkDeploymentByName} for a caller that has to tell why a lookup failed: the envelope keeps Core's
+   * `status`, where the lookup above folds a 404, a 5xx and an unreachable Core into `null`. A call that throws
+   * (Core unreachable) is the caller's to catch.
+   */
+  getDeploymentInfoResult(name: string, token: Token): Promise<ServerActionResponse<DeploymentData>> {
+    return this.sdkAction<DeploymentData>(token, (init) => this.sdk.getDeploymentInfo(encodeCorePath(name), init));
+  }
+
   getCoreVersion(token: Token): Promise<string | null> {
     return this.getText(VERSION_URL, token, { Accept: 'text/plain' }).catch(() => null);
   }

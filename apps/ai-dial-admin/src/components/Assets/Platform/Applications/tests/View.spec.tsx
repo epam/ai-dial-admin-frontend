@@ -15,6 +15,10 @@ import PlatformApplicationView from '../View';
 
 vi.mock('@/src/components/SourceField/Application/resolve-app-runner');
 
+vi.mock('@/src/components/TryOut/Deployment/DeploymentTryOut', () => ({
+  default: ({ deployment }: { deployment: string }) => <div>panel:{deployment}</div>,
+}));
+
 vi.mock('@/src/context/assets/AppsFolderContext', () => ({
   useAppsFolder: vi.fn(),
   AppsFolderProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -291,5 +295,25 @@ describe('PlatformApplicationView', () => {
     const deleteButtons = screen.getAllByRole('button', { name: ButtonsI18nKey.Delete });
 
     expect(deleteButtons.some((button) => button.parentElement?.contains(tryOut))).toBe(true);
+  });
+
+  test('opens the Try out panel for the application by its short name', async () => {
+    render(
+      <PlatformApplicationView
+        etag={mockEtag}
+        originalApp={{ ...mockOriginalApp, _metadata: { path: 'platform/platform-app' } } as AssetApp}
+        models={mockModels}
+        applications={mockApplications}
+        schemes={mockSchemes}
+        roles={mockRoles}
+        interceptors={mockInterceptors}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.TryOut }));
+
+    const [content] = appContextMock.sidebar.showSidebar.mock.calls[0];
+    render(<>{content}</>);
+    expect(screen.getByText('panel:platform-app')).toBeInTheDocument();
   });
 });

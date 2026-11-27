@@ -13,11 +13,12 @@ describe('isTryOutInterface', () => {
     DeploymentInterfaceType.OpenAIChatCompletions,
     DeploymentInterfaceType.OpenAIResponses,
     DeploymentInterfaceType.AnthropicMessages,
+    DeploymentInterfaceType.OpenAIEmbeddings,
   ])('accepts %s', (type) => {
     expect(isTryOutInterface(type)).toBe(true);
   });
 
-  test.each([DeploymentInterfaceType.OpenAIEmbeddings, 'chat', '', undefined, null, 1])('rejects %s', (value) => {
+  test.each(['chat', '', undefined, null, 1])('rejects %s', (value) => {
     expect(isTryOutInterface(value)).toBe(false);
   });
 });
@@ -42,7 +43,17 @@ describe('getCorePath', () => {
   );
 
   test('has no path for an unsupported interface', () => {
-    expect(getCorePath(DeploymentInterfaceType.OpenAIEmbeddings, 'x')).toBeNull();
+    expect(getCorePath('chat', 'x')).toBeNull();
+  });
+
+  test('puts the deployment in the embeddings path, encoding each segment', () => {
+    expect(getCorePath(DeploymentInterfaceType.OpenAIEmbeddings, 'applications/a b/c')).toBe(
+      '/openai/deployments/applications/a%20b/c/embeddings',
+    );
+  });
+
+  test.each([undefined, '', '..', 'a/../b'])('has no embeddings path for deployment %s', (deployment) => {
+    expect(getCorePath(DeploymentInterfaceType.OpenAIEmbeddings, deployment)).toBeNull();
   });
 });
 
