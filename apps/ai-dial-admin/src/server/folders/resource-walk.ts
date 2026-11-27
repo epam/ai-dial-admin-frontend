@@ -42,7 +42,7 @@ export const isTechnicalItem = (path: string): boolean => {
  */
 export const fetchAllPages = async (
   readPage: (nextToken?: string) => Promise<WalkableNode | null | undefined>,
-): Promise<WalkableNode | null | undefined> => {
+): Promise<WalkableNode | null> => {
   const first = await readPage();
   if (!first) {
     return null;

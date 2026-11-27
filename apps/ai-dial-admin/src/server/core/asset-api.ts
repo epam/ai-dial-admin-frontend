@@ -95,14 +95,12 @@ export class AssetApi extends CoreApi {
       );
     }
 
-    const params = new URLSearchParams();
-    params.set('recursive', String(query.recursive));
-    if (query.token) {
-      params.set('token', query.token);
-    }
-    if (query.limit !== undefined) {
-      params.set('limit', String(query.limit));
-    }
+    // An unset key must not reach the URL as the string "undefined", so only defined values are sent.
+    const params = new URLSearchParams(
+      Object.entries(query)
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]) => [key, String(value)]),
+    );
     return this.get<CoreResourceMetadataNode>(
       `${resourceUrl(CORE_RESOURCE_METADATA_URL, type)}${resolvedPath}?${params.toString()}`,
       token,
