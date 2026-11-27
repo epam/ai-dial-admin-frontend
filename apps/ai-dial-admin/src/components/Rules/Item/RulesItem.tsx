@@ -63,7 +63,7 @@ const RulesItem: FC<Props> = ({
   return (
     <div ref={ref} className={classNames('flex flex-1 min-w-0', !folderName && 'border border-primary')}>
       <div style={{ width: `${RULE_INDENT * indentIndex}px` }} className="flex items-center shrink-0">
-        <div className="h-px w-full bg-green-1"></div>
+        <div className="h-px w-full text-success bg-current"></div>
       </div>
       <div
         className={classNames(

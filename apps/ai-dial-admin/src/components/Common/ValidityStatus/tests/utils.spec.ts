@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 describe('Keys list :: getColorClassName', () => {
   test('returns accent class for VALID status', () => {
     const result = getColorClassName(ValidityStatus.VALID, 'light');
-    expect(result).toBe('bg-green-1');
+    expect(result).toBe('text-success bg-current');
   });
 
   test('returns red-800 for other statuses in light theme', () => {
