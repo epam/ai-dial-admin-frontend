@@ -929,6 +929,19 @@ unknown field, which failed every read on the page rather than only the card. Wh
 served but empty on a row, that row SHALL fall back to the hash as well. Where the schema serves
 neither column, the page SHALL ask for no caller count and SHALL NOT draw the caller card.
 
+Only the reads behind the card SHALL ask for the caller count: the totals of each compared window,
+for its value and delta, and the current window's buckets, for its sparkline. The share chart, the
+breakdown tab and the heatmap SHALL NOT ask for it. Counting it over the principal reference joins
+the identity table over the whole window, and a page that issued that join from every read at once
+exceeded the service's query budget on a week of a large environment.
+
+#### Scenario: Only the caller card's reads count callers
+
+- **GIVEN** comparison is on and the schema serves the principal reference
+- **WHEN** the dashboard loads
+- **THEN** the caller count is asked for by the two totals reads and the current window's bucketed read
+- **AND** by no other read on the page
+
 #### Scenario: A schema without the principal reference still loads the dashboard
 
 - **GIVEN** the usage log schema served to the current user has no `usage_client_identity.user_ref`

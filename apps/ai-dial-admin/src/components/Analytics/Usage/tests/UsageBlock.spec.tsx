@@ -9,7 +9,7 @@ import {
   DonutMetric,
   UsageView,
 } from '@/src/components/Analytics/Usage/models';
-import { CALLS_ALIAS } from '@/src/components/Analytics/Usage/queries';
+import { BUCKET_ALIAS, CALLERS_ALIAS, CALLS_ALIAS } from '@/src/components/Analytics/Usage/queries';
 import UsageBlock from '@/src/components/Analytics/Usage/UsageBlock';
 import { getBlockTabs, getEntityBlocks } from '@/src/components/Analytics/Usage/utils/entity-blocks';
 import { buildEntityScope } from '@/src/components/Analytics/Usage/utils/entity-scope';
@@ -148,5 +148,50 @@ describe('UsageBlock share chart measure', () => {
 
     rerender(renderPage(UsageView.Llm));
     expect(lastMetric()).toBe(DonutMetric.Cost);
+  });
+});
+
+describe('UsageBlock caller count', () => {
+  const COMPARED_WINDOWS = {
+    ...WINDOWS,
+    previous: { startDate: new Date('2025-12-31'), endDate: new Date('2026-01-01') },
+  };
+
+  const issuedQueries = () => runQueryMock.mock.calls.map(([query]) => query as StructuredQuery);
+  const isBucketed = (query: StructuredQuery) => Boolean(query.group_by?.includes(BUCKET_ALIAS));
+  const countsCallers = (query: StructuredQuery) => (query.select ?? []).some((entry) => entry.as === CALLERS_ALIAS);
+
+  const renderComparedPage = () => {
+    const view = UsageView.Llm;
+
+    render(
+      <UsageBlock
+        view={view}
+        callerSource={CallerSource.Principal}
+        scope={{ own: [] }}
+        tabs={VIEW_BREAKDOWN_TABS[view]}
+        windows={COMPARED_WINDOWS}
+        resolution={{ value: 1, unit: 'h' }}
+        compare={ComparePeriod.PreviousPeriod}
+        refreshToken={0}
+        notice={NOTICE}
+        onRefreshingChange={vi.fn()}
+      />,
+    );
+  };
+
+  test('is asked for only by the two totals and the current chart', () => {
+    renderComparedPage();
+
+    const callerQueries = issuedQueries().filter(countsCallers);
+    expect(callerQueries.filter(isTotals)).toHaveLength(2);
+    expect(callerQueries.filter(isBucketed)).toHaveLength(1);
+    expect(callerQueries).toHaveLength(3);
+  });
+
+  test('issues no bucketed read over the previous window', () => {
+    renderComparedPage();
+
+    expect(issuedQueries().filter(isBucketed)).toHaveLength(2);
   });
 });

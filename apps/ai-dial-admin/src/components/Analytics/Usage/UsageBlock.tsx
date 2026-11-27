@@ -136,7 +136,7 @@ const UsageBlock: FC<Props> = ({
     onRefreshingChange(isRefreshing);
   }, [isRefreshing, onRefreshingChange]);
 
-  const heatmap = useHeatmapWeek({ view, rows, refreshToken, notice, callerSource });
+  const heatmap = useHeatmapWeek({ view, rows, refreshToken, notice });
 
   // A tab read from the calls the entity made states its shares of those calls: a share of the
   // entity's own requests would read past a hundred per cent wherever one request fanned out.
