@@ -80,12 +80,13 @@ Shared asset plumbing serves AI Gateway and Artifacts alike — use the cross-cu
 
 ### `Eval`
 
-| Area              | Route slug                                    | Component folder |
-| ----------------- | --------------------------------------------- | ---------------- |
-| `Eval/TestSuites` | `test-suites`                                 | `TestSuites`     |
-| `Eval/Runs`       | `runs`                                        | `Runs`           |
-| `Eval/Datasets`   | `datasets`                                    | `Datasets`       |
-| `Eval/Trends`     | — (trends tab on model and application views) | `EvalTrendsTab`  |
+| Area                | Route slug                                    | Component folder   |
+| ------------------- | --------------------------------------------- | ------------------ |
+| `Eval/TestSuites`   | `test-suites`                                 | `TestSuites`       |
+| `Eval/Runs`         | `runs`                                        | `Runs`             |
+| `Eval/Datasets`     | `datasets`                                    | `Datasets`         |
+| `Eval/Trends`       | — (trends tab on model and application views) | `EvalTrendsTab`    |
+| `Eval/SystemHealth` | `system-health`                               | `EvalSystemHealth` |
 
 ### `Analytics` (Preview)
 

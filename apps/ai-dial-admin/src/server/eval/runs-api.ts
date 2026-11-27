@@ -7,6 +7,8 @@ import {
   RunsTotalCostsRequest,
   SuitePassRateRequest,
   SuitePassRateResponse,
+  TotalCosts,
+  TotalCostsRequest,
 } from '@/src/models/evaluation/run';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -19,6 +21,7 @@ import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
 export const RUNS_URL = `${API}/test-suite-runs`;
 export const RUN_URL = (id: string) => `${RUNS_URL}/${id}`;
 export const RUNS_TOTAL_COSTS_URL = `${API}/costs/test-suite-runs`;
+export const TOTAL_COSTS_URL = `${API}/costs/total`;
 export const DEPLOYMENT_COSTS_URL = (deploymentId: string, fromMs: number, toMs: number) =>
   `${API}/costs/deployment/${encodeCorePath(deploymentId)}?from=${fromMs}&to=${toMs}`;
 export const RUN_CANCEL_URL = (id: string) => `${RUN_URL(id)}/cancel`;
@@ -48,6 +51,11 @@ export class RunsApi extends BaseApi {
 
   getRunsTotalCosts(runIds: RunsTotalCostsRequest, token: Token): Promise<RunTotalCosts[] | null> {
     return this.post(RUNS_TOTAL_COSTS_URL, runIds, token);
+  }
+
+  getTotalCosts(fromMs: number, toMs: number, token: Token): Promise<TotalCosts | null> {
+    const request: TotalCostsRequest = { from: fromMs, to: toMs };
+    return this.post<TotalCostsRequest, TotalCosts>(TOTAL_COSTS_URL, request, token);
   }
 
   getDeploymentCosts(

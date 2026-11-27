@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { datasetsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
+import { assetApi, datasetsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -37,8 +37,10 @@ import {
   duplicateTestSuite,
   getDeploymentTools,
   createDatasetForSuite,
+  listPlatformRoutes,
 } from './actions';
 import { FilterOperatorDto } from '@/src/types/request';
+import { ResourceType } from '@/src/types/resource-type';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -177,6 +179,20 @@ describe('TestSuites :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.getDeployments).toHaveBeenCalledWith(TOKEN_MOCK, undefined, undefined);
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call listPlatformRoutes action', async () => {
+    const rows = [{ name: 'echo' }];
+    (assetApi.listStrict as any).mockResolvedValue(rows);
+    const result = await listPlatformRoutes();
+    expect(getUserToken).toHaveBeenCalled();
+    expect(assetApi.listStrict).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.ROUTE, 'platform/');
+    expect(result).toBe(rows);
+  });
+
+  test('Should return null from listPlatformRoutes when the listing failed', async () => {
+    (assetApi.listStrict as any).mockResolvedValue(null);
+    expect(await listPlatformRoutes()).toBeNull();
   });
 
   test('Should call getDeploymentTools action', async () => {

@@ -118,6 +118,24 @@ export class AssetApi extends CoreApi {
   }
 
   /**
+   * Same listing as `list`, but a page that fails to load fails the whole call with `null` instead of reading
+   * as no rows — for callers that count, where a short list would be a wrong answer rather than an empty state.
+   */
+  async listStrict(token: Token, type: ResourceType, path: string): Promise<ResourceInfo[] | null> {
+    const rows: ResourceInfo[] = [];
+    let nextToken: string | undefined;
+    do {
+      const node = await this.getMetadata(token, type, path, { recursive: false, nextToken });
+      if (node == null) {
+        return null;
+      }
+      rows.push(...toResourceInfoList(node, type));
+      nextToken = node.nextToken;
+    } while (nextToken);
+    return rows;
+  }
+
+  /**
    * Reads a resource's content DTO (`GET /v1/{type}/{path}`), conditionally on `etag`.
    * `undefined` is a `403`, `null` any other failure: `get` and `sdkGet` both resolve a `403` to `undefined` and only
    * type it `T | null`, so the signature of this and `getMetadata` says what they return.

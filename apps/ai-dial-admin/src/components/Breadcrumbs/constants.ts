@@ -334,4 +334,7 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       { name: 'Id', href: false },
     ],
   },
+  [ApplicationRoute.SystemHealth]: {
+    segments: [{ name: 'SystemHealth', i18nKey: MenuI18nKey.SystemHealth }],
+  },
 };

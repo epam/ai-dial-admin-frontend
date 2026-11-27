@@ -5,9 +5,11 @@ import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import {
+  ANALYTICS_HEALTH_DISTRIBUTION_URL,
   ANALYTICS_METRIC_SCORES_COMPARISON_URL,
   ANALYTICS_RESULTS_URL,
   ANALYTICS_RUN_METRIC_SNAPSHOTS_URL,
+  ANALYTICS_RUN_TRENDS_URL,
   AnalyticsApi,
 } from '../analytics-api';
 
@@ -97,5 +99,46 @@ describe('Server :: AnalyticsApi', () => {
       `${TEST_URL}${ANALYTICS_METRIC_SCORES_COMPARISON_URL}?runIds=run-a%2Crun-b`,
       expect.objectContaining({ method: 'GET' }),
     );
+  });
+
+  test('Should call getRunTrends with the page and size and return the page', async () => {
+    const page = { content: [], page: 2, size: 10, totalElements: 0, totalPages: 0 };
+    fetch.mockResponseOnce(JSON.stringify(page), { headers: { 'content-type': 'application/json' } });
+
+    const result = await instance.getRunTrends(2, 10, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${ANALYTICS_RUN_TRENDS_URL}?page=2&size=10`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result).toEqual(page);
+  });
+
+  test('Should return null from getRunTrends when the request fails', async () => {
+    fetch.mockResponseOnce('', { status: 500 });
+
+    expect(await instance.getRunTrends(0, 10, TOKEN_MOCK)).toBeNull();
+  });
+
+  test('Should call getHealthDistribution with the weeks and threshold and return the body', async () => {
+    const body = {
+      threshold: 0.75,
+      weeks: [{ weekStart: 1762128000000, healthyCount: 3, failingCount: 1, suiteCount: 4 }],
+    };
+    fetch.mockResponseOnce(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+
+    const result = await instance.getHealthDistribution(5, 0.75, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${ANALYTICS_HEALTH_DISTRIBUTION_URL}?weeks=5&threshold=0.75`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result).toEqual(body);
+  });
+
+  test('Should return null from getHealthDistribution when the request fails', async () => {
+    fetch.mockResponseOnce('', { status: 500 });
+
+    expect(await instance.getHealthDistribution(5, 0.75, TOKEN_MOCK)).toBeNull();
   });
 });

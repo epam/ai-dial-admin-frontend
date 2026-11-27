@@ -166,6 +166,29 @@ export interface DeploymentPeriodCosts {
   previous: DeploymentCosts;
 }
 
+/** Body for `POST /api/v1/costs/total`; both ends are epoch milliseconds and inclusive. */
+export interface TotalCostsRequest {
+  from: number;
+  to: number;
+}
+
+/**
+ * `POST /api/v1/costs/total` answer: the cost of all evaluation traffic in the window, over every deployment.
+ * The API omits a figure when no usage row matched (not the same as `0`, which is a phase with no usage inside a
+ * non-empty window), so a missing one reads as `undefined`.
+ */
+export interface TotalCosts {
+  totalCost?: number | null;
+  testCaseCost?: number | null;
+  metricEvalCost?: number | null;
+}
+
+/** Current and previous windows from `getEvalPeriodCosts`; a window whose request failed is `null`. */
+export interface EvalPeriodCosts {
+  current: TotalCosts | null;
+  previous: TotalCosts | null;
+}
+
 /** Body for `POST /api/v1/analytics/test-suites/pass-rate`. */
 export interface SuitePassRateRequest {
   suiteIds: string[];
