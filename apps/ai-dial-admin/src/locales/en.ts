@@ -4336,6 +4336,7 @@ export default {
     TraceCardProject: 'project',
     TraceCardSpans: '{count} spans',
     TraceCardOwnTokens: 'own tokens',
+    TraceCachedShare: '{share} cached',
     TraceDuration: 'Duration',
     TraceTokens: 'Tokens',
     TraceCost: 'Cost',
@@ -4448,6 +4449,7 @@ export default {
     SpanFailedMarker: 'Failed',
     SpanRating: 'Rating',
     SpanTokens: '{count} tok',
+    SpanCache: 'cache r/w {read} / {write}',
     SpanChainCost: '{cost} chain',
     SpanRequestMessages: '{count} msg',
     InspectorToolNotRecorded:

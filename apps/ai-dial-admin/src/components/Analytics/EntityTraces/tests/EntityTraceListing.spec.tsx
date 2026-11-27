@@ -64,6 +64,8 @@ const group = (over: Partial<SessionTraceGroup> = {}): SessionTraceGroup => ({
   startedAt: 5000,
   spans: 4,
   tokens: 100,
+  promptTokens: 0,
+  cachedTokens: 0,
   price: 0.05,
   failedSpans: 0,
   chips: [],

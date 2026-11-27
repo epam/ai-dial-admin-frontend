@@ -170,6 +170,8 @@ describe('buildHopTree', () => {
       expect(tree[0].facts).toEqual({
         shape: HopFactsShape.Metered,
         tokens: 10,
+        cacheRead: null,
+        cacheWrite: null,
         requestMessages: 3,
         cost: '0.001',
       });

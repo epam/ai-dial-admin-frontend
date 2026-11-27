@@ -30,6 +30,7 @@ import {
   HopInspectorSide,
   HopReadState,
   MessageRole,
+  SessionTraceFigureField,
   UsageLogField,
 } from '@/src/models/analytics/sessions-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -1470,6 +1471,7 @@ describe('the hop inspector reads', () => {
 describe('getEntityTracePage', () => {
   const CALL = { trace_id: 't1', core_span_id: 's1', request_time: END_MS - 1000, deployment: 'a-model' };
   const FIGURE = { trace_id: 't1', event_kind: 'llm_call', spans: 3, tokens: 10, price: 0.1, failed_spans: 0 };
+  const figuresSelect = () => JSON.stringify(execute().mock.lastCall?.[0]?.select);
 
   test('reads the calls, then the figures of their traces, with the token', async () => {
     execute()
@@ -1519,5 +1521,27 @@ describe('getEntityTracePage', () => {
     const result = await getEntityTracePage(ApplicationRoute.Models, 'a-model', END_MS - DAY_MS, END_MS, null);
 
     expect(result.success).toBe(false);
+  });
+  test('sums the cached prompt tokens where the hop log schema serves the column', async () => {
+    serveSchemas({ dial_usage_log: [schemaField('cached_prompt_tokens')] });
+    execute()
+      .mockResolvedValueOnce(ok([CALL]))
+      .mockResolvedValueOnce(ok([FIGURE]));
+
+    await getEntityTracePage(ApplicationRoute.Models, 'a-model', END_MS - DAY_MS, END_MS, null);
+
+    expect(figuresSelect()).toContain(SessionTraceFigureField.CachedTokens);
+  });
+
+  test('names no cache column where the hop log schema does not serve it', async () => {
+    serveSchemas({ dial_usage_log: [schemaField('total_tokens')] });
+    execute()
+      .mockResolvedValueOnce(ok([CALL]))
+      .mockResolvedValueOnce(ok([FIGURE]));
+
+    const result = await getEntityTracePage(ApplicationRoute.Models, 'a-model', END_MS - DAY_MS, END_MS, null);
+
+    expect(figuresSelect()).not.toContain(SessionTraceFigureField.CachedTokens);
+    expect(result.response?.groups).toEqual([expect.objectContaining({ traceId: 't1', spans: 3 })]);
   });
 });
