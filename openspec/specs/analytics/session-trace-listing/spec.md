@@ -690,55 +690,6 @@ UTC-ness. A test that checks only that a bound falls on a UTC day boundary passe
 - **WHEN** the listing's query-shape test runs
 - **THEN** it fails a query whose bounds are the containing UTC day without padding
 
-### Requirement: The trace listing pages by offset in ascending start order
-
-The listing SHALL page, appending each page to those already shown, and SHALL NOT impose a fixed ceiling on
-how much of a session can be reached.
-
-**The order SHALL be ascending by each trace's earliest recorded time, tie-broken by trace id.** The ascending
-direction is not cosmetic: it is what makes offset paging sound here. The listing reads a live table, so rows
-arrive between one page fetch and the next; ordered ascending, a newly recorded trace sorts past the last page
-fetched and the offsets already consumed do not shift. The tie-break is required for the same reason — equal
-start times with no discriminator make a page boundary arbitrary and therefore unstable.
-
-**A newest-first order MUST NOT be introduced while the listing pages by offset.** Under a descending order a
-new trace sorts to the front and displaces every row after it, so a later page re-serves rows already shown
-and skips others. Newest-first is admissible only via keyset paging on the ordering key, which requires the
-cursor bound to be expressed over the **aggregated** start time: filtering the underlying rows by the cursor
-instead changes the computed start time of a trace straddling it, and that trace reappears on the next page.
-The sort direction SHALL therefore be treated as a constraint with a precondition, not as a display option.
-
-**The listing SHALL discard a trace it has already loaded.** A late-arriving row can lower a trace's earliest
-recorded time and move it relative to a page boundary, which both offset and keyset paging expose. Rejecting
-an already-loaded trace id makes the duplicate impossible rather than unlikely.
-
-**The number of cards rendered for one trace SHALL be bounded, and reaching that bound SHALL be disclosed.**
-Traces exist whose root count runs into the dozens. Because a trace's own figures are not bounded by that cap,
-a capped trace's totals legitimately exceed the sum of the cards on screen — so the listing SHALL state how
-many further calls the trace records rather than truncating in silence.
-
-#### Scenario: A page is appended rather than replacing what is shown
-
-- **WHEN** the reader reaches the end of the loaded traces and a further page resolves
-- **THEN** the new traces are appended below those already shown
-
-#### Scenario: The order is ascending with a tie-break
-
-- **WHEN** a page of traces is requested
-- **THEN** the query sorts ascending by the trace's earliest recorded time
-- **AND** the trace id is the tie-break key
-
-#### Scenario: An already-loaded trace is not rendered twice
-
-- **WHEN** a page returns a trace id already loaded
-- **THEN** that trace renders once
-
-#### Scenario: A trace beyond the card cap discloses the remainder
-
-- **WHEN** a trace records more roots than the card cap allows
-- **THEN** the rendered cards are capped
-- **AND** the trace states how many further calls it records
-
 ### Requirement: A card is identified by its own recorded call, not by message text
 
 A card SHALL be identified by the deployment its call named, falling back to the request endpoint where the
@@ -1828,4 +1779,205 @@ list of field names, so a field newly typed as a closed vocabulary reads as word
 - **WHEN** a record carries the enrichment's field keys and a value in none of them
 - **THEN** the view reports the session as not yet evaluated
 - **AND** it does not report the enrichment as absent from the instance
+
+### Requirement: The trace listing pages by keyset in descending start order
+
+The listing SHALL page, appending each page to those already shown, and SHALL NOT impose a fixed ceiling on
+how much of a session can be reached.
+
+**The order SHALL be descending by each trace's earliest recorded time, tie-broken by trace id descending.** The
+trace that started last SHALL be on top, and older traces SHALL load below it. The tie-break is required because
+equal start times with no discriminator make a page boundary arbitrary and therefore unstable.
+
+**The listing SHALL page by keyset, never by offset.** Under a descending order a newly recorded trace sorts to
+the front, so an offset would shift by one for every trace recorded since the first page and a later page would
+re-serve rows already shown and skip others. Each page after the first SHALL instead be bounded by a cursor: the
+earliest recorded time and the trace id of the last trace the previous page returned. A page SHALL hold only
+traces that sort strictly after the cursor in the listing's order.
+
+**The cursor bound SHALL be expressed over the aggregated start time, never over the underlying rows.** Filtering
+the rows by the cursor time changes the computed start time of a trace whose rows straddle it, and that trace
+reappears on the next page with a later start than it really has.
+
+**A trace recorded after the listing loaded SHALL NOT be inserted into it.** It sorts before the first page's
+cursor, so no later page reaches it; it appears when the session detail is loaded again.
+
+**The listing SHALL discard a trace it has already loaded.** A late-arriving row can lower a trace's earliest
+recorded time and move it past the cursor, so the same trace can be returned by two pages. Rejecting an
+already-loaded trace id makes the duplicate impossible rather than unlikely.
+
+**The number of cards rendered for one trace SHALL be bounded, and reaching that bound SHALL be disclosed.**
+Traces exist whose root count runs into the dozens. Because a trace's own figures are not bounded by that cap,
+a capped trace's totals legitimately exceed the sum of the cards on screen — so the listing SHALL state how
+many further calls the trace records rather than truncating in silence.
+
+#### Scenario: A page is appended rather than replacing what is shown
+
+- **WHEN** the reader reaches the end of the loaded traces and a further page resolves
+- **THEN** the new traces are appended below those already shown
+
+#### Scenario: The order is descending with a tie-break
+
+- **WHEN** a page of traces is requested
+- **THEN** the query sorts descending by the trace's earliest recorded time
+- **AND** the trace id, descending, is the tie-break key
+
+#### Scenario: The newest trace is on top
+
+- **GIVEN** a session whose traces started at 10:00, 10:05 and 10:10
+- **WHEN** the listing loads
+- **THEN** the trace that started at 10:10 is first and the trace that started at 10:00 is last
+
+#### Scenario: The first page carries no cursor
+
+- **WHEN** the first page of traces is requested
+- **THEN** the query carries no cursor bound and no offset
+
+#### Scenario: A later page is bounded by the previous page's last trace
+
+- **GIVEN** the previous page's last trace has earliest recorded time T and trace id X
+- **WHEN** the next page is requested
+- **THEN** the query admits only traces whose earliest recorded time is before T, or equals T with a trace id before X
+- **AND** that bound is applied to the aggregated start time, not to the rows' recorded time
+
+#### Scenario: A trace recorded after the listing loaded does not shift later pages
+
+- **GIVEN** the first page is loaded
+- **AND** a new trace is recorded in the session
+- **WHEN** the next page is requested
+- **THEN** the page holds no trace already shown and skips none that sorts after the cursor
+
+#### Scenario: An already-loaded trace is not rendered twice
+
+- **WHEN** a page returns a trace id already loaded
+- **THEN** that trace renders once
+
+#### Scenario: A trace beyond the card cap discloses the remainder
+
+- **WHEN** a trace records more roots than the card cap allows
+- **THEN** the rendered cards are capped
+- **AND** the trace states how many further calls it records
+
+### Requirement: A trace of the session can be found by its exact trace id
+
+The session detail SHALL offer a search field above the trace listing that finds a trace of **this session** by
+its trace id. The match SHALL be exact: the field's value, trimmed of surrounding whitespace, SHALL equal the
+trace id. A substring or prefix of an id SHALL NOT match. The hop log indexes the trace id for equality, so an
+exact match stays cheap however long the session ran; a partial match would read every row of the session.
+
+The search SHALL be scoped exactly as the paging query is — the session, its project and its padded window — so
+a trace id from another session SHALL NOT be found here, even though it exists in the hop log.
+
+A match SHALL show that trace alone, rendered as the listing renders it, with its own figures and cards. No
+match SHALL state that the session has no trace with that id, distinct from the state of a session with no
+traces at all. An empty or whitespace-only field SHALL apply no search. Clearing the field SHALL restore the
+newest-first listing from its first page.
+
+A failed search SHALL show the listing's load-error state, not the no-match state: a failed read is not evidence
+that the trace is absent.
+
+#### Scenario: An exact trace id shows that trace alone
+
+- **GIVEN** the session records a trace with id X
+- **WHEN** the reader enters X in the search field
+- **THEN** the listing shows the trace X only, with its figures and cards
+
+#### Scenario: Surrounding whitespace is ignored
+
+- **WHEN** the reader enters X with leading and trailing spaces
+- **THEN** the search matches the trace X
+
+#### Scenario: A partial id does not match
+
+- **GIVEN** the session records a trace with id X
+- **WHEN** the reader enters the first eight characters of X
+- **THEN** no trace is shown
+- **AND** the listing states that the session has no trace with that id
+
+#### Scenario: A trace of another session is not found
+
+- **GIVEN** a trace with id Y is recorded in another session
+- **WHEN** the reader enters Y in this session's search field
+- **THEN** the listing states that the session has no trace with that id
+
+#### Scenario: The search query is scoped like the paging query
+
+- **WHEN** a search for X is requested
+- **THEN** the query's filter names the session, its project, the padded window and the trace id X
+
+#### Scenario: Clearing the search restores the listing
+
+- **GIVEN** a search shows one trace
+- **WHEN** the reader clears the field
+- **THEN** the listing shows the session's traces newest-first from the first page
+
+#### Scenario: A failed search is not reported as no match
+
+- **WHEN** the search read fails
+- **THEN** the listing shows its load-error state
+- **AND** it does not state that the session has no trace with that id
+
+### Requirement: A trace states the share of its prompt read from cache
+
+A trace's figures SHALL state, beside its token total, the share of its prompt tokens the provider served
+from cache, as a percentage labelled as cached. The share SHALL be the trace's summed cached prompt tokens
+over its summed prompt tokens, both summed over **every hop of the trace** — the same scope as its token
+total and its price. A trace's token total and its price disagree exactly where most of a prompt was read
+from cache, and the share is the figure that reconciles them.
+
+The prompt token count already includes the cached part, so it SHALL be the denominator; adding the cached
+count to it would understate every share.
+
+**The share SHALL be resolved by the query that resolves the trace's other figures**, under the same scope —
+the page's trace ids and the padded window, with no session id and no project. A second query for it would
+be a second scope to keep in step with the first, which is the divergence the three-query invariant exists to
+prevent.
+
+**A trace whose hops recorded no prompt tokens SHALL state no share.** A trace of protocol and routing hops
+alone has nothing to divide, and `0% cached` would read as a cache that missed. A trace whose hops recorded
+prompt tokens and no cache hit SHALL state `0% cached`: that is a measured miss.
+
+**The share SHALL be stated wherever the trace's figures are stated** — on a trace whose single root renders
+with it, in the trace tier of a trace with several cards, and on a trace whose root was not recorded.
+
+**The share SHALL be read only where the hop log schema reports the cached prompt column.** Naming a column
+the instance does not publish rejects the whole figures query, which would cost every trace its span count,
+tokens and price for want of one optional figure. Where the column is not reported, the listing SHALL render
+as it does without it, stating no share.
+
+#### Scenario: An agent trace states its cached share
+
+- **WHEN** a trace's hops recorded prompt tokens and cached prompt tokens
+- **THEN** the trace's figures state its token total followed by the cached share as a percentage
+- **AND** the share is computed over every hop of the trace, not over its root alone
+
+#### Scenario: A trace with no prompt tokens states no share
+
+- **WHEN** a trace's hops recorded no prompt tokens
+- **THEN** its figures state no cached share
+
+#### Scenario: A measured miss states zero
+
+- **WHEN** a trace's hops recorded prompt tokens and no cached prompt tokens
+- **THEN** its figures state `0% cached`
+
+#### Scenario: An instance without the cache column keeps its listing
+
+- **WHEN** the hop log schema does not report the cached prompt column
+- **THEN** the figures query does not name it
+- **AND** every trace still states its span count, tokens and price, with no cached share
+
+### Requirement: A card's own facts carry no cache figure
+
+A card's own facts SHALL NOT state cache usage. A card's facts are read from its root's own row, and an
+application root records no tokens of its own, so its own cache is always zero while the cache its trace
+consumed sits in the calls beneath it; stating `0` there reads as a cache that missed. A model root's trace
+and call coincide, so a card fact would repeat the trace's share. The cache a single call consumed SHALL be
+stated on that call's span row inside the trace.
+
+#### Scenario: An application root states no cache fact
+
+- **WHEN** a card's root records no tokens of its own and its trace recorded cached prompt tokens
+- **THEN** the card's own facts state no cache figure
+- **AND** the trace's figures state the cached share
 

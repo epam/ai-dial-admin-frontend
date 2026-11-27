@@ -12,7 +12,8 @@ The Tables page SHALL render the tables the page fetched as a grid with columns 
 
 - **WHEN** the catalog renders with tables
 - **THEN** each table appears as a row with its name, type, source table, description, column count, and status badge
-- **AND** clicking a row navigates to that table's detail page
+- **AND** clicking a table's name link navigates to that table's detail page
+- **AND** clicking elsewhere in the row does not navigate
 
 #### Scenario: Catalog names the source table an enrichment enriches
 
@@ -1499,7 +1500,7 @@ read-only and performs no action a success or error notification would describe.
 #### Scenario: Row click opens the global audit detail page
 
 - **GIVEN** the Audit tab lists an activity whose `activityId` is `abc-123`
-- **WHEN** the user clicks that row outside the action menu
+- **WHEN** the user clicks that row's Activity ID link
 - **THEN** the browser opens `/activity-audit/abc-123` in a new tab, as the shared audit list already
   does for every other view
 - **AND** no `/tables/{name}/{activityId}` URL is requested

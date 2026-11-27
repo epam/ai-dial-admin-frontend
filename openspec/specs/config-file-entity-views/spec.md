@@ -80,11 +80,7 @@ move, drag-and-drop, selection mutation, folder creation, or folder-management a
 
 ### Requirement: config.json rows preserve existing detail source behavior
 
-The system SHALL open a config.json row through its existing platform or asset detail route. Except for Catalog
-Schemas, the route SHALL append `configFile=true`, using `&` if a query string already exists. Applications and
-Toolsets SHALL use the bare `{id}` detail path with the flag and SHALL NOT carry a public-bucket `path` parameter.
-Catalog Schema config.json rows SHALL navigate to the ordinary encoded `$id` detail route without
-`configFile=true`, preserving its API-first/file-fallback resolver.
+The system SHALL open a config.json row through its existing platform or asset detail route. Except for Catalog Schemas, the route SHALL append `configFile=true`, using `&` if a query string already exists. Applications and Toolsets SHALL use the bare `{id}` detail path with the flag and SHALL NOT carry a public-bucket `path` parameter. Catalog Schema config.json rows SHALL navigate to the ordinary encoded `$id` detail route without `configFile=true`, preserving its API-first/file-fallback resolver.
 
 #### Scenario: A config.json application opens the platform-shaped detail URL
 - **WHEN** a user opens an application from the config.json tab
@@ -92,7 +88,7 @@ Catalog Schema config.json rows SHALL navigate to the ordinary encoded `$id` det
 
 #### Scenario: Open in new tab preserves config.json source
 - **WHEN** a user activates open-in-new-tab for a non-Catalog config.json row
-- **THEN** the new tab URL includes `configFile=true` exactly as a row click would
+- **THEN** the new tab URL includes `configFile=true` exactly as the row's name link does
 
 #### Scenario: A Catalog Schema config.json row uses its existing fallback address
 - **WHEN** a user opens a Catalog Schema from the config.json tab

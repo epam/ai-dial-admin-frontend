@@ -7,9 +7,7 @@ view, truncation and overflow behaviour, content-based sizing, and row activatio
 list, the Test Suite view's Runs tab, and the compare-run picker, all of which render the same run
 shape. `/runs` and the Test Suite Runs tab both read it via the structured-query API
 (`test_suite_runs`); the compare-run picker still reads it via `GET /api/v1/test-suite-runs`.
-
 ## Requirements
-
 ### Requirement: Runs list column set and order
 
 The runs list SHALL present these columns, in this order: Status, Test suite run name, Runs, Test
@@ -253,27 +251,6 @@ fit its header label, which truncates instead; the full label SHALL stay reachab
 - **WHEN** the runs list renders
 - **THEN** the Status column is sized for its indicator, not for the width of the word in its header
 
-### Requirement: Activating a row opens the run
-
-Clicking a run row, other than in the row-actions column, SHALL open that run's details page in the
-same tab. A click with ctrl / cmd held, or a middle click, SHALL open it in a new tab instead. This
-SHALL hold on both the unscoped runs list and a suite-scoped one.
-
-#### Scenario: A plain click navigates in place
-
-- **WHEN** the operator clicks a run row on a suite's Runs tab
-- **THEN** the app navigates to that run's details page in the same tab
-
-#### Scenario: A modified click opens a new tab
-
-- **WHEN** the operator ctrl / cmd clicks or middle-clicks a run row
-- **THEN** that run's details page opens in a new tab and the list stays as it is
-
-#### Scenario: The actions column does not navigate
-
-- **WHEN** the operator clicks within a row's actions column
-- **THEN** no navigation occurs
-
 ### Requirement: A column is sortable or filterable only where the backend supports it
 
 Columns whose values the run listing endpoint cannot order or query on SHALL NOT offer a sort control
@@ -439,3 +416,31 @@ modal SHALL offer only the completed runs of the opened run's own suite.
 - **WHEN** the operator changes either run from the comparison view
 - **THEN** the modal lists the same completed runs of the same-dataset suites, excluding the other
   compared run
+
+### Requirement: A run opens through its name link
+
+Clicking a run's name link SHALL open that run's details page in the same tab. A click with ctrl / cmd
+held, or a middle click, SHALL open it in a new tab instead. A click elsewhere in the row, including the
+row-actions column, SHALL NOT navigate. This SHALL hold on both the unscoped runs list and a
+suite-scoped one.
+
+#### Scenario: A plain click navigates in place
+
+- **WHEN** the operator clicks a run's name link on a suite's Runs tab
+- **THEN** the app navigates to that run's details page in the same tab
+
+#### Scenario: A modified click opens a new tab
+
+- **WHEN** the operator ctrl / cmd clicks or middle-clicks a run's name link
+- **THEN** that run's details page opens in a new tab and the list stays as it is
+
+#### Scenario: A click outside the name does not navigate
+
+- **WHEN** the operator clicks a run row outside its name link
+- **THEN** no navigation occurs
+
+#### Scenario: The actions column does not navigate
+
+- **WHEN** the operator clicks within a row's actions column
+- **THEN** no navigation occurs
+

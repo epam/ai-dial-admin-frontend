@@ -209,7 +209,7 @@ folder-move control. Both buckets share the existing `/assets-toolsets/[id]` det
 query param present means public bucket; its absence means platform bucket.
 
 #### Scenario: Opening a platform toolset shows the platform detail view
-- **WHEN** the user clicks a platform-bucket toolset row
+- **WHEN** the user clicks a platform-bucket toolset's name link
 - **THEN** the system navigates to `/assets-toolsets/[id]` with no `?path=` query param, and renders
   the platform Toolsets view, not the public Toolsets view
 
@@ -360,4 +360,13 @@ When the caller's `adminAccess` is not `FULL`, the Assets Toolsets editor SHALL 
 #### Scenario: Non-admin opens a toolset
 - **WHEN** a caller without full admin access opens a toolset
 - **THEN** no roles read is made and the user-roles control cannot be edited
+
+### Requirement: Toolset role references open their Core role details
+
+The Core-direct toolset Roles tab SHALL offer Open in a new tab for each displayed role, following `core-role-reference-navigation`, without changing `userRoles` membership behavior.
+
+#### Scenario: Open a toolset role
+
+- **WHEN** a user selects Open in a new tab on a toolset role row
+- **THEN** the unqualified platform-role detail address for that role opens in a new tab
 

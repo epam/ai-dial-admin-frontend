@@ -404,11 +404,13 @@ the admin backend's activity/revision trail, which has no rows for a DIAL Core c
 `Conversations` is excluded because this surface follows the `Assets ▸ Toolsets` Audit precedent,
 which offers neither.
 
-Both sub-tabs read from the analytics-data-access-service (`DIAL_ANALYTICS_API_URL`) through the
-existing `Telemetry/Dashboard` and `UsageLog/UsageLog` components, unchanged. No admin-backend
-request and no additional DIAL Core request is introduced by this tab, and no new user action is
-added — so no new success or error notification is defined; a failed analytics read surfaces through
-those components' existing error handling.
+Both sub-tabs read from the analytics-data-access-service (`DIAL_ANALYTICS_API_URL`). While both
+`ANALYTICS_ENABLED` and `ANALYTICS_USAGE_ENABLED` resolve truthy, `Dashboard` renders the usage dashboard
+(`analytics/dashboards`) and `Traces` renders the entity trace listing (`analytics/entity-trace-listing`);
+with either flag falsy, they render the existing `Telemetry/Dashboard` and `UsageLog/UsageLog`
+components, unchanged. No admin-backend request and no additional DIAL Core request is introduced by
+this tab, and no new user action is added — so no new success or error notification is defined; a
+failed analytics read surfaces through the rendered component's own error handling.
 
 #### Scenario: Audit opens on Dashboard with Traces alongside
 
@@ -434,6 +436,13 @@ those components' existing error handling.
   detail view already surfaces — with no `toolsets/`-style deployment prefix and no
   `models/platform/{name}` canonical id
 
+#### Scenario: Traces follows the analytics flags
+
+- **GIVEN** both `ANALYTICS_ENABLED` and `ANALYTICS_USAGE_ENABLED` resolve truthy
+- **WHEN** a user selects the `Traces` sub-tab on a model asset's `Audit` tab
+- **THEN** the entity trace listing renders for the model
+- **AND** with either flag falsy the telemetry usage-log grid renders instead
+
 #### Scenario: The Entities > Models Audit tab is unchanged
 
 - **WHEN** a user opens the `Audit` tab on an `Entities ▸ Models` detail view with `dashboardEnabled`
@@ -453,4 +462,18 @@ labelled to cover tools, functions and skills. The value SHALL be stored in snak
 #### Scenario: Toggling persists the flag
 - **WHEN** a user turns `skills_supported` on and saves
 - **THEN** the payload carries `features.skills_supported: true`
+
+### Requirement: Model role references open their Core role details
+
+The model's Core-direct Roles tab SHALL offer Open in a new tab for each displayed role, following `core-role-reference-navigation`, without altering `userRoles` membership or the unrestricted display.
+
+#### Scenario: Open a model role
+
+- **WHEN** a user selects Open in a new tab on a model role row
+- **THEN** the unqualified platform-role detail address for that role opens in a new tab
+
+#### Scenario: Unrestricted model role
+
+- **WHEN** a model's Roles tab displays all roles because access is unrestricted
+- **THEN** each displayed role retains the open action and membership is not editable from that grid
 

@@ -368,3 +368,23 @@ When the suite is a chain, the per-turn sections SHALL be shown within the selec
 - **WHEN** Try Out is opened for a three-turn test case on a suite whose second request binds a per-turn field while request `#0` does not
 - **THEN** selecting request `#0` shows one Dynamic configuration section with no turn labels
 - **AND** selecting the second request shows Turn 1, Turn 2, and Turn 3 sections resolved from its own bindings
+
+### Requirement: Duplicating a multi-turn test case preserves all turns
+
+When a multi-turn test case is duplicated, the new case SHALL retain all of the source case's
+shared field values and every per-turn value in the original turn order. The duplicate SHALL have a
+new unique case ID and a unique copy name, and its data content SHALL be independent of the source
+so edits to either case do not change the other.
+
+#### Scenario: Duplicate a multi-turn case
+
+- **WHEN** the user duplicates a case with shared fields and three turns
+- **THEN** the duplicate has the same shared fields and three turns in the same order
+- **AND** the duplicate has a different unique ID
+- **AND** the duplicate has a unique copy name
+
+#### Scenario: Edit the duplicate without changing the source
+
+- **WHEN** the user edits a copied field or turn in the duplicate
+- **THEN** the corresponding value in the original case remains unchanged
+
