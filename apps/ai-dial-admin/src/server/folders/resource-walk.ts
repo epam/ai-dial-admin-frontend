@@ -41,7 +41,7 @@ export const isTechnicalItem = (path: string): boolean => {
  * exhausted, and returns one node whose `items[]` is the full accumulated flat list.
  */
 export const fetchAllPages = async (
-  readPage: (nextToken?: string) => Promise<WalkableNode | null>,
+  readPage: (nextToken?: string) => Promise<WalkableNode | null | undefined>,
 ): Promise<WalkableNode | null> => {
   const first = await readPage();
   if (!first) {
@@ -77,7 +77,7 @@ export const flattenResourceUrls = (node: WalkableNode | null | undefined): stri
  * contributes no URLs.
  */
 export const gatherResourceUrls = async (
-  readRecursive: (path: string, nextToken?: string) => Promise<WalkableNode | null>,
+  readRecursive: (path: string, nextToken?: string) => Promise<WalkableNode | null | undefined>,
   path: string,
 ): Promise<string[]> => {
   try {

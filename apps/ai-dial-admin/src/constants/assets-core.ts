@@ -53,13 +53,15 @@ export const RESOURCE_CONTROLLER_TYPES: ReadonlySet<ResourceType> = new Set([
 ]);
 
 /**
- * `v1/{prefix}` content endpoint per resource type (mirrors the backend's per-type Core clients).
- * `SKILL`'s and `PROJECT`'s entries are unreachable in practice: a skill (or project) has no `/v1/skills` JSON endpoint (Core
- * serves it via `/v2/skills`, multipart/ZIP) and is never enriched through `AssetApi` — publications
- * resolve it through the dedicated `SkillsCoreApi.getSkillMetadata` instead (see
- * `enrichSkillResource`). Present only so this `Record<ResourceType, string>` stays total.
+ * `v1/{prefix}` content endpoint per resource type that has no SDK operation row yet (mirrors the backend's per-type Core
+ * clients). A type whose calls go through the SDK has a row in `ASSET_SDK_OPS` and no entry here; a type with neither
+ * makes `AssetApi` throw.
+ * `FILE`'s, `SKILL`'s and `PROJECT`'s entries are unreachable in practice: a skill (or project) has no `/v1/skills` JSON
+ * endpoint (Core serves it via `/v2/skills`, multipart/ZIP) and is never enriched through `AssetApi` — publications
+ * resolve it through the dedicated `SkillsCoreApi.getSkillMetadata` instead (see `enrichSkillResource`) — and a file has
+ * `FilesCoreApi`. `AssetApi` reaches those three only through `move`, which reads `RESOURCE_TYPE_PREFIX`, not this map.
  */
-export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
+export const CORE_RESOURCE_URL: Partial<Record<ResourceType, string>> = {
   [ResourceType.APPLICATION]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION]}`,
   [ResourceType.TOOLSET]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET]}`,
   [ResourceType.CONVERSATION]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION]}`,
@@ -67,23 +69,13 @@ export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
   [ResourceType.FILE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.FILE]}`,
   [ResourceType.SKILL]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.SKILL]}`,
   [ResourceType.PROJECT]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT]}`,
-  [ResourceType.MODEL]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.MODEL]}`,
-  [ResourceType.APP_TYPE_SCHEMA]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]}`,
-  [ResourceType.CATALOG_SCHEMA]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]}`,
-  [ResourceType.INTERCEPTOR]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
-  [ResourceType.TRANSLATOR]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.TRANSLATOR]}`,
-  [ResourceType.PLUGIN]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PLUGIN]}`,
-  [ResourceType.ROUTER]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTER]}`,
-  [ResourceType.ROLE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
-  [ResourceType.ROUTE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTE]}`,
-  [ResourceType.PROJECT_KEY]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
   [ResourceType.POLICY]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY]}`,
   [ResourceType.POLICY_ASSIGNMENT]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY_ASSIGNMENT]}`,
   [ResourceType.ALIAS]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ALIAS]}`,
 };
 
-/** `v1/metadata/{prefix}` metadata endpoint per resource type. `SKILL`'s and `PROJECT`'s entries are unreachable — see `CORE_RESOURCE_URL`. */
-export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
+/** `v1/metadata/{prefix}` metadata endpoint per resource type with no SDK row yet. `FILE`'s, `SKILL`'s and `PROJECT`'s entries are unreachable — see `CORE_RESOURCE_URL`. */
+export const CORE_RESOURCE_METADATA_URL: Partial<Record<ResourceType, string>> = {
   [ResourceType.APPLICATION]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION]}`,
   [ResourceType.TOOLSET]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET]}`,
   [ResourceType.CONVERSATION]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION]}`,
@@ -91,16 +83,6 @@ export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
   [ResourceType.FILE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.FILE]}`,
   [ResourceType.SKILL]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.SKILL]}`,
   [ResourceType.PROJECT]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT]}`,
-  [ResourceType.MODEL]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.MODEL]}`,
-  [ResourceType.APP_TYPE_SCHEMA]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]}`,
-  [ResourceType.CATALOG_SCHEMA]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.CATALOG_SCHEMA]}`,
-  [ResourceType.INTERCEPTOR]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
-  [ResourceType.TRANSLATOR]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.TRANSLATOR]}`,
-  [ResourceType.PLUGIN]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PLUGIN]}`,
-  [ResourceType.ROUTER]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTER]}`,
-  [ResourceType.ROLE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
-  [ResourceType.ROUTE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTE]}`,
-  [ResourceType.PROJECT_KEY]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
   [ResourceType.POLICY]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY]}`,
   [ResourceType.POLICY_ASSIGNMENT]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.POLICY_ASSIGNMENT]}`,
   [ResourceType.ALIAS]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ALIAS]}`,

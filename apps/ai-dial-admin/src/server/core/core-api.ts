@@ -37,10 +37,32 @@ export class CoreApi extends BaseApi {
    * SDK counterpart of `getAction` and friends: resolves to the same envelope `handleResponse` builds.
    * `headers` are sent alongside the caller's `authorization`, which they can never supply or replace.
    */
-  protected async sdkAction<T extends object = object>(
+  protected sdkAction<T extends object = object>(
     token: Token | undefined,
     call: CoreSdkCall,
     headers?: Record<string, string>,
+  ): Promise<ServerActionResponse<T>> {
+    return this.runSdkAction<T>(token, call, headers, false);
+  }
+
+  /**
+   * SDK counterpart of `deleteAction` / `sendActionRequest(..., 'DELETE')`. The hand-written client reads a `DELETE`
+   * body with `res.text()`, so a success body stays text (`''` when empty) and is never parsed as JSON, which also means
+   * a `200` body carrying an `error` field is still a success. Failures are unchanged.
+   */
+  protected sdkDelete(
+    token: Token | undefined,
+    call: CoreSdkCall,
+    headers?: Record<string, string>,
+  ): Promise<ServerActionResponse> {
+    return this.runSdkAction(token, call, headers, true);
+  }
+
+  private async runSdkAction<T extends object>(
+    token: Token | undefined,
+    call: CoreSdkCall,
+    headers: Record<string, string> | undefined,
+    isRawBody: boolean,
   ): Promise<ServerActionResponse<T>> {
     const result = await runSdkCall(token, call, headers);
     if (!result) {
@@ -57,6 +79,10 @@ export class CoreApi extends BaseApi {
       return this.toFailure(this.parseErrorBody(body, response.status), response, etag);
     }
 
+    if (isRawBody) {
+      return { success: true, response: (typeof data === 'string' ? data : '') as unknown as T, etag };
+    }
+
     const parsed = parseSdkBody(data, response);
     if ((parsed as ErrorObject | null)?.error) {
       return this.toFailure(parsed as ErrorObject, response, etag);
@@ -67,7 +93,9 @@ export class CoreApi extends BaseApi {
 
   /**
    * SDK counterpart of `get`: the parsed body, `undefined` on 403, `null` on any other failure or abort.
-   * Typed `R | null` like `get`, which hides the 403 `undefined` behind the same cast.
+   * Typed `R | null` like `get`, which hides the 403 `undefined` behind the same cast. The narrower type is deliberate:
+   * widening it would change every SDK-backed read at once, so a caller that must tell a 403 from other failures
+   * re-exposes `| undefined` on its own signature, as `AssetApi.getContent` and `getMetadata` do.
    */
   protected sdkGet<R extends object>(
     token: Token | undefined,

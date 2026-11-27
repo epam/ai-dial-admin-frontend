@@ -9,7 +9,7 @@
  * re-serves the first page forever. Each caller's `fetchPage` already builds its request against
  * that asymmetry (see e.g. `AssetApi.getMetadata`) — this helper only threads the value through.
  */
-export async function fetchAllPages<TNode extends { nextToken?: string } | null, TRow>(
+export async function fetchAllPages<TNode extends { nextToken?: string } | null | undefined, TRow>(
   fetchPage: (nextToken?: string) => Promise<TNode>,
   mapPage: (node: TNode) => TRow[],
 ): Promise<TRow[]> {
