@@ -39,6 +39,8 @@ describe('Server :: Core :: AssetApi :: request paths equal the hand-written cli
   const instance = new AssetApi({ host: CORE_TEST_URL });
 
   const readPair = async (read: (type: ResourceType) => Promise<unknown>) => {
+    // `mockResponse` persists across calls: reset here so each pair starts from an empty call log and urlOf(0) / urlOf(1)
+    // are the pair's own requests, whatever ran before in the same test.
     fetch.resetMocks();
     fetch.mockResponse('{}', { headers: JSON_HEADERS });
     await read(ResourceType.ROLE);

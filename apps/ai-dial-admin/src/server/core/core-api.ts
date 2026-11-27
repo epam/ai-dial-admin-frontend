@@ -93,7 +93,9 @@ export class CoreApi extends BaseApi {
 
   /**
    * SDK counterpart of `get`: the parsed body, `undefined` on 403, `null` on any other failure or abort.
-   * Typed `R | null` like `get`, which hides the 403 `undefined` behind the same cast.
+   * Typed `R | null` like `get`, which hides the 403 `undefined` behind the same cast. The narrower type is deliberate:
+   * widening it would change every SDK-backed read at once, so a caller that must tell a 403 from other failures
+   * re-exposes `| undefined` on its own signature, as `AssetApi.getContent` and `getMetadata` do.
    */
   protected sdkGet<R extends object>(
     token: Token | undefined,
