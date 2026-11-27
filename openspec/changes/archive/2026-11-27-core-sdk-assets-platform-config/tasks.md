@@ -25,7 +25,7 @@
 
 ## 5. OpenSpec bookkeeping
 
-- [ ] 5.1 After archive, confirm `core-client` names the nine types in the SDK-backed list, has the "Platform configuration asset operations are SDK-backed" scenario and a policy in the "not yet routed" scenario, and `core-asset-client` has the app-runner SDK scenario; no browser-verification task is added because every scenario's THEN is a request, a body, an envelope or a resolved value, not UI state
+- [x] 5.1 After archive, confirm `core-client` names the nine types in the SDK-backed list, has the "Platform configuration asset operations are SDK-backed" scenario and a policy in the "not yet routed" scenario, and `core-asset-client` has the app-runner SDK scenario; no browser-verification task is added because every scenario's THEN is a request, a body, an envelope or a resolved value, not UI state
 - [ ] 5.2 Once this PR is merged, tick task 2.2 of the umbrella `core-sdk-assets`
 
 ## 6. Gates

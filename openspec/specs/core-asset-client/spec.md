@@ -194,6 +194,11 @@ This is a second, distinct family within the client. For the typed-entity kinds 
 - **WHEN** a structurally invalid app-runner body is written
 - **THEN** Core responds with success rather than a validation error, so the client SHALL NOT treat a successful write as evidence of a valid payload
 
+#### Scenario: App-runner requests go through the SDK to the same endpoints with the body unchanged
+
+- **WHEN** an app-runner resource is read, saved or deleted
+- **THEN** the request is sent by the SDK to `/v1/schemas/platform/{name}` (or `/v1/metadata/schemas/platform/{name}` for its metadata, `/v1/metadata/schemas/platform/` for the root listing), the same path and method the hand-written client used, and a saved body reaches Core with every field the caller sent, none added or dropped
+
 ### Requirement: App-runner resource name carries an extra encoding layer
 
 Unlike the five existing resource kinds, whose names pass through the shared path builder's single segment encoding, the app-runner resource name is a URI (`$id`) that must survive Core's `ENTITY_NAME_PATTERN` (`^[A-Za-z0-9._%:-]+$`) after the route boundary decodes one layer. The client SHALL apply one additional percent-encoding layer to the name before the shared path builder encodes it, and SHALL reverse both layers when parsing a name back out of a metadata `url`.
