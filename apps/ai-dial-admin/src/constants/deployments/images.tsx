@@ -93,12 +93,12 @@ export const STATUS_I18N_KEYS: Record<IMAGE_STATUS | CONTAINER_STATUS | KubEvent
 };
 
 export const STATUS_CLASSNAMES: Record<IMAGE_STATUS | CONTAINER_STATUS | KubEventType, string> = {
-  [IMAGE_STATUS.BUILT]: 'bg-green-1',
+  [IMAGE_STATUS.BUILT]: 'text-success bg-current',
   [IMAGE_STATUS.BUILDING]: '',
   [IMAGE_STATUS.NOT_BUILT]: 'bg-control-error-active',
   [IMAGE_STATUS.BUILD_FAILED]: 'bg-control-error-active',
   [IMAGE_STATUS.BUILD_STOPPED]: 'bg-orange-400',
-  [CONTAINER_STATUS.RUNNING]: 'bg-green-1',
+  [CONTAINER_STATUS.RUNNING]: 'text-success bg-current',
   [CONTAINER_STATUS.PENDING]: '',
   [CONTAINER_STATUS.STOPPING]: '',
   [CONTAINER_STATUS.NOT_DEPLOYED]: 'bg-control-error-active',
