@@ -155,6 +155,8 @@ export const hopFactsOf = (span: SessionSpanRow): HopFacts | null => {
       // Never a zero. A span can record a real own price against zero tokens, and `0 tok` beside that price
       // is the same broken reading the unmetered shape exists to avoid — absent, not zero, is the fact.
       tokens: (tokens ?? 0) > 0 ? tokens : null,
+      cacheRead: toNumber(span.cached_prompt_tokens ?? null),
+      cacheWrite: toNumber(span.cache_creation_tokens ?? null),
       requestMessages: toNumber(span.number_request_messages),
       cost: span.deployment_price,
     };

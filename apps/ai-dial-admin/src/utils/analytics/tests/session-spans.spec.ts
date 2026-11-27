@@ -142,6 +142,8 @@ describe('hopFactsOf', () => {
     expect(hopFactsOf(span())).toEqual({
       shape: HopFactsShape.Metered,
       tokens: 18,
+      cacheRead: null,
+      cacheWrite: null,
       requestMessages: 3,
       cost: '0.001',
     });
@@ -150,6 +152,20 @@ describe('hopFactsOf', () => {
   // The boundary the rule exists for: zero tokens and no own price, with a real chain price beneath.
   test('states the chain cost for a hop that metered nothing of its own', () => {
     const facts = hopFactsOf(span({ total_tokens: 0, deployment_price: null, total_price: '0.0375' }));
+
+    expect(facts).toEqual({ shape: HopFactsShape.Unmetered, chainCost: '0.0375' });
+  });
+
+  test('carries the hop own cache read and write on a metered hop', () => {
+    const facts = hopFactsOf(span({ cached_prompt_tokens: '19500', cache_creation_tokens: 4300 }));
+
+    expect(facts).toMatchObject({ shape: HopFactsShape.Metered, cacheRead: 19500, cacheWrite: 4300 });
+  });
+
+  test('carries no cache figure on a hop that metered nothing of its own', () => {
+    const facts = hopFactsOf(
+      span({ total_tokens: 0, deployment_price: null, total_price: '0.0375', cached_prompt_tokens: 100 }),
+    );
 
     expect(facts).toEqual({ shape: HopFactsShape.Unmetered, chainCost: '0.0375' });
   });
@@ -167,6 +183,8 @@ describe('hopFactsOf', () => {
     expect(hopFactsOf(span({ total_tokens: 0, deployment_price: '0.001' }))).toEqual({
       shape: HopFactsShape.Metered,
       tokens: null,
+      cacheRead: null,
+      cacheWrite: null,
       requestMessages: 3,
       cost: '0.001',
     });

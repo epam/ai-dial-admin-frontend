@@ -19,6 +19,8 @@ const group = (traceId: string): SessionTraceGroup => ({
   startedAt: 1,
   spans: 2,
   tokens: 10,
+  promptTokens: 0,
+  cachedTokens: 0,
   price: 0.001,
   failedSpans: 0,
   chips: [],

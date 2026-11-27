@@ -111,9 +111,14 @@ const sum = (figures: SessionTraceFigureRow[], read: (row: SessionTraceFigureRow
 /** One trace's own figures, summed from its rows of the figures pass. Shared by every listing that reads it. */
 export const traceFiguresOf = (
   figures: SessionTraceFigureRow[],
-): Pick<SessionTraceGroup, 'spans' | 'tokens' | 'price' | 'failedSpans' | 'chips' | 'responseIds'> => ({
+): Pick<
+  SessionTraceGroup,
+  'spans' | 'tokens' | 'promptTokens' | 'cachedTokens' | 'price' | 'failedSpans' | 'chips' | 'responseIds'
+> => ({
   spans: sum(figures, (row) => toNumber(row.spans) ?? 0),
   tokens: sum(figures, (row) => toNumber(row.tokens) ?? 0),
+  promptTokens: sum(figures, (row) => toNumber(row.prompt_tokens ?? null) ?? 0),
+  cachedTokens: sum(figures, (row) => toNumber(row.cached_tokens ?? null) ?? 0),
   price: sum(figures, (row) => toNumber(row.price) ?? 0),
   failedSpans: sum(figures, (row) => toNumber(row.failed_spans) ?? 0),
   chips: chipsOf(figures),

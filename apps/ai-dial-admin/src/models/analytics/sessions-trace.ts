@@ -395,6 +395,9 @@ export enum UsageLogField {
   Deployment = 'deployment',
   EventKind = 'event_kind',
   TotalTokens = 'total_tokens',
+  PromptTokens = 'prompt_tokens',
+  CachedPromptTokens = 'cached_prompt_tokens',
+  CacheCreationTokens = 'cache_creation_tokens',
   DeploymentPrice = 'deployment_price',
   // The chain-inclusive figure: on a root span it equals the sum of its subtree's own `deployment_price`
   // (verified against a live app-form trace), which is what makes the card's own/chain price pair readable.
@@ -467,6 +470,8 @@ export enum SessionTraceFigureField {
   EventKind = 'event_kind',
   Spans = 'spans',
   Tokens = 'tokens',
+  PromptTokens = 'prompt_tokens',
+  CachedTokens = 'cached_tokens',
   Price = 'price',
   FailedSpans = 'failed_spans',
   ResponseIds = 'response_ids',
@@ -478,6 +483,8 @@ export interface SessionTraceFigureRow {
   event_kind: string | null;
   spans: number | string | null;
   tokens: number | string | null;
+  prompt_tokens?: number | string | null;
+  cached_tokens?: number | string | null;
   price: number | string | null;
   failed_spans: number | string | null;
   response_ids: string[] | null;
@@ -554,6 +561,8 @@ export interface SessionTraceGroup {
   startedAt: number | string | null;
   spans: number;
   tokens: number;
+  promptTokens: number;
+  cachedTokens: number;
   price: number;
   failedSpans: number;
   chips: SessionTraceChip[];
@@ -592,6 +601,8 @@ export interface SessionSpanRow {
   request_body_bytes: number | string | null;
   number_request_messages: number | string | null;
   reasoning_tokens: number | string | null;
+  cached_prompt_tokens?: number | string | null;
+  cache_creation_tokens?: number | string | null;
   mcp_method?: string | null;
   mcp_tool_call_name?: string | null;
   execution_path?: string[] | null;
@@ -625,6 +636,8 @@ export enum HopFactsShape {
 export interface HopMeteredFacts {
   shape: HopFactsShape.Metered;
   tokens: number | null;
+  cacheRead: number | null;
+  cacheWrite: number | null;
   requestMessages: number | null;
   cost: number | string | null;
 }

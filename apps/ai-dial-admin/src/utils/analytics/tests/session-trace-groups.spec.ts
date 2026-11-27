@@ -128,6 +128,28 @@ describe('traceGroupsOf', () => {
     expect(group.price).toBeCloseTo(0.02995);
   });
 
+  test('sums prompt and cached prompt tokens across event kinds', () => {
+    const [group] = groupsOf(
+      [pageRow(TRACE, 1000)],
+      [root()],
+      [
+        figure({ event_kind: 'llm_call', prompt_tokens: 1000, cached_tokens: 800 }),
+        figure({ event_kind: '', prompt_tokens: '500', cached_tokens: '400' }),
+        figure({ event_kind: 'mcp', prompt_tokens: null, cached_tokens: null }),
+      ],
+    );
+
+    expect(group.promptTokens).toBe(1500);
+    expect(group.cachedTokens).toBe(1200);
+  });
+
+  test('yields zero prompt and cached tokens when the figures carry neither', () => {
+    const [group] = groupsOf([pageRow(TRACE, 1000)], [root()], [figure()]);
+
+    expect(group.promptTokens).toBe(0);
+    expect(group.cachedTokens).toBe(0);
+  });
+
   test('builds one chip per recorded event kind, carrying its count', () => {
     const [group] = groupsOf(
       [pageRow(TRACE, 1000)],

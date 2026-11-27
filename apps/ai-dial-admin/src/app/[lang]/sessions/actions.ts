@@ -636,12 +636,16 @@ export async function getSessionTracePage(
     return { success: true, response: { groups: [], hasMore, cursor: nextCursor } };
   }
 
+  const hasCacheColumns = await isUsageLogFieldServed(UsageLogField.CachedPromptTokens, authToken);
   const [rootsResult, figuresResult] = await Promise.all([
     analyticsDataApi.executeAction(
       buildSessionTraceRootsQuery(traceIds, pageWindow, TRACE_ROOTS_LIMIT, hasClientSessionId),
       authToken,
     ),
-    analyticsDataApi.executeAction(buildSessionTraceFiguresQuery(traceIds, pageWindow, TRACE_FIGURES_LIMIT), authToken),
+    analyticsDataApi.executeAction(
+      buildSessionTraceFiguresQuery(traceIds, pageWindow, TRACE_FIGURES_LIMIT, hasCacheColumns),
+      authToken,
+    ),
   ]);
 
   if (!rootsResult.success) {
@@ -737,8 +741,9 @@ export async function getEntityTracePage(
   }
 
   const traceIds = [...new Set(callRows.map(({ trace_id }) => trace_id))];
+  const hasCacheColumns = await isUsageLogFieldServed(UsageLogField.CachedPromptTokens, authToken);
   const figuresResult = await analyticsDataApi.executeAction(
-    buildSessionTraceFiguresQuery(traceIds, pageWindow, ENTITY_TRACE_FIGURES_LIMIT),
+    buildSessionTraceFiguresQuery(traceIds, pageWindow, ENTITY_TRACE_FIGURES_LIMIT, hasCacheColumns),
     authToken,
   );
 

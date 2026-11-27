@@ -607,6 +607,13 @@ describe('buildSessionTraceRootsQuery', () => {
       expect(names).not.toContain(column);
     }
   });
+
+  test('projects no cache column', () => {
+    const names = selectedNames(query().select);
+
+    expect(names).not.toContain(UsageLogField.CachedPromptTokens);
+    expect(names).not.toContain(UsageLogField.CacheCreationTokens);
+  });
 });
 
 describe('buildSessionTraceFiguresQuery', () => {
@@ -644,6 +651,23 @@ describe('buildSessionTraceFiguresQuery', () => {
     for (const column of BODY_COLUMNS) {
       expect(JSON.stringify(query().select)).not.toContain(column);
     }
+  });
+
+  test('sums prompt and cached prompt tokens where the schema serves the cache column', () => {
+    const serialized = JSON.stringify(
+      buildSessionTraceFiguresQuery(PAGE_TRACE_IDS, window(), SESSION_TRACE_PAGE_SIZE, true).select,
+    );
+
+    expect(serialized).toContain(UsageLogField.PromptTokens);
+    expect(serialized).toContain(UsageLogField.CachedPromptTokens);
+    expect(serialized).toContain(SessionTraceFigureField.CachedTokens);
+  });
+
+  test('names no cache column where the schema does not serve it', () => {
+    const serialized = JSON.stringify(query().select);
+
+    expect(serialized).not.toContain(UsageLogField.PromptTokens);
+    expect(serialized).not.toContain(UsageLogField.CachedPromptTokens);
   });
 });
 

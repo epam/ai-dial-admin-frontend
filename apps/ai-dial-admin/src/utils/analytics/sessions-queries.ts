@@ -584,6 +584,7 @@ export const buildSessionTraceFiguresQuery = (
   traceIds: string[],
   window: SessionTraceWindow,
   limit: number,
+  hasCacheColumns = false,
 ): StructuredQuery =>
   aggregateQuery({
     entity: USAGE_LOG_ENTITY,
@@ -593,6 +594,12 @@ export const buildSessionTraceFiguresQuery = (
       col(field(UsageLogField.EventKind)),
       col(fn('count'), SessionTraceFigureField.Spans),
       col(fn('sum', [field(UsageLogField.TotalTokens)]), SessionTraceFigureField.Tokens),
+      ...(hasCacheColumns
+        ? [
+            col(fn('sum', [field(UsageLogField.PromptTokens)]), SessionTraceFigureField.PromptTokens),
+            col(fn('sum', [field(UsageLogField.CachedPromptTokens)]), SessionTraceFigureField.CachedTokens),
+          ]
+        : []),
       col(fn('sum', [field(UsageLogField.DeploymentPrice)]), SessionTraceFigureField.Price),
       // No `countIf` in the catalog and no `CASE` in the grammar; `if` is what expresses this.
       col(
