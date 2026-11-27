@@ -100,7 +100,7 @@ stricter default.
 
 #### Scenario: A URI-shaped name opens on click
 
-- **WHEN** a user clicks a row whose name contains `:` and `/`
+- **WHEN** a user clicks the name link of a row whose name contains `:` and `/`
 - **THEN** the detail view opens, navigating by the row's encoded path
 
 #### Scenario: Row and bulk actions stay enabled

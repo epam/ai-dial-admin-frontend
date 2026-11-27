@@ -3,9 +3,7 @@
 ## Purpose
 
 The code viewer and fullscreen viewer used by run detail views.
-
 ## Requirements
-
 ### Requirement: CodeViewer displays JSON content with syntax highlighting and line numbers
 The `CodeViewer` component SHALL render JSON or text content as a collapsible block with a header bar (title, file size, Copy button, Fullscreen button) and a body area with line numbers gutter and syntax-highlighted `<pre>` content. The body SHALL be collapsed by default. When expanded, the code area SHALL have a max-height of 400px with vertical scroll on the wrapper div (so line numbers and code scroll together). JSON syntax highlighting SHALL use regex-based coloring via `highlightJson()` with existing Tailwind theme tokens. The code viewer SHALL NOT use Monaco Editor (Monaco is used only in the FullscreenViewer). The `CodeViewer` is reused for request/response bodies and for individual metricInfos value entries.
 
@@ -53,3 +51,33 @@ The `FullscreenViewer` SHALL render as a fixed-position modal overlay with a dim
 #### Scenario: Close fullscreen viewer via backdrop click
 - **WHEN** the user clicks the dimmed backdrop area outside the content panel
 - **THEN** the viewer closes
+
+### Requirement: Metric highlight columns in the row-detail pivot
+
+When a metric leaf's `metricInfos` entry holds a `highlight` value — an object of chunk
+arrays such as `{ "corpus": [{ "text": string, "score": number, "title"?: string }, ...] }`,
+or a bare chunk array — the single-run row-detail pivot SHALL show a `{leaf} highlight`
+column immediately after that leaf's numeric column. The cell SHALL render the chunk text
+with score-based coloring: positive scores use the green delta score palette, negative
+scores the red delta score palette, and a score of exactly `0` has no highlight. Chunk
+`title` values SHALL be exposed as native tooltips; colored chunks SHALL also carry a
+non-color cue (for example an `aria-label` with the score). Named sources SHALL show their
+key as a secondary label above the text. The score popup SHALL remain unchanged. A leaf
+without a `highlight` key SHALL get no such column.
+
+#### Scenario: Highlight column appears next to the numeric leaf
+- **WHEN** a metric leaf has `metricInfos[group][leaf].highlight`
+- **THEN** the pivot shows a `{leaf} highlight` column immediately after that leaf
+
+#### Scenario: Highlight cell shows colored text
+- **WHEN** the highlight column cell is rendered
+- **THEN** it shows the chunk text colored by score and does not show raw JSON brackets
+
+#### Scenario: Neutral score has no color
+- **WHEN** a highlight chunk has score `0`
+- **THEN** that chunk is rendered with the standard text look and no score background
+
+#### Scenario: No highlight key means no column
+- **WHEN** a metric leaf has no `highlight` in its metricInfos entry
+- **THEN** the pivot does not add a highlight column for that leaf
+

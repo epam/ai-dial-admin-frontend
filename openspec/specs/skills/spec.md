@@ -10,9 +10,7 @@ per-row content fetch beyond what creation and file management need, and no edit
 skill's own parsed metadata (name/description/version) after creation, which lives only in
 `SKILL.md`'s frontmatter — created by archiving change `add-assets-skills`; creation added by
 archiving change `add-skill-creation`.
-
 ## Requirements
-
 ### Requirement: Assets > Skills menu entry
 The system SHALL add a `Skills` menu item to the Assets section of the admin menu, directly after `Files`
 (the last existing Assets entry), linking to the `/skills` route.
@@ -53,7 +51,9 @@ metadata listing carries no version information distinguishable from its `Name`.
 
 ### Requirement: Skill asset list offers delete, bulk delete, folder creation, and skill creation; no import, export, or row-level move
 The system SHALL offer row-level delete and multi-select bulk delete on the Skills asset list, and
-SHALL offer a `Create` toolbar action with two options, `Folder` and `Skill`. The system SHALL NOT
+SHALL offer a `Create` toolbar action with two options, `Folder` and `Skill`. The system SHALL offer a
+context menu on every grouping-folder row and folder-tree node with `Add sibling`, `Add child`,
+`Manage permissions` and `Delete`, and SHALL hide it for read-only admins. The system SHALL NOT
 offer import, export, or a row-level move-to-folder action, since this surface's authoring is limited
 to creating a skill and its containing folders, and Move is offered on the detail view instead (see
 the Save/Discard requirement below).
@@ -73,6 +73,26 @@ the Save/Discard requirement below).
 #### Scenario: No import, export, or row-level move action is present
 - **WHEN** a user opens the Skills asset list toolbar and row actions
 - **THEN** no import, export, or move-to-folder action is offered
+
+#### Scenario: A folder has a context menu
+- **WHEN** a user hovers a grouping-folder row or opens a folder's menu in the folder tree
+- **THEN** the menu offers `Add sibling`, `Add child`, `Manage permissions` and `Delete`, and no rename or move
+
+#### Scenario: Add child creates a folder inside the chosen folder
+- **WHEN** a user chooses `Add child` on a folder, enters a valid name and confirms
+- **THEN** an empty grouping folder is created inside that folder and the list shows it
+
+#### Scenario: Add sibling creates a folder next to the chosen folder
+- **WHEN** a user chooses `Add sibling` on a folder, enters a valid name and confirms
+- **THEN** an empty grouping folder is created in the same parent as the chosen folder
+
+#### Scenario: Manage permissions opens Folders Storage on the folder
+- **WHEN** a user chooses `Manage permissions` on a folder
+- **THEN** Folders Storage opens in a new tab with that folder selected
+
+#### Scenario: Read-only admins get no folder menu
+- **WHEN** a read-only admin hovers a folder row
+- **THEN** no folder context menu is offered
 
 ### Requirement: Creating a folder from the Skills asset list
 The system SHALL let a user create an empty grouping folder at the currently open path by selecting
@@ -279,3 +299,4 @@ and UI as before the extraction. No Skill requirement in this capability changes
 #### Scenario: Existing Skill behaviour is preserved
 - **WHEN** a user lists, creates, edits, and deletes skills
 - **THEN** each action sends the same Core requests and shows the same results as before the extraction
+

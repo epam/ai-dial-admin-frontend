@@ -3,9 +3,7 @@
 ## Purpose
 
 Routing of platform entities under platform- prefixed paths, addressed by the id segment alone, without affecting asset routes.
-
 ## Requirements
-
 ### Requirement: Platform entity routes use platform- prefix
 The six World-B platform entity pages (Models, App Runners, Interceptors, Routes, Roles, Keys)
 SHALL be accessible under `/platform-*` URL paths. The previous `/assets-*` URLs for these pages
@@ -79,12 +77,12 @@ pattern from the previous `/assets-*` routes SHALL NOT be carried over.
 - **THEN** the page renders the entity detail view, ignoring the `path` query parameter
 
 ### Requirement: Platform Routers page uses the platform- prefix
-The Routers page SHALL be accessible at `/platform-routers`, with its detail page at
+The Auto Routers page SHALL be accessible at `/platform-routers`, with its detail page at
 `/platform-routers/{id}` addressed by the id segment alone, and its sidebar entry SHALL link to it.
 
 #### Scenario: Platform Routers page is reachable
 - **WHEN** a user navigates to `/<lang>/platform-routers`
-- **THEN** the system renders the Platform Routers list page
+- **THEN** the system renders the Auto Routers list page
 
 #### Scenario: Router detail page is addressed by id alone
 - **WHEN** a user opens a router from the list
@@ -92,4 +90,6 @@ The Routers page SHALL be accessible at `/platform-routers`, with its detail pag
 
 #### Scenario: Sidebar entry links to the platform route
 - **WHEN** the user views the AI Gateway section of the sidebar
-- **THEN** the `Routers` entry links to `/platform-routers`
+- **THEN** the `Auto Routers` entry links to `/platform-routers`
+- **AND** the separate `Routes` entry retains its label and destination
+

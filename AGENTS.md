@@ -49,9 +49,9 @@ Things that cost time or fail silently if you don't know them:
   it as a default project skills location, so both see the canonical files. The `openspec-*` entries
   under `.cursor/skills` and `.github/skills` are different — the openspec CLI generates a distinct
   variant per tool and owns them.
-- **Analytics is a root index plus fourteen sub-capabilities** under `openspec/specs/analytics/` —
+- **Analytics is a root index plus fifteen sub-capabilities** under `openspec/specs/analytics/` —
   `query-builder`, `query-viewer`, `saved-queries`, `source-panel`, `tables`, `sessions-source`, `sessions-listing`,
-  `session-trace-listing`, `session-trace-detail`, `pipelines`, `dashboards`, `custom-dashboards`,
+  `session-trace-listing`, `session-trace-detail`, `entity-trace-listing`, `pipelines`, `dashboards`, `custom-dashboards`,
   `config-transfer`, `app-routes`. Address one as
   `analytics/<sub>`. `analytics/spec.md` is the index: it carries only what every Analytics page
   shares, plus a routing table naming what each sub-capability answers — add a row when you add one.

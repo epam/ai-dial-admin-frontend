@@ -21,8 +21,12 @@ The system SHALL expose one list page at `/containers` showing containers of typ
 - **THEN** the list SHALL render the existing empty state
 
 #### Scenario: Row and name navigation
-- **WHEN** the user clicks a container row or opens it in a new tab
+- **WHEN** the user clicks a container's name link or opens it in a new tab
 - **THEN** the system SHALL navigate to `/containers/[id]`
+
+#### Scenario: A row click outside the name does not navigate
+- **WHEN** the user clicks a container row outside its name link
+- **THEN** no navigation occurs
 
 ### Requirement: Container list column display
 The `/containers` list SHALL render every cell as human-readable text; no cell SHALL show `[object Object]` or a raw epoch/ISO timestamp.

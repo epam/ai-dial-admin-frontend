@@ -196,7 +196,7 @@ UI and no folder-move control. Both buckets share the existing `/assets-applicat
 route — a `?path=` query param present means public bucket; its absence means platform bucket.
 
 #### Scenario: Opening a platform application shows the platform detail view
-- **WHEN** the user clicks a platform-bucket application row
+- **WHEN** the user clicks a platform-bucket application's name link
 - **THEN** the system navigates to `/assets-applications/[id]` with no `?path=` query param, and
   renders the platform Apps view, not the public Apps view
 
@@ -362,4 +362,18 @@ When the caller's `adminAccess` is not `FULL`, the Assets Applications editor, l
 #### Scenario: Non-admin selects a runner
 - **WHEN** a caller without full admin access selects a runner
 - **THEN** its routes, interceptors and features come from the resolved schema read, not the config-file read
+
+### Requirement: Application role references open their Core role details
+
+The Core-direct application Roles tab and embedded Core-backed application route role grids SHALL offer Open in a new tab for each displayed role, following `core-role-reference-navigation`. The system SHALL preserve membership and route-grant behavior.
+
+#### Scenario: Open an application role
+
+- **WHEN** a user selects Open in a new tab on a Core application role row
+- **THEN** the unqualified platform-role detail address for that role opens in a new tab
+
+#### Scenario: Open an embedded application-route role
+
+- **WHEN** a user selects Open in a new tab on a Core-backed application route role row
+- **THEN** the unqualified platform-role detail address for that role opens in a new tab even if the role option list is empty
 

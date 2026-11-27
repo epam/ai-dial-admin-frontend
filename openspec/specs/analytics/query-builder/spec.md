@@ -1409,13 +1409,14 @@ the same Analytics access check the other Analytics pages use, resolving to a 40
 denied. A draft SHALL be runnable, and its result exportable, without being saved.
 
 The draft's table SHALL be the table last picked in the Source panel, as specified in
-`analytics/source-panel`, and the first queryable table when none was picked. The address SHALL stay
+`analytics/source-panel`, and the **default table** when none was picked: `dial_usage_log` when it is
+queryable, otherwise the first queryable table. The address SHALL stay
 `/queries` whatever the table: the table is not part of the address. The picked table SHALL be held for
 as long as the user stays within the Queries pages, so returning to the draft from a saved query SHALL
-show the table picked before; reloading the page SHALL return the draft to the first queryable table.
+show the table picked before; reloading the page SHALL return the draft to the default table.
 The page heading SHALL show the draft's table name.
 
-The first queryable table's schema SHALL be read on the server with the page. The schema of a table
+The default table's schema SHALL be read on the server with the page. The schema of a table
 picked afterwards SHALL be read when it is picked; while it is being read the builder SHALL show a
 loading indicator in place of the draft, and a schema that cannot be read SHALL leave the draft on that
 table with the schema-load failure state.
@@ -1432,8 +1433,13 @@ draft is specified in `analytics/saved-queries`.
 #### Scenario: The menu item opens a draft
 
 - **WHEN** the user opens `/queries` without having picked a table
-- **THEN** the builder is shown on the first queryable table
+- **THEN** the builder is shown on `dial_usage_log`
 - **AND** the heading shows that table's name
+
+#### Scenario: Without the usage log the first table is the default
+
+- **WHEN** `dial_usage_log` is not among the queryable tables and the user opens `/queries` without having picked a table
+- **THEN** the builder is shown on the first queryable table
 
 #### Scenario: A picked table becomes the draft's table
 
@@ -1446,9 +1452,14 @@ draft is specified in `analytics/saved-queries`.
 - **WHEN** the user picks a table, opens a saved query, and returns to `/queries`
 - **THEN** the draft is shown on the table picked before
 
+#### Scenario: A reload returns to the default table
+
+- **WHEN** the user picks a table other than the default and reloads the page
+- **THEN** the builder is shown on the default table
+
 #### Scenario: A reload returns to the first table
 
-- **WHEN** the user picks a table other than the first and reloads the page
+- **WHEN** `dial_usage_log` is not among the queryable tables, and the user picks a table other than the first and reloads the page
 - **THEN** the builder is shown on the first queryable table
 
 #### Scenario: A draft runs without being saved

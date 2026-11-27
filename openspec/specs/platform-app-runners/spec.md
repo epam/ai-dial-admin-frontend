@@ -73,7 +73,7 @@ Because the row name is the runner's `$id`, it contains characters the shared as
 
 #### Scenario: A URI-shaped name opens on click
 
-- **WHEN** a user clicks a row whose name contains `:` and `/`
+- **WHEN** a user clicks the name link of a row whose name contains `:` and `/`
 - **THEN** the detail view opens, navigating by the row's encoded path
 
 #### Scenario: Row and bulk actions stay enabled
@@ -793,4 +793,13 @@ A Platform App Runner route response SHALL have a non-empty string body and a st
 
 - **WHEN** all staged responses have a valid status and non-empty body
 - **THEN** response validation no longer blocks Save, subject to the other existing Save gates
+
+### Requirement: App-runner route role references open their Core role details
+
+Core-backed embedded app-runner route role grids SHALL offer Open in a new tab for each displayed role, following `core-role-reference-navigation`, without changing route-grant behavior.
+
+#### Scenario: Open an app-runner route role
+
+- **WHEN** a user selects Open in a new tab on a Core-backed app-runner route role row
+- **THEN** the unqualified platform-role detail address for that role opens in a new tab even if the role option list is empty
 
