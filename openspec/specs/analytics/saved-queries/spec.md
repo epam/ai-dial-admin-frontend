@@ -198,6 +198,8 @@ Discard SHALL ask for confirmation and, on confirmation, SHALL restore the page 
 
 The result view a query was last rendered in, and its chart configuration, SHALL be part of what a saved query stores and restores. Reopening a saved query SHALL show it in its stored result view, and a stored chart configuration SHALL survive the page's first run rather than being reset by it. A stored chart configuration whose axis columns are not set SHALL be re-derived from the result. The chart configuration SHALL be stored without interpretation — it names result columns, not schema fields.
 
+The chart configuration SHALL carry the chart type — including the scorecard — its axis columns, and its legend settings: whether the legend is shown and its position (above, right, below or left). A stored configuration without legend settings, or with a position the page does not know, SHALL open with the legend on and below the chart, and opening it SHALL NOT by itself mark the query as changed. Changing the legend settings SHALL count as an unsaved change. Whether the chart formatting panel is open SHALL NOT be stored.
+
 #### Scenario: A stored chart view is restored
 
 - **WHEN** the user opens a query saved in the chart view and runs it
@@ -212,6 +214,27 @@ The result view a query was last rendered in, and its chart configuration, SHALL
 
 - **WHEN** the user switches a saved query from the table view to the chart view
 - **THEN** the page indicates unsaved changes
+
+#### Scenario: The legend settings round-trip
+
+- **WHEN** the user moves the legend of a saved query's chart to the right, saves, and opens the query again
+- **THEN** the chart's legend is on the right
+
+#### Scenario: Moving the legend is an unsaved change
+
+- **WHEN** the user moves the legend of a saved query's chart to the right
+- **THEN** the page indicates unsaved changes
+
+#### Scenario: A chart saved before legend settings opens with defaults
+
+- **WHEN** the user opens a query whose stored chart configuration has no legend settings
+- **THEN** the chart shows its legend below the chart
+- **AND** the query is not marked as changed
+
+#### Scenario: A scorecard round-trips
+
+- **WHEN** the user saves a query shown as a scorecard and opens it again
+- **THEN** the result is shown as a scorecard
 
 ### Requirement: Scope-based permission gating for saved queries
 
@@ -588,4 +611,53 @@ The stored time intent SHALL be applied to the toolbar time filter: a relative i
 
 - **WHEN** a stored query carries a relative period the frontend does not recognise
 - **THEN** the query loads and the toolbar time filter is left as it was
+
+### Requirement: Add a saved query to a dashboard from its page
+
+While custom dashboards are available, a query page SHALL offer **Add to dashboard** in the builder
+toolbar's actions area whenever the page holds no unsaved changes; while it holds unsaved changes the
+actions area shows Save and Discard instead and SHALL NOT offer Add to dashboard. Add to dashboard SHALL
+be offered for every saved query the caller can read, structured or SQL.
+
+Activating it SHALL open a modal with a **required** dashboard picker and an optional widget title. The
+picker SHALL list custom dashboards only — never the built-in usage dashboard — and SHALL always end
+with **Create dashboard**, which creates a dashboard from a name entered in the same modal and selects
+it. Submission SHALL append one widget referencing the query to the chosen dashboard, at column 0 below
+its lowest widget, in the Medium size, with the query's own page limit as its row limit (capped at 1000, or 100 when the
+query has none), and SHALL write the whole dashboard once.
+Adding a query that is already on the dashboard SHALL add a second widget.
+
+On success the modal SHALL close, the browser SHALL stay on the query page, and a success notification
+SHALL carry a link to the dashboard; activating the link SHALL navigate there. On failure an error
+notification SHALL be shown and the modal SHALL stay open with its values intact.
+
+#### Scenario: Add to dashboard is offered on a saved query without edits
+
+- **GIVEN** custom dashboards are available
+- **WHEN** the user opens a saved query's page and makes no edits
+- **THEN** Add to dashboard is offered in the toolbar's actions area
+
+#### Scenario: Add to dashboard is absent while edits are unsaved
+
+- **WHEN** the user edits a saved query on its page
+- **THEN** Save and Discard are offered and Add to dashboard is not
+
+#### Scenario: The picker lists custom dashboards only
+
+- **WHEN** the user opens the Add to dashboard modal
+- **THEN** the picker lists custom dashboards and Create dashboard
+- **AND** does not list the usage dashboard
+
+#### Scenario: The widget lands at the bottom of the dashboard
+
+- **WHEN** the user adds the query to a dashboard that already has widgets
+- **THEN** a success notification links to that dashboard
+- **AND** on that dashboard the new widget is below every other widget, in the Medium size, with a row
+  limit of 100
+
+#### Scenario: Add to dashboard is absent without custom dashboards
+
+- **GIVEN** the custom-dashboards flag is unset
+- **WHEN** the user opens a saved query's page
+- **THEN** Add to dashboard is not offered
 

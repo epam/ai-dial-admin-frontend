@@ -27,6 +27,7 @@ import {
 import {
   formatCompactNumber,
   formatDurationMs,
+  formatShare,
   formatSignificantCost,
   toMillis,
 } from '@/src/utils/analytics/session-formatting';
@@ -41,6 +42,21 @@ const PANEL_CLASS = 'flex flex-col gap-2 rounded border border-secondary bg-laye
 
 // One label/value pair of the middle tier. That tier is card-level throughout, so every value in it is read
 // from the card's own root row — never from the trace. The label is what keeps the two registers legible.
+const TraceTokens: FC<{ group: SessionTraceGroup }> = ({ group }) => {
+  const t = useI18n();
+
+  return (
+    <>
+      <span>{formatCompactNumber(group.tokens) || UNAVAILABLE_VALUE}</span>
+      {group.promptTokens > 0 && (
+        <span>
+          {t(SessionsTraceI18nKey.TraceCachedShare, { share: formatShare(group.cachedTokens, group.promptTokens) })}
+        </span>
+      )}
+    </>
+  );
+};
+
 const Fact: FC<{ label: string; children: ReactNode }> = ({ label, children }) => (
   <span className="flex items-baseline gap-1">
     <span className="text-secondary dial-tiny-text">{label}</span>
@@ -49,7 +65,10 @@ const Fact: FC<{ label: string; children: ReactNode }> = ({ label, children }) =
 );
 
 const StatusDot: FC<{ isFailed: boolean }> = ({ isFailed }) => (
-  <span aria-hidden className={classNames('size-1.5 shrink-0 rounded-full', isFailed ? 'bg-error' : 'bg-green-1')} />
+  <span
+    aria-hidden
+    className={classNames('size-1.5 shrink-0 rounded-full', isFailed ? 'bg-error' : 'text-success bg-current')}
+  />
 );
 
 // Bottom tier: the trace's own register — its chips and span count, with the drill-in affordance. Kept apart
@@ -68,7 +87,7 @@ const TraceTier: FC<{ group: SessionTraceGroup; hasChevron?: boolean; hasTotals?
           so repeating them per card would present one fact as several. */}
       {hasTotals && (
         <span className="flex shrink-0 items-center gap-3 font-mono text-secondary dial-tiny-text">
-          <span>{formatCompactNumber(group.tokens) || UNAVAILABLE_VALUE}</span>
+          <TraceTokens group={group} />
           <span className={COST_TEXT_CLASS}>{formatSignificantCost(group.price) || UNAVAILABLE_VALUE}</span>
         </span>
       )}
@@ -134,7 +153,7 @@ const TraceCard: FC<CardProps> = ({ group, card, ratings, traceTier, hasTraceTot
           <span>{formatDurationMs(card.durationMs) || UNAVAILABLE_VALUE}</span>
           {hasTraceTotals && (
             <>
-              <span>{formatCompactNumber(group.tokens) || UNAVAILABLE_VALUE}</span>
+              <TraceTokens group={group} />
               <span className={COST_TEXT_CLASS}>{formatSignificantCost(group.price) || UNAVAILABLE_VALUE}</span>
             </>
           )}
@@ -205,7 +224,7 @@ const UnrecordedRoot: FC<UnrecordedProps> = ({ group, onOpenTrace }) => {
             what "renders from its trace-level figures" means. Only the middle tier is absent, because there is
             no card to speak for. */}
         <span className="ml-auto flex shrink-0 items-center gap-3 font-mono dial-tiny-text text-secondary">
-          <span>{formatCompactNumber(group.tokens) || UNAVAILABLE_VALUE}</span>
+          <TraceTokens group={group} />
           <span className={COST_TEXT_CLASS}>{formatSignificantCost(group.price) || UNAVAILABLE_VALUE}</span>
         </span>
       </span>

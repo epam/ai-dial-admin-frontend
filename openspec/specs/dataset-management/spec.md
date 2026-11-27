@@ -3,7 +3,6 @@
 ## Purpose
 
 Defines the Datasets list page and the dataset detail view: listing PUBLIC datasets, creating, deleting and switching a dataset between public and private, and the detail view's header and tabs.
-
 ## Requirements
 ### Requirement: Dataset listing page shows only PUBLIC datasets
 The system SHALL display a listing page at `/datasets` that shows only datasets with `visibility: PUBLIC`, fetched from `GET /api/v1/datasets` with a PUBLIC visibility filter. The page SHALL be accessible from the Evaluation section menu as the first item, before "Test Suites" and "Runs".
@@ -53,10 +52,10 @@ The system SHALL allow users to delete a dataset from the listing page via a row
 ---
 
 ### Requirement: Dataset detail view navigation
-The system SHALL navigate to `/datasets/{id}` when the user clicks a dataset row in the listing grid.
+The system SHALL navigate to `/datasets/{id}` when the user clicks a dataset's name link in the listing grid; a click elsewhere in the row SHALL NOT navigate.
 
 #### Scenario: Click row to open dataset
-- **WHEN** user clicks a row in the datasets listing grid
+- **WHEN** user clicks a dataset's name link in the datasets listing grid
 - **THEN** the user is navigated to `/datasets/{id}` showing the dataset detail view
 
 ---
@@ -139,3 +138,4 @@ While the dataset's schema is read-only (a PUBLIC dataset bound to at least one 
 #### Scenario: JSON Editor enabled for an unbound dataset
 - **WHEN** the user opens a PUBLIC dataset that no test suite uses, or a PRIVATE dataset
 - **THEN** the JSON Editor toggle is enabled
+

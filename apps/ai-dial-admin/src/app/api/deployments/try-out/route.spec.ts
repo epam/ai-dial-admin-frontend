@@ -54,22 +54,20 @@ describe('POST /api/deployments/try-out', () => {
       ],
       [DeploymentInterfaceType.OpenAIResponses, `${CORE_URL}/openai/v1/responses`],
       [DeploymentInterfaceType.AnthropicMessages, `${CORE_URL}/anthropic/v1/messages`],
+      [DeploymentInterfaceType.OpenAIEmbeddings, `${CORE_URL}/openai/deployments/applications/my%20app/embeddings`],
     ])('sends %s to its Core path', async (type, expectedUrl) => {
       await POST(makeRequest({ ...CHAT_REQUEST, interface: type }));
 
       expect(lastCoreCall().url).toBe(expectedUrl);
     });
 
-    test.each([DeploymentInterfaceType.OpenAIEmbeddings, 'somethingElse', undefined])(
-      'refuses interface %s without calling Core',
-      async (type) => {
-        const res = await POST(makeRequest({ ...CHAT_REQUEST, interface: type }));
+    test.each(['somethingElse', undefined])('refuses interface %s without calling Core', async (type) => {
+      const res = await POST(makeRequest({ ...CHAT_REQUEST, interface: type }));
 
-        expect(res.status).toBe(400);
-        expect(res.headers.get(TRY_OUT_PROXY_ERROR_HEADER)).toBe('1');
-        expect(fetchMock).not.toHaveBeenCalled();
-      },
-    );
+      expect(res.status).toBe(400);
+      expect(res.headers.get(TRY_OUT_PROXY_ERROR_HEADER)).toBe('1');
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
 
     test('refuses chat completions with no deployment', async () => {
       const res = await POST(makeRequest({ ...CHAT_REQUEST, deployment: '' }));

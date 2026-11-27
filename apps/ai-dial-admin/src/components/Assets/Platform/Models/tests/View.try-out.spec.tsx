@@ -42,14 +42,14 @@ describe('ModelView — Try out', () => {
     expect(deleteButtons.some((button) => button.parentElement?.contains(tryOut))).toBe(true);
   });
 
-  test('opens the panel for the model by its canonical platform id', async () => {
+  test('opens the panel for the model by its short name', async () => {
     renderView();
 
     await userEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.TryOut }));
 
     const [content] = appContextMock.sidebar.showSidebar.mock.calls[0];
     render(<>{content}</>);
-    expect(screen.getByText('panel:models/platform/gpt-4')).toBeInTheDocument();
+    expect(screen.getByText('panel:gpt-4')).toBeInTheDocument();
   });
 
   test('shows no Try out button for a model without a name', () => {

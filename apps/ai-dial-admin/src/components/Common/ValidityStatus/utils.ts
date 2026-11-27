@@ -10,7 +10,7 @@ import { ValidityStatus } from '@/src/types/key';
  */
 export const getColorClassName = (status: string, theme: string): string => {
   if (status === ValidityStatus.VALID) {
-    return 'bg-green-1';
+    return 'text-success bg-current';
   }
 
   return theme === 'dark' ? 'bg-control-error-active' : 'bg-red-800';

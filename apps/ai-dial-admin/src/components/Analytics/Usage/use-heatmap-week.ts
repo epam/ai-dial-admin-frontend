@@ -17,7 +17,6 @@ interface Params {
   rows: RowScope;
   refreshToken: number;
   notice: LoadFailureNotice;
-  callerSource: CallerSource;
 }
 
 export interface HeatmapWeek {
@@ -33,7 +32,7 @@ export interface HeatmapWeek {
  * The heatmap keeps its own week rather than following the page period: a grid of hour by day is
  * only readable over exactly seven days, and the page's period is free to be an hour or a month.
  */
-export const useHeatmapWeek = ({ view, rows, refreshToken, notice, callerSource }: Params): HeatmapWeek => {
+export const useHeatmapWeek = ({ view, rows, refreshToken, notice }: Params): HeatmapWeek => {
   const { report, reset } = notice;
 
   const { runQuery } = useAnalyticsQuery();
@@ -64,7 +63,7 @@ export const useHeatmapWeek = ({ view, rows, refreshToken, notice, callerSource 
     reset();
     setBuckets({ data: null, isLoading: true, hasFailed: false });
 
-    void runQuery(buildBucketedQuery({ view, callerSource, window: week, ...rows }, HOURLY)).then(
+    void runQuery(buildBucketedQuery({ view, callerSource: CallerSource.None, window: week, ...rows }, HOURLY)).then(
       ({ result, error, isCancelled }) => {
         // A cancelled read belongs to a heatmap nobody is looking at: it neither reports nor records.
         if (current !== generation.current || isCancelled) return;
@@ -78,7 +77,7 @@ export const useHeatmapWeek = ({ view, rows, refreshToken, notice, callerSource 
         setBuckets({ data: null, isLoading: false, hasFailed: true });
       },
     );
-  }, [view, callerSource, rows, week, report, reset, runQuery]);
+  }, [view, rows, week, report, reset, runQuery]);
 
   const onPreviousWeek = useCallback(() => setWeekOffset((offset) => offset + 1), []);
   const onNextWeek = useCallback(() => setWeekOffset((offset) => Math.max(0, offset - 1)), []);

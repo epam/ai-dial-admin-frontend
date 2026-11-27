@@ -2,9 +2,7 @@
 
 ## Purpose
 The Aliases entity of the admin console: an alias is an admin-managed deployment of DIAL Core with its own name, catalog entry and `userRoles` that forwards calls to a model, application, toolset or router. Covers the AI Gateway menu entry, the Platform, Public and config.json listing, the create wizard, duplicate and delete, name validation, the Properties, Target and Roles detail tabs, the target and present-as selection, broken-alias reporting and i18n. Created by archiving change `add-aliases`.
-
 ## Requirements
-
 ### Requirement: AI Gateway > Aliases menu entry
 The system SHALL add an `Aliases` item to the AI Gateway group of the admin menu, directly after `Plugins`,
 linking to the `/assets-aliases` route. The label SHALL come from i18n (`MenuI18nKey.PlatformAliases`). The item SHALL
@@ -157,21 +155,21 @@ etag-conflict handling. A config.json alias SHALL open read-only.
 - **THEN** Core's 412 is handled as for the other entities and the user's edits are not lost silently
 
 ### Requirement: Target and present-as selection
-The system SHALL let the user choose the **target type** (Model, Application, Toolset, Router), then pick the **target** with
+The system SHALL let the user choose the **target type** (Model, Application, Toolset, Auto Router), then pick the **target** with
 the shared entity picker in single-selection mode, opened from a read-only input with an open icon (the pattern of the
 other popup-backed fields; no separate Select/Change button), then choose **present-as**. Present-as options SHALL be limited to:
-Model → Model, Application; Application → Model, Application, Toolset; Toolset → Toolset; Router → Router, Model,
-Application. Present-as Router SHALL be offered for a Router target only. Present-as SHALL default to
-the target type and SHALL be written only when it differs from that default. The Router target type SHALL be offered
+Model → Model, Application; Application → Model, Application, Toolset; Toolset → Toolset; Auto Router → Auto Router, Model,
+Application. Present-as Auto Router SHALL be offered for an Auto Router target only. Present-as SHALL default to
+the target type and SHALL be written only when it differs from that default. The Auto Router target type SHALL be offered
 only on a Platform alias, because Core refuses a router target on a Public alias; a Public alias already stored with a
 router target SHALL still show that type. Changing the target type SHALL clear the
 target. The picker SHALL offer every source the chosen type has: Application and Toolset the Public tree, Platform
-and config.json; Model and Router Platform and config.json. The picked target SHALL be stored as `target.path`: a Public pick as
+and config.json; Model and Auto Router Platform and config.json. The picked target SHALL be stored as `target.path`: a Public pick as
 `<type>/<picked public path>` with each path segment percent-encoded, the form Core parses (for example
 `applications/public/team/assistant`, or `applications/public/QA/Code%20Apps%20ALS/assistant` for a folder named
 `Code Apps ALS`), and a Platform or config.json pick as `<type>/<name>` (for example `routers/smart-router`). The stored path SHALL be decoded again where
 it is shown or reused. A `target.path` the form cannot parse SHALL be shown as plain text and SHALL be left unchanged
-until the user picks a target.
+until the user picks a target. The Auto Router label SHALL NOT change the Core router type or its stored values.
 
 #### Scenario: Toolset target allows only toolset presentation
 - **WHEN** the target type is Toolset
@@ -182,12 +180,12 @@ until the user picks a target.
 - **THEN** present-as offers Model, Application and Toolset, with Application preselected
 
 #### Scenario: Router target offers router, model and application presentations
-- **WHEN** the target type is Router
-- **THEN** present-as offers Router, Model and Application, with Router preselected, and a Router pick is stored as `routers/<name>`
+- **WHEN** the target type is Auto Router
+- **THEN** present-as offers Auto Router, Model and Application, with Auto Router preselected, and an Auto Router pick is stored as `routers/<name>`
 
 #### Scenario: Public alias is not offered a router target
 - **WHEN** an admin opens the target type on a Public alias
-- **THEN** Router is not among the options; on a Platform alias it is
+- **THEN** Auto Router is not among the options; on a Platform alias it is
 
 #### Scenario: Target is an input with an open icon
 - **WHEN** an admin views the Target step or tab
@@ -218,7 +216,7 @@ until the user picks a target.
 - **THEN** only the second is selected, Apply is enabled, and applying reports exactly one entity
 
 #### Scenario: Model and Router pickers have no Public tab
-- **WHEN** an admin opens the target picker for a Model or Router target
+- **WHEN** an admin opens the target picker for a Model or Auto Router target
 - **THEN** only the Platform and config.json tabs are offered
 
 #### Scenario: Unparseable existing target is not rewritten
@@ -228,6 +226,10 @@ until the user picks a target.
 #### Scenario: A missing target is accepted by the form
 - **WHEN** an admin saves an alias whose target does not exist yet
 - **THEN** the form does not block the save, because Core accepts it and reports the alias as broken until the target exists
+
+#### Scenario: Stored router target retains its displayed type
+- **WHEN** an admin opens an alias whose target path uses the `routers/` prefix
+- **THEN** the target type is displayed as Auto Router and its existing path is retained
 
 ### Requirement: Broken-alias reporting
 The system SHALL show a banner on the alias detail view when Core reports the alias invalid: a `GET` answer with
@@ -268,3 +270,23 @@ SHALL reuse the existing keys.
 #### Scenario: No duplicated shared labels
 - **WHEN** the new `AliasI18nKey` section is reviewed
 - **THEN** it contains no key whose text equals an existing `BasicI18nKey`, `ButtonsI18nKey` or `AssetTabsI18nKey` label
+
+### Requirement: Alias bulk selection is isolated by source
+
+The system SHALL offer bulk selection and deletion on both the Public and Platform Alias grids, independently for each source. Confirming deletion SHALL delete the selected aliases from the active source using DIAL Core's `DELETE /v1/aliases/<bucket>/<name>` contract and SHALL NOT delete aliases in another bucket or their targets.
+
+#### Scenario: Delete Public aliases
+
+- **WHEN** an admin selects and confirms deletion of multiple aliases on the Public tab
+- **THEN** the system requests deletion of those `aliases/public/` resources, and their targets and any Platform aliases remain untouched
+
+#### Scenario: Delete Platform aliases
+
+- **WHEN** an admin selects and confirms deletion of multiple aliases on the Platform tab
+- **THEN** the system requests deletion of those `aliases/platform/` resources, and their targets and any Public aliases remain untouched
+
+#### Scenario: Same name in both buckets
+
+- **WHEN** an alias with the same name exists in both buckets and an admin bulk-deletes the Public alias
+- **THEN** only the Public alias is requested for deletion
+

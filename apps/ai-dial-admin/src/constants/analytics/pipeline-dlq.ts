@@ -25,7 +25,7 @@ export const DLQ_SUMMARY_LIMIT = 1;
  * The dot is `aria-hidden`: the stage's own name sits next to it.
  */
 export const DLQ_STAGE_COLOR: Record<DlqStage, string> = {
-  [DlqStage.InputMap]: 'bg-green-1',
+  [DlqStage.InputMap]: 'text-success bg-current',
   [DlqStage.DialCall]: 'bg-control-accent',
   [DlqStage.Validate]: 'bg-yellow-400',
   [DlqStage.OutputMap]: 'bg-accent-tertiary',

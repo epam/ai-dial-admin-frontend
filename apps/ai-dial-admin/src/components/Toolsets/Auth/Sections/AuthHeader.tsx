@@ -43,7 +43,7 @@ export const AuthHeader: FC<Props> = ({ toolset }) => {
         <div
           className={classNames(
             'w-[10px] h-[10px] rounded-full',
-            isUserLoggedIn || isAdminLoggedIn ? 'bg-green-1' : 'bg-control-error-active',
+            isUserLoggedIn || isAdminLoggedIn ? 'text-success bg-current' : 'bg-control-error-active',
           )}
         ></div>
         <div>{getAuthStatusLabel()}</div>

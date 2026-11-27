@@ -392,3 +392,50 @@ describe('SessionEventStream — opening on a span', () => {
     expect(scrollIntoView).toHaveBeenCalledOnce();
   });
 });
+
+describe('SessionEventStream — cache', () => {
+  const renderModel = (overrides: Partial<SessionSpanRow>) =>
+    renderStream(buildHopTree([span({ core_span_id: 'm', deployment: 'a-model', ...overrides })]));
+
+  test('states the cache read and write of a model call that used the cache', () => {
+    renderModel({ cached_prompt_tokens: 19500, cache_creation_tokens: 4300 });
+
+    expect(rowFor(/a-model/)).toHaveAccessibleName(new RegExp(SessionsTraceI18nKey.SpanCache));
+  });
+
+  test('states the cache of a call that only read from it', () => {
+    renderModel({ cached_prompt_tokens: 18000, cache_creation_tokens: 0 });
+
+    expect(rowFor(/a-model/)).toHaveAccessibleName(new RegExp(SessionsTraceI18nKey.SpanCache));
+  });
+
+  test('states no cache figure for a call with zero cache activity', () => {
+    renderModel({ cached_prompt_tokens: 0, cache_creation_tokens: 0 });
+
+    expect(rowFor(/a-model/)).toHaveAccessibleName(new RegExp(SessionsTraceI18nKey.SpanTokens));
+    expect(rowFor(/a-model/)).not.toHaveAccessibleName(new RegExp(SessionsTraceI18nKey.SpanCache));
+  });
+
+  test('states no cache figure for a call that recorded no cache columns', () => {
+    renderModel({});
+
+    expect(rowFor(/a-model/)).not.toHaveAccessibleName(new RegExp(SessionsTraceI18nKey.SpanCache));
+  });
+
+  test('states no cache figure for a hop that metered nothing of its own', () => {
+    renderStream(
+      buildHopTree([
+        span({
+          core_span_id: 'app',
+          deployment: 'an-application',
+          total_tokens: 0,
+          deployment_price: null,
+          total_price: '0.0375',
+          cached_prompt_tokens: 500,
+        }),
+      ]),
+    );
+
+    expect(rowFor(/an-application/)).not.toHaveAccessibleName(new RegExp(SessionsTraceI18nKey.SpanCache));
+  });
+});

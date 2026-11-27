@@ -25,6 +25,7 @@ sub-capability; open the one row that answers the question rather than reading t
 | `analytics/sessions-source` | The instance-wide Sessions source — base table and role binding, where it is edited and stored, the default binding, how an unbound role degrades |
 | `analytics/sessions-listing` | The sessions log page — filters, provenance line, grid columns, ordering and filtering |
 | `analytics/session-trace-listing` | One session's page — route and guard, header, side panels, the trace listing |
+| `analytics/entity-trace-listing` | An entity's Audit Traces tab — its own calls newest first, each card above the trace it belongs to, opening that trace with the call selected |
 | `analytics/session-trace-detail` | A trace opened in place — span tree, Request/Response/Chat tabs, tiered body reads |
 | `analytics/pipelines` | The pipelines console — listing, registration, detail page, bindings and triggers, JSON editing |
 | `analytics/dashboards` | The Dashboards page over the usage log — how it is reached, its requests, Compare, KPI row, heatmap, share donut, breakdown table |

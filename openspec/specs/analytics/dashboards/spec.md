@@ -929,6 +929,19 @@ unknown field, which failed every read on the page rather than only the card. Wh
 served but empty on a row, that row SHALL fall back to the hash as well. Where the schema serves
 neither column, the page SHALL ask for no caller count and SHALL NOT draw the caller card.
 
+Only the reads behind the card SHALL ask for the caller count: the totals of each compared window,
+for its value and delta, and the current window's buckets, for its sparkline. The share chart, the
+breakdown tab and the heatmap SHALL NOT ask for it. Counting it over the principal reference joins
+the identity table over the whole window, and a page that issued that join from every read at once
+exceeded the service's query budget on a week of a large environment.
+
+#### Scenario: Only the caller card's reads count callers
+
+- **GIVEN** comparison is on and the schema serves the principal reference
+- **WHEN** the dashboard loads
+- **THEN** the caller count is asked for by the two totals reads and the current window's bucketed read
+- **AND** by no other read on the page
+
 #### Scenario: A schema without the principal reference still loads the dashboard
 
 - **GIVEN** the usage log schema served to the current user has no `usage_client_identity.user_ref`
@@ -2229,4 +2242,40 @@ to sit, not a row.
 - **GIVEN** the window holds no rows for the active tab
 - **WHEN** the card renders
 - **THEN** the table keeps its full height and states the empty window
+
+### Requirement: The Dashboards header switches between the built-in dashboard and custom ones
+
+While custom dashboards are available, the Dashboards page header SHALL offer a dashboard switcher. Its
+first option SHALL be the built-in usage dashboard, followed by every custom dashboard by name, followed
+by a separator and **Create dashboard**, which is always offered. The switcher SHALL show the dashboard
+currently open. `/dashboards` SHALL keep rendering the usage dashboard and SHALL remain the default
+destination of the Dashboards menu item; picking a custom dashboard SHALL navigate to
+`/dashboards/[id]`, and picking the built-in one SHALL navigate to `/dashboards`. Create dashboard SHALL
+open the create modal of `analytics/custom-dashboards` without changing the open dashboard.
+
+The usage dashboard SHALL be unchanged by the switcher: it SHALL NOT be editable, SHALL NOT be offered
+as a target of Add to dashboard, and its controls, requests and Compare behave as before.
+
+#### Scenario: The usage dashboard is the default
+
+- **GIVEN** custom dashboards are available
+- **WHEN** the user opens Dashboards from the menu
+- **THEN** the usage dashboard renders and the switcher shows it as selected
+
+#### Scenario: Picking a custom dashboard navigates to it
+
+- **WHEN** the user picks a custom dashboard in the switcher
+- **THEN** the browser navigates to that dashboard's address and it renders
+
+#### Scenario: Create dashboard is always offered
+
+- **GIVEN** no custom dashboard exists yet
+- **WHEN** the user opens the switcher
+- **THEN** it offers the usage dashboard and Create dashboard
+
+#### Scenario: No switcher without custom dashboards
+
+- **GIVEN** the custom-dashboards flag is unset
+- **WHEN** the user opens `/dashboards`
+- **THEN** the header shows no switcher
 

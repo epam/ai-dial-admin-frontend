@@ -15,8 +15,9 @@ import {
 
 import AdvancedRequest from '@/src/components/TryOut/Deployment/components/AdvancedRequest';
 import TryOutFailureMessage from '@/src/components/TryOut/Deployment/components/TryOutFailureMessage';
+import TryOutLookupMessage from '@/src/components/TryOut/Deployment/components/TryOutLookupMessage';
 import { TRY_OUT_INTERFACE_LABELS } from '@/src/components/TryOut/Deployment/constants';
-import { TryOutMode, TryOutStatus } from '@/src/components/TryOut/Deployment/models';
+import { TryOutLookupStatus, TryOutMode, TryOutStatus } from '@/src/components/TryOut/Deployment/models';
 import { useDeploymentTryOut } from '@/src/components/TryOut/Deployment/use-deployment-try-out';
 import TryOutHeader from '@/src/components/TryOut/components/TryOutHeader';
 import TryOutResponseBody from '@/src/components/TryOut/components/TryOutResponseBody';
@@ -39,9 +40,8 @@ interface Props {
 const DeploymentTryOut: FC<Props> = ({ deployment }) => {
   const t = useI18n();
   const tryOut = useDeploymentTryOut(deployment);
-  const { mode, setMode, type, supportedTypes, status, response, failure, traceUrl } = tryOut;
+  const { mode, setMode, type, supportedTypes, lookup, status, response, failure, traceUrl } = tryOut;
   const isSending = status === TryOutStatus.Sending;
-  const isUnavailable = supportedTypes.length === 0;
 
   const modeTabs = useMemo(
     () => [
@@ -66,8 +66,8 @@ const DeploymentTryOut: FC<Props> = ({ deployment }) => {
   );
 
   const statusMessage = STATUS_MESSAGES[status];
-  // Until the first byte arrives the spinner stands in for the response; after that the reply fills in as it streams.
-  const isAwaitingResponse = isSending && (response == null || (response.events?.length ?? 0) === 0);
+  // The response spinner stays until the stream ends; events replace their own spinner once the first one arrives.
+  const isAwaitingEvents = isSending && (response == null || (response.events?.length ?? 0) === 0);
 
   return (
     <div className="flex flex-col gap-y-4 size-full min-h-0 overflow-auto pb-4">
@@ -76,24 +76,15 @@ const DeploymentTryOut: FC<Props> = ({ deployment }) => {
           isSending ? (
             <OutlinedButton label={t(ButtonsI18nKey.Stop)} onClick={tryOut.onStop} />
           ) : (
-            <PrimaryButton
-              label={t(ButtonsI18nKey.SendRequest)}
-              onClick={tryOut.onSend}
-              disabled={!tryOut.canSend || isUnavailable}
-            />
+            <PrimaryButton label={t(ButtonsI18nKey.SendRequest)} onClick={tryOut.onSend} disabled={!tryOut.canSend} />
           )
         }
       />
       <p className="text-secondary dial-small-text">{t(DeploymentTryOutI18nKey.RealRequestNote)}</p>
-      {tryOut.isInterfacesUnknown && (
-        <p className="text-secondary dial-small-text">{t(DeploymentTryOutI18nKey.InterfacesUnknownNote)}</p>
-      )}
 
-      {tryOut.isLoadingInterfaces ? (
-        <Spinner size={18} fullWidth />
-      ) : isUnavailable ? (
-        <p role="status">{t(DeploymentTryOutI18nKey.Unavailable)}</p>
-      ) : (
+      {lookup.status === TryOutLookupStatus.Loading && <Spinner size={18} fullWidth />}
+      <TryOutLookupMessage lookup={lookup} onRetry={tryOut.onRetryLookup} />
+      {lookup.status === TryOutLookupStatus.Ready && (
         <>
           <div className="flex flex-row items-center justify-between gap-x-4">
             <Tabs
@@ -109,7 +100,7 @@ const DeploymentTryOut: FC<Props> = ({ deployment }) => {
               options={interfaceOptions}
               value={type ?? undefined}
               onChange={onChangeInterface}
-              disabled={isSending || tryOut.isLoadingInterfaces}
+              disabled={isSending}
               className="w-auto"
             />
           </div>
@@ -144,7 +135,12 @@ const DeploymentTryOut: FC<Props> = ({ deployment }) => {
       {failure && <TryOutFailureMessage failure={failure} />}
       <TryOutTraceLink url={traceUrl} />
       {(response || isSending) && (
-        <TryOutResponseBody response={response} isRequestSend={isAwaitingResponse} growOnOpen={false} />
+        <TryOutResponseBody
+          response={response}
+          isRequestSend={isSending}
+          isEventsLoading={isAwaitingEvents}
+          growOnOpen={false}
+        />
       )}
     </div>
   );

@@ -120,9 +120,8 @@ in a cross-kind listing outright rather than leaving it unresolved — so a list
 carry them at all. A column that could only ever be empty here is not offered; both are read on the pipeline
 itself.
 
-- The **name** cell SHALL navigate to that pipeline's detail route, `/pipelines/{name}`, while rendering as
-  plain text rather than as a link: the name is a value an operator reads and compares across rows, and
-  styling every one as a link makes the column harder to scan.
+- The **name** cell SHALL render the name as a link to that pipeline's detail route, `/pipelines/{name}`,
+  and SHALL be the only cell that navigates; a click elsewhere in the row SHALL NOT navigate.
 - The **kind** cell SHALL present the kind as a badge. Kind SHALL NOT be carried by colour alone.
 - The **trigger** cell SHALL show the trigger kind as a badge and nothing else. A raw six-field cron says
   nothing at a glance, and the schedule and the grouping key are both stated on the pipeline's own page.
@@ -245,13 +244,18 @@ refresh client-side, preserving the filters currently applied.
 
 #### Scenario: Navigating to a pipeline
 
-- **WHEN** the user activates a pipeline's name cell
+- **WHEN** the user activates a pipeline's name link
 - **THEN** the browser navigates to `/pipelines/{name}` for that pipeline
 
 #### Scenario: The name is presented as text rather than as a link
 
 - **WHEN** the listing renders a pipeline
-- **THEN** its name is presented as text rather than as a link
+- **THEN** its name is presented as a link
+
+#### Scenario: A row click outside the name does not navigate
+
+- **WHEN** the user clicks a pipeline row outside its name link
+- **THEN** no navigation occurs
 
 #### Scenario: Data columns stay sortable and filterable
 
@@ -1592,10 +1596,14 @@ boolean expression in the same bounded grammar over the read source's **entity**
 enrichments flattened in, which is what the service resolves a predicate against — and none admits a join, a
 subquery, or a CTE.
 
-Each SHALL be presented as a multi-line expression input, in a monospaced face, captioned with the source its
-columns come from. The console SHALL NOT attempt to validate the expression — the grammar is the service's
-and a client-side approximation would reject valid predicates — so an invalid expression SHALL be reported by
-surfacing the service's rejection on save.
+The `signal`, the `prefer_sql` and a measure's `where` SHALL each be presented as a multi-line expression
+input, in a monospaced face, captioned with the source its columns come from. The membership `filter` SHALL
+be presented as described in *The membership filter is built from conditions, with SQL as a fallback*; its
+SQL view is the same expression input.
+
+The console SHALL NOT attempt to validate an expression typed into an expression input — the grammar is the
+service's and a client-side approximation would reject valid predicates — so an invalid expression SHALL be
+reported by surfacing the service's rejection on save.
 
 #### Scenario: A predicate names its source
 
@@ -2103,7 +2111,7 @@ and performs no action a success or error notification would describe.
 #### Scenario: Pipeline activity row click opens the global audit detail page
 
 - **GIVEN** the pipeline Audit tab lists an activity whose `activityId` is `abc-123`
-- **WHEN** the user clicks that row outside the action menu
+- **WHEN** the user clicks that row's Activity ID link
 - **THEN** the browser opens `/activity-audit/abc-123` in a new tab, as the shared audit list already does
   for every other view
 - **AND** no `/pipelines/{name}/{activityId}` URL is requested
@@ -2192,10 +2200,11 @@ be recovered from the target table rather than from the projection.
 
 ### Requirement: An enrichment pipeline's execution knobs are grouped under Advanced
 
-An enrichment pipeline carries four execution knobs the runner applies: how many rows one scan may
-claim, how many rows it evaluates per call, a per-minute model-call ceiling, and the fraction of
-eligible rows to evaluate. They are hints to the runner rather than part of the transform,
-so the console SHALL present them together in one collapsible **Advanced** block placed last in the
+An enrichment pipeline carries four execution knobs the runner applies to every trigger kind: how many rows
+one scan may claim, how many rows it evaluates per call, a per-minute model-call ceiling, and the fraction of
+eligible rows to evaluate. A `group` pipeline carries a fifth: the **input token budget**, the ceiling the
+runner trims a group's members to before the model call. They are hints to the runner rather than part of the
+transform, so the console SHALL present them together in one collapsible **Advanced** block placed last in the
 section, after the members that describe what the pipeline does.
 
 An empty knob SHALL be omitted from the saved pipeline rather than sent as a zero: an omitted knob means
@@ -2203,8 +2212,20 @@ the runner's own configured default, which a zero does not.
 
 The sample fraction SHALL be validated by the console as strictly greater than zero and at most one.
 Zero is refused by the service, which names disabling the pipeline as the way to express evaluating
-nothing, and a value above one is refused rather than read as a percentage. This is the one knob the
-console validates; the others it SHALL present without imposing constraints the service does not.
+nothing, and a value above one is refused rather than read as a percentage.
+
+The input token budget SHALL be validated by the console as a whole number of zero or more; the service
+refuses a negative value. Zero is a value, not an empty knob: it turns the runner's trimming off for this
+pipeline, and the console SHALL send it. The field SHALL say that an empty value means the runner's default
+and zero means no trimming.
+
+The service accepts the input token budget only on a `group` pipeline and refuses it on a `schedule`
+pipeline with HTTP 422 on every write, a disabled draft included. The console SHALL therefore present it only
+while the trigger kind is `group`, and SHALL omit `advanced.input_token_budget` from the request whenever the
+trigger kind is anything else — hiding the control is not sufficient, because a value entered before the
+trigger kind was changed would otherwise still be submitted.
+
+The other knobs the console SHALL present without imposing constraints the service does not.
 
 How often the pipeline scans is not one of them. It is the trigger's cron, and the service refuses
 `advanced.scan_every` with HTTP 400 naming the member, so the console SHALL neither present nor send it.
@@ -2214,7 +2235,7 @@ These members belong to the enrichment kind and SHALL NOT be presented for an ag
 #### Scenario: The knobs are grouped and placed last
 
 - **WHEN** an enrichment pipeline is opened
-- **THEN** the four knobs are presented together in a collapsible block at the end of the section
+- **THEN** its knobs are presented together in a collapsible block at the end of the section
 
 #### Scenario: No scan cadence is presented or sent
 
@@ -2236,6 +2257,33 @@ These members belong to the enrichment kind and SHALL NOT be presented for an ag
 
 - **WHEN** a value above one is entered as the sample fraction
 - **THEN** it is reported as invalid and the pipeline cannot be saved
+
+#### Scenario: The input token budget is presented only for a group trigger
+
+- **WHEN** an enrichment pipeline's trigger kind is `group`
+- **THEN** the Advanced block presents the input token budget
+- **AND** when the trigger kind is `schedule` or unset, it does not
+
+#### Scenario: A zero input token budget is sent
+
+- **WHEN** zero is entered as the input token budget of a `group` pipeline and the pipeline is saved
+- **THEN** the request carries `advanced.input_token_budget` equal to `0`
+
+#### Scenario: A cleared input token budget is omitted
+
+- **WHEN** the input token budget of a `group` pipeline is cleared and the pipeline is saved
+- **THEN** the request carries no `advanced.input_token_budget`
+
+#### Scenario: A negative or fractional input token budget is refused
+
+- **WHEN** a negative or a fractional value is entered as the input token budget
+- **THEN** it is reported as invalid and the pipeline cannot be saved, or the field does not accept it
+
+#### Scenario: Switching away from group drops the input token budget
+
+- **WHEN** the user enters an input token budget, then switches the trigger kind to `schedule`, then saves
+- **THEN** the request carries no `advanced.input_token_budget`
+- **AND** the request carries no `advanced` member at all when no other knob is set
 
 #### Scenario: An aggregate pipeline presents no execution knobs
 
@@ -3055,252 +3103,6 @@ modal to explain: an enrichment pipeline is registered from what the operator ty
 - **WHEN** a full admin opens the listing
 - **THEN** the create action is enabled and the modal blocks neither kind on the state of another registry
 
-### Requirement: Runtime control is reached through a second analytics service
-
-Pausing a pipeline, resuming it, reading which pipelines are paused, reading which ones the runner
-has taken on, reading one pipeline's runtime view, and reading and re-running its dead-lettered failures are
-served by the **analytics enrichment runner**, a service distinct from the one that holds the pipeline
-registry. Its failures
-listing is **paged by cursor and counted by the service**: every page carries the number of items the
-filter matches and the number of them it would re-run, read in the page's own snapshot, so a caller
-never has to count rows to state a total. The console SHALL
-reach it at its own configured host and SHALL treat it as a separate upstream throughout: a registry read
-that succeeds while the runner is unreachable SHALL still present the pipeline.
-
-Every property of every runner response is named in **snake_case**, the paused listing included. The console
-SHALL parse that spelling and SHALL NOT accept the Java property names the paused listing emitted before,
-which named the same two facts differently from every other response that reports them.
-
-The runner authorizes **every** endpoint, reads included, on full-admin rights, and offers no
-consumer-facing read. The console SHALL therefore issue no request to it for a caller who is not a full
-admin, and SHALL present no runtime affordance to such a caller rather than presenting one that would be
-refused.
-
-An installation that has not configured the runner's host SHALL behave exactly as one whose runner did not
-answer: no runtime affordance is presented, and no error is raised for the absence. Runtime control is an
-addition to the console, not a precondition for reading a pipeline. The failures card is a runtime
-affordance like the rest: with no host configured it SHALL NOT be presented and no request SHALL be
-issued for it.
-
-The runner reports failures in the same envelope the registry does — a status, a stable machine code, a
-human-readable message, the path and the method — so a refusal SHALL be surfaced the way a registry refusal
-already is, by the service's own message with its request id. Three of its codes name conditions the operator
-can act on and SHALL be distinguished from a generic failure:
-
-- the runner has not yet loaded the pipeline list since it started, which resolves by itself shortly;
-- the runtime-state database is unavailable, which does not;
-- the runner does not hold the pipeline, which is the state the console already states as nothing running it.
-
-#### Scenario: Pausing survives a runner that does not serve the cache listing
-
-- **GIVEN** the runtime service answers the paused listing but refuses the cache listing
-- **WHEN** a full admin opens an enabled `enrich` pipeline
-- **THEN** its runtime is stated as running
-- **AND** the pause control is offered
-- **AND** no warning states that nothing is running it
-
-#### Scenario: The paused listing is parsed in snake_case
-
-- **GIVEN** the runtime service reports a paused pipeline with its name and lift time in snake_case
-- **WHEN** a full admin opens the pipelines listing
-- **THEN** that pipeline is stated as paused
-- **AND** its lift time is stated wherever a lift time is stated
-
-#### Scenario: A pipeline reads even when the runner is unreachable
-
-- **GIVEN** the runtime service does not answer
-- **WHEN** a full admin opens a pipeline's detail view
-- **THEN** the pipeline, its facts and its form are presented
-- **AND** no runtime status is stated
-
-#### Scenario: No runtime request is issued for a caller who is not a full admin
-
-- **GIVEN** a caller who is not a full admin
-- **WHEN** the user opens the pipelines listing and a pipeline's detail view
-- **THEN** no request is issued to the runtime service
-
-#### Scenario: An unconfigured runner is not an error
-
-- **GIVEN** no runtime service host is configured
-- **WHEN** a full admin opens a pipeline's detail view
-- **THEN** no runtime affordance is presented
-- **AND** no failures card is presented and no failures request is issued
-- **AND** no error notification is raised
-
-#### Scenario: A cold runner is distinguished from a broken one
-
-- **GIVEN** the runner answers that it has not loaded the pipeline list yet
-- **WHEN** a full admin attempts to pause a pipeline
-- **THEN** the failure states that the service is still starting and that the action can be retried shortly
-- **AND** the pipeline is not presented as paused
-
-### Requirement: A pipeline's enqueue can be paused and resumed
-
-A full admin SHALL be offered a control that pauses the pipeline's enqueue, and — while it is paused — one
-that resumes it. Pausing suspends the work the runner drives for that pipeline; it does not change the
-pipeline's declaration, and the pipeline SHALL remain `enabled` throughout.
-
-The control SHALL be presented in the Runtime tab's control bar, beside the statement of when the state
-was read, and — while the pipeline is paused — in the pause banner, which is where a reader who arrived on
-any tab meets the pause itself.
-
-Unlike the delete and enable/disable controls in the identity row, the pause control SHALL NOT be withheld
-while the `Discard` / `Save` change bar is up. Those two are withheld while edits are pending because they
-re-read the pipeline; a pause does not, and an incident is exactly when the form is most likely to be
-half-edited.
-
-Pausing SHALL be confirmed before it applies. The confirmation SHALL state what stops and what does not:
-input is no longer consumed, input keeps arriving and the backlog grows until the pipeline is resumed, the
-pipeline stays enabled and its definition is unchanged. It SHALL state that the pause is a runtime action
-and is not recorded as a change to the pipeline document. It SHALL state that the pause does not survive a
-restart of the runtime service, which is a consequence an operator cannot discover from the console and
-would otherwise meet as a pipeline that resumed itself overnight. The confirmation SHALL be the
-informational variant, not the danger one: a pause is reversible, and the danger treatment is reserved for
-delete.
-
-Resuming SHALL NOT be confirmed. It restores the ordinary state and is itself the undo of the action that
-was confirmed.
-
-Neither control SHALL be withheld while the pipeline has unsaved edits, unlike the enable/disable control:
-pausing sends no part of the document, so there is nothing for an unsaved edit to be discarded by. While a
-request is in flight the control SHALL state that and SHALL NOT be actionable, so a second request cannot
-be issued for the same decision.
-
-Each outcome SHALL be reported: a success as a notification stating the pipeline was paused or resumed, a
-failure as an error notification carrying the service's own message and its request id.
-
-#### Scenario: Pausing a running pipeline
-
-- **GIVEN** a full admin on the `Runtime` tab of a running pipeline
-- **WHEN** the user activates the pause control and confirms
-- **THEN** the pipeline is paused
-- **AND** a notification states that it was paused
-- **AND** the page states the pipeline as paused without a reload
-
-#### Scenario: The confirmation states what a pause does and does not do
-
-- **WHEN** a full admin activates the pause control
-- **THEN** the confirmation states that input stops being consumed and that the backlog grows until resumed
-- **AND** it states that the pipeline stays enabled and its definition is unchanged
-- **AND** it states that the pause does not survive a restart of the runtime service
-
-#### Scenario: Resuming takes no confirmation
-
-- **GIVEN** a full admin on a paused pipeline
-- **WHEN** the user activates the resume control
-- **THEN** the pipeline is resumed without a confirmation step
-- **AND** a notification states that it was resumed
-
-#### Scenario: A pause is offered while the form has unsaved edits
-
-- **GIVEN** a pipeline with one field edited and the `Discard` / `Save` bar offered
-- **WHEN** a full admin opens the `Runtime` tab
-- **THEN** the delete and enable/disable controls have stepped aside for the change bar
-- **AND** the pause control is still presented and actionable
-
-#### Scenario: A request in flight cannot be issued twice
-
-- **WHEN** a full admin confirms a pause and the request has not yet answered
-- **THEN** the control states that the request is in progress and is not actionable
-
-#### Scenario: A refused pause reports the service's own message
-
-- **GIVEN** the runtime service refuses the pause
-- **WHEN** a full admin confirms it
-- **THEN** an error notification carries the service's message and its request id
-- **AND** the pipeline is not presented as paused
-
-#### Scenario: Pausing is not offered to a caller who is not a full admin
-
-- **GIVEN** a caller who is not a full admin
-- **WHEN** the user opens the pipeline detail view
-- **THEN** no pause or resume control is presented
-
-### Requirement: A paused pipeline states its pause above the tab strip
-
-While a pipeline is paused, a banner SHALL render between the identity row and the tab strip, stating that
-the pipeline is paused, how long it has been paused, that input is still arriving and that the backlog it
-builds is worked through on resume. The banner SHALL carry a resume control.
-
-On the detail page the pause SHALL be taken from the pipeline's own **runtime view**, which reports the
-pause the runner is enforcing for it. The global paused listing answers the same question for every
-pipeline at once and remains what the listing page reads; asking it again for one pipeline the console has
-already read a view of would be a second answer to a question already answered, and the two could disagree.
-
-The banner SHALL distinguish the two origins the runtime service reports, because they call for opposite
-responses:
-
-- an **operator** pause is a decision, and it never expires — it is lifted only by someone resuming it;
-- a **breaker** pause was taken by the service's own dead-letter circuit breaker, and it lifts itself. The
-  banner SHALL state when it lifts.
-
-A **breaker** pause SHALL additionally state the reason the service recorded when it took the pause. That
-reason names the evidence the breaker tripped on — how many of the last N units of work were
-dead-lettered — which is the first thing a reader needs and the one fact the banner cannot derive. It
-SHALL be presented as the service worded it and SHALL NOT be re-phrased: the threshold and the window are
-the service's configuration, and a console that restated them would be quoting a copy.
-
-An **operator** pause SHALL NOT state a reason. The service records a fixed string for it that says only
-that an operator paused the pipeline, which the banner already states by naming the origin, so presenting
-it would be the same sentence twice.
-
-The banner SHALL NOT name who paused the pipeline. The runtime service records the origin and the reason it
-wrote at the time, and no user identity, so a name in this banner could only be invented.
-
-A pipeline the runtime service does not report as paused SHALL raise no banner, and a pipeline whose
-runtime could not be read SHALL raise none either: a banner is a statement that the pipeline is stopped,
-and an unread runtime does not support it.
-
-The banner SHALL be raised on the reported state alone. The runtime view holds the pause's origin and its
-start time in the runner's memory, so a restart can lose them while the pause itself survives — and a
-banner withheld for a missing timestamp withholds the only Resume control on the page with it. Where the
-service did not say when the pause began, the banner SHALL state the pause without its age rather than not
-at all.
-
-#### Scenario: An operator pause is stated as one that will not lift itself
-
-- **GIVEN** a pipeline whose runtime view reports it paused by an operator
-- **WHEN** a full admin opens its detail view
-- **THEN** a banner states that the pipeline is paused and how long it has been
-- **AND** it states that input keeps arriving and is worked through on resume
-- **AND** it offers a resume control
-- **AND** it states no reason
-
-#### Scenario: A breaker pause states when it lifts
-
-- **GIVEN** a pipeline whose runtime view reports it paused by its circuit breaker, with the time it
-  resumes
-- **WHEN** a full admin opens its detail view
-- **THEN** the banner states that the pause was taken by the service rather than by an operator
-- **AND** it states when the pause lifts by itself
-
-#### Scenario: A breaker pause states the evidence it tripped on
-
-- **GIVEN** a pipeline whose runtime view reports it paused by its circuit breaker, with a recorded
-  reason
-- **WHEN** a full admin opens its detail view
-- **THEN** the banner presents that reason as the service worded it
-
-#### Scenario: The banner names no author
-
-- **GIVEN** a paused pipeline
-- **WHEN** a full admin opens its detail view
-- **THEN** the banner attributes the pause to no named user
-
-#### Scenario: A pause the service can no longer describe still offers Resume
-
-- **GIVEN** a pipeline whose runtime view reports it paused and carries neither the pause's origin nor when
-  it began
-- **WHEN** a full admin opens its detail view
-- **THEN** a banner states that the pipeline is paused, without stating how long it has been
-- **AND** it offers a resume control
-
-#### Scenario: No banner without a read runtime
-
-- **GIVEN** the runtime service did not answer
-- **WHEN** a full admin opens a pipeline's detail view
-- **THEN** no pause banner is presented
-
 ### Requirement: Runtime status is stated beside configuration status
 
 The pipeline detail header states two facts that are commonly confused and are not the same axis: whether
@@ -3311,8 +3113,7 @@ Runtime status SHALL be stated **only for an `enrich` pipeline**, which is the k
 An `aggregate` pipeline is run by the registry service itself, on its own scheduler — it is absent from
 the runner's listings by construction, and reading that absence as a fault flagged every healthy rollup
 as one nothing was running. For an aggregate pipeline the console SHALL state no runtime status, raise
-no warning about one, and offer no pause: the runner would accept a pause for it and answer success,
-but only the runner's own executors consult that registry, so nothing would stop.
+no warning about one, and offer no resume: the runner's circuit breaker never pauses one.
 
 On the **detail page** the runtime status SHALL be taken from the pipeline's own runtime view, which states
 it directly. The service resolves it by the same rules its own status log uses, so the console SHALL state
@@ -3326,7 +3127,12 @@ other:
 | `held` | the view reports it held, waiting on the registry across a contract change |
 | `over budget` | the view reports it over its daily spend budget |
 | `backpressured` | the view reports it holding back because its queue is full |
-| `not running` | the service answers that it does not hold the pipeline |
+| `not running` | the service answers that it does not hold the pipeline, or the view reports it stopped while the registry has it enabled |
+
+A view that reports a pipeline **stopped** while the registry has it enabled is a runner that has not synced
+the enable yet: it follows the registry's flag within one sync. That is the second of the two causes the
+`not running` warning already states, so the console SHALL state it as `not running` with that same warning
+rather than as a state of its own, and SHALL NOT state it as `running`.
 
 A state this console does not recognise SHALL be stated as `running` rather than withheld. The service's
 vocabulary grew from two states to five in one release, and a console that blanked the chip on the next
@@ -3339,14 +3145,17 @@ a different reason: a held pipeline waits on the registry, an over-budget one on
 backpressured one on its own queue draining. A console that showed all three as running would be stating the
 opposite of what the operator needs to act on.
 
-A pause SHALL still be offered for a gated pipeline and SHALL NOT be offered for one the service does not
-hold: a gate is temporary and the operator may still want the pipeline stopped, where a pipeline the runner
-does not hold has no work to withhold.
+No runtime state SHALL offer a control that stops the pipeline: the enable/disable control in the identity
+row is the only one, whatever the runner reports. Resume SHALL be offered only while the view reports a
+pause.
 
 On the **listing**, which asks about every pipeline at once, the runtime status SHALL continue to be derived
 from the two listings the runner serves for exactly that purpose — the pipelines it has taken on and the
 pipelines it has paused — and SHALL state the three states those two support: `running`, `paused` and
-`not running`. The gate states are per-pipeline facts the listings do not carry, and one view request per
+`not running`. The cache listing names stopped pipelines too, each marked as not enabled, so a pipeline
+SHALL count as taken on only when the cache lists it **as enabled**; one listed as stopped while the
+registry has it enabled SHALL be stated as `not running`, for the same sync-lag reason as on the detail
+page. The gate states are per-pipeline facts the listings do not carry, and one view request per
 row is not a trade the listing makes.
 
 `running` SHALL mean that the runner has the pipeline and schedules its fires — **not** that rows are
@@ -3360,21 +3169,21 @@ both possible causes, since it cannot tell them apart from outside. It SHALL NOT
 right after a pipeline is enabled or saved the runner has ordinarily not picked it up yet, so a page-level
 alert raised a fault on every enable. The chip beside the name SHALL still state that the pipeline is not
 running, and the copy SHALL say that a minute's delay after enabling is normal and that its persisting
-means the service cannot execute the declaration. It SHALL NOT offer to pause such a pipeline: there is no work to withhold.
+means the service cannot execute the declaration.
 
 On the listing the two reads SHALL fail **independently**. The pauses are load-bearing: without them the
 console states no runtime at all. The cache listing only adds `not running`, so where it is missing — an
-older runner build, a route that answers 404 — the console SHALL keep stating `running` and SHALL keep
-offering the pause, rather than withholding every runtime affordance because one of two reads failed.
-It SHALL NOT state `not running` on an unread cache: that would withhold the pause on a guess.
+older runner build, a route that answers 404 — the console SHALL keep stating `running` rather than
+withholding every runtime affordance because one of two reads failed. It SHALL NOT state `not running` on an
+unread cache: that would state a fault on a guess.
 
 The runtime chip SHALL be withheld — not rendered as unknown — when the pipeline is disabled, when the
 runtime could not be read, or when the caller is not a full admin. A disabled pipeline has no runtime answer: the runner
 is not driving it at all, and stating it as "not running" would read as a fault where there is a
 configuration.
 
-A paused pipeline SHALL still be stated as **enabled**. Pausing leaves the declaration untouched, and a
-console that showed a paused pipeline as disabled would send an operator to re-enable something that was
+A breaker-paused pipeline SHALL still be stated as **enabled**. The breaker leaves the declaration
+untouched, and a console that showed it as disabled would send an operator to re-enable something that was
 never disabled.
 
 #### Scenario: A running pipeline states both facts
@@ -3396,14 +3205,28 @@ never disabled.
 - **WHEN** a full admin opens its detail view
 - **THEN** the header states that it is over budget
 - **AND** it does not state that it is running
-- **AND** the pause control is still offered
+- **AND** no pause or resume control is offered
 
 #### Scenario: A state the console does not recognise is stated as running
 
 - **GIVEN** an enabled pipeline whose runtime view reports a state this console does not know
 - **WHEN** a full admin opens its detail view
 - **THEN** the header states that it is running
-- **AND** the pause control is offered
+
+#### Scenario: An enabled pipeline the runner still reports stopped is stated as not running
+
+- **GIVEN** a pipeline the registry has just enabled, whose runtime view still reports it stopped
+- **WHEN** a full admin opens its detail view
+- **THEN** the header states that it is not running
+- **AND** a warning on the `Runtime` tab states that the service either cannot execute the declaration or
+  has not picked it up yet
+- **AND** no pause banner is presented
+
+#### Scenario: The listing does not count a stopped cache entry as running
+
+- **GIVEN** a pipeline the registry has enabled, which the runner's cache lists as not enabled
+- **WHEN** a full admin opens the pipelines listing
+- **THEN** its runtime cell states that it is not running
 
 #### Scenario: A backpressured pipeline is distinguished from a paused one
 
@@ -3425,7 +3248,7 @@ never disabled.
 - **WHEN** a full admin opens its detail view
 - **THEN** no runtime chip is presented
 - **AND** no warning states that nothing is running it
-- **AND** no pause control is offered
+- **AND** no resume control is offered
 
 #### Scenario: An enabled enrichment pipeline the runner has not taken on is flagged
 
@@ -3434,7 +3257,6 @@ never disabled.
 - **THEN** a warning on the `Runtime` tab states that nothing is running the pipeline
 - **AND** nothing above the tab strip states it
 - **AND** it states that the service either cannot execute the declaration or has not picked it up yet
-- **AND** no pause control is offered
 
 #### Scenario: A disabled pipeline states no runtime status
 
@@ -4107,10 +3929,9 @@ A refused read SHALL carry the service's message **and** the statement that the 
 unaffected. The second is what the reader acts on, and the service's message is never empty, so presenting
 one in place of the other made the second unreachable.
 
-Only a pipeline the runner does not hold SHALL withhold the pause and resume controls, and only until the
-first answer arrives SHALL they be withheld for not knowing. A read that was refused SHALL keep offering
-them: the moment an operator most wants to stop a pipeline is the moment its runtime read is failing, and
-there is no work to withhold only where the runner holds nothing.
+None of the three answers offers a resume control, because none reports a pause. The control that stops a
+pipeline is the enable/disable control, which reads only the registry, so a runtime read that fails or has
+not answered SHALL NOT withhold it.
 
 #### Scenario: A pipeline the runner does not hold is stated as one nothing is running
 
@@ -4119,7 +3940,7 @@ there is no work to withhold only where the runner holds nothing.
 - **THEN** a warning on the `Runtime` tab states that nothing is running the pipeline
 - **AND** nothing above the tab strip states it
 - **AND** it states that the service either cannot execute the declaration or has not picked it up yet
-- **AND** no pause control is offered
+- **AND** no resume control is offered
 - **AND** no error notification is raised
 
 #### Scenario: A runner that has not synced is stated as not read yet
@@ -4137,7 +3958,7 @@ there is no work to withhold only where the runner holds nothing.
 - **THEN** the tab states that the runtime could not be read, carrying that message
 - **AND** it states that the pipeline's configuration is unaffected
 - **AND** the pipeline, its facts and its form are presented
-- **AND** the pause control is still offered
+- **AND** the enable/disable control is still offered
 
 #### Scenario: Nothing is stated while the read is in flight
 
@@ -4145,7 +3966,7 @@ there is no work to withhold only where the runner holds nothing.
 - **WHEN** the `Runtime` tab is presented
 - **THEN** no runtime chip is presented
 - **AND** the tab states neither that the pipeline has never run nor that its runtime could not be read
-- **AND** no pause control is offered
+- **AND** no resume control is offered
 
 #### Scenario: A cold runner is stated once
 
@@ -4844,9 +4665,12 @@ While a backfill of the pipeline is running or paused, a banner SHALL render bes
 banner, above the tab strip, stating the run's state and offering a control that opens the backfill drawer.
 For a paused run the banner SHALL state the reason the run reports.
 
-The banner SHALL NOT be shown for a run paused because its pipeline is paused, whether by an operator or by
-the circuit breaker: the pipeline's own banner already states that pause. In every other state of the run the
-banner SHALL be shown.
+The banner SHALL NOT be shown for a run paused because its pipeline is paused — by the circuit breaker, or by
+an operator on a runner older than the one that retired that pause, whose runs still carry the reason: the
+pipeline's own banner already states that pause. In every other state of the run the banner SHALL be shown,
+including a run paused because its pipeline is **stopped**. A disabled pipeline raises no pause banner of its
+own, so this banner is the one place a reader learns that the replay is held, and its reason SHALL say that
+the run is held because the pipeline is disabled and continues once it is enabled and resumed.
 
 The banner SHALL be read from the runner's list of runs narrowed to the pipeline, so it is present after a
 reload. It SHALL NOT be shown for a run that is done or cancelled.
@@ -4863,8 +4687,14 @@ reload. It SHALL NOT be shown for a run that is done or cancelled.
 
 #### Scenario: A run paused with its pipeline
 
-- **GIVEN** a backfill paused because its pipeline is paused by an operator or by the breaker
+- **GIVEN** a backfill paused because its pipeline is paused by the breaker
 - **THEN** no backfill banner is shown and the pipeline's pause banner is
+
+#### Scenario: A run held by a stopped pipeline
+
+- **GIVEN** a backfill paused because its pipeline was disabled
+- **THEN** the backfill banner is shown
+- **AND** it states that the run is held because the pipeline is disabled
 
 #### Scenario: A finished run
 
@@ -4990,22 +4820,24 @@ day. A run whose window does not fall on whole days SHALL be shown as the exact 
 
 The controls SHALL be the first thing in the run block, drawn large, above the run's figures. A running run SHALL
 offer Pause and Cancel. A paused run SHALL offer Resume and Cancel, except that **Resume SHALL be withheld while
-the pipeline is paused**: the runner repeats the start checks on a resume and refuses one while its pipeline is
-paused, so the control could only fail. In its place the block SHALL say that the pipeline is paused and must be
-resumed first, and Cancel SHALL remain, because the runner cancels a paused run whatever state its pipeline is in.
-The pipeline's pause SHALL be read as it stands while the drawer is open, so resuming the pipeline offers Resume
-without closing and reopening the drawer. A done or cancelled run SHALL offer no control.
+the pipeline is paused or disabled**: the runner repeats the start checks on a resume and refuses one while its
+pipeline is paused or stopped, so the control could only fail. In its place the block SHALL say what must happen
+first — that the pipeline is paused and must be resumed, or that it is disabled and must be enabled — and Cancel
+SHALL remain, because the runner cancels a paused run whatever state its pipeline is in. The pipeline's pause and
+its `enabled` flag SHALL be read as they stand while the drawer is open, so resuming or enabling the pipeline
+offers Resume without closing and reopening the drawer. A done or cancelled run SHALL offer no control.
 
 Cancelling SHALL be confirmed, because it cannot be undone and abandons the run's cursor. Pausing and resuming
 SHALL NOT be confirmed. The console SHALL NOT warn before resuming a run on account of its pause reason. When the
 service refuses a verb the console SHALL show the service's own message and read the run again — including a
-resume the console had no way to foresee being refused, such as one over a spent daily budget.
+resume the console had no way to foresee being refused, such as one over a spent daily budget, or one on a
+pipeline the runner still holds as stopped because it has not synced the enable.
 
 #### Scenario: Controls by state
 
 - **GIVEN** a running run
 - **THEN** it offers Pause and Cancel
-- **AND GIVEN** a paused run on a pipeline that is not paused
+- **AND GIVEN** a paused run on an enabled pipeline that is not paused
 - **THEN** it offers Resume and Cancel
 
 #### Scenario: The controls come first
@@ -5023,10 +4855,22 @@ resume the console had no way to foresee being refused, such as one over a spent
 - **GIVEN** a paused run and a paused pipeline, whatever the run's pause reason
 - **THEN** the block offers no Resume, says the pipeline is paused and must be resumed first, and still offers Cancel
 
+#### Scenario: Resume is withheld while the pipeline is disabled
+
+- **GIVEN** a paused run on a pipeline whose `enabled` is false
+- **THEN** the block offers no Resume, says the pipeline is disabled and must be enabled first, and still offers
+  Cancel
+
 #### Scenario: Resume returns when the pipeline is resumed
 
 - **GIVEN** the drawer open on a paused run while its pipeline is paused
 - **WHEN** the pipeline is resumed
+- **THEN** the run offers Resume without the drawer being reopened
+
+#### Scenario: Resume returns when the pipeline is enabled
+
+- **GIVEN** the drawer open on a paused run while its pipeline is disabled
+- **WHEN** the pipeline is enabled
 - **THEN** the run offers Resume without the drawer being reopened
 
 #### Scenario: Cancel is confirmed
@@ -5036,7 +4880,8 @@ resume the console had no way to foresee being refused, such as one over a spent
 
 #### Scenario: A refused resume the console could not foresee
 
-- **GIVEN** a paused run on a pipeline that is not paused, whose resume the service refuses with a conflict
+- **GIVEN** a paused run on an enabled pipeline that is not paused, whose resume the service refuses with a
+  conflict
 - **THEN** the console shows the service's message
 
 #### Scenario: A run that has changed state
@@ -5048,9 +4893,14 @@ resume the console had no way to foresee being refused, such as one over a spent
 ### Requirement: A refused start reports the service's message
 
 When the runner refuses to start a backfill the console SHALL show the runner's own message and leave the
-form as it was. This covers a pipeline the runner does not hold, a pipeline that is paused or over its daily
-spend budget, a run already running, an invalid window, and a runner whose pipeline list has not loaded yet.
-The console SHALL NOT present a start on a paused pipeline as accepted.
+form as it was. This covers a pipeline the runner does not hold, a pipeline that is paused, stopped or over its
+daily spend budget, a run already running, an invalid window, and a runner whose pipeline list has not loaded
+yet. The console SHALL NOT present a start on a paused or stopped pipeline as accepted.
+
+While the pipeline is **disabled** the start form SHALL NOT offer to start a run: the runner refuses every start
+on a stopped pipeline, so the control could only fail. In its place the form SHALL say that the pipeline is
+disabled and must be enabled first. The form SHALL follow the pipeline's `enabled` flag while the drawer is
+open. The latest runs and a current run's Cancel SHALL stay available.
 
 #### Scenario: A paused pipeline
 
@@ -5061,6 +4911,19 @@ The console SHALL NOT present a start on a paused pipeline as accepted.
 
 - **GIVEN** the runner answers that the pipeline is not found or not enabled
 - **THEN** the console shows its message
+
+#### Scenario: A disabled pipeline offers no start
+
+- **GIVEN** a full admin opens the backfill drawer of a pipeline whose `enabled` is false
+- **THEN** the start form offers no control that starts a run
+- **AND** it says that the pipeline is disabled and must be enabled first
+- **AND** the latest runs are still listed
+
+#### Scenario: A start refused because the runner has not synced the enable
+
+- **GIVEN** a pipeline enabled moments ago, which the runner still holds as stopped
+- **WHEN** a full admin starts a backfill and the runner refuses it with a conflict
+- **THEN** the console shows the runner's message and leaves the form as it was
 
 ### Requirement: A group pipeline's finished run reads Queued
 
@@ -6154,3 +6017,602 @@ with that value shown as authored; the service's own error reports the problem.
 
 - **WHEN** a saved pipeline already names a projection-only field as a group key
 - **THEN** the editor shows that group key as authored
+
+### Requirement: The membership filter is built from conditions, with SQL as a fallback
+
+The membership `filter` SHALL offer two views, **Builder** and **SQL**, chosen by a switch on the field. The
+value sent to the service SHALL remain a SQL predicate string in both views; the wire contract does not change.
+
+The Builder view SHALL present the filter as a list of conditions. Each condition SHALL be one row of a
+**Column** control, an **Operator** control and, where the operator takes one, a **Value** control, and a
+control that deletes the row. Only the first row SHALL draw the Column, Operator and Value labels; the rows
+below line up under them without repeating them. Every control in every row SHALL still carry its name for
+assistive technology, and each row SHALL be exposed as a group named by its position. Below the list an **Add condition** control SHALL append
+an empty row. Above the list a **Match** control SHALL choose whether a row must satisfy **all** conditions or
+**any** of them; the choice applies to the whole list.
+
+The Column control SHALL offer the fields of the read source's entity, including the enrichment columns the
+service accepts. The Operator control SHALL offer equals, not equals, less than, greater than, less than or
+equal, greater than or equal, contains, does not contain, in, is empty and is not empty, and SHALL withhold
+the operators the selected column's type does not admit: contains and does not contain are not offered for an
+enum column. The Value control SHALL follow the column's type: a choice of the declared values for an enum
+column, a choice of true or false for a boolean column, and a text input otherwise; for **in** it SHALL take
+several values.
+
+The SQL the builder writes SHALL quote and escape every column and value the way the service's own SQL
+rendering does, so a value containing a quote, or a column named like a keyword, produces a predicate the
+service reads as the operator meant it.
+
+A condition with no column, or with no value where its operator needs one, SHALL NOT be written into the
+filter. Neither SHALL a contains or does-not-contain condition whose value holds `%` or `_`, because the
+service's SQL subset cannot express those characters in a contains pattern; that row SHALL show why. While any
+condition is not written, the field SHALL state how many conditions are not applied, announced to assistive
+technology, because the saved filter then admits more rows than the list shows.
+
+When the form opens on a pipeline that already has a filter, the console SHALL ask the service to read the
+filter against the read source and SHALL show it in the Builder view when it is a single condition, or one
+list of conditions joined only by AND or only by OR, where each condition compares a column with a value, a
+list of values or emptiness using an operator the builder offers. A negated equality or contains reads as its
+opposite — `NOT ("deployment" = 'a')` as not equals — because that is a condition the builder offers. Otherwise —
+the filter nests groups, calls a function, negates anything else, compares two columns, uses a case-sensitive
+`LIKE`, lists a value holding a comma or edge spaces in an **in**, cannot be read by the service, the read
+source is not resolved, or its columns cannot be loaded — the field SHALL open in the SQL view, the Builder
+option SHALL be disabled, and the field SHALL say why the builder is unavailable. A list value holding a comma
+or edge spaces is refused because the builder edits a list as comma-separated text, and writing it back would
+change the list.
+
+While the read source or its columns are still resolving, the field SHALL NOT offer the Builder view for a
+filter that has text: a condition written before the column types are known would type its literals wrongly.
+The SQL view stays editable meanwhile.
+
+A string value SHALL be written exactly as entered, edge spaces included; a number, date, timestamp or boolean
+value SHALL be written trimmed.
+
+The shape is judged on the filter as the service reads it, not as it was typed. The service folds an OR of
+equalities on one column into a single **in** condition, and that folding can turn a nested group into a flat
+list: `("deployment" = 'a' OR "deployment" = 'b') AND "response_status" = 200` reads as two conditions joined
+by AND. The console SHALL show such a filter in the Builder view as read — the folded group as one **in**
+condition — because it means the same rows, and SHALL NOT try to restore the OR it was typed as, which the read
+filter no longer records.
+
+Opening a pipeline SHALL NOT change its filter. The filter's text SHALL change only when the user edits it,
+in either view.
+
+Switching from Builder to SQL SHALL show the predicate the builder wrote. Switching back without editing the
+SQL SHALL return to the same conditions, including those not applied. Switching from SQL to Builder after the
+SQL was edited SHALL read the current text the same way as on open: a filter the builder can show replaces the list; one it cannot
+show keeps the field in the SQL view with the reason.
+
+An empty list, or an empty SQL view, SHALL send no filter, which the service reads as admitting every row.
+
+#### Scenario: A new pipeline's filter opens in the Builder view
+
+- **WHEN** the user creates a pipeline
+- **THEN** the filter field shows the Builder view with no conditions
+- **AND** an Add condition control is presented
+
+#### Scenario: Conditions are written as a SQL predicate
+
+- **WHEN** the user adds a condition with column `deployment`, operator equals and value `o'neil`
+- **AND** adds a second condition with column `status_code`, operator in and values `200` and `201`
+- **AND** chooses to match all conditions
+- **THEN** switching to the SQL view shows `"deployment" = 'o''neil' AND "status_code" IN (200, 201)`
+
+#### Scenario: Labels are drawn on the first condition only
+
+- **WHEN** the filter has two conditions
+- **THEN** the Column, Operator and Value labels are shown above the first condition only
+- **AND** every control of the second condition is still named Column, Operator or Value for assistive
+  technology
+
+#### Scenario: Is empty takes no value
+
+- **WHEN** the user chooses the operator is empty on a condition
+- **THEN** no Value control is presented for that row
+- **AND** the condition is written as `IS NULL` on its column
+
+#### Scenario: Contains is withheld for an enum column
+
+- **WHEN** the selected column of a condition is an enum
+- **THEN** the Operator control does not offer contains or does not contain
+- **AND** the Value control offers the column's declared values
+
+#### Scenario: An incomplete condition is not applied
+
+- **WHEN** a condition has a column and the operator equals but no value
+- **THEN** the condition is not part of the filter sent on save
+- **AND** the field states that one condition is not applied
+
+#### Scenario: A contains value with a LIKE wildcard is refused
+
+- **WHEN** the user enters `a_b` as the value of a contains condition
+- **THEN** the row says the value cannot contain `%` or `_`
+- **AND** the condition is not part of the filter sent on save
+
+#### Scenario: An existing flat filter opens in the Builder view
+
+- **WHEN** the user opens a pipeline whose filter is `"deployment" = 'gpt-4o' OR "response_status" = 200`
+- **THEN** the filter field shows the Builder view with two conditions
+- **AND** the Match control is set to any condition
+
+#### Scenario: An OR of equalities on one column opens as one in condition
+
+- **WHEN** the user opens a pipeline whose filter is
+  `("deployment" = 'a' OR "deployment" = 'b') AND "response_status" = 200`
+- **THEN** the filter field shows the Builder view with two conditions: `deployment` in `a, b`, and
+  `response_status` equals `200`
+- **AND** the Match control is set to all conditions
+- **AND** the filter's text is unchanged until the user edits a condition
+
+#### Scenario: A filter the builder cannot show opens in the SQL view
+
+- **WHEN** the user opens a pipeline whose filter calls a function, or nests a group over different columns
+  such as `"deployment" = 'a' AND ("response_status" = 200 OR "response_status" IS NULL)`
+- **THEN** the filter field shows the SQL view with the filter's text unchanged
+- **AND** the Builder option is disabled
+- **AND** the field says why the builder is unavailable
+
+#### Scenario: Opening a pipeline does not rewrite its filter
+
+- **WHEN** the user opens a pipeline whose filter shows in the Builder view and saves without editing it
+- **THEN** the filter sent on save is the text the pipeline already had
+
+#### Scenario: A look at the SQL keeps conditions not yet applied
+
+- **WHEN** the builder holds a condition with a column and no value, the user switches to the SQL view and
+  back without editing
+- **THEN** the condition is still shown
+- **AND** the field still states that one condition is not applied
+
+#### Scenario: An in list with a comma inside a value stays in the SQL view
+
+- **WHEN** the user opens a pipeline whose filter is `"label" IN ('a,b', 'c')`
+- **THEN** the filter field shows the SQL view with the filter's text unchanged
+- **AND** the Builder option is disabled
+
+#### Scenario: Switching back to the builder rereads the SQL
+
+- **WHEN** the user switches to the SQL view, changes a condition's value in the text, and switches back to
+  the Builder view
+- **THEN** the Builder view shows the changed value
+
+#### Scenario: An empty builder sends no filter
+
+- **WHEN** the user deletes every condition and saves
+- **THEN** the pipeline is saved with no filter
+
+### Requirement: Runtime is read through a second analytics service
+
+Resuming a pipeline its circuit breaker paused, reading which pipelines are paused, reading which ones the
+runner has taken on, reading one pipeline's runtime view, and reading and re-running its dead-lettered failures
+are served by the **analytics enrichment runner**, a service distinct from the one that holds the pipeline
+registry.
+
+Stopping and starting a pipeline is **not** a runner action. The registry's `enabled` flag is a pipeline's
+only run control: the runner follows it, holds a disabled pipeline's queued work instead of discarding it, and
+works through that work once the pipeline is enabled again. The runner has no pause of its own that an
+operator can take, so the console SHALL NOT offer one; the enable/disable control is how a pipeline is
+stopped. Its failures
+listing is **paged by cursor and counted by the service**: every page carries the number of items the
+filter matches and the number of them it would re-run, read in the page's own snapshot, so a caller
+never has to count rows to state a total. The console SHALL
+reach it at its own configured host and SHALL treat it as a separate upstream throughout: a registry read
+that succeeds while the runner is unreachable SHALL still present the pipeline.
+
+Every property of every runner response is named in **snake_case**, the paused listing included. The console
+SHALL parse that spelling and SHALL NOT accept the Java property names the paused listing emitted before,
+which named the same two facts differently from every other response that reports them.
+
+The runner authorizes **every** endpoint, reads included, on full-admin rights, and offers no
+consumer-facing read. The console SHALL therefore issue no request to it for a caller who is not a full
+admin, and SHALL present no runtime affordance to such a caller rather than presenting one that would be
+refused.
+
+An installation that has not configured the runner's host SHALL behave exactly as one whose runner did not
+answer: no runtime affordance is presented, and no error is raised for the absence. Runtime control is an
+addition to the console, not a precondition for reading a pipeline. The failures card is a runtime
+affordance like the rest: with no host configured it SHALL NOT be presented and no request SHALL be
+issued for it.
+
+The runner reports failures in the same envelope the registry does — a status, a stable machine code, a
+human-readable message, the path and the method — so a refusal SHALL be surfaced the way a registry refusal
+already is, by the service's own message with its request id. Three of its codes name conditions the operator
+can act on and SHALL be distinguished from a generic failure:
+
+- the runner has not yet loaded the pipeline list since it started, which resolves by itself shortly;
+- the runtime-state database is unavailable, which does not;
+- the runner does not hold the pipeline, which is the state the console already states as nothing running it.
+
+#### Scenario: Runtime survives a runner that does not serve the cache listing
+
+- **GIVEN** the runtime service answers the paused listing but refuses the cache listing
+- **WHEN** a full admin opens the pipelines listing
+- **THEN** an enabled `enrich` pipeline the paused listing does not name is stated as running
+- **AND** no row is stated as not running
+
+#### Scenario: No pipeline pause is offered
+
+- **GIVEN** a full admin on the `Runtime` tab of an enabled `enrich` pipeline the runner reports as active
+- **WHEN** the tab is presented
+- **THEN** no control to pause the pipeline is presented
+- **AND** the enable/disable control in the identity row is the control that stops it
+
+#### Scenario: The paused listing is parsed in snake_case
+
+- **GIVEN** the runtime service reports a paused pipeline with its name and lift time in snake_case
+- **WHEN** a full admin opens the pipelines listing
+- **THEN** that pipeline is stated as paused
+- **AND** its lift time is stated wherever a lift time is stated
+
+#### Scenario: A pipeline reads even when the runner is unreachable
+
+- **GIVEN** the runtime service does not answer
+- **WHEN** a full admin opens a pipeline's detail view
+- **THEN** the pipeline, its facts and its form are presented
+- **AND** no runtime status is stated
+
+#### Scenario: No runtime request is issued for a caller who is not a full admin
+
+- **GIVEN** a caller who is not a full admin
+- **WHEN** the user opens the pipelines listing and a pipeline's detail view
+- **THEN** no request is issued to the runtime service
+
+#### Scenario: An unconfigured runner is not an error
+
+- **GIVEN** no runtime service host is configured
+- **WHEN** a full admin opens a pipeline's detail view
+- **THEN** no runtime affordance is presented
+- **AND** no failures card is presented and no failures request is issued
+- **AND** no error notification is raised
+
+#### Scenario: A cold runner is distinguished from a broken one
+
+- **GIVEN** the runner answers that it has not loaded the pipeline list yet
+- **WHEN** a full admin attempts to resume a breaker-paused pipeline
+- **THEN** the failure states that the service is still starting and that the action can be retried shortly
+- **AND** the pipeline is still presented as paused
+
+### Requirement: A breaker pause is stated above the tab strip
+
+While a pipeline is paused, a banner SHALL render between the identity row and the tab strip, stating that
+the pipeline is paused, how long it has been paused, that input is still arriving and that the backlog it
+builds is worked through on resume. The banner SHALL carry a resume control.
+
+On the detail page the pause SHALL be taken from the pipeline's own **runtime view**, which reports the
+pause the runner is enforcing for it. The global paused listing answers the same question for every
+pipeline at once and remains what the listing page reads; asking it again for one pipeline the console has
+already read a view of would be a second answer to a question already answered, and the two could disagree.
+
+The only pause the runner takes is its dead-letter **circuit breaker**'s, and it lifts itself. The banner
+SHALL state that the pause was taken by the service and SHALL state when it lifts. Resuming lifts it early.
+
+The banner SHALL additionally state the reason the service recorded when it took the pause. That reason
+names the evidence the breaker tripped on — how many of the last N units of work were dead-lettered — which
+is the first thing a reader needs and the one fact the banner cannot derive. It SHALL be presented as the
+service worded it and SHALL NOT be re-phrased: the threshold and the window are the service's
+configuration, and a console that restated them would be quoting a copy.
+
+The banner SHALL NOT name who paused the pipeline. The runtime service records the origin and the reason it
+wrote at the time, and no user identity, so a name in this banner could only be invented.
+
+A disabled pipeline SHALL raise no banner: it is stopped by its declaration, which the header already
+states, and the runner reports it as stopped rather than paused. A pipeline the runtime service does not
+report as paused SHALL raise no banner, and a pipeline whose runtime could not be read SHALL raise none
+either: a banner is a statement that the pipeline is paused, and an unread runtime does not support it.
+
+The banner SHALL be raised on the reported state alone. The runtime view holds the pause's origin, its
+start time and its lift time in the runner's memory, so a restart can lose them while the pause itself
+survives — and a banner withheld for a missing member withholds the only Resume control on the page with
+it. Where the service did not say when the pause began or when it lifts, the banner SHALL state the pause
+without that fact rather than not at all.
+
+Resuming SHALL NOT be confirmed: it lifts a pause that would lift itself. While the request is in flight
+the control SHALL state that and SHALL NOT be actionable. A success SHALL be reported as a notification
+stating that the pipeline was resumed and SHALL re-read the runtime view. A refusal SHALL be reported as an
+error notification carrying the service's message and its request id, and SHALL re-read the runtime view
+too: the runner refuses a resume when no pause is in force any more — the breaker lifted it in the
+meantime — and the page would otherwise keep offering a control for a pause that is gone.
+
+The resume control SHALL NOT be withheld while the `Discard` / `Save` change bar is up: it sends no part of
+the document, and an incident is exactly when the form is most likely to be half-edited. It SHALL NOT be
+presented to a caller who is not a full admin.
+
+#### Scenario: A breaker pause states when it lifts
+
+- **GIVEN** a pipeline whose runtime view reports it paused by its circuit breaker, with the time it
+  resumes
+- **WHEN** a full admin opens its detail view
+- **THEN** a banner states that the pause was taken by the service
+- **AND** it states when the pause lifts by itself
+- **AND** it states that input keeps arriving and is worked through on resume
+- **AND** it offers a resume control
+
+#### Scenario: A breaker pause states the evidence it tripped on
+
+- **GIVEN** a pipeline whose runtime view reports it paused by its circuit breaker, with a recorded
+  reason
+- **WHEN** a full admin opens its detail view
+- **THEN** the banner presents that reason as the service worded it
+
+#### Scenario: The banner names no author
+
+- **GIVEN** a paused pipeline
+- **WHEN** a full admin opens its detail view
+- **THEN** the banner attributes the pause to no named user
+
+#### Scenario: A pause the service can no longer describe still offers Resume
+
+- **GIVEN** a pipeline whose runtime view reports it paused and carries neither the pause's origin nor when
+  it began
+- **WHEN** a full admin opens its detail view
+- **THEN** a banner states that the pipeline is paused, without stating how long it has been
+- **AND** it offers a resume control
+
+#### Scenario: Resuming takes no confirmation
+
+- **GIVEN** a full admin on a breaker-paused pipeline
+- **WHEN** the user activates the resume control
+- **THEN** the pipeline is resumed without a confirmation step
+- **AND** a notification states that it was resumed
+- **AND** the banner is no longer presented, without a reload
+
+#### Scenario: A resume refused because the pause already lifted
+
+- **GIVEN** a breaker-paused pipeline whose pause lifts while the page is open
+- **WHEN** a full admin activates the resume control and the service answers that the pipeline is not paused
+- **THEN** an error notification carries the service's message and its request id
+- **AND** the runtime view is read again and the banner is no longer presented
+
+#### Scenario: Resume is offered while the form has unsaved edits
+
+- **GIVEN** a breaker-paused pipeline with one field edited and the `Discard` / `Save` bar offered
+- **WHEN** a full admin looks at the pause banner
+- **THEN** the resume control is presented and actionable
+
+#### Scenario: A disabled pipeline raises no banner
+
+- **GIVEN** a pipeline whose `enabled` is false, which the runtime view reports as stopped
+- **WHEN** a full admin opens its detail view
+- **THEN** no pause banner is presented
+
+#### Scenario: No banner without a read runtime
+
+- **GIVEN** the runtime service did not answer
+- **WHEN** a full admin opens a pipeline's detail view
+- **THEN** no pause banner is presented
+
+### Requirement: An llm transform's call preset selects chat completions or an application route
+
+For an `llm` transform the enrichment section SHALL present the transform's **preset** as a labelled
+selection of two values: `chat_completion`, which calls the deployment's chat-completions endpoint, and
+`dial_app_route`, which calls one of a DIAL application's custom routes. A transform that declares no preset
+SHALL be presented as `chat_completion`, which is the service's default, and the console SHALL NOT write the
+member into a declaration only because it was presented.
+
+The members presented SHALL follow the preset:
+
+- **`chat_completion`** — no route control is presented, and the request carries no `transform.route`. The
+  service refuses a route on this preset.
+- **`dial_app_route`** — a **route** control is presented beside the deployment, and the request carries
+  `transform.route`.
+
+For a `sql` transform neither the preset nor the route SHALL be presented or sent.
+
+Changing the preset away from `dial_app_route`, or the type to `sql`, SHALL remove `transform.route` from the
+request, so a declaration that was valid under one preset is not refused under the other for a member the
+form no longer shows. The typed route SHALL be kept in the form for the session, so changing the preset back
+restores it.
+
+A preset value the console does not know SHALL be presented as the stored value and kept on save.
+
+#### Scenario: A transform with no preset reads as chat completion
+
+- **WHEN** an enrichment pipeline whose `llm` transform declares no preset is opened
+- **THEN** the preset selection shows chat completion
+- **AND** no route control is presented
+
+#### Scenario: Choosing the route preset presents the route
+
+- **WHEN** the author chooses the application-route preset
+- **THEN** a route control is presented beside the deployment
+
+#### Scenario: The route is sent only under the route preset
+
+- **WHEN** the author enters a route under the application-route preset, changes the preset to chat
+  completion, and saves
+- **THEN** the request carries no `transform.route`
+
+#### Scenario: A sql transform shows neither
+
+- **WHEN** the transform's type is `sql`
+- **THEN** neither a preset selection nor a route control is presented
+
+### Requirement: An llm transform's deployment and route are picked from DIAL Core's listings
+
+Under `dial_app_route` the deployment control SHALL suggest the DIAL Core applications the console can list,
+and the route control SHALL suggest the paths of the routes declared on the application the deployment
+control names. Both SHALL accept a typed value that matches no suggestion.
+
+Under `chat_completion` the deployment control SHALL suggest the DIAL Core models and applications the
+console can list, since either can serve chat completions, and SHALL accept a typed value that matches no
+suggestion.
+
+For a `sql` transform no listing SHALL be read.
+
+A route that is present and breaks the service's path rule — segments of letters, digits and `._~-`
+separated by single `/`, no leading or trailing `/`, no `.` or `..` segment, at most 256 characters — SHALL
+be marked invalid on the field with the rule stated. It SHALL NOT block the save: a disabled declaration is
+stored as written and the service states the same rule at enable. A blank route SHALL NOT be marked.
+
+When a listing cannot be read, the controls SHALL remain usable as free-text fields and no error SHALL be
+reported for the missing suggestions.
+
+#### Scenario: Routes follow the chosen application
+
+- **WHEN** the author picks an application that declares two route paths under the route preset
+- **THEN** the route control suggests those two paths
+
+#### Scenario: A typed value outside the suggestions is kept
+
+- **WHEN** the author types a deployment that matches no listed application
+- **THEN** the field holds the typed value and the pipeline can be saved
+
+#### Scenario: A malformed route is marked without blocking the save
+
+- **WHEN** the author enters a route that begins with `/`
+- **THEN** the route field states the path rule
+- **AND** the save is still offered
+
+#### Scenario: The chat-completion deployment suggests models and applications
+
+- **WHEN** the preset is chat completion and the deployment control is opened
+- **THEN** it suggests the listed models and the listed applications
+
+#### Scenario: A typed model outside the suggestions is kept
+
+- **WHEN** the author types a deployment that matches no listed model or application under chat completion
+- **THEN** the field holds the typed value and the pipeline can be saved
+
+#### Scenario: A sql transform reads no listing
+
+- **WHEN** the transform's type is `sql`
+- **THEN** no request is made for the models or the applications
+
+### Requirement: A route output reads its value through a source
+
+Under `dial_app_route` an output's transform refinement SHALL be **`source`** — a JSONata expression over
+the route's response body — presented in the place the `jsonata` refinement holds under `chat_completion`.
+The refinement selection SHALL keep its two choices, the transform and the value list, and under the route
+preset the transform choice SHALL be labelled as the source and SHALL write `source`, never `jsonata`: the
+service refuses `jsonata` on a route output and `source` on a chat-completion output.
+
+An output with no source reads the response member of its own name, so an empty source field SHALL send no
+`source` member.
+
+Under `dial_app_route` the output's **prose** SHALL NOT be presented: no model is told about the field, so
+the service keeps the member as documentation only. A prose already stored on the output SHALL be sent back
+unchanged, so a save does not erase it.
+
+A source that repeats the output's own name is the **identity** expression, which the service refuses. It
+SHALL be handled as the identity `jsonata` is: dropped on read, and marked invalid on the row when typed,
+without blocking the save.
+
+Changing the preset SHALL NOT carry an expression across: what was typed as `jsonata` SHALL NOT be sent as
+`source`, nor the reverse. Each SHALL be kept on the row for the session, so changing the preset back
+restores it.
+
+#### Scenario: The transform refinement writes source under the route preset
+
+- **WHEN** the author enters an expression in an output's transform field under the route preset and saves
+- **THEN** that output is sent with `source` holding the expression
+- **AND** it is sent with no `jsonata`
+
+#### Scenario: A route output presents no prose
+
+- **WHEN** an output of an application-route transform is presented
+- **THEN** no prose field is shown for it
+
+#### Scenario: A stored prose survives a save
+
+- **WHEN** an output that carries a prose is edited under the route preset and saved
+- **THEN** that output is sent with its prose unchanged
+
+#### Scenario: An empty source sends nothing
+
+- **WHEN** an output's source field is empty under the route preset
+- **THEN** that output is sent with no `source` member
+
+#### Scenario: An identity source is marked
+
+- **WHEN** the author types an output's own name as its source
+- **THEN** the row is marked invalid
+- **AND** the save is still offered
+
+#### Scenario: A jsonata expression does not become a source
+
+- **WHEN** an output carries a `jsonata` expression under chat completion and the author changes the preset
+  to the application route and saves
+- **THEN** that output is sent with neither `jsonata` nor `source`
+
+### Requirement: A placeholder carrying the json suffix is read as a use of its name
+
+The request template accepts a placeholder in two forms: `{{name}}`, which renders the value as an escaped
+string, and `{{name:json}}`, which renders it as a JSON literal. The console SHALL read both as a use of
+`name` wherever it reads the template's placeholders: the row-grain correspondence between placeholders and
+inputs, and the group-grain check that the template references `{{members}}`.
+
+The reference listed beside the template SHALL state that the `:json` form exists and what it renders.
+
+A template using the `:json` form in value position is not valid JSON; it SHALL be presented as text and stay
+editable, as any template that does not parse is.
+
+#### Scenario: A json placeholder covers its input
+
+- **WHEN** a row-grain pipeline's template references `{{payload:json}}` and an input named `payload` is
+  declared
+- **THEN** the placeholder is listed once, as `payload`, and marked as covered
+- **AND** the input is not marked as unused
+
+#### Scenario: A json members placeholder satisfies the group rule
+
+- **WHEN** a group-triggered pipeline's template references `{{members:json}}` and no `{{members}}`
+- **THEN** no error is reported against the request template
+
+#### Scenario: The suffix is documented beside the template
+
+- **WHEN** an enrichment pipeline's template is presented
+- **THEN** the reference beside it names the `:json` form
+
+### Requirement: A route pair the instance does not allow is stated before enable
+
+The service enables a `dial_app_route` pipeline only when its `(deployment, route)` pair is on the instance
+allowlist specified by `analytics/app-routes`. Where the preset is `dial_app_route` and both the deployment
+and the route are entered, the console SHALL compare the pair, exactly and case-sensitively, with the
+allowlist it can read, and SHALL state beside the route that the pair is not allowed when it is absent. The
+statement SHALL name the Enrichment routes tab and link to the System Properties page.
+
+The statement is guidance, not a gate: it SHALL NOT block the save or the enable control, because the service
+judges the pair at enable and a disabled declaration is stored as written. It SHALL be announced to assistive
+technology as a status rather than as an error.
+
+An allowlist the service reports as not stored allows no route, so every entered pair SHALL be stated as not
+allowed.
+
+An author whose read of the allowlist is refused or fails SHALL be shown no statement and no error for it:
+that author meets the service's own refusal at enable, reported as any other action failure is.
+
+The allowlist SHALL be read only once the preset is `dial_app_route`; a pipeline that never uses the preset
+SHALL cause no allowlist request.
+
+#### Scenario: An unlisted pair is stated
+
+- **WHEN** the author enters a deployment and a route that the allowlist does not hold
+- **THEN** text beside the route states that the pair is not allowed and names the Enrichment routes tab
+- **AND** the save and the enable control are still offered
+
+#### Scenario: A listed pair shows nothing
+
+- **WHEN** the entered pair is on the allowlist
+- **THEN** no statement is shown
+
+#### Scenario: No stored allowlist states every pair
+
+- **WHEN** the service answers that no allowlist is stored and the author enters a pair
+- **THEN** the pair is stated as not allowed
+
+#### Scenario: An author who cannot read the allowlist sees no statement
+
+- **WHEN** the read of the allowlist is refused
+- **THEN** no statement and no error notification is shown
+
+#### Scenario: Enabling an unlisted pair reports the service's refusal
+
+- **WHEN** a pipeline whose pair is not allowed is enabled and the service refuses it
+- **THEN** the service's own message is reported
+- **AND** the pipeline is still presented as saved and disabled
+
+#### Scenario: A chat-completion pipeline reads no allowlist
+
+- **WHEN** an enrichment pipeline whose preset is chat completion is opened
+- **THEN** no request is made for the allowlist
+

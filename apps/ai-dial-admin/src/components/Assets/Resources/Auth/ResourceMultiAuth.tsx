@@ -229,7 +229,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
                       aria-label={statusLabel}
                       className={classNames(
                         'w-[8px] h-[8px] rounded-full',
-                        isPositiveState ? 'bg-green-1' : 'bg-control-error-active',
+                        isPositiveState ? 'text-success bg-current' : 'bg-control-error-active',
                       )}
                     />
                   )}

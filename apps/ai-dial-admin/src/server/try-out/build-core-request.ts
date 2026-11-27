@@ -10,13 +10,16 @@ const isSafeDeploymentId = (deployment: string): boolean =>
 export const isTryOutInterface = (value: unknown): value is DeploymentInterfaceType =>
   TRY_OUT_INTERFACES.includes(value as DeploymentInterfaceType);
 
-/** `null` for an interface Try out does not call, or a chat completions request without a usable deployment id. */
+/** Interfaces whose Core path names the deployment, so a request for one needs a usable deployment id. */
+const PATH_NAMED_INTERFACES = [DeploymentInterfaceType.OpenAIChatCompletions, DeploymentInterfaceType.OpenAIEmbeddings];
+
+/** `null` for an interface Try out does not call, or one whose path names the deployment without a usable id. */
 export const getCorePath = (type: unknown, deployment: unknown): string | null => {
   if (!isTryOutInterface(type)) {
     return null;
   }
   const isDeploymentNamed = typeof deployment === 'string' && isSafeDeploymentId(deployment);
-  if (type === DeploymentInterfaceType.OpenAIChatCompletions && !isDeploymentNamed) {
+  if (PATH_NAMED_INTERFACES.includes(type) && !isDeploymentNamed) {
     return null;
   }
 

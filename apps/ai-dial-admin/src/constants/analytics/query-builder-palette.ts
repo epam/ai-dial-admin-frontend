@@ -6,7 +6,7 @@ import { QueryBuilderColor, QueryBuilderColorClasses } from '@/src/models/analyt
 // reference in the rail going through this map — no ad-hoc color classes in section components.
 export const QUERY_BUILDER_PALETTE: Record<QueryBuilderColor, QueryBuilderColorClasses> = {
   [QueryBuilderColor.Dimension]: {
-    marker: 'bg-green-1',
+    marker: 'text-success bg-current',
     text: 'text-green-2',
     chipBg: 'bg-success',
     chipText: 'text-green-2',

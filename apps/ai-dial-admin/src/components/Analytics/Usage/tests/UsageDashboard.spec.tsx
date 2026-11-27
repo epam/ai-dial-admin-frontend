@@ -82,18 +82,18 @@ describe('UsageDashboard', () => {
   test('reads each window exactly once on mount, since comparison starts on', async () => {
     render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
-    // Totals, buckets and the breakdown rows, each for the current window and the previous one,
-    // plus the share chart's own ranking and the heatmap's independent week. An exact count, so a
+    // Totals and the breakdown rows, each for the current window and the previous one, the current
+    // window's buckets, the share chart's own ranking and the heatmap's independent week. An exact count, so a
     // window taken twice — which is what a snapshot re-taken in an effect produced — fails here.
     await settled();
-    expect(runQueryMock).toHaveBeenCalledTimes(8);
+    expect(runQueryMock).toHaveBeenCalledTimes(7);
   });
 
   test('asks every query for the same entity', async () => {
     render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
     await settled();
-    expect(queriesSent()).toHaveLength(8);
+    expect(queriesSent()).toHaveLength(7);
     expect(queriesSent().every((query) => query.entity === 'dial_usage_log')).toBe(true);
   });
 
@@ -101,7 +101,7 @@ describe('UsageDashboard', () => {
     render(<UsageDashboard callerSource={CallerSource.Principal} />);
 
     await settled();
-    expect(runQueryMock).toHaveBeenCalledTimes(8);
+    expect(runQueryMock).toHaveBeenCalledTimes(7);
     expect(groupings().some((grouping) => grouping === 'bucket+deployment')).toBe(false);
   });
 
@@ -150,9 +150,9 @@ describe('UsageDashboard', () => {
     await user.click(screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.ViewByLabel}`) }));
     await user.click(screen.getByRole('option', { name: AnalyticsUsageI18nKey.ViewRoutes }));
 
-    // The same eight reads against the new view: comparison stays on, so each window is read again.
+    // The same seven reads against the new view: comparison stays on, so each window is read again.
     await settled();
-    expect(runQueryMock).toHaveBeenCalledTimes(8);
+    expect(runQueryMock).toHaveBeenCalledTimes(7);
     expect(groupings().filter((grouping) => grouping === 'route_owner')).toHaveLength(3);
     expect(
       screen.getByRole('combobox', { name: new RegExp(`^${AnalyticsUsageI18nKey.CompareLabel}`) }),
@@ -182,7 +182,7 @@ describe('UsageDashboard', () => {
 
     // A cancelled read leaves its widget loading for good, so Refresh never comes back: wait instead for
     // every read to have been issued and answered, then let the page react to the answers.
-    await vi.waitFor(() => expect(runQueryMock).toHaveBeenCalledTimes(8));
+    await vi.waitFor(() => expect(runQueryMock).toHaveBeenCalledTimes(7));
     await Promise.all(runQueryMock.mock.results.map(({ value }) => value));
     await act(async () => {});
     expect(showNotificationMock).not.toHaveBeenCalled();

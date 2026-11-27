@@ -883,9 +883,9 @@ The grid SHALL use a taller row than the app's shared default, since its cells s
 The page header SHALL be the title alone, with no status badge of its own — the Analytics navigation group
 already marks the whole area as preview.
 
-Rows SHALL be openable, navigating to that session's detail view. The grid SHALL indicate that its rows
-are openable rather than leaving the affordance undiscoverable, and SHALL honour the app's convention for
-opening a row in a new tab. The session id SHALL be URL-encoded into the detail address, since real ids
+Each row's session title — or its id when the session has no title — SHALL be a link to that session's
+detail view and SHALL be the only part of the row that navigates; a click elsewhere in the row SHALL NOT navigate. The link SHALL open in a new tab with the
+browser's own new-tab gestures (Cmd/Ctrl-click, middle-click). The session id SHALL be URL-encoded into the detail address, since real ids
 contain path separators and percent-encoded text.
 
 The grid SHALL carry a provenance band above the column headers, grouping every column under the data source
@@ -972,12 +972,17 @@ from the column header beneath it.
 
 #### Scenario: Opening a row navigates to the session
 
-- **WHEN** a grid row is opened
+- **WHEN** a session's title link is activated
 - **THEN** that session's detail view is navigated to, with its id URL-encoded in the address
+
+#### Scenario: A row click outside the link does not navigate
+
+- **WHEN** the operator clicks a row outside the session's link
+- **THEN** no navigation occurs
 
 #### Scenario: Opening a row in a new tab
 
-- **WHEN** a grid row is opened with the app's new-tab modifier
+- **WHEN** a session's link is Cmd/Ctrl-clicked or middle-clicked
 - **THEN** the session's detail view opens in a new tab and the grid keeps its fetched pages
 
 #### Scenario: Loading replaces the grid rather than the empty state showing

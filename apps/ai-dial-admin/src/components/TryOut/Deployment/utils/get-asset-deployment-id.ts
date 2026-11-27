@@ -1,6 +1,6 @@
-import { MODELS_PREFIX } from '@/src/constants/publications-core';
+import { APPLICATIONS_PREFIX } from '@/src/constants/publications-core';
 
-const APPLICATIONS_PREFIX = 'applications/';
+const PLATFORM_BUCKET_PREFIX = 'platform/';
 
 interface AssetEntity {
   name?: string;
@@ -8,12 +8,18 @@ interface AssetEntity {
 }
 
 /**
- * The id Core calls an application by. Core names one stored as a resource by its resource url, which is the
- * `applications/` prefix and the bucket-qualified path; one with no Core path, such as a config-file application,
- * is called by its name.
+ * The id Core calls an application by. Core keys a platform application, like a config-file one, by its short name;
+ * an application stored in another bucket is called by its resource url, the `applications/` prefix and the
+ * bucket-qualified path. A platform resource url is not a name Core resolves for the admin, so it is never used.
  */
-export const getAssetApplicationDeploymentId = (app: AssetEntity): string =>
-  app._metadata?.path ? `${APPLICATIONS_PREFIX}${app._metadata.path}` : (app.name ?? '');
+export const getAssetApplicationDeploymentId = (app: AssetEntity): string => {
+  const path = app._metadata?.path;
+  if (!path || path.startsWith(PLATFORM_BUCKET_PREFIX)) {
+    return app.name ?? path?.slice(PLATFORM_BUCKET_PREFIX.length) ?? '';
+  }
 
-/** A platform model is called by the canonical id Core keys it under, `models/platform/<name>`. */
-export const getPlatformModelDeploymentId = (name: string): string => `${MODELS_PREFIX}${name}`;
+  return `${APPLICATIONS_PREFIX}${path}`;
+};
+
+/** A platform model is called by its short name, the key Core holds it under. */
+export const getPlatformModelDeploymentId = (name: string): string => name;

@@ -3,9 +3,7 @@
 ## Purpose
 
 Selection-independent lazy loading for the shared content-page FileManager folder tree: caret and keyboard expansion reveal children while preserving the selected folder, reusing cached loads, and coordinating pending requests.
-
 ## Requirements
-
 ### Requirement: Content-page folder expansion loads children independently of selection
 
 The shared content-page FileManager SHALL load the direct children of an uncached folder when it becomes expanded through its controlled tree-expansion callback. Caret clicks and keyboard expansion SHALL use the same callback. Expansion and collapse through that callback SHALL preserve the selected folder, grid's displayed folder, and navigation. Folder-name activation SHALL retain its existing selection behavior. This requirement applies to content-page FileManager consumers, not the separate FolderList surface.
@@ -78,3 +76,36 @@ Expansion loading SHALL retain the folder context's existing loading and error b
 #### Scenario: Expansion load succeeds
 - **WHEN** an expansion load succeeds
 - **THEN** the loaded children are visible if the folder remains expanded and no success toast is added
+
+### Requirement: Content-page FileManager restores the selected nested folder on mount
+
+When the shared content-page FileManager mounts and the folder context holds a selected folder below the root whose contents are not cached, it SHALL load that folder's whole chain of parents through the folder context's `fetchFolderHierarchy(path, true)` and expand it, instead of loading only the root folders. When the selection is empty, a root, or already cached, the FileManager SHALL keep its existing behavior of loading the roots only when the tree is empty. A folder context without `fetchFolderHierarchy` SHALL keep the root load. A failed restore SHALL use the context's existing fetch-error state.
+
+The restore reuses the existing per-entity folder-context operations and server-action listing contracts; no admin-backend or deployment-manager-backend endpoint changes are required. No form fields or validation rules are introduced.
+
+#### Scenario: Return to the list through the menu keeps the folder content
+- **GIVEN** a folder `public/team/` is selected and an entity inside it is open on its details page
+- **AND** the tree no longer holds that folder's contents
+- **WHEN** the user opens the section from the menu or the first breadcrumb
+- **THEN** the listing shows `public/team/` selected and expanded with its content visible
+- **AND** its parent folders are expanded in the tree
+
+#### Scenario: Cached selection is not reloaded
+- **GIVEN** the selected folder's contents are already cached
+- **WHEN** the listing mounts
+- **THEN** no hierarchy request is issued and the tree is unchanged
+
+#### Scenario: Root selection loads the roots
+- **GIVEN** the selection is empty or a root folder
+- **WHEN** the listing mounts with an empty tree
+- **THEN** the root folders are loaded as before
+
+#### Scenario: Context without hierarchy loading keeps the root load
+- **GIVEN** the folder context offers no `fetchFolderHierarchy`
+- **WHEN** the listing mounts with an uncached nested selection and an empty tree
+- **THEN** the root folders are loaded as before
+
+#### Scenario: Failed restore shows the fetch error
+- **WHEN** a level of the selected folder's chain cannot be loaded
+- **THEN** the context reports its fetch error and the tree stays as it was
+

@@ -230,3 +230,36 @@ describe('Server :: Core :: CoreUtilityApi deployment lookup encoding', () => {
     expect(requestedUrl()).toBe('http://core.test/v1/deployments/applications/bucket/My%20App');
   });
 });
+
+describe('Server :: Core :: CoreUtilityApi.getDeploymentInfoResult', () => {
+  const api = new CoreUtilityApi({ host: CORE_TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('GETs the Core deployment route with the token and returns the body', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ interfaces: ['chat'] }), { headers: JSON_HEADERS });
+
+    const result = await api.getDeploymentInfoResult('my app', TOKEN_MOCK);
+
+    const request = fetch.mock.calls[0][0] as Request;
+    expect(new URL(request.url).pathname).toBe('/v1/deployments/my%20app');
+    expect(request.headers.get('authorization')).toBe('Bearer access_token_mock');
+    expect(result).toMatchObject({ success: true, response: { interfaces: ['chat'] } });
+  });
+
+  test.each([403, 404, 500, 503])('keeps the status of a %s answer', async (status) => {
+    fetch.mockResponseOnce('failed', { status });
+
+    const result = await api.getDeploymentInfoResult('gpt', TOKEN_MOCK);
+
+    expect(result).toMatchObject({ success: false, status });
+  });
+
+  test('rejects when Core cannot be reached', async () => {
+    fetch.mockRejectOnce(new Error('Network error'));
+
+    await expect(api.getDeploymentInfoResult('gpt', TOKEN_MOCK)).rejects.toThrow('Network error');
+  });
+});

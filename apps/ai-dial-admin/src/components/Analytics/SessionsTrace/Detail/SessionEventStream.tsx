@@ -99,15 +99,23 @@ const RowFacts: FC<FactsProps> = ({ facts }) => {
     const cost = formatSignificantCost(facts.cost);
 
     return (
-      <>
+      <span className="flex min-w-0 items-center gap-2 [&>*+*]:before:mr-2 [&>*+*]:before:text-tertiary [&>*+*]:before:[content:'·'_/_'']">
         {facts.tokens !== null && (
           <span>{t(SessionsTraceI18nKey.SpanTokens, { count: formatCompactNumber(facts.tokens) })}</span>
+        )}
+        {((facts.cacheRead ?? 0) > 0 || (facts.cacheWrite ?? 0) > 0) && (
+          <span>
+            {t(SessionsTraceI18nKey.SpanCache, {
+              read: formatCompactNumber(facts.cacheRead) || '0',
+              write: formatCompactNumber(facts.cacheWrite) || '0',
+            })}
+          </span>
         )}
         {facts.requestMessages !== null && (
           <span>{t(SessionsTraceI18nKey.SpanRequestMessages, { count: facts.requestMessages })}</span>
         )}
         {cost && <span className={COST_TEXT_CLASS}>{cost}</span>}
-      </>
+      </span>
     );
   }
 

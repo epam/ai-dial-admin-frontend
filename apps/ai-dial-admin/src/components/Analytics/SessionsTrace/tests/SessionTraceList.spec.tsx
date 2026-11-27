@@ -33,6 +33,8 @@ const group = (over: Partial<SessionTraceGroup> = {}): SessionTraceGroup => ({
   startedAt: Date.UTC(2026, 7, 27, 10, 9, 18),
   spans: 4,
   tokens: 11615,
+  promptTokens: 0,
+  cachedTokens: 0,
   price: 0.02895,
   failedSpans: 0,
   chips: [{ eventKind: 'llm_call', spans: 4 }],
@@ -509,5 +511,35 @@ describe('SessionTraceList — outside a session', () => {
 
     expect(screen.getByRole('heading', { name: 'a heading' })).toBeInTheDocument();
     expect(screen.getByText('a rule')).toBeInTheDocument();
+  });
+});
+
+describe('SessionTraceList — cached share', () => {
+  test('states the cached share beside the trace tokens', () => {
+    renderList({ groups: [group({ promptTokens: 10000, cachedTokens: 8800 })] });
+
+    expect(screen.getByText(SessionsTraceI18nKey.TraceCachedShare)).toBeTruthy();
+  });
+
+  test('states a measured miss when the trace recorded prompt tokens and no cache hit', () => {
+    renderList({ groups: [group({ promptTokens: 10000, cachedTokens: 0 })] });
+
+    expect(screen.getByText(SessionsTraceI18nKey.TraceCachedShare)).toBeTruthy();
+  });
+
+  test('states no share when the trace recorded no prompt tokens', () => {
+    renderList({ groups: [group({ promptTokens: 0, cachedTokens: 0 })] });
+
+    expect(screen.getByText('applications/public/pg-chat-hub__1.0.0')).toBeTruthy();
+    expect(screen.queryByText(SessionsTraceI18nKey.TraceCachedShare)).toBeNull();
+  });
+
+  test('states the share once, as a trace figure and not among the card own facts', () => {
+    renderList({ groups: [group({ promptTokens: 10000, cachedTokens: 8800 })] });
+
+    expect(screen.getAllByText(SessionsTraceI18nKey.TraceCachedShare)).toHaveLength(1);
+    expect(screen.getByText(SessionsTraceI18nKey.TraceCardOwnTokens).parentElement).not.toHaveTextContent(
+      SessionsTraceI18nKey.TraceCachedShare,
+    );
   });
 });

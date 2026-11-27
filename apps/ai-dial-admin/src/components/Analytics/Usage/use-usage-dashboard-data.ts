@@ -77,7 +77,6 @@ export interface UsageDashboardData {
   totals: RequestState<UsageMeasures | null>;
   previousTotals: RequestState<UsageMeasures | null>;
   buckets: RequestState<BucketPoint[]>;
-  previousBuckets: RequestState<BucketPoint[]>;
   donutRows: RequestState<BreakdownRow[]>;
   donutRowsMetric: DonutMetric;
   dimensionBuckets: RequestState<DimensionBucketPoint[]>;
@@ -115,7 +114,6 @@ export const useUsageDashboardData = ({
   const [totals, setTotals] = useState<RequestState<UsageMeasures | null>>(pending);
   const [previousTotals, setPreviousTotals] = useState<RequestState<UsageMeasures | null>>(loaded(null));
   const [buckets, setBuckets] = useState<RequestState<BucketPoint[]>>(pending);
-  const [previousBuckets, setPreviousBuckets] = useState<RequestState<BucketPoint[]>>(loaded([]));
   const [donutRows, setDonutRows] = useState<RequestState<BreakdownRow[]>>(pending);
   /**
    * The measure the rows on screen were ranked by, which lags the selected one while a re-ranking
@@ -149,10 +147,11 @@ export const useUsageDashboardData = ({
   ].join('|');
   const donutScopeKey = useRef(donutScope);
 
-  const baseScope = useMemo(() => ({ view, callerSource, ...rows }), [view, callerSource, rows]);
+  const kpiScope = useMemo(() => ({ view, callerSource, ...rows }), [view, callerSource, rows]);
+  const baseScope = useMemo(() => ({ view, callerSource: CallerSource.None, ...rows }), [view, rows]);
   const madeScope = useMemo(
-    () => (madeRows ? { view, callerSource, ...madeRows } : null),
-    [view, callerSource, madeRows],
+    () => (madeRows ? { view, callerSource: CallerSource.None, ...madeRows } : null),
+    [view, madeRows],
   );
   const madeTabsKey = madeTabs.join('|');
   /** The rows a tab ranks: the calls the entity made for a tab that reads those, its own rows otherwise. */
@@ -188,7 +187,7 @@ export const useUsageDashboardData = ({
     reset();
     setBuckets(pending);
     setTotals(pending);
-    const currentScope: QueryScope = { ...baseScope, window: windows.current };
+    const currentScope: QueryScope = { ...kpiScope, window: windows.current };
 
     void runQuery(buildBucketedQuery(currentScope, resolution)).then(({ result, error, isCancelled }) => {
       if (!isCurrent() || isCancelled) return;
@@ -202,26 +201,20 @@ export const useUsageDashboardData = ({
     });
 
     if (!windows.previous) {
-      setPreviousBuckets(loaded([]));
       setPreviousTotals(loaded(null));
       return;
     }
 
-    const previousScope: QueryScope = { ...baseScope, window: windows.previous };
-    setPreviousBuckets(pending);
     setPreviousTotals(pending);
 
-    void runQuery(buildBucketedQuery(previousScope, resolution)).then(({ result, error, isCancelled }) => {
-      if (!isCurrent() || isCancelled) return;
-      setPreviousBuckets(result ? loaded(foldBucketPoints(result)) : reportFailed(error));
-    });
-
-    void runQuery(buildTotalsQuery(previousScope)).then(({ result, error, isCancelled }) => {
-      if (!isCurrent() || isCancelled) return;
-      const row = result?.rows?.[0];
-      setPreviousTotals(result ? loaded(row ? readMeasures(row) : null) : reportFailed(error));
-    });
-  }, [baseScope, windows, resolution, refreshToken, runQuery, reset, reportFailed]);
+    void runQuery(buildTotalsQuery({ ...kpiScope, window: windows.previous })).then(
+      ({ result, error, isCancelled }) => {
+        if (!isCurrent() || isCancelled) return;
+        const row = result?.rows?.[0];
+        setPreviousTotals(result ? loaded(row ? readMeasures(row) : null) : reportFailed(error));
+      },
+    );
+  }, [kpiScope, windows, resolution, refreshToken, runQuery, reset, reportFailed]);
 
   // The stack plots the same entities the share chart names, so it waits for that ranking rather
   // than ranking again — and it is issued only while the split view is the one being read.
@@ -396,7 +389,6 @@ export const useUsageDashboardData = ({
     totals,
     previousTotals,
     buckets,
-    previousBuckets,
     donutRows,
     dimensionBuckets,
     spendBuckets,
@@ -410,7 +402,6 @@ export const useUsageDashboardData = ({
     totals,
     previousTotals,
     buckets,
-    previousBuckets,
     donutRows,
     donutRowsMetric,
     dimensionBuckets,

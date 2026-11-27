@@ -121,6 +121,9 @@ first failing rule next to the offending field:
   rejected; `{current-user}` SHALL be accepted only as the second segment; no segment after the first
   may be empty, contain `*`, or equal `.` or `..`.
 - At least one access right is present, and `SHARE` is never offered.
+- `Write` is not a valid right on a target whose decoded first segment is `applications` or `toolsets`.
+  The modal SHALL show the error next to `Access`, naming the type, and SHALL keep `Write` selectable
+  and selected. The error SHALL appear or clear as either the path or the access changes.
 
 Core remains authoritative: a validation error returned by Core on Save SHALL be reported through the
 normal save error notification.
@@ -166,6 +169,26 @@ normal save error notification.
 #### Scenario: Editing a row does not conflict with itself
 - **WHEN** a user edits a row without changing its Link ID
 - **THEN** no uniqueness error is shown
+
+#### Scenario: Write on an applications or toolsets target is rejected
+- **WHEN** a user enters path `applications/public/x/` and, separately, `toolsets/public/x/`, and
+  selects `Write`
+- **THEN** the modal shows an error next to `Access` saying Write is not allowed on that type, and
+  `Add` stays disabled
+- **AND** `Write` remains selected and selectable
+
+#### Scenario: Write error follows the path
+- **WHEN** a user selects `Write` with path `applications/public/x/`, then changes the path to
+  `files/public/x/`
+- **THEN** the error disappears and `Add` becomes enabled
+
+#### Scenario: Read on an applications or toolsets target is accepted
+- **WHEN** a user enters path `applications/public/x/` with only `Read` selected
+- **THEN** the dependency is accepted as valid
+
+#### Scenario: Encoded applications root is rejected for Write
+- **WHEN** a user selects `Write` with path `%61pplications/public/x/`
+- **THEN** the modal shows the same error as for `applications/public/x/`
 
 ### Requirement: Duplicating a dependency
 A row's Duplicate action SHALL insert a copy directly after the source row without opening a modal.
@@ -348,3 +371,4 @@ entries (`url`, `access`) to the UI as `path` and `access`, so no UI code depend
 - **WHEN** an admin approves
 - **THEN** the `POST` body is `{ "resources": [{ "url", "access" }] }`, one entry per saved dependency in declaration order
 - **AND** Core answers `409` and stores nothing if the application's list changed since it was read
+

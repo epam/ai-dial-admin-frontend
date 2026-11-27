@@ -12,10 +12,12 @@ describe('getAssetApplicationDeploymentId', () => {
     );
   });
 
-  test('uses the platform path of a platform application', () => {
-    expect(getAssetApplicationDeploymentId({ name: 'app', _metadata: { path: 'platform/app' } })).toBe(
-      'applications/platform/app',
-    );
+  test('uses the short name of a platform application', () => {
+    expect(getAssetApplicationDeploymentId({ name: 'app', _metadata: { path: 'platform/app' } })).toBe('app');
+  });
+
+  test('derives the name from a platform path when the entity has none', () => {
+    expect(getAssetApplicationDeploymentId({ _metadata: { path: 'platform/app' } })).toBe('app');
   });
 
   test('falls back to the name for an application with no Core path', () => {
@@ -29,7 +31,7 @@ describe('getAssetApplicationDeploymentId', () => {
 });
 
 describe('getPlatformModelDeploymentId', () => {
-  test('is the canonical platform model id', () => {
-    expect(getPlatformModelDeploymentId('gpt-4')).toBe('models/platform/gpt-4');
+  test('is the short name of the model', () => {
+    expect(getPlatformModelDeploymentId('gpt-4')).toBe('gpt-4');
   });
 });
