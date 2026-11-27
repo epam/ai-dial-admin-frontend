@@ -48,6 +48,20 @@ describe('TryOutResponseBody', () => {
     expect(screen.getByText('Events:true:false')).toBeInTheDocument();
   });
 
+  test('lets the events section load independently of the response body', () => {
+    render(
+      <TryOutResponseBody
+        response={{ streaming: true, events: [{ a: 1 }] }}
+        isRequestSend
+        isEventsLoading={false}
+        growOnOpen={false}
+      />,
+    );
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByText('Events:true:false')).toBeInTheDocument();
+  });
+
   test('renders with no response', () => {
     render(<TryOutResponseBody response={null} isRequestSend={false} growOnOpen={false} />);
 

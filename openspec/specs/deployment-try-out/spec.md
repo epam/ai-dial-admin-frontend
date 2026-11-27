@@ -76,11 +76,15 @@ In Simple mode, the default, the admin SHALL choose an interface, type a message
 - **THEN** Send is disabled
 
 ### Requirement: Streamed replies are shown as they arrive
-When the reply is an event stream, the panel SHALL show events as they arrive, and SHALL show the assembled response when the stream ends. The admin SHALL be able to stop an in-progress request, which SHALL end it without showing an error.
+When the reply is an event stream, the panel SHALL show events as they arrive, and SHALL show a loader in the response body until the stream ends, then the assembled response. The admin SHALL be able to stop an in-progress request, which SHALL end it without showing an error.
 
 #### Scenario: Stream shown incrementally
 - **WHEN** the deployment streams its reply
 - **THEN** events appear in the events section before the stream has finished
+
+#### Scenario: Loader until the stream ends
+- **WHEN** events have arrived but the stream has not finished
+- **THEN** the response body still shows a loader, and the assembled response replaces it when the stream ends
 
 #### Scenario: Stop
 - **WHEN** an admin stops an in-progress request

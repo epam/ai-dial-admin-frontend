@@ -16,10 +16,12 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   response: TryOutResponseData | null;
   isRequestSend: boolean;
+  /** Overrides `isRequestSend` for the events section, so events can show while the response still loads. */
+  isEventsLoading?: boolean;
   growOnOpen: boolean;
 }
 
-const TryOutResponseBody: FC<Props> = ({ response, isRequestSend, growOnOpen }) => {
+const TryOutResponseBody: FC<Props> = ({ response, isRequestSend, isEventsLoading = isRequestSend, growOnOpen }) => {
   const t = useI18n();
   const copyText = useMemo(() => (response?.body != null ? JSON.stringify(response.body, null, 2) : ''), [response]);
   const editorProps = useMemo(() => toTryOutJsonEditorProps(response?.body, { wordWrap: 'off' }), [response?.body]);
@@ -47,7 +49,7 @@ const TryOutResponseBody: FC<Props> = ({ response, isRequestSend, growOnOpen }) 
           </div>
         )}
       </CollapsibleSection>
-      <TryOutEventsSection streaming={response?.streaming} events={response?.events} isLoading={isRequestSend} />
+      <TryOutEventsSection streaming={response?.streaming} events={response?.events} isLoading={isEventsLoading} />
     </div>
   );
 };

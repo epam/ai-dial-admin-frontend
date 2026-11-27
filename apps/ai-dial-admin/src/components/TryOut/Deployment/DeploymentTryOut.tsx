@@ -66,8 +66,8 @@ const DeploymentTryOut: FC<Props> = ({ deployment }) => {
   );
 
   const statusMessage = STATUS_MESSAGES[status];
-  // Until the first byte arrives the spinner stands in for the response; after that the reply fills in as it streams.
-  const isAwaitingResponse = isSending && (response == null || (response.events?.length ?? 0) === 0);
+  // The response spinner stays until the stream ends; events replace their own spinner once the first one arrives.
+  const isAwaitingEvents = isSending && (response == null || (response.events?.length ?? 0) === 0);
 
   return (
     <div className="flex flex-col gap-y-4 size-full min-h-0 overflow-auto pb-4">
@@ -135,7 +135,12 @@ const DeploymentTryOut: FC<Props> = ({ deployment }) => {
       {failure && <TryOutFailureMessage failure={failure} />}
       <TryOutTraceLink url={traceUrl} />
       {(response || isSending) && (
-        <TryOutResponseBody response={response} isRequestSend={isAwaitingResponse} growOnOpen={false} />
+        <TryOutResponseBody
+          response={response}
+          isRequestSend={isSending}
+          isEventsLoading={isAwaitingEvents}
+          growOnOpen={false}
+        />
       )}
     </div>
   );
