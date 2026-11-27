@@ -8,8 +8,9 @@ import {
   Notification,
   NotificationType,
   NotificationVariant,
+  Tooltip,
 } from '@epam/ai-dial-ui-kit';
-import { IconAlertTriangle, IconChevronRight, IconSubtask } from '@tabler/icons-react';
+import { IconAlertTriangle, IconChevronRight, IconInfoCircle, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, ReactNode, useEffect, useRef } from 'react';
 
@@ -18,6 +19,7 @@ import SessionTraceChips from '@/src/components/Analytics/SessionsTrace/Detail/S
 import RatingCounts from '@/src/components/Analytics/SessionsTrace/RatingCounts';
 import { COST_TEXT_CLASS, EMPTY_ICON_SIZE, UNAVAILABLE_VALUE } from '@/src/constants/analytics/sessions-trace';
 import { BasicI18nKey, SessionsTraceI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import {
   SessionTraceCard,
@@ -312,6 +314,8 @@ interface Props {
   // The heading and the rule line name what one panel stands for, which differs by listing.
   title?: string;
   rule?: string;
+  headerAction?: ReactNode;
+  emptyState?: ReactNode;
   // False where a card is a call somewhere inside its trace — an entity's call — rather than the trace's root.
   isCardTheRoot?: boolean;
   hasMore: boolean;
@@ -326,6 +330,8 @@ const SessionTraceList: FC<Props> = ({
   traceRatings,
   title,
   rule,
+  headerAction,
+  emptyState,
   isCardTheRoot = true,
   hasMore,
   isLoading,
@@ -355,25 +361,57 @@ const SessionTraceList: FC<Props> = ({
     // change, so the observer was never recreated and no further page was ever requested.
   }, [hasMore, isLoading, onLoadMore]);
 
+  const ruleText = rule ?? t(SessionsTraceI18nKey.TraceSectionRule);
+
+  // States the rule the listing follows, so a reader knows what one panel stands for without having to infer
+  // it. Deliberately not "turn": the data records no turn index.
+  const header = (
+    <div className="sticky top-0 z-10 -mt-4 flex flex-wrap items-center justify-between gap-2 bg-layer-base pb-2 pt-4">
+      <span className="flex min-w-0 items-center gap-1">
+        <h3 className="text-primary dial-small-semi-text">{title ?? t(SessionsTraceI18nKey.TraceSectionTitle)}</h3>
+        <Tooltip tooltip={ruleText} asChild>
+          <IconInfoCircle
+            {...BASE_BUTTON_ICON_PROPS}
+            role="img"
+            aria-label={ruleText}
+            tabIndex={0}
+            className="shrink-0 text-secondary"
+          />
+        </Tooltip>
+      </span>
+      {headerAction}
+    </div>
+  );
+
   if (!groups.length && !isLoading) {
+    const emptyContent =
+      !hasLoadError && emptyState ? (
+        emptyState
+      ) : (
+        <div className="flex flex-1 flex-col justify-center">
+          <NoDataContent
+            icon={
+              hasLoadError ? (
+                <IconAlertTriangle size={EMPTY_ICON_SIZE} aria-hidden className="text-error" />
+              ) : (
+                <IconSubtask size={EMPTY_ICON_SIZE} aria-hidden />
+              )
+            }
+            title={t(hasLoadError ? SessionsTraceI18nKey.TraceListLoadFailed : SessionsTraceI18nKey.TraceListEmpty)}
+            description={t(
+              hasLoadError ? SessionsTraceI18nKey.TraceListLoadFailedHint : SessionsTraceI18nKey.TraceListEmptyHintLive,
+            )}
+            className="max-w-[520px] self-center p-6"
+            titleClassName="dial-tiny-semi-text"
+            descriptionClassName="dial-small-text"
+          />
+        </div>
+      );
+
     return (
-      <div className="flex flex-1 flex-col justify-center bg-layer-base">
-        <NoDataContent
-          icon={
-            hasLoadError ? (
-              <IconAlertTriangle size={EMPTY_ICON_SIZE} aria-hidden className="text-error" />
-            ) : (
-              <IconSubtask size={EMPTY_ICON_SIZE} aria-hidden />
-            )
-          }
-          title={t(hasLoadError ? SessionsTraceI18nKey.TraceListLoadFailed : SessionsTraceI18nKey.TraceListEmpty)}
-          description={t(
-            hasLoadError ? SessionsTraceI18nKey.TraceListLoadFailedHint : SessionsTraceI18nKey.TraceListEmptyHintLive,
-          )}
-          className="max-w-[520px] self-center p-6"
-          titleClassName="dial-tiny-semi-text"
-          descriptionClassName="dial-small-text"
-        />
+      <div className="flex min-h-0 flex-1 flex-col bg-layer-base">
+        {headerAction && <div className="px-4 pt-4">{header}</div>}
+        {emptyContent}
       </div>
     );
   }
@@ -381,12 +419,7 @@ const SessionTraceList: FC<Props> = ({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-layer-base">
       <div className="flex flex-col gap-1.5 p-4">
-        {/* States the rule the listing follows, so a reader knows what one panel stands for without having to
-            infer it. Deliberately not "turn": the data records no turn index. */}
-        <div className="flex flex-wrap items-baseline justify-between gap-2 pb-1">
-          <h3 className="text-primary dial-small-semi-text">{title ?? t(SessionsTraceI18nKey.TraceSectionTitle)}</h3>
-          <p className="font-mono text-secondary dial-tiny-text">{rule ?? t(SessionsTraceI18nKey.TraceSectionRule)}</p>
-        </div>
+        {header}
         {hasLoadError && (
           <Notification
             type={NotificationType.SectionMessage}

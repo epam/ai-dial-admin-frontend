@@ -198,6 +198,8 @@ describe('SessionTraceList', () => {
     renderList({ onOpenTrace });
 
     await user.tab();
+    expect(screen.getByRole('img', { name: SessionsTraceI18nKey.TraceSectionRule })).toHaveFocus();
+    await user.tab();
     await user.keyboard('{Enter}');
 
     expect(onOpenTrace).toHaveBeenCalled();
@@ -376,7 +378,7 @@ describe('SessionTraceList — tiers', () => {
     renderList();
 
     expect(screen.getByRole('heading', { name: SessionsTraceI18nKey.TraceSectionTitle })).toBeInTheDocument();
-    expect(screen.getByText(SessionsTraceI18nKey.TraceSectionRule)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: SessionsTraceI18nKey.TraceSectionRule })).toBeInTheDocument();
     expect(screen.queryByText(/Turn \d/)).toBeNull();
   });
 
@@ -510,7 +512,7 @@ describe('SessionTraceList — outside a session', () => {
     renderList({ title: 'a heading', rule: 'a rule' });
 
     expect(screen.getByRole('heading', { name: 'a heading' })).toBeInTheDocument();
-    expect(screen.getByText('a rule')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'a rule' })).toBeInTheDocument();
   });
 });
 
@@ -541,5 +543,44 @@ describe('SessionTraceList — cached share', () => {
     expect(screen.getByText(SessionsTraceI18nKey.TraceCardOwnTokens).parentElement).not.toHaveTextContent(
       SessionsTraceI18nKey.TraceCachedShare,
     );
+  });
+});
+
+describe('SessionTraceList — header action and empty state', () => {
+  const action = <button type="button">header action</button>;
+  const emptyState = <p>custom empty</p>;
+
+  test('renders the header action beside the heading', () => {
+    renderList({ headerAction: action });
+
+    expect(screen.getByRole('button', { name: 'header action' })).toBeInTheDocument();
+  });
+
+  test('keeps the heading and the header action above an empty listing', () => {
+    renderList({ groups: [], headerAction: action });
+
+    expect(screen.getByRole('heading', { name: SessionsTraceI18nKey.TraceSectionTitle })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'header action' })).toBeInTheDocument();
+    expect(screen.getByText(SessionsTraceI18nKey.TraceListEmpty)).toBeInTheDocument();
+  });
+
+  test('renders no heading over an empty listing without a header action', () => {
+    renderList({ groups: [] });
+
+    expect(screen.queryByRole('heading')).toBeNull();
+  });
+
+  test('replaces the empty state with the one supplied', () => {
+    renderList({ groups: [], emptyState });
+
+    expect(screen.getByText('custom empty')).toBeInTheDocument();
+    expect(screen.queryByText(SessionsTraceI18nKey.TraceListEmpty)).toBeNull();
+  });
+
+  test('states a load failure rather than the supplied empty state', () => {
+    renderList({ groups: [], emptyState, hasLoadError: true });
+
+    expect(screen.getByText(SessionsTraceI18nKey.TraceListLoadFailed)).toBeInTheDocument();
+    expect(screen.queryByText('custom empty')).toBeNull();
   });
 });
