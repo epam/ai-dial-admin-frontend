@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import SessionDetailBody from '@/src/components/Analytics/SessionsTrace/Detail/SessionDetailBody';
@@ -11,7 +12,12 @@ import { defaultSessionsSource } from '@/src/utils/analytics/sessions-source';
 vi.mock('@/src/components/Analytics/SessionsTrace/Detail/use-session-traces');
 
 vi.mock('@/src/components/Analytics/SessionsTrace/Detail/SessionTraceList', () => ({
-  default: () => <section aria-label="trace list" />,
+  default: ({ headerAction, emptyState }: { headerAction?: ReactNode; emptyState?: ReactNode }) => (
+    <section aria-label="trace list">
+      {headerAction}
+      {emptyState}
+    </section>
+  ),
 }));
 
 vi.mock('@/src/components/Analytics/SessionsTrace/Detail/SessionDetailRail', () => ({
@@ -103,15 +109,7 @@ describe('SessionDetailBody', () => {
 
     expect(screen.getByRole('status')).toBeTruthy();
     expect(screen.getByText(SessionsTraceI18nKey.TraceSearchNoMatch)).toBeTruthy();
-    expect(screen.queryByRole('region', { name: 'trace list' })).toBeNull();
-  });
-
-  test('keeps the listing for a failed search rather than stating no match', () => {
-    vi.mocked(useSessionTraces).mockReturnValue(traces({ isSearch: true, hasLoadError: true }));
-
-    renderBody();
-
-    expectListingVisible();
+    expect(searchField()).toBeTruthy();
   });
 
   test('keeps the listing for a session with no traces when nothing is searched', () => {

@@ -1860,8 +1860,9 @@ many further calls the trace records rather than truncating in silence.
 
 ### Requirement: A trace of the session can be found by its exact trace id
 
-The session detail SHALL offer a search field above the trace listing that finds a trace of **this session** by
-its trace id. The match SHALL be exact: the field's value, trimmed of surrounding whitespace, SHALL equal the
+The session detail SHALL offer a search field in the trace listing's header, beside its heading, that finds a
+trace of **this session** by its trace id. The header SHALL stay in view while the listing scrolls, and SHALL
+stay above the no-match state, so the reader can correct the id without clearing the result first. The match SHALL be exact: the field's value, trimmed of surrounding whitespace, SHALL equal the
 trace id. A substring or prefix of an id SHALL NOT match. The hop log indexes the trace id for equality, so an
 exact match stays cheap however long the session ran; a partial match would read every row of the session.
 

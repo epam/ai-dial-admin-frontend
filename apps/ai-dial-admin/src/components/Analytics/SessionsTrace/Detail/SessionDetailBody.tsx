@@ -81,8 +81,6 @@ const SessionDetailBody: FC<Props> = ({
     traceId,
   });
 
-  const isNoMatch = isSearch && !groups.length && !isLoading && !hasLoadError;
-
   const listingRatings = useMemo(() => attributeRatingsToTraces(groups, feedbackRows), [groups, feedbackRows]);
 
   // The drawer is titled by the card's own name rather than a turn ordinal: the data records no turn index,
@@ -96,36 +94,39 @@ const SessionDetailBody: FC<Props> = ({
   return (
     <div className="flex min-h-0 flex-1 rounded border border-secondary">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="border-b border-secondary bg-layer-base px-4 py-3">
-          <Search
-            id="session-trace-search"
-            value={search}
-            onChange={onSearchChange}
-            placeholder={t(SessionsTraceI18nKey.TraceSearchPlaceholder)}
-          />
-        </div>
-        {isNoMatch ? (
-          <div role="status" aria-live="polite" className="flex flex-1 flex-col justify-center bg-layer-base">
-            <NoDataContent
-              icon={<IconSearch size={EMPTY_ICON_SIZE} aria-hidden />}
-              title={t(SessionsTraceI18nKey.TraceSearchNoMatch)}
-              description={t(SessionsTraceI18nKey.TraceSearchNoMatchHint)}
-              className="max-w-[520px] self-center p-6"
-              titleClassName="dial-tiny-semi-text"
-              descriptionClassName="dial-small-text"
-            />
-          </div>
-        ) : (
-          <SessionTraceList
-            groups={groups}
-            traceRatings={listingRatings}
-            hasMore={hasMore}
-            isLoading={isLoading}
-            hasLoadError={hasLoadError}
-            onLoadMore={onLoadMore}
-            onOpenTrace={onOpenCard}
-          />
-        )}
+        <SessionTraceList
+          groups={groups}
+          traceRatings={listingRatings}
+          headerAction={
+            <div className="w-56">
+              <Search
+                id="session-trace-search"
+                value={search}
+                onChange={onSearchChange}
+                placeholder={t(SessionsTraceI18nKey.TraceSearchPlaceholder)}
+              />
+            </div>
+          }
+          emptyState={
+            isSearch ? (
+              <div role="status" aria-live="polite" className="flex flex-1 flex-col justify-center">
+                <NoDataContent
+                  icon={<IconSearch size={EMPTY_ICON_SIZE} aria-hidden />}
+                  title={t(SessionsTraceI18nKey.TraceSearchNoMatch)}
+                  description={t(SessionsTraceI18nKey.TraceSearchNoMatchHint)}
+                  className="max-w-[520px] self-center p-6"
+                  titleClassName="dial-tiny-semi-text"
+                  descriptionClassName="dial-small-text"
+                />
+              </div>
+            ) : undefined
+          }
+          hasMore={hasMore}
+          isLoading={isLoading}
+          hasLoadError={hasLoadError}
+          onLoadMore={onLoadMore}
+          onOpenTrace={onOpenCard}
+        />
       </div>
       <SessionDetailRail
         session={session}
