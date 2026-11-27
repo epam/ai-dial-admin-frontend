@@ -570,9 +570,10 @@ describe('SessionTraceList — header action and empty state', () => {
     expect(screen.queryByRole('heading')).toBeNull();
   });
 
-  test('replaces the empty state with the one supplied', () => {
+  test('replaces the empty state with the one supplied, under the heading', () => {
     renderList({ groups: [], emptyState });
 
+    expect(screen.getByRole('heading', { name: SessionsTraceI18nKey.TraceSectionTitle })).toBeInTheDocument();
     expect(screen.getByText('custom empty')).toBeInTheDocument();
     expect(screen.queryByText(SessionsTraceI18nKey.TraceListEmpty)).toBeNull();
   });

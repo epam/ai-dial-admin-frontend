@@ -410,7 +410,7 @@ const SessionTraceList: FC<Props> = ({
 
     return (
       <div className="flex min-h-0 flex-1 flex-col bg-layer-base">
-        {headerAction && <div className="px-4 pt-4">{header}</div>}
+        {(headerAction || emptyState) && <div className="px-4 pt-4">{header}</div>}
         {emptyContent}
       </div>
     );
