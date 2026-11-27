@@ -1471,6 +1471,7 @@ describe('the hop inspector reads', () => {
 describe('getEntityTracePage', () => {
   const CALL = { trace_id: 't1', core_span_id: 's1', request_time: END_MS - 1000, deployment: 'a-model' };
   const FIGURE = { trace_id: 't1', event_kind: 'llm_call', spans: 3, tokens: 10, price: 0.1, failed_spans: 0 };
+  const figuresSelect = () => JSON.stringify(execute().mock.lastCall?.[0]?.select);
 
   test('reads the calls, then the figures of their traces, with the token', async () => {
     execute()
@@ -1521,8 +1522,6 @@ describe('getEntityTracePage', () => {
 
     expect(result.success).toBe(false);
   });
-  const figuresSelect = () => JSON.stringify(execute().mock.lastCall?.[0]?.select);
-
   test('sums the cached prompt tokens where the hop log schema serves the column', async () => {
     serveSchemas({ dial_usage_log: [schemaField('cached_prompt_tokens')] });
     execute()
