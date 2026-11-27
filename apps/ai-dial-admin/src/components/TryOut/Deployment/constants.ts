@@ -1,29 +1,37 @@
 import { DeploymentTryOutI18nKey } from '@/src/constants/i18n';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 
-/** The interfaces Try out can call, in the order they are offered. Embeddings is deliberately absent. */
+/** The interfaces Try out can call, in the order they are offered. */
 export const TRY_OUT_INTERFACES: DeploymentInterfaceType[] = [
   DeploymentInterfaceType.OpenAIChatCompletions,
   DeploymentInterfaceType.OpenAIResponses,
   DeploymentInterfaceType.AnthropicMessages,
+  DeploymentInterfaceType.OpenAIEmbeddings,
 ];
 
 /**
  * How Core names, in a deployment's reported `interfaces`, what Try out can call. Core reports `chat` for a
  * deployment that serves chat completions through its legacy endpoint and `openaiChatCompletions` for one that
- * declares the interface.
+ * declares the interface; likewise `embedding` and `openaiEmbeddings` for an embeddings model.
  */
 export const REPORTED_INTERFACE_TYPES: Record<string, DeploymentInterfaceType> = {
   chat: DeploymentInterfaceType.OpenAIChatCompletions,
   [DeploymentInterfaceType.OpenAIChatCompletions]: DeploymentInterfaceType.OpenAIChatCompletions,
   [DeploymentInterfaceType.OpenAIResponses]: DeploymentInterfaceType.OpenAIResponses,
   [DeploymentInterfaceType.AnthropicMessages]: DeploymentInterfaceType.AnthropicMessages,
+  embedding: DeploymentInterfaceType.OpenAIEmbeddings,
+  [DeploymentInterfaceType.OpenAIEmbeddings]: DeploymentInterfaceType.OpenAIEmbeddings,
 };
+
+/** The names Core gives, in a deployment's reported `interfaces`, to what Try out cannot call. */
+export const REPORTED_MCP_INTERFACE = 'mcp';
+export const REPORTED_CUSTOM_UI_INTERFACE = 'custom_ui';
 
 export const TRY_OUT_INTERFACE_LABELS: Partial<Record<DeploymentInterfaceType, DeploymentTryOutI18nKey>> = {
   [DeploymentInterfaceType.OpenAIChatCompletions]: DeploymentTryOutI18nKey.InterfaceChatCompletions,
   [DeploymentInterfaceType.OpenAIResponses]: DeploymentTryOutI18nKey.InterfaceResponses,
   [DeploymentInterfaceType.AnthropicMessages]: DeploymentTryOutI18nKey.InterfaceMessages,
+  [DeploymentInterfaceType.OpenAIEmbeddings]: DeploymentTryOutI18nKey.InterfaceEmbeddings,
 };
 
 /** Anthropic's Messages API requires a token ceiling on every request. */

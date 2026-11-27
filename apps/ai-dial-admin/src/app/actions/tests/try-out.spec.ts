@@ -2,10 +2,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getTryOutInterfaces } from '@/src/app/actions/try-out';
 import { coreUtilityApi } from '@/src/app/api/api';
+import { TryOutFailureKind } from '@/src/components/TryOut/Deployment/models';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 
-vi.mock('@/src/app/api/api', () => ({ coreUtilityApi: { checkDeploymentByName: vi.fn() } }));
+vi.mock('@/src/app/api/api', () => ({ coreUtilityApi: { getDeploymentInfoResult: vi.fn() } }));
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
 
@@ -15,28 +16,48 @@ describe('getTryOutInterfaces', () => {
   });
 
   test("looks the deployment up with the signed-in admin's token", async () => {
-    vi.mocked(coreUtilityApi.checkDeploymentByName).mockResolvedValue({ interfaces: ['chat'] } as never);
+    vi.mocked(coreUtilityApi.getDeploymentInfoResult).mockResolvedValue({ success: true, response: {} } as never);
 
     await getTryOutInterfaces('applications/public/app__1.0.0');
 
-    expect(coreUtilityApi.checkDeploymentByName).toHaveBeenCalledWith('applications/public/app__1.0.0', TOKEN_MOCK);
+    expect(coreUtilityApi.getDeploymentInfoResult).toHaveBeenCalledWith('applications/public/app__1.0.0', TOKEN_MOCK);
   });
 
   test('returns the interfaces Core reports', async () => {
-    vi.mocked(coreUtilityApi.checkDeploymentByName).mockResolvedValue({
-      interfaces: ['chat', 'openaiResponses'],
+    vi.mocked(coreUtilityApi.getDeploymentInfoResult).mockResolvedValue({
+      success: true,
+      response: { interfaces: ['chat', 'openaiResponses'] },
     } as never);
 
-    expect(await getTryOutInterfaces('gpt')).toEqual(['chat', 'openaiResponses']);
+    expect(await getTryOutInterfaces('gpt')).toEqual({ interfaces: ['chat', 'openaiResponses'] });
+  });
+
+  test('returns no interfaces when Core reports none', async () => {
+    vi.mocked(coreUtilityApi.getDeploymentInfoResult).mockResolvedValue({ success: true, response: {} } as never);
+
+    expect(await getTryOutInterfaces('gpt')).toEqual({ interfaces: [] });
   });
 
   test.each([
-    ['the deployment is not found', null],
-    ['Core did not answer', undefined],
-    ['Core reports no interfaces field', {}],
-  ])('returns null when %s', async (_name, deployment) => {
-    vi.mocked(coreUtilityApi.checkDeploymentByName).mockResolvedValue(deployment as never);
+    [403, TryOutFailureKind.NoAccess],
+    [404, TryOutFailureKind.NotFound],
+    [500, TryOutFailureKind.Server],
+    [400, TryOutFailureKind.Rejected],
+  ])('classifies a %s answer with its status', async (status, kind) => {
+    vi.mocked(coreUtilityApi.getDeploymentInfoResult).mockResolvedValue({ success: false, status } as never);
 
-    expect(await getTryOutInterfaces('gpt')).toBeNull();
+    expect(await getTryOutInterfaces('gpt')).toEqual({ failure: { kind, status } });
+  });
+
+  test('reports a network failure when the answer has no status', async () => {
+    vi.mocked(coreUtilityApi.getDeploymentInfoResult).mockResolvedValue({ success: false, status: 0 } as never);
+
+    expect(await getTryOutInterfaces('gpt')).toEqual({ failure: { kind: TryOutFailureKind.Network } });
+  });
+
+  test('reports a network failure when Core cannot be reached', async () => {
+    vi.mocked(coreUtilityApi.getDeploymentInfoResult).mockRejectedValue(new Error('down'));
+
+    expect(await getTryOutInterfaces('gpt')).toEqual({ failure: { kind: TryOutFailureKind.Network } });
   });
 });

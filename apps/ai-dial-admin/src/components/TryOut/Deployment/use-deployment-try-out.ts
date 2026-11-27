@@ -2,11 +2,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getTryOutInterfaces } from '@/src/app/actions/try-out';
 import { sendDeploymentTryOut } from '@/src/components/TryOut/Deployment/send-try-out-request';
-import { TryOutFailure, TryOutFailureKind, TryOutMode, TryOutStatus } from '@/src/components/TryOut/Deployment/models';
+import {
+  TryOutFailure,
+  TryOutFailureKind,
+  TryOutInterfacesResult,
+  TryOutLookup,
+  TryOutLookupStatus,
+  TryOutMode,
+  TryOutStatus,
+} from '@/src/components/TryOut/Deployment/models';
 import { buildTryOutBody } from '@/src/components/TryOut/Deployment/utils/build-request-body';
 import { classifyTryOutFailure } from '@/src/components/TryOut/Deployment/utils/classify-failure';
 import { extractStreamText } from '@/src/components/TryOut/Deployment/utils/extract-stream-text';
-import { getSupportedTryOutInterfaces } from '@/src/components/TryOut/Deployment/utils/get-supported-interfaces';
+import { LOADING_LOOKUP, resolveTryOutLookup } from '@/src/components/TryOut/Deployment/utils/resolve-lookup';
 import { parseBodyText, toTryOutRequest } from '@/src/components/TryOut/Deployment/utils/to-try-out-request';
 import { TryOutResponseData } from '@/src/components/TryOut/models';
 import { createSseParser, SseEvent } from '@/src/components/TryOut/utils/sse-parser';
@@ -31,8 +39,8 @@ const readJson = async (response: Response): Promise<unknown> => {
  */
 export const useDeploymentTryOut = (deployment: string) => {
   const [mode, setMode] = useState(TryOutMode.Simple);
-  const [reportedInterfaces, setReportedInterfaces] = useState<string[] | null>(null);
-  const [isLoadingInterfaces, setIsLoadingInterfaces] = useState(true);
+  const [lookup, setLookup] = useState<TryOutLookup>(LOADING_LOOKUP);
+  const [lookupAttempt, setLookupAttempt] = useState(0);
   const [selectedType, setSelectedType] = useState<DeploymentInterfaceType | null>(null);
   const [message, setMessage] = useState('');
   const [template, setTemplate] = useState<TestSuiteRequestTemplate>({ headers: [], queryParams: [] });
@@ -47,20 +55,28 @@ export const useDeploymentTryOut = (deployment: string) => {
 
   useEffect(() => {
     let isCurrent = true;
-    setIsLoadingInterfaces(true);
-    getTryOutInterfaces(deployment)
-      .then((reported) => isCurrent && setReportedInterfaces(reported))
-      .catch(() => isCurrent && setReportedInterfaces(null))
-      .finally(() => isCurrent && setIsLoadingInterfaces(false));
+    const loadInterfaces = async () => {
+      setLookup(LOADING_LOOKUP);
+      let result: TryOutInterfacesResult;
+      try {
+        result = await getTryOutInterfaces(deployment);
+      } catch {
+        result = { failure: { kind: TryOutFailureKind.Network } };
+      }
+      if (isCurrent) {
+        setLookup(resolveTryOutLookup(result));
+      }
+    };
+    void loadInterfaces();
 
     return () => {
       isCurrent = false;
     };
-  }, [deployment]);
+  }, [deployment, lookupAttempt]);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  const supportedTypes = useMemo(() => getSupportedTryOutInterfaces(reportedInterfaces), [reportedInterfaces]);
+  const { supportedTypes } = lookup;
   const type =
     selectedType != null && supportedTypes.includes(selectedType) ? selectedType : (supportedTypes[0] ?? null);
 
@@ -72,7 +88,7 @@ export const useDeploymentTryOut = (deployment: string) => {
   const isBodyValid = parseBodyText(bodyText).isValid;
   const isSending = status === TryOutStatus.Sending;
   const hasInput = mode === TryOutMode.Simple ? message.trim() !== '' : bodyText.trim() !== '';
-  const canSend = type != null && !isLoadingInterfaces && !isSending && hasInput && isBodyValid;
+  const canSend = type != null && lookup.status === TryOutLookupStatus.Ready && !isSending && hasInput && isBodyValid;
 
   const onChangeType = useCallback((next: DeploymentInterfaceType) => {
     setSelectedType(next);
@@ -85,6 +101,8 @@ export const useDeploymentTryOut = (deployment: string) => {
   }, []);
 
   const onReset = useCallback(() => setEditedBody(null), []);
+
+  const onRetryLookup = useCallback(() => setLookupAttempt((attempt) => attempt + 1), []);
 
   const readStream = useCallback(async (streamResponse: Response) => {
     const reader = streamResponse.body?.getReader();
@@ -159,10 +177,9 @@ export const useDeploymentTryOut = (deployment: string) => {
   return {
     mode,
     setMode,
+    lookup,
     supportedTypes,
     type,
-    isLoadingInterfaces,
-    isInterfacesUnknown: !isLoadingInterfaces && reportedInterfaces == null,
     message,
     template,
     setTemplate,
@@ -178,6 +195,7 @@ export const useDeploymentTryOut = (deployment: string) => {
     onChangeMessage,
     onChangeBody: setEditedBody,
     onReset,
+    onRetryLookup,
     onSend,
     onStop,
   };

@@ -9,6 +9,7 @@ import {
   sendDeploymentTryOut,
 } from '@/src/components/TryOut/Deployment/send-try-out-request';
 import { ButtonsI18nKey, DeploymentTryOutI18nKey, GrafanaLinksI18nKey } from '@/src/constants/i18n';
+import { TryOutFailureKind, TryOutInterfacesResult } from '@/src/components/TryOut/Deployment/models';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 
 vi.mock('@/src/app/actions/try-out');
@@ -81,8 +82,8 @@ const sseStream = (...chunks: string[]) =>
   });
 
 describe('DeploymentTryOut', () => {
-  const renderPanel = async (reported: string[] | null = [CHAT]) => {
-    vi.mocked(getTryOutInterfaces).mockResolvedValue(reported);
+  const renderPanel = async (reported: string[] = [CHAT]) => {
+    vi.mocked(getTryOutInterfaces).mockResolvedValue({ interfaces: reported });
     const user = userEvent.setup();
     render(<DeploymentTryOut deployment="gpt-4" />);
     await screen.findByRole('textbox', { name: DeploymentTryOutI18nKey.Message });
@@ -101,8 +102,8 @@ describe('DeploymentTryOut', () => {
   });
 
   describe('loading', () => {
-    test('shows neither the form nor the unavailable message until the interfaces are known', async () => {
-      let resolveInterfaces: (reported: string[]) => void = () => void 0;
+    test('shows neither the form nor a message until the interfaces are known', async () => {
+      let resolveInterfaces: (result: TryOutInterfacesResult) => void = () => void 0;
       vi.mocked(getTryOutInterfaces).mockReturnValue(
         new Promise((resolve) => {
           resolveInterfaces = resolve;
@@ -111,20 +112,13 @@ describe('DeploymentTryOut', () => {
       render(<DeploymentTryOut deployment="gpt-4" />);
 
       expect(screen.queryByRole('textbox', { name: DeploymentTryOutI18nKey.Message })).toBeNull();
-      expect(screen.queryByText(DeploymentTryOutI18nKey.Unavailable)).toBeNull();
+      expect(screen.queryByText(DeploymentTryOutI18nKey.UnavailableNoInterface)).toBeNull();
+      expect(screen.queryByText(DeploymentTryOutI18nKey.LookupFailed)).toBeNull();
       expect(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest })).toBeDisabled();
 
-      resolveInterfaces([CHAT]);
+      resolveInterfaces({ interfaces: [CHAT] });
 
       expect(await screen.findByRole('textbox', { name: DeploymentTryOutI18nKey.Message })).toBeTruthy();
-    });
-
-    test('shows the unavailable message, not the form, once a deployment turns out to serve none', async () => {
-      vi.mocked(getTryOutInterfaces).mockResolvedValue(['mcp']);
-      render(<DeploymentTryOut deployment="tool" />);
-
-      expect(await screen.findByText(DeploymentTryOutI18nKey.Unavailable)).toBeTruthy();
-      expect(screen.queryByRole('textbox', { name: DeploymentTryOutI18nKey.Message })).toBeNull();
     });
   });
 
@@ -137,21 +131,83 @@ describe('DeploymentTryOut', () => {
       ).toBeTruthy();
     });
 
-    test('says Try out is unavailable and offers no Send when none is served', async () => {
-      vi.mocked(getTryOutInterfaces).mockResolvedValue(['mcp']);
-      render(<DeploymentTryOut deployment="tool" />);
+    test('offers only embeddings for an embeddings model and sends the message as the input', async () => {
+      vi.mocked(sendDeploymentTryOut).mockResolvedValue(makeResult({ body: '{"data":[{"embedding":[0.1]}]}' }));
+      const user = await renderPanel(['embedding']);
 
-      expect(await screen.findByText(DeploymentTryOutI18nKey.Unavailable)).toBeTruthy();
-      expect(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest })).toBeDisabled();
+      expect(
+        screen.getByRole('combobox', { name: new RegExp(DeploymentTryOutI18nKey.InterfaceEmbeddings) }),
+      ).toBeTruthy();
+
+      await typeMessage(user, 'embed me');
+      await clickSend(user);
+
+      expect(await screen.findByText(/body:.*"embedding"/)).toBeTruthy();
+      expect(screen.getByText('events:0')).toBeTruthy();
+      expect(vi.mocked(sendDeploymentTryOut).mock.calls[0][0]).toEqual({
+        interface: DeploymentInterfaceType.OpenAIEmbeddings,
+        deployment: 'gpt-4',
+        headers: {},
+        query: {},
+        body: { input: 'embed me' },
+      });
     });
 
-    test('offers every interface and notes it when the interfaces could not be read', async () => {
-      await renderPanel(null);
+    test('shows no note about interfaces that could not be read', async () => {
+      await renderPanel();
 
-      expect(screen.getByText(DeploymentTryOutI18nKey.InterfacesUnknownNote)).toBeTruthy();
-      expect(
-        screen.getByRole('combobox', { name: new RegExp(DeploymentTryOutI18nKey.InterfaceChatCompletions) }),
-      ).toBeTruthy();
+      expect(screen.queryByText(/could not be read/i)).toBeNull();
+    });
+  });
+
+  describe('unavailable', () => {
+    test.each([
+      [['mcp'], DeploymentTryOutI18nKey.UnavailableMcpOnly],
+      [['custom_ui'], DeploymentTryOutI18nKey.UnavailableCustomUiOnly],
+      [[], DeploymentTryOutI18nKey.UnavailableNoInterface],
+    ])('says why for reported interfaces %j and offers no form or Send', async (reported, message) => {
+      vi.mocked(getTryOutInterfaces).mockResolvedValue({ interfaces: reported });
+      render(<DeploymentTryOut deployment="tool" />);
+
+      expect(await screen.findByText(message)).toBeTruthy();
+      expect(screen.queryByRole('textbox', { name: DeploymentTryOutI18nKey.Message })).toBeNull();
+      expect(screen.getByRole('button', { name: ButtonsI18nKey.SendRequest })).toBeDisabled();
+    });
+  });
+
+  describe('lookup failures', () => {
+    test.each([
+      [TryOutFailureKind.NoAccess, 403, `${DeploymentTryOutI18nKey.NoAccess} (403)`],
+      [TryOutFailureKind.NotFound, 404, `${DeploymentTryOutI18nKey.NotFound} (404)`],
+    ])('says %s with the status and offers no Retry', async (kind, status, message) => {
+      vi.mocked(getTryOutInterfaces).mockResolvedValue({ failure: { kind, status } });
+      render(<DeploymentTryOut deployment="gpt-4" />);
+
+      expect(await screen.findByText(message)).toBeTruthy();
+      expect(screen.queryByRole('button', { name: DeploymentTryOutI18nKey.Retry })).toBeNull();
+      expect(screen.queryByRole('textbox', { name: DeploymentTryOutI18nKey.Message })).toBeNull();
+    });
+
+    test('says Core failed and reads the interfaces again on Retry', async () => {
+      vi.mocked(getTryOutInterfaces)
+        .mockResolvedValueOnce({ failure: { kind: TryOutFailureKind.Server, status: 503 } })
+        .mockResolvedValueOnce({ interfaces: [CHAT] });
+      const user = userEvent.setup();
+      render(<DeploymentTryOut deployment="gpt-4" />);
+
+      expect(await screen.findByText(`${DeploymentTryOutI18nKey.LookupFailed} (503)`)).toBeTruthy();
+      await user.click(screen.getByRole('button', { name: DeploymentTryOutI18nKey.Retry }));
+
+      expect(await screen.findByRole('textbox', { name: DeploymentTryOutI18nKey.Message })).toBeTruthy();
+      expect(getTryOutInterfaces).toHaveBeenCalledTimes(2);
+    });
+
+    test('says Core failed when the lookup itself throws', async () => {
+      vi.mocked(getTryOutInterfaces).mockRejectedValue(new Error('down'));
+      render(<DeploymentTryOut deployment="gpt-4" />);
+
+      expect(await screen.findByText(DeploymentTryOutI18nKey.LookupFailed)).toBeTruthy();
+      expect(screen.getByRole('button', { name: DeploymentTryOutI18nKey.Retry })).toBeTruthy();
     });
   });
 

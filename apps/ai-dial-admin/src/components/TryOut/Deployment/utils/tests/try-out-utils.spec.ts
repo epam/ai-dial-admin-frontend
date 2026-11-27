@@ -1,9 +1,14 @@
 import { describe, expect, test } from 'vitest';
 
-import { TryOutFailureKind } from '@/src/components/TryOut/Deployment/models';
+import {
+  TryOutFailureKind,
+  TryOutLookupStatus,
+  TryOutUnavailableReason,
+} from '@/src/components/TryOut/Deployment/models';
 import { buildTryOutBody } from '@/src/components/TryOut/Deployment/utils/build-request-body';
 import { classifyTryOutFailure } from '@/src/components/TryOut/Deployment/utils/classify-failure';
 import { getSupportedTryOutInterfaces } from '@/src/components/TryOut/Deployment/utils/get-supported-interfaces';
+import { resolveTryOutLookup } from '@/src/components/TryOut/Deployment/utils/resolve-lookup';
 import {
   paramsToRecord,
   parseBodyText,
@@ -14,13 +19,8 @@ import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 const { OpenAIChatCompletions, OpenAIResponses, AnthropicMessages, OpenAIEmbeddings } = DeploymentInterfaceType;
 
 describe('getSupportedTryOutInterfaces', () => {
-  test('offers every interface when the reported list could not be read', () => {
-    expect(getSupportedTryOutInterfaces(null)).toEqual([OpenAIChatCompletions, OpenAIResponses, AnthropicMessages]);
-    expect(getSupportedTryOutInterfaces(undefined)).toHaveLength(3);
-  });
-
   test('keeps only the supported interfaces, in the offered order', () => {
-    expect(getSupportedTryOutInterfaces(['anthropicMessages', 'embedding', 'openaiChatCompletions'])).toEqual([
+    expect(getSupportedTryOutInterfaces(['anthropicMessages', 'mcp', 'openaiChatCompletions'])).toEqual([
       OpenAIChatCompletions,
       AnthropicMessages,
     ]);
@@ -34,13 +34,63 @@ describe('getSupportedTryOutInterfaces', () => {
     expect(getSupportedTryOutInterfaces(['chat', 'openaiChatCompletions'])).toEqual([OpenAIChatCompletions]);
   });
 
+  test('offers only embeddings for an embeddings model', () => {
+    expect(getSupportedTryOutInterfaces(['embedding'])).toEqual([OpenAIEmbeddings]);
+    expect(getSupportedTryOutInterfaces(['embedding', 'openaiEmbeddings'])).toEqual([OpenAIEmbeddings]);
+  });
+
+  test('never offers embeddings for a chat model', () => {
+    expect(getSupportedTryOutInterfaces(['chat', 'openaiResponses'])).toEqual([OpenAIChatCompletions, OpenAIResponses]);
+  });
+
   test('offers nothing for a deployment that serves none of them', () => {
-    expect(getSupportedTryOutInterfaces(['mcp', 'custom-ui', OpenAIEmbeddings])).toEqual([]);
+    expect(getSupportedTryOutInterfaces(['mcp', 'custom_ui'])).toEqual([]);
     expect(getSupportedTryOutInterfaces([])).toEqual([]);
   });
 });
 
+describe('resolveTryOutLookup', () => {
+  test('is ready with the supported interfaces when Core reports a callable one', () => {
+    expect(resolveTryOutLookup({ interfaces: ['chat', 'openaiResponses'] })).toEqual({
+      status: TryOutLookupStatus.Ready,
+      supportedTypes: [OpenAIChatCompletions, OpenAIResponses],
+    });
+  });
+
+  test('lets a callable interface win over MCP', () => {
+    expect(resolveTryOutLookup({ interfaces: ['mcp', 'chat'] }).status).toBe(TryOutLookupStatus.Ready);
+  });
+
+  test.each([
+    [['mcp'], TryOutUnavailableReason.McpOnly],
+    [['mcp', 'custom_ui'], TryOutUnavailableReason.McpOnly],
+    [['custom_ui'], TryOutUnavailableReason.CustomUiOnly],
+    [[], TryOutUnavailableReason.NoInterface],
+    [['unknownInterface'], TryOutUnavailableReason.NoInterface],
+  ])('is unavailable for %j with its reason', (interfaces, reason) => {
+    expect(resolveTryOutLookup({ interfaces })).toEqual({
+      status: TryOutLookupStatus.Unavailable,
+      supportedTypes: [],
+      reason,
+    });
+  });
+
+  test('is failed with the failure when the interfaces could not be read', () => {
+    const failure = { kind: TryOutFailureKind.NotFound, status: 404 };
+
+    expect(resolveTryOutLookup({ failure })).toEqual({
+      status: TryOutLookupStatus.Failed,
+      supportedTypes: [],
+      failure,
+    });
+  });
+});
+
 describe('buildTryOutBody', () => {
+  test('builds a non-streamed embeddings body with the message as the input', () => {
+    expect(buildTryOutBody(OpenAIEmbeddings, 'embed', 'hi')).toEqual({ input: 'hi' });
+  });
+
   test('builds a streamed chat completions body without a model', () => {
     expect(buildTryOutBody(OpenAIChatCompletions, 'gpt', 'hi')).toEqual({
       messages: [{ role: 'user', content: 'hi' }],
