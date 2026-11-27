@@ -49,7 +49,10 @@ const Fact: FC<{ label: string; children: ReactNode }> = ({ label, children }) =
 );
 
 const StatusDot: FC<{ isFailed: boolean }> = ({ isFailed }) => (
-  <span aria-hidden className={classNames('size-1.5 shrink-0 rounded-full', isFailed ? 'bg-error' : 'text-success bg-current')} />
+  <span
+    aria-hidden
+    className={classNames('size-1.5 shrink-0 rounded-full', isFailed ? 'bg-error' : 'text-success bg-current')}
+  />
 );
 
 // Bottom tier: the trace's own register — its chips and span count, with the drill-in affordance. Kept apart
